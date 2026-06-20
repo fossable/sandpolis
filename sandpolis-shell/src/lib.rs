@@ -23,11 +23,6 @@ pub mod execute;
 pub mod session;
 pub mod shell;
 
-/// Build info
-pub mod built_info {
-    include!(concat!(env!("OUT_DIR"), "/built.rs"));
-}
-
 #[derive(Clone)]
 pub struct ShellLayer {
     database: DatabaseLayer,
@@ -154,12 +149,11 @@ impl DiscoveredShell {
                         .captures(&stdout)
                         .map(|m| m[1].to_string());
 
-                    let location = std::env::split_paths(
-                        &std::env::var_os("PATH").unwrap_or_default(),
-                    )
-                    .map(|p| p.join("bash"))
-                    .find(|p| p.is_file())
-                    .unwrap_or_else(|| PathBuf::from("bash"));
+                    let location =
+                        std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default())
+                            .map(|p| p.join("bash"))
+                            .find(|p| p.is_file())
+                            .unwrap_or_else(|| PathBuf::from("bash"));
 
                     shells.push(DiscoveredShell {
                         shell_type: ShellType::Bash,

@@ -6,13 +6,6 @@ use std::{
 fn main() {
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
 
-    // Generate built.rs
-    if built::write_built_file().is_err() {
-        let dest = Path::new(&out_dir).join("built.rs");
-        built::write_built_file_with_opts(Some(&PathBuf::from("..")), &dest)
-            .expect("Failed to acquire build-time information");
-    }
-
     // Generate rust_analyzer.json for the LSP. The analyzer indexes every
     // `config.rs` file across the workspace under its real crate-qualified
     // module path so that field-type lookups (e.g.
@@ -74,8 +67,7 @@ fn main() {
                 format!("{}::{}", crate_prefix, module_path.join("::"))
             };
 
-            let source =
-                fs::read_to_string(entry.path()).expect("Failed to read config.rs source");
+            let source = fs::read_to_string(entry.path()).expect("Failed to read config.rs source");
             let _ = analyzer.add_source_with_prefix(&prefix, &source);
         }
     }

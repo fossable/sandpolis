@@ -14,9 +14,10 @@ use bevy::prelude::*;
 
 /// Semantic color roles. Widgets reference roles, not raw colors, so a theme swap
 /// recolors everything consistently.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Role {
     /// App background.
+    #[default]
     Background,
     /// Panel / window fill.
     Panel,
@@ -251,15 +252,15 @@ impl Theme {
 }
 
 /// Marks a node whose [`BackgroundColor`] tracks a [`Role`].
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Default)]
 pub struct ThemedBg(pub Role);
 
 /// Marks a node whose [`TextColor`] tracks a [`Role`].
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Default)]
 pub struct ThemedText(pub Role);
 
 /// Marks a node whose [`BorderColor`] tracks a [`Role`].
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Default)]
 pub struct ThemedBorder(pub Role);
 
 /// Marks an interactive button whose background reflects the surface palette and

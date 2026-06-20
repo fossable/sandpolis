@@ -1,11 +1,12 @@
 use crate::gui::input::{LoginDialogState, LoginPhase};
 use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
 use crate::gui::ui::panel::modal_scrim;
-use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::text_input::text_input;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{button, heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
+use bevy::text::EditableText;
 use bevy_ui_widgets::Activate;
 use sandpolis_instance::database::{DataCreation, DataIdentifier};
 use sandpolis_server::ServerUrl;
@@ -364,7 +365,7 @@ fn spawn_login_modal(commands: &mut Commands, theme: &Theme, state: &LoginDialog
                     p.spawn(heading(theme, "Login to Server"));
                     if phase == 0 {
                         p.spawn(muted(theme, "Server address", theme.metrics.font_sm));
-                        p.spawn((LoginServerInput, text_input(theme, "host:port", false)));
+                        p.spawn((LoginServerInput, text_input(theme)));
                     } else {
                         if let LoginPhase::Credentials { banner } = &state.phase {
                             if let Some(message) = &banner.message {
@@ -385,13 +386,13 @@ fn spawn_login_modal(commands: &mut Commands, theme: &Theme, state: &LoginDialog
                             theme.metrics.font_sm,
                         ));
                         p.spawn(muted(theme, "Username", theme.metrics.font_sm));
-                        p.spawn((LoginUserInput, text_input(theme, "username", false)));
+                        p.spawn((LoginUserInput, text_input(theme)));
                         p.spawn(muted(theme, "Password", theme.metrics.font_sm));
-                        p.spawn((LoginPassInput, text_input(theme, "password", true)));
+                        p.spawn((LoginPassInput, text_input(theme)));
                         let mfa = matches!(&state.phase, LoginPhase::Credentials { banner } if banner.mfa);
                         if mfa {
                             p.spawn(muted(theme, "One-time code", theme.metrics.font_sm));
-                            p.spawn((LoginOtpInput, text_input(theme, "OTP", false)));
+                            p.spawn((LoginOtpInput, text_input(theme)));
                         }
                     }
                     p.spawn((
@@ -430,29 +431,33 @@ pub fn focus_login_input(
 /// Copy text-input contents into [`LoginDialogState`] for the login systems.
 pub fn sync_login_inputs(
     mut state: ResMut<LoginDialogState>,
-    server: Query<&TextInput, With<LoginServerInput>>,
-    user: Query<&TextInput, With<LoginUserInput>>,
-    pass: Query<&TextInput, With<LoginPassInput>>,
-    otp: Query<&TextInput, With<LoginOtpInput>>,
+    server: Query<&EditableText, With<LoginServerInput>>,
+    user: Query<&EditableText, With<LoginUserInput>>,
+    pass: Query<&EditableText, With<LoginPassInput>>,
+    otp: Query<&EditableText, With<LoginOtpInput>>,
 ) {
     if let Ok(input) = server.single() {
-        if state.server_address != input.value {
-            state.server_address = input.value.clone();
+        let value = input.value().to_string();
+        if state.server_address != value {
+            state.server_address = value;
         }
     }
     if let Ok(input) = user.single() {
-        if state.username != input.value {
-            state.username = input.value.clone();
+        let value = input.value().to_string();
+        if state.username != value {
+            state.username = value;
         }
     }
     if let Ok(input) = pass.single() {
-        if state.password != input.value {
-            state.password = input.value.clone();
+        let value = input.value().to_string();
+        if state.password != value {
+            state.password = value;
         }
     }
     if let Ok(input) = otp.single() {
-        if state.otp != input.value {
-            state.otp = input.value.clone();
+        let value = input.value().to_string();
+        if state.otp != value {
+            state.otp = value;
         }
     }
 }

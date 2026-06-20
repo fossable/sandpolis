@@ -40,10 +40,12 @@ use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_
 use sandpolis_client::gui::add_agent::CoreLayerToolbarPlugin;
 use sandpolis_client::gui::input::{
     CurrentLayer, HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState,
-    ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_help,
+    ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_diagnostics_overlay,
+    toggle_help,
 };
 use sandpolis_client::gui::layer_picker::{
     LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker, rebuild_layer_rows,
+    sync_layer_search,
 };
 use sandpolis_client::gui::layer_toolbar::{rebuild_layer_toolbar, update_toolbar_button_enabled};
 use sandpolis_client::gui::layer_ui::{
@@ -67,7 +69,7 @@ use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_mini
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
 use sandpolis_client::gui::node_picker::{
     NodePickerState, focus_node_search, handle_node_picker_toggle, manage_node_picker,
-    node_picker_keys, rebuild_node_rows,
+    node_picker_keys, rebuild_node_rows, sync_node_search,
 };
 use sandpolis_client::gui::preview::{
     PreviewsVisible, sync_node_previews, toggle_previews, update_preview_content,
@@ -132,6 +134,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     )
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     // .add_plugins(RapierDebugRenderPlugin::default())
+    // FPS/frame-time diagnostics, surfaced by the F3 overlay (see toggle_diagnostics_overlay).
+    .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
+    .add_plugins(bevy::dev_tools::diagnostics_overlay::DiagnosticsOverlayPlugin)
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(sandpolis_client::gui::ui::UiPlugin)
@@ -173,26 +178,33 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_systems(
         Update,
         (
-            manage_layer_picker,
-            focus_layer_search,
-            rebuild_layer_rows,
-            rebuild_layer_toolbar,
-            update_toolbar_button_enabled,
-            layer_picker_keys,
-            manage_node_picker,
-            focus_node_search,
-            rebuild_node_rows,
-            node_picker_keys,
-            manage_theme_picker,
-            update_theme_rows,
+            (
+                manage_layer_picker,
+                focus_layer_search,
+                sync_layer_search,
+                rebuild_layer_rows,
+                rebuild_layer_toolbar,
+                update_toolbar_button_enabled,
+                layer_picker_keys,
+                manage_node_picker,
+                focus_node_search,
+                sync_node_search,
+                rebuild_node_rows,
+                node_picker_keys,
+                manage_theme_picker,
+                update_theme_rows,
+            ),
             // Help / about / login modals (native)
-            toggle_help,
-            manage_help_panel,
-            manage_about_panel,
-            manage_login,
-            focus_login_input,
-            sync_login_inputs,
-            update_login_error,
+            (
+                toggle_help,
+                toggle_diagnostics_overlay,
+                manage_help_panel,
+                manage_about_panel,
+                manage_login,
+                focus_login_input,
+                sync_login_inputs,
+                update_login_error,
+            ),
         ),
     )
     .add_systems(

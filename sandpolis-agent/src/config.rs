@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-// TODO allow embedded config
+// TODO convert to CLI args and add configure agents here
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentLayerConfig {

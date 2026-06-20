@@ -6,7 +6,8 @@ use crate::gui::input::CurrentLayer;
 use crate::gui::ui::controller::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
-use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::text_input::text_input;
+use bevy::text::EditableText;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
@@ -145,7 +146,7 @@ pub fn manage_layer_picker(
                     ))
                     .with_children(|panel| {
                         panel.spawn(heading(&theme, "Layers"));
-                        panel.spawn((LayerSearchInput, text_input(&theme, "Search layers...", false)));
+                        panel.spawn((LayerSearchInput, text_input(&theme)));
                         panel.spawn((
                             LayerRowsContainer,
                             Node {
@@ -174,6 +175,22 @@ pub fn focus_layer_search(
     }
 }
 
+/// Mirror the search field's contents into [`LayerPickerState`], but only when the
+/// text actually changes. Bevy marks [`EditableText`] changed every frame (its
+/// layout system mutably touches the editor), so row rebuilds must key off this
+/// resource rather than the component's change detection.
+pub fn sync_layer_search(
+    mut picker: ResMut<LayerPickerState>,
+    search: Query<&EditableText, With<LayerSearchInput>>,
+) {
+    if let Ok(input) = search.single() {
+        let value = input.value().to_string();
+        if picker.search_query != value {
+            picker.search_query = value;
+        }
+    }
+}
+
 /// Rebuild the row list when the query, selection, or active layer changes.
 pub fn rebuild_layer_rows(
     mut commands: Commands,
@@ -181,17 +198,16 @@ pub fn rebuild_layer_rows(
     registry: Res<LayerRegistry>,
     picker: Res<LayerPickerState>,
     current: Res<CurrentLayer>,
-    search: Query<Ref<TextInput>, With<LayerSearchInput>>,
     container: Query<Entity, With<LayerRowsContainer>>,
+    new_container: Query<(), Added<LayerRowsContainer>>,
     rows: Query<Entity, With<LayerRow>>,
 ) {
-    let Ok(search_input) = search.single() else {
-        return;
-    };
     let Ok(container_entity) = container.single() else {
         return;
     };
-    if !(search_input.is_changed() || picker.is_changed() || current.is_changed()) {
+    // Rebuild on the frame the panel first appears, then only when the query,
+    // selection (both on the resource), or active layer change.
+    if !(picker.is_changed() || current.is_changed() || !new_container.is_empty()) {
         return;
     }
 
@@ -199,7 +215,7 @@ pub fn rebuild_layer_rows(
         commands.entity(entity).despawn();
     }
 
-    let filtered = filtered_layers(&picker.available_layers, &search_input.value);
+    let filtered = filtered_layers(&picker.available_layers, &picker.search_query);
     let selected = picker.selected_index.min(filtered.len().saturating_sub(1));
 
     commands.entity(container_entity).with_children(|parent| {
@@ -258,7 +274,6 @@ pub fn layer_picker_keys(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut picker: ResMut<LayerPickerState>,
     mut current: ResMut<CurrentLayer>,
-    search: Query<&TextInput, With<LayerSearchInput>>,
 ) {
     if !picker.show {
         return;
@@ -268,8 +283,7 @@ pub fn layer_picker_keys(
         return;
     }
 
-    let query = search.single().map(|t| t.value.clone()).unwrap_or_default();
-    let filtered = filtered_layers(&picker.available_layers, &query);
+    let filtered = filtered_layers(&picker.available_layers, &picker.search_query);
     if filtered.is_empty() {
         return;
     }

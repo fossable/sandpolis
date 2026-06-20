@@ -7,11 +7,13 @@
 //! scrollback, and submitted lines are forwarded as `Stdin`. A full VT100/PTY
 //! terminal is still deferred — output is appended as plain text.
 
+use bevy::input_focus::InputFocus;
 use bevy::prelude::*;
+use bevy::text::EditableText;
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
-use sandpolis_client::gui::ui::text_input::{TextInput, TextSubmit, text_input};
+use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme};
 use sandpolis_client::gui::ui::widgets::{button, muted, row, text};
 use sandpolis_instance::network::stream::StreamMessage;
@@ -144,7 +146,7 @@ impl NodeController for ShellController {
                     instance,
                     scrollback,
                 },
-                text_input(theme, "type a command and press Enter", false),
+                text_input(theme),
             ))
             .id();
 
@@ -221,28 +223,41 @@ fn drive_shell_streams(
 }
 
 /// Forward the submitted command to the active session as stdin.
-fn on_terminal_submit(
-    submit: On<TextSubmit>,
+///
+/// Native `EditableText` has no submit event, so (like the upstream text-input
+/// example) we watch for Enter and act on the focused prompt.
+fn handle_terminal_submit(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    input_focus: Res<InputFocus>,
     theme: Res<Theme>,
-    mut prompts: Query<(&TerminalPrompt, &mut TextInput)>,
+    mut prompts: Query<(&TerminalPrompt, &mut EditableText)>,
     streams: Res<ShellStreams>,
     mut commands: Commands,
 ) {
-    let Ok((prompt, mut input)) = prompts.get_mut(submit.entity) else {
+    if !keyboard.just_pressed(KeyCode::Enter) {
+        return;
+    }
+    let Some(focused) = input_focus.get() else {
         return;
     };
-    let cmd = std::mem::take(&mut input.value);
+    // The prompt entity carries both the marker and the native editor; read + clear it.
+    let Ok((prompt, mut editable)) = prompts.get_mut(focused) else {
+        return;
+    };
+    let cmd = editable.value().to_string();
     if cmd.trim().is_empty() {
         return;
     }
+    editable.clear();
 
+    let instance = prompt.instance;
     let scrollback = prompt.scrollback;
     let echo = format!("$ {}", cmd);
     commands.entity(scrollback).with_children(|s| {
         s.spawn(text(&theme, echo, theme.metrics.font_sm, Role::Text));
     });
 
-    match streams.sessions.get(&prompt.instance) {
+    match streams.sessions.get(&instance) {
         Some(session) => {
             let mut data = cmd.into_bytes();
             data.push(b'\n');
@@ -268,8 +283,7 @@ pub struct ShellClientPlugin;
 impl Plugin for ShellClientPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShellStreams>()
-            .add_systems(Update, drive_shell_streams)
-            .add_observer(on_terminal_submit)
+            .add_systems(Update, (drive_shell_streams, handle_terminal_submit))
             .register_layer_client(
                 LayerClientInfo::new(
                     LayerName::from("Shell"),

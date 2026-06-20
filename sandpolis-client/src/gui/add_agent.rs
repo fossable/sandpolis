@@ -11,7 +11,8 @@
 use crate::gui::input::LoginDialogState;
 use crate::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
 use crate::gui::ui::panel::modal_scrim;
-use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::text_input::text_input;
+use bevy::text::EditableText;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{button, heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
@@ -106,7 +107,7 @@ pub fn manage_add_agent(
                     .with_children(|p| {
                         p.spawn(heading(&theme, "Add Agent"));
                         p.spawn(muted(&theme, "Agent address", theme.metrics.font_sm));
-                        p.spawn((AddAgentAddressInput, text_input(&theme, "host:port", false)));
+                        p.spawn((AddAgentAddressInput, text_input(&theme)));
                         p.spawn(text(
                             &theme,
                             "Agent deployment is not yet implemented.",
@@ -145,11 +146,12 @@ pub fn focus_add_agent_input(
 /// Copy the address input into [`AddAgentDialogState`].
 pub fn sync_add_agent_inputs(
     mut state: ResMut<AddAgentDialogState>,
-    address: Query<&TextInput, With<AddAgentAddressInput>>,
+    address: Query<&EditableText, With<AddAgentAddressInput>>,
 ) {
     if let Ok(input) = address.single() {
-        if state.address != input.value {
-            state.address = input.value.clone();
+        let value = input.value().to_string();
+        if state.address != value {
+            state.address = value;
         }
     }
 }

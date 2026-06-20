@@ -4,7 +4,8 @@
 use crate::gui::node::WorldView;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
-use crate::gui::ui::text_input::{TextInput, text_input};
+use crate::gui::ui::text_input::text_input;
+use bevy::text::EditableText;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
@@ -106,7 +107,7 @@ pub fn manage_node_picker(
                     ))
                     .with_children(|panel| {
                         panel.spawn(heading(&theme, "Find Node"));
-                        panel.spawn((NodeSearchInput, text_input(&theme, "id, server/agent...", false)));
+                        panel.spawn((NodeSearchInput, text_input(&theme)));
                         panel.spawn((
                             NodeRowsContainer,
                             Node {
@@ -135,23 +136,38 @@ pub fn focus_node_search(
     }
 }
 
+/// Mirror the search field's contents into [`NodePickerState`], but only when the
+/// text actually changes. Bevy marks [`EditableText`] changed every frame (its
+/// layout system mutably touches the editor), so row rebuilds must key off this
+/// resource rather than the component's change detection.
+pub fn sync_node_search(
+    mut picker: ResMut<NodePickerState>,
+    search: Query<&EditableText, With<NodeSearchInput>>,
+) {
+    if let Ok(input) = search.single() {
+        let value = input.value().to_string();
+        if picker.search_query != value {
+            picker.search_query = value;
+        }
+    }
+}
+
 /// Rebuild the row list when the query or selection changes.
 pub fn rebuild_node_rows(
     mut commands: Commands,
     theme: Res<Theme>,
     picker: Res<NodePickerState>,
-    search: Query<Ref<TextInput>, With<NodeSearchInput>>,
     nodes: Query<(Entity, &InstanceId)>,
     container: Query<Entity, With<NodeRowsContainer>>,
+    new_container: Query<(), Added<NodeRowsContainer>>,
     rows: Query<Entity, With<NodeRow>>,
 ) {
-    let Ok(search_input) = search.single() else {
-        return;
-    };
     let Ok(container_entity) = container.single() else {
         return;
     };
-    if !(search_input.is_changed() || picker.is_changed()) {
+    // Rebuild on the frame the panel first appears, then only when the search
+    // query or selection (both on the resource) change.
+    if !(picker.is_changed() || !new_container.is_empty()) {
         return;
     }
 
@@ -159,7 +175,7 @@ pub fn rebuild_node_rows(
         commands.entity(entity).despawn();
     }
 
-    let filtered = collect_nodes(&nodes, &search_input.value);
+    let filtered = collect_nodes(&nodes, &picker.search_query);
     let selected = picker.selected_index.min(filtered.len().saturating_sub(1));
 
     commands.entity(container_entity).with_children(|parent| {
@@ -214,7 +230,6 @@ fn on_node_row_click(
 pub fn node_picker_keys(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut picker: ResMut<NodePickerState>,
-    search: Query<&TextInput, With<NodeSearchInput>>,
     nodes: Query<(Entity, &InstanceId)>,
     mut camera: Query<&mut Transform, With<WorldView>>,
     node_transforms: Query<&Transform, (With<InstanceId>, Without<WorldView>)>,
@@ -227,8 +242,7 @@ pub fn node_picker_keys(
         return;
     }
 
-    let query = search.single().map(|t| t.value.clone()).unwrap_or_default();
-    let filtered = collect_nodes(&nodes, &query);
+    let filtered = collect_nodes(&nodes, &picker.search_query);
     if filtered.is_empty() {
         return;
     }

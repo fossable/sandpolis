@@ -20,6 +20,8 @@ pub mod controller;
 pub mod gating;
 pub mod icon;
 pub mod panel;
+pub mod scene;
+pub mod scroll;
 pub mod text_input;
 pub mod theme;
 pub mod tooltip;
@@ -50,17 +52,24 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        // `bevy_ui_widgets` relies on the input-focus resource/dispatch and tab
-        // navigation, which `DefaultPlugins` does not add on its own.
-        app.add_plugins((
-            bevy::input_focus::InputDispatchPlugin,
-            bevy::input_focus::tab_navigation::TabNavigationPlugin,
-        ))
-        .add_plugins(bevy_ui_widgets::UiWidgetsPlugins)
-            .add_plugins(theme::ThemePlugin)
+        // `bevy_ui_widgets` relies on the input-focus resource/dispatch, tab
+        // navigation, and the headless widget plugins. Depending on the enabled
+        // Bevy feature set (e.g. `bevy_dev_tools` pulls in the `bevy_ui_widgets`
+        // and `bevy_input_focus` features) these may already be part of
+        // `DefaultPlugins`, so only add the ones that are missing.
+        if !app.is_plugin_added::<bevy::input_focus::InputDispatchPlugin>() {
+            app.add_plugins(bevy::input_focus::InputDispatchPlugin);
+        }
+        if !app.is_plugin_added::<bevy::input_focus::tab_navigation::TabNavigationPlugin>() {
+            app.add_plugins(bevy::input_focus::tab_navigation::TabNavigationPlugin);
+        }
+        if !app.is_plugin_added::<bevy_ui_widgets::EditableTextInputPlugin>() {
+            app.add_plugins(bevy_ui_widgets::UiWidgetsPlugins);
+        }
+        app.add_plugins(theme::ThemePlugin)
             .add_plugins(gating::GatingPlugin)
             .add_plugins(icon::IconPlugin)
-            .add_plugins(text_input::TextInputPlugin)
+            .add_plugins(scroll::ScrollPlugin)
             .add_plugins(anchored::AnchoredPlugin)
             .add_plugins(bind::BindPlugin)
             .add_plugins(tooltip::TooltipPlugin)

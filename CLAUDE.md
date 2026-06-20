@@ -14,7 +14,7 @@ It's comprised of multiple applications:
   - TUI based on Ratatui
 
 All of these applications are built from the main `sandpolis` crate (except for
-the mobile app) with different feature flags.
+the mobile app) with feature flags.
 
 Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
 "layer" that brings some functionality. Layers can depend on each other and some
@@ -48,11 +48,6 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
-- Analyze attack surface
-- Compromise tracing:
-  - Suppose any entity in the network is compromised, what others could be
-    affected?
-  - Assign a weight on how bad a compromise of an entity would be
 - "Away" mode where monitoring becomes more strict
   - For example, a SSH login when away is highly suspicious and must be notified
     immediately
@@ -67,30 +62,49 @@ cd android && ./gradlew assembleDebug
 - Upgrade to bevy 0.19
   - Reimplement all scenes using the new bsn! macro
     (https://bevy.org/news/bevy-0-19/#next-generation-scenes)
+    - The pattern is established in `sandpolis-client/src/gui/ui/scene.rs`
+      (theme colors via captured `{...}` exprs + `Themed*` markers,
+      `template_value` for runtime components, `on(..)` observers, dynamic
+      `Vec<impl Scene>` child lists). The help modal is migrated as the first
+      example.
+    - Still imperative (migrate to `bsn!` incrementally): login modal, add-agent
+      modal, layer picker, node picker, minimap, layer indicator, about panel,
+      theme picker, node/edge graph, per-layer controller bodies.
+    - `spawn_floating_panel` (`ui/panel.rs`) intentionally stays imperative: it
+      returns child entity ids synchronously, which doesn't fit `spawn_scene`.
   - Replace our bespoke text input with the new native TextInput
-    (https://bevy.org/news/bevy-0-19/#text-input)
+    (https://bevy.org/news/bevy-0-19/#text-input) — DONE. `ui/text_input.rs` now
+    wraps native `EditableText` (cursor/selection/IME/paste). Password masking
+    is dropped for now (unimplemented upstream in 0.19).
   - Replace bevy_ui_widgets with
-    https://bevy.org/news/bevy-0-19/#more-feathers-widgets
-  - Keybinding to enable diagnostic overlay
-    (https://bevy.org/news/bevy-0-19/#diagnostics-overlay)
+    https://bevy.org/news/bevy-0-19/#more-feathers-widgets — deferred. Feathers
+    ships its own theming that overlaps our custom `Theme`; keeping
+    `bevy_ui_widgets` primitives for now.
 
-## Layer implementations
+## `sandpolis-tunnel`
 
-> Many layer crates currently contain only data structs / skeletons. These need
-> real agent-side collection, server-side routing, and client-side surfacing.
+- Application-level tunnel (traffic to client port gets tunneled to port on
+  device in agent/server's network)
+  - Implement as stream
 
-- `sandpolis-tunnel` — only data structs; no listener/repeater/terminator impl
-- `sandpolis-wake` — `WakeLayer::schedule` commented out; no Wake-on-LAN sender
-- `sandpolis-account` — `todo!()` in `lib.rs`; no account CRUD
-- `sandpolis-deploy` — `todo!()` in `ssh/server.rs`; SSH-based agent deployment
-  is unimplemented
+## `sandpolis-agent`
+
+- Merge deploy crate
 
 ## `sandpolis-account`
+
+- Allow CRUD operations on account objects
+- Analyze attack surface
+- Compromise tracing:
+  - Suppose any entity in the network is compromised, what others could be
+    affected?
+  - Assign a weight on how bad a compromise of an entity would be
 
 ## `sandpolis-snapshot`
 
 - Use boot agent to create/apply "cold snapshots"
 - Store snapshots on server
+- Not compatible with regular agents
 
 ## `sandpolis-audit`
 
@@ -140,23 +154,58 @@ for each of the following probe "integrations":
 - Manage firmware updates
 - Inspect nixpkgs package versions
 
-## Client
+## `sandpolis` (main crate)
 
-- Wire up Bevy GUI queries — currently most return placeholder data:
-  - Instance / hostname query from database
-  - Network resident queries
-  - Filesystem resident queries (size, listing)
-  - Inventory resident queries (packages, hardware)
-  - Shell layer queries
-- Layer visuals: query instance type, desktop environment, hardware type from DB
-- Edge rendering: filesystem connections, desktop streaming connections
-- Banner image display in login input (`input.rs`)
-- Replace TUI interface with CLI
-  - Make sure all features in the TUI have been brought over to the GUI
-  - CLI can do anything the GUI can do (except graphical tasks like remote
-    desktop)
+- Banner image display in login input dialog
+  - Fetched once a valid server URL is entered
+- TUI interface redesign
+  - Instead of a unified TUI, we have a CLI that optionally opens a TUI for
+    specific features. The CLI is also usable noninteractively in scripts. For
+    example:
 
-## Server
+```sh
+# Run server and/or agent daemon (depending on cargo features)
+sandpolis --daemon
 
-- IP blocking middleware (`server/mod.rs` — `from_fn_with_state` TODO)
+# Open interactive TUI with agent list
+sandpolis agent restart
+
+# Noninteractive version of the above
+sandpolis agent restart --json --instance UUID
+
+# Open interactive TUI with server list
+sandpolis server
+
+# Run client GUI
+sandpolis
+
+# Open WoL TUI interface
+sandpolis probe wol
+
+# Open interactive TUI
+sandpolis desktop
+
+# Noninteractive screenshot
+sandpolis desktop screenshot --instance UUID
+
+# Interactive shell (TUI)
+sandpolis shell
+
+# Interactive shell (non-TUI)
+sandpolis shell --instance UUID
+```
+
+- Configure IP blocking middleware in `sandpolis.ron`
+  - Add/remove from the GUI in the server layer
 - Encrypted storage enclave for secrets
+- Support direct connections between clients/agents if hole punching works
+  - Streams can optionally run over this direct connection
+- Whenever a stream is active, we need to render that in the GUI as a dotted
+  line running parallel to the link between the nodes
+  - This also works for streams running over direct connections
+- Bootagent mode is a UKI that boots before the actual OS
+  - The server can place a "boot hold" that prevents the UKI from chainloading
+    the actual bootloader.
+  - Also configured as fallback in case the primary OS fails to boot which the
+    UKI detects
+  - Only the following layers are supported by bootagents: shell, snapshot

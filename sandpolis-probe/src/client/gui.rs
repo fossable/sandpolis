@@ -20,7 +20,8 @@ use sandpolis_client::gui::ui::controller::{
     LayerClientInfo, LayerRegistry, NodeController, RegisterLayerClient,
 };
 use sandpolis_client::gui::ui::panel::modal_scrim;
-use sandpolis_client::gui::ui::text_input::{TextInput, text_input};
+use bevy::text::EditableText;
+use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, row};
 use sandpolis_client::gui::node::{ExcludeFromSelection, NeedsScaling, NodeEntity};
@@ -864,6 +865,10 @@ pub fn manage_register_probe(
                         Node {
                             flex_direction: FlexDirection::Column,
                             width: Val::Px(380.0),
+                            // The form is tall (many fields); cap it to the viewport
+                            // and let it scroll so no field is pushed off-screen.
+                            max_height: Val::Percent(90.0),
+                            overflow: Overflow::scroll_y(),
                             padding: UiRect::all(Val::Px(16.0)),
                             row_gap: Val::Px(6.0),
                             border: UiRect::all(Val::Px(1.0)),
@@ -877,21 +882,21 @@ pub fn manage_register_probe(
                     .with_children(|p| {
                         p.spawn(heading(&theme, "Register Device"));
                         p.spawn(muted(&theme, "Name", theme.metrics.font_sm));
-                        p.spawn((NameInput, text_input(&theme, "device name", false)));
+                        p.spawn((NameInput, text_input(&theme)));
                         p.spawn(muted(&theme, "IP address", theme.metrics.font_sm));
-                        p.spawn((IpInput, text_input(&theme, "10.0.0.220", false)));
+                        p.spawn((IpInput, text_input(&theme)));
 
                         p.spawn(muted(&theme, "RTSP path", theme.metrics.font_sm));
-                        p.spawn((RtspPathInput, text_input(&theme, "stream1 (optional)", false)));
+                        p.spawn((RtspPathInput, text_input(&theme)));
                         p.spawn(muted(&theme, "RTSP port", theme.metrics.font_sm));
-                        p.spawn((RtspPortInput, text_input(&theme, "554", false)));
+                        p.spawn((RtspPortInput, text_input(&theme)));
                         p.spawn(muted(&theme, "RTSP username", theme.metrics.font_sm));
-                        p.spawn((RtspUserInput, text_input(&theme, "username (optional)", false)));
+                        p.spawn((RtspUserInput, text_input(&theme)));
                         p.spawn(muted(&theme, "RTSP password", theme.metrics.font_sm));
-                        p.spawn((RtspPassInput, text_input(&theme, "password (optional)", true)));
+                        p.spawn((RtspPassInput, text_input(&theme)));
 
                         p.spawn(muted(&theme, "Wake-on-LAN MAC", theme.metrics.font_sm));
-                        p.spawn((WolMacInput, text_input(&theme, "00:11:22:33:44:55 (optional)", false)));
+                        p.spawn((WolMacInput, text_input(&theme)));
 
                         p.spawn(Node {
                             column_gap: Val::Px(8.0),
@@ -925,47 +930,54 @@ pub fn focus_register_probe_input(
 /// Copy dialog input contents into [`RegisterProbeDialogState`].
 pub fn sync_register_probe_inputs(
     mut state: ResMut<RegisterProbeDialogState>,
-    name: Query<&TextInput, With<NameInput>>,
-    ip: Query<&TextInput, With<IpInput>>,
-    path: Query<&TextInput, With<RtspPathInput>>,
-    port: Query<&TextInput, With<RtspPortInput>>,
-    user: Query<&TextInput, With<RtspUserInput>>,
-    pass: Query<&TextInput, With<RtspPassInput>>,
-    mac: Query<&TextInput, With<WolMacInput>>,
+    name: Query<&EditableText, With<NameInput>>,
+    ip: Query<&EditableText, With<IpInput>>,
+    path: Query<&EditableText, With<RtspPathInput>>,
+    port: Query<&EditableText, With<RtspPortInput>>,
+    user: Query<&EditableText, With<RtspUserInput>>,
+    pass: Query<&EditableText, With<RtspPassInput>>,
+    mac: Query<&EditableText, With<WolMacInput>>,
 ) {
     if let Ok(i) = name.single() {
-        if state.name != i.value {
-            state.name = i.value.clone();
+        let value = i.value().to_string();
+        if state.name != value {
+            state.name = value;
         }
     }
     if let Ok(i) = ip.single() {
-        if state.ip != i.value {
-            state.ip = i.value.clone();
+        let value = i.value().to_string();
+        if state.ip != value {
+            state.ip = value;
         }
     }
     if let Ok(i) = path.single() {
-        if state.rtsp_path != i.value {
-            state.rtsp_path = i.value.clone();
+        let value = i.value().to_string();
+        if state.rtsp_path != value {
+            state.rtsp_path = value;
         }
     }
     if let Ok(i) = port.single() {
-        if state.rtsp_port != i.value {
-            state.rtsp_port = i.value.clone();
+        let value = i.value().to_string();
+        if state.rtsp_port != value {
+            state.rtsp_port = value;
         }
     }
     if let Ok(i) = user.single() {
-        if state.rtsp_user != i.value {
-            state.rtsp_user = i.value.clone();
+        let value = i.value().to_string();
+        if state.rtsp_user != value {
+            state.rtsp_user = value;
         }
     }
     if let Ok(i) = pass.single() {
-        if state.rtsp_pass != i.value {
-            state.rtsp_pass = i.value.clone();
+        let value = i.value().to_string();
+        if state.rtsp_pass != value {
+            state.rtsp_pass = value;
         }
     }
     if let Ok(i) = mac.single() {
-        if state.wol_mac != i.value {
-            state.wol_mac = i.value.clone();
+        let value = i.value().to_string();
+        if state.wol_mac != value {
+            state.wol_mac = value;
         }
     }
 }

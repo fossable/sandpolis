@@ -2791,11 +2791,6 @@ name = "built"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c0e531d93d39c34eef561e929e8a7f86d77a5af08aac4f6d6e39976c51858e9"
-dependencies = [
- "chrono",
- "git2",
- "semver",
-]
 
 [[package]]
 name = "bumpalo"
@@ -5459,18 +5454,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e629b9b98ef3dd8afe6ca2bd0f89306cec16d43d907889945bc5d6687f2f13c7"
 
 [[package]]
-name = "git2"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddddbf932745a6be37109b6112d3ee09696106f848449069d3a57bba937ab82e"
-dependencies = [
- "bitflags 2.13.0",
- "libc",
- "libgit2-sys",
- "log 0.4.32",
-]
-
-[[package]]
 name = "gl_generator"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7226,18 +7209,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libgit2-sys"
-version = "0.18.5+1.9.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "005d6ae6eac1912906073e069f7db60b1fa98e052a68227824afe3e3a1c59ca2"
-dependencies = [
- "cc",
- "libc",
- "libz-sys",
- "pkg-config",
-]
-
-[[package]]
 name = "libloading"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7293,18 +7264,6 @@ version = "0.11.0"
 source = "git+https://github.com/rustdesk/rustdesk#9ded8d6ab24779db3c9334f5a3d6a652b8425c4f"
 dependencies = [
  "hbb_common",
-]
-
-[[package]]
-name = "libz-sys"
-version = "1.1.29"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85bc9657773828b90eeb625adff10eeac83cc21bbfd8e23a03eaa8a33c9e28d9"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
- "vcpkg",
 ]
 
 [[package]]
@@ -11519,7 +11478,6 @@ dependencies = [
  "bevy_stl",
  "bevy_svg",
  "bevy_ui_widgets",
- "built",
  "chrono",
  "clap 4.6.1",
  "colored",
@@ -11571,7 +11529,6 @@ name = "sandpolis-account"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "built",
  "native_db",
  "native_model",
  "sandpolis-instance",
@@ -11902,7 +11859,6 @@ dependencies = [
  "axum-macros",
  "base64",
  "bevy",
- "built",
  "futures",
  "inventory",
  "native_db",

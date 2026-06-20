@@ -1,13 +1,13 @@
 #[cfg(target_os = "android")]
 use bevy::input::touch::TouchPhase;
 use bevy::{
+    dev_tools::diagnostics_overlay::DiagnosticsOverlay,
     input::mouse::{MouseButtonInput, MouseMotion, MouseWheel},
     prelude::*,
 };
-use crate::gui::ui::gating::UiPointerState;
-use crate::gui::ui::panel::modal_scrim;
-use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
-use crate::gui::ui::widgets::{button, heading, muted};
+use crate::gui::ui::gating::{BlocksWorldInput, UiPointerState};
+use crate::gui::ui::scene::help_modal_scene;
+use crate::gui::ui::theme::Theme;
 use bevy_ui_widgets::Activate;
 use sandpolis_instance::LayerName;
 use std::ops::Range;
@@ -311,6 +311,7 @@ pub fn manage_help_panel(
         "N  -  Find node",
         "T  -  Theme picker",
         "P  -  Toggle node previews",
+        "F3  -  Diagnostics overlay",
         "H  -  This help",
         "Click layer indicator  -  Switch layers",
         "Double-click a node  -  Open controller",
@@ -318,32 +319,11 @@ pub fn manage_help_panel(
 
     let exists = !root.is_empty();
     if help_state.show && !exists {
+        // `HelpRoot`/`BlocksWorldInput` don't derive `Clone`, so they're inserted
+        // on the scene root rather than declared inside `bsn!`.
         commands
-            .spawn((HelpRoot, modal_scrim()))
-            .with_children(|scrim| {
-                scrim
-                    .spawn((
-                        Node {
-                            flex_direction: FlexDirection::Column,
-                            width: Val::Px(360.0),
-                            padding: UiRect::all(Val::Px(16.0)),
-                            row_gap: Val::Px(6.0),
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..default()
-                        },
-                        BackgroundColor(theme.color(Role::Panel)),
-                        ThemedBg(Role::Panel),
-                        BorderColor::all(theme.color(Role::Border)),
-                        ThemedBorder(Role::Border),
-                    ))
-                    .with_children(|p| {
-                        p.spawn(heading(&theme, "Keyboard Shortcuts"));
-                        for line in SHORTCUTS {
-                            p.spawn(muted(&theme, *line, theme.metrics.font_md));
-                        }
-                        p.spawn(button(&theme, "Close")).observe(on_help_close);
-                    });
-            });
+            .spawn_scene(help_modal_scene(&theme, SHORTCUTS))
+            .insert((HelpRoot, BlocksWorldInput));
     } else if !help_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();
@@ -351,6 +331,26 @@ pub fn manage_help_panel(
     }
 }
 
-fn on_help_close(_activate: On<Activate>, mut help_state: ResMut<HelpScreenState>) {
+pub(crate) fn on_help_close(_activate: On<Activate>, mut help_state: ResMut<HelpScreenState>) {
     help_state.show = false;
+}
+
+/// Toggle the Bevy diagnostics overlay (FPS / frame time / frame count) with `F3`.
+///
+/// Spawning a [`DiagnosticsOverlay`] entity creates the overlay window (built by
+/// `DiagnosticsOverlayPlugin`); despawning it hides it. `F3` is a function key, so
+/// it never collides with focused text input.
+pub fn toggle_diagnostics_overlay(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut commands: Commands,
+    existing: Query<Entity, With<DiagnosticsOverlay>>,
+) {
+    if !keyboard.just_pressed(KeyCode::F3) {
+        return;
+    }
+    if let Ok(entity) = existing.single() {
+        commands.entity(entity).despawn();
+    } else {
+        commands.spawn(DiagnosticsOverlay::fps());
+    }
 }

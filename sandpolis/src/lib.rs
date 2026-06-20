@@ -17,11 +17,6 @@ pub mod lsp;
 #[cfg(feature = "server")]
 pub mod server;
 
-/// Build info
-pub mod built_info {
-    include!(concat!(env!("OUT_DIR"), "/built.rs"));
-}
-
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
 #[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
 #[derive(Clone)]
@@ -85,8 +80,7 @@ impl InstanceState {
             sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-health")]
-        let health =
-            sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
+        let health = sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "layer-wake")]
         let wake = sandpolis_wake::WakeLayer {
@@ -151,30 +145,9 @@ pub enum InstancePermission {
     Filesystem(sandpolis_filesystem::FilesystemPermission),
 }
 
-macro_rules! layer_version {
-    ($l:tt) => {
-        LayerVersion {
-            major: $l::built_info::PKG_VERSION_MAJOR.parse().unwrap(),
-            minor: $l::built_info::PKG_VERSION_MINOR.parse().unwrap(),
-            patch: $l::built_info::PKG_VERSION_PATCH.parse().unwrap(),
-            description: if $l::built_info::PKG_DESCRIPTION != "" {
-                Some($l::built_info::PKG_DESCRIPTION.to_string())
-            } else {
-                None
-            },
-        }
-    };
-}
-
-// TODO make this const
+// TODO inventory crate
 pub fn layers() -> HashMap<sandpolis_instance::LayerName, LayerVersion> {
-    HashMap::from([
-        #[cfg(feature = "layer-shell")]
-        (
-            sandpolis_instance::LayerName::from("shell"),
-            layer_version!(sandpolis_shell),
-        ),
-    ])
+    HashMap::from([])
 }
 
 // TODO dynamic loading
