@@ -12,7 +12,7 @@ use super::gating::WantsKeyboard;
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
-use bevy::input_focus::{FocusedInput, InputFocus};
+use bevy::input_focus::{FocusCause, FocusedInput, InputFocus};
 use bevy::picking::Pickable;
 use bevy::prelude::*;
 
@@ -85,7 +85,7 @@ fn text_input_focus_on_click(
     mut focus: ResMut<InputFocus>,
 ) {
     if inputs.contains(click.entity) {
-        focus.0 = Some(click.entity);
+        focus.set(click.entity, FocusCause::Pressed);
     }
 }
 
@@ -125,7 +125,7 @@ fn update_text_input_display(
     mut display: Query<(&mut Text, &mut TextColor), With<TextInputDisplay>>,
 ) {
     for (entity, input, children) in &inputs {
-        let focused = focus.0 == Some(entity);
+        let focused = focus.get() == Some(entity);
         let mut shown = if input.value.is_empty() && !focused {
             input.placeholder.clone()
         } else if input.mask {

@@ -124,7 +124,7 @@ pub fn spawn_about_logo(
                 commands.spawn((
                     PointLight {
                         intensity: 2_000_000.0,
-                        shadows_enabled: false,
+                        shadow_maps_enabled: false,
                         ..default()
                     },
                     Transform::from_xyz(4.0, 8.0, 4.0),

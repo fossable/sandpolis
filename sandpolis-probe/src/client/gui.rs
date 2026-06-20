@@ -8,7 +8,7 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::image::Image;
-use bevy::input_focus::InputFocus;
+use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy_rapier2d::dynamics::{Damping, ExternalForce, RigidBody, Velocity};
@@ -908,7 +908,7 @@ pub fn manage_register_probe(
         for entity in &root {
             commands.entity(entity).despawn();
         }
-        focus.0 = None;
+        focus.clear();
     }
 }
 
@@ -918,7 +918,7 @@ pub fn focus_register_probe_input(
     mut focus: ResMut<InputFocus>,
 ) {
     if let Ok(entity) = inputs.single() {
-        focus.0 = Some(entity);
+        focus.set(entity, FocusCause::Navigated);
     }
 }
 

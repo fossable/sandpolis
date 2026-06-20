@@ -30,9 +30,16 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> =
         app.route("/connect", get(sandpolis_server::user::server::connect));
 
-    // TODO from_fn_with_state for IP blocking
     let app = app.route_layer(axum::middleware::from_fn(
         sandpolis_instance::realm::server::auth_middleware,
+    ));
+
+    // Reject requests from blocked IPs before authentication runs
+    let blocklist =
+        sandpolis_server::block::IpBlockList::new(config.server.blocked_ips.iter().copied());
+    let app = app.route_layer(axum::middleware::from_fn_with_state(
+        blocklist,
+        sandpolis_server::block::block_middleware,
     ));
 
     // Tracing support for Axum
@@ -47,7 +54,11 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             )
             .await?,
         )
-        .serve(app.clone().with_state(state.clone()).into_make_service())
+        .serve(
+            app.clone()
+                .with_state(state.clone())
+                .into_make_service_with_connect_info::<std::net::SocketAddr>(),
+        )
         .await?;
     Ok(())
 }

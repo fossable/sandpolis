@@ -14,6 +14,11 @@ pub struct ServerLayerConfig {
     /// (GS).
     pub local: bool,
 
+    /// IP addresses that are denied access to the server. Connections from
+    /// these addresses are rejected before authentication.
+    #[serde(default)]
+    pub blocked_ips: Vec<IpAddr>,
+
     /// Service to use for resolving IP location info
     #[cfg(feature = "server")]
     pub service: crate::location::server::LocationService,
@@ -27,6 +32,7 @@ impl Default for ServerLayerConfig {
                 ServerUrl::default_port(),
             ),
             local: false,
+            blocked_ips: Vec::new(),
             #[cfg(feature = "server")]
             service: crate::location::server::LocationService::default(),
         }

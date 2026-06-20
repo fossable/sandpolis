@@ -87,7 +87,7 @@ pub fn update_pointer_state(
     state.over_ui_blocking = over;
 
     state.wants_keyboard = input_focus
-        .and_then(|focus| focus.0)
+        .and_then(|focus| focus.get())
         .map(|entity| keyboard_capturers.contains(entity))
         .unwrap_or(false);
 }

@@ -97,11 +97,11 @@ ratatui-image = { version = "11.0.4", default-features = false, features = [
 tui-popup = { version = "0.7.2" }
 
 # GUI client exclusive
-bevy = { version = "0.18.0" }
-bevy_svg = { version = "0.18.0", features = ["2d"] }
 bevy_rapier2d = { version = "0.34.0" }
 bevy_stl = { version = "0.18.0" }
-bevy_ui_widgets = { version = "=0.18.1" }
+bevy = { version = "0.19.0" }
+bevy_svg = { git = "https://github.com/cilki/bevy_svg", features = ["2d"] }
+bevy_ui_widgets = { version = "0.19.0" }
 resvg = { version = "0.45" }
 include_dir = { version = "0.7" }
 

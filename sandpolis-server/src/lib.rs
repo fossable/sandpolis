@@ -29,6 +29,8 @@ use url::Url;
 use validator::Validate;
 
 pub mod banner;
+#[cfg(feature = "server")]
+pub mod block;
 pub mod cli;
 #[cfg(feature = "client")]
 pub mod client;

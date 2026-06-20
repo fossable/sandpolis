@@ -244,7 +244,7 @@ impl Theme {
     pub fn text_font(&self, size: f32) -> TextFont {
         let mut font = TextFont::from_font_size(size);
         if let Some(handle) = &self.font {
-            font.font = handle.clone();
+            font.font = FontSource::Handle(handle.clone());
         }
         font
     }

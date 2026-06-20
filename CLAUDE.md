@@ -1,5 +1,3 @@
-# Claude Code Guide for Sandpolis
-
 Sandpolis is a Rust-based virtual estate manager that covers:
 
 - Physical devices like servers, desktops, phones, etc
@@ -18,8 +16,9 @@ It's comprised of multiple applications:
 All of these applications are built from the main `sandpolis` crate (except for
 the mobile app) with different feature flags.
 
-Functionality is divided into "layers" which can be enabled/disabled at build
-time with Cargo features.
+Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
+"layer" that brings some functionality. Layers can depend on each other and some
+are optional (controlled via cargo features).
 
 ## CoLo mode
 
@@ -29,31 +28,12 @@ and connect to each other automatically over loopback — no `--realm-cert` or
 server configuration is needed. This is meant for convenient local testing:
 targeting the local instance (e.g. starting a desktop stream) "just works".
 
-It is wired in three places:
-
-- `RealmLayer::new` (`sandpolis-instance/src/realm/mod.rs`) derives the
-  client/agent realm certs from the local cluster CA and keeps them in memory,
-  so the co-located client/agent can connect without an out-of-band cert.
-- `sandpolis/src/main.rs` (gated on the run including both `server` and the
-  role) points the agent at `https://127.0.0.1:<listen port>/default` and opens
-  the same loopback connection for the client via
-  `client::spawn_local_server_connection`.
-- `Relay::find` (`sandpolis-instance/src/network/stream.rs`) excludes the origin
-  connection when routing, since the co-located client and agent share one
-  `InstanceId` (from `InstanceId::default()`) and would otherwise be ambiguous.
-
 Running a specific instance via subcommand (e.g. `sandpolis client`) disables
 the auto-connection.
 
-## Database Layer (`sandpolis-database`)
+## Mobile App
 
-- Database is based on the native_db crate which saves/loads Rust structs
-- Data model are defined by structs with `#[data]` macro which automatically get
-  `_id`, `_revision`, `_creation` fields
-
-## Mobile App (`sandpolis-mobile`)
-
-- Wraps the main `sandpolis` crate and uses the `client-gui` feature with Bevy
+The `sandpolis-mobile` crate wraps the main `sandpolis` crate.
 
 Build instructions for Android:
 
@@ -68,11 +48,6 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
-## Core features
-
-- Consume auditd
-- Manage firmware updates
-- Inspect nixpkgs package versions
 - Analyze attack surface
 - Compromise tracing:
   - Suppose any entity in the network is compromised, what others could be
@@ -81,7 +56,6 @@ cd android && ./gradlew assembleDebug
 - "Away" mode where monitoring becomes more strict
   - For example, a SSH login when away is highly suspicious and must be notified
     immediately
-- Mount FUSE filesystem of an agent from a client
 - Zooming in on a node enters another level of depth where all other nodes
   disappear. Now shows more detailed operations.
 - `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should not be layers anymore?
@@ -90,29 +64,39 @@ cd android && ./gradlew assembleDebug
   only servers are shown and they become interactable. Clients are only present
   in the graph when the client layer is active (servers are also present, but
   not interactable).
+- Upgrade to bevy 0.19
+  - Reimplement all scenes using the new bsn! macro
+    (https://bevy.org/news/bevy-0-19/#next-generation-scenes)
+  - Replace our bespoke text input with the new native TextInput
+    (https://bevy.org/news/bevy-0-19/#text-input)
+  - Replace bevy_ui_widgets with
+    https://bevy.org/news/bevy-0-19/#more-feathers-widgets
+  - Keybinding to enable diagnostic overlay
+    (https://bevy.org/news/bevy-0-19/#diagnostics-overlay)
 
 ## Layer implementations
 
 > Many layer crates currently contain only data structs / skeletons. These need
 > real agent-side collection, server-side routing, and client-side surfacing.
 
-- `sandpolis-audit` — only enums/data; no auditd ingestion, no detection rules,
-  no event stream wiring
 - `sandpolis-tunnel` — only data structs; no listener/repeater/terminator impl
 - `sandpolis-wake` — `WakeLayer::schedule` commented out; no Wake-on-LAN sender
-- `sandpolis-snapshot` — agent/server modules exist but disk snapshot create /
-  restore / diff logic is not implemented
 - `sandpolis-account` — `todo!()` in `lib.rs`; no account CRUD
 - `sandpolis-deploy` — `todo!()` in `ssh/server.rs`; SSH-based agent deployment
   is unimplemented
-- `sandpolis-shell` — `execute.rs` and `session.rs` need remote shell session
-  routing across server
-- `sandpolis-filesystem` — FUSE session handlers (`FuseLookup`, etc.) defined
-  but unimplemented; ties into the FUSE roadmap item above
-- `sandpolis-inventory` — `applications/firefox.rs` is the only app collector;
-  most `hardware/*.rs` files are data-only with no agent-side collection
 
-## Probe layer
+## `sandpolis-account`
+
+## `sandpolis-snapshot`
+
+- Use boot agent to create/apply "cold snapshots"
+- Store snapshots on server
+
+## `sandpolis-audit`
+
+- auditd ingestion on agent, detection rules
+
+## `sandpolis-probe`
 
 In the UI, the probes should have a node controller window below them with tabs
 for each of the following probe "integrations":
@@ -134,20 +118,29 @@ for each of the following probe "integrations":
 - SNMP probe — partial, needs MIB-driven discovery
 - ARP probe (`arp/`) — verify completeness
 
-## Agent
+## `sandpolis-filesystem`
 
-- Agent self-update (`sandpolis-agent/src/update.rs` is `todo!()`)
-- Agent self-uninstall (`sandpolis-agent/src/uninstall.rs` is `todo!()`)
-- Embedded config support (`sandpolis-agent/src/config.rs` TODO)
-- Connection retry logic (`sandpolis/src/agent/mod.rs` TODO)
+- GUI: delete, create folder, upload/download
+- Client can mount remote filesystems via FUSE
 
-## Client — TUI
+## `sandpolis-desktop`
 
-- Agent list: navigate, connect, selection mode (multiple TODOs)
-- Server list: ping, retry, saved-token auth, login-failed dialog,
-  connection-failed dialog (~8 TODOs)
+- Desktop streaming controls: start/stop stream, request screenshot
 
-## Client — GUI
+## `sandpolis-instance`
+
+- GUI: view the data of an instance for debugging
+
+## `sandpolis-shell`
+
+- GUI: fully featured shell depending on `alacritty_terminal`
+
+## `sandpolis-inventory`
+
+- Manage firmware updates
+- Inspect nixpkgs package versions
+
+## Client
 
 - Wire up Bevy GUI queries — currently most return placeholder data:
   - Instance / hostname query from database
@@ -156,10 +149,12 @@ for each of the following probe "integrations":
   - Inventory resident queries (packages, hardware)
   - Shell layer queries
 - Layer visuals: query instance type, desktop environment, hardware type from DB
-- Desktop streaming controls: start/stop stream, request screenshot
-- Filesystem GUI: delete, create folder, upload/download
 - Edge rendering: filesystem connections, desktop streaming connections
 - Banner image display in login input (`input.rs`)
+- Replace TUI interface with CLI
+  - Make sure all features in the TUI have been brought over to the GUI
+  - CLI can do anything the GUI can do (except graphical tasks like remote
+    desktop)
 
 ## Server
 

@@ -14,7 +14,7 @@ use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::{TextInput, text_input};
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{button, heading, muted, text};
-use bevy::input_focus::InputFocus;
+use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use bevy_ui_widgets::Activate;
 use sandpolis_instance::{InstanceType, LayerName};
@@ -128,7 +128,7 @@ pub fn manage_add_agent(
         for entity in &root {
             commands.entity(entity).despawn();
         }
-        focus.0 = None;
+        focus.clear();
     }
 }
 
@@ -138,7 +138,7 @@ pub fn focus_add_agent_input(
     mut focus: ResMut<InputFocus>,
 ) {
     if let Ok(entity) = inputs.single() {
-        focus.0 = Some(entity);
+        focus.set(entity, FocusCause::Navigated);
     }
 }
 
