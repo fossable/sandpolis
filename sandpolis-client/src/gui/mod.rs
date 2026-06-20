@@ -11,6 +11,7 @@ pub mod controller;
 pub mod drag;
 pub mod edges;
 pub mod input;
+pub mod instance_layer;
 pub mod layer_picker;
 pub mod layer_toolbar;
 pub mod layer_ui;

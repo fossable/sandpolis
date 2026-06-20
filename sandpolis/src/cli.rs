@@ -20,6 +20,10 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub client: sandpolis_client::cli::ClientCommandLine,
 
+    #[cfg(feature = "agent")]
+    #[clap(flatten)]
+    pub agent: sandpolis_agent::cli::AgentCommandLine,
+
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
 

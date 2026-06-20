@@ -45,6 +45,7 @@ sandpolis-shell = { path = "../sandpolis-shell", version = "0.0.1", optional = t
 sandpolis-snapshot = { path = "../sandpolis-snapshot", version = "0.0.1", optional = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
+chrono = { workspace = true }
 strum = { workspace = true }
 tempfile = { workspace = true }
 tokio-stream = { workspace = true }

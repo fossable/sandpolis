@@ -176,6 +176,13 @@ impl StreamRegistry {
         let _ = self.tx.send(message).await;
     }
 
+    /// Whether `tx` is this registry's own outbound channel, i.e. messages on it
+    /// originate from this connection. Used by the relay to avoid routing a
+    /// message back to its sender.
+    pub fn is_origin(&self, tx: &Sender<StreamMessage>) -> bool {
+        self.tx.same_channel(tx)
+    }
+
     /// Register a responder factory for a given stream type.
     /// When an incoming message arrives for an unknown stream ID,
     /// the factory will be used to create a new responder instance.
@@ -347,12 +354,20 @@ impl Relay {
         }
     }
 
-    fn find(&self, target: InstanceId) -> Option<Arc<super::InstanceConnection>> {
+    /// Find a connection to `target`, skipping the origin connection. In an
+    /// all-in-one build the local client and agent share one `InstanceId`, so
+    /// both inbound connections match `target`; excluding the origin (the
+    /// sender) routes to the *other* one, never back to the sender.
+    fn find(
+        &self,
+        target: InstanceId,
+        origin_tx: &Sender<StreamMessage>,
+    ) -> Option<Arc<super::InstanceConnection>> {
         self.connections
             .read()
             .unwrap()
             .iter()
-            .find(|c| c.data.read().remote_instance == target)
+            .find(|c| c.data.read().remote_instance == target && !c.streams.is_origin(origin_tx))
             .cloned()
     }
 
@@ -362,7 +377,7 @@ impl Relay {
         // Client -> agent: an addressed message. Remember the origin so responses
         // can return, then forward to the target connection.
         if let Some(target) = message.dst {
-            let Some(conn) = self.find(target) else {
+            let Some(conn) = self.find(target, origin_tx) else {
                 // Unknown target: swallow it rather than mis-handling locally.
                 return true;
             };

@@ -6,6 +6,7 @@ use anyhow::Result;
 use sandpolis_instance::database::DatabaseLayer;
 
 pub mod bootagent;
+pub mod cli;
 pub mod config;
 pub mod uefi;
 

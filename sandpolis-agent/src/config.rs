@@ -16,6 +16,33 @@ pub struct AgentLayerConfig {
     /// with a warning.
     #[serde(default)]
     pub servers: Vec<String>,
+
+    /// When set, the agent connects in "polling" mode: instead of holding a
+    /// persistent connection, it only checks in with its servers on this
+    /// schedule. Best when latency is not important (low-power or low-footprint
+    /// agents). When unset, the agent stays continuously connected.
+    #[serde(default)]
+    pub poll: Option<PollConfig>,
+}
+
+/// Configures the agent's "polling" connection mode.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PollConfig {
+    /// Cron expression describing when the agent connects to check in, e.g.
+    /// `"0 */5 * * * *"` for every five minutes.
+    pub schedule: String,
+
+    /// How long the agent stays connected during each check-in window, in
+    /// seconds. The server pulls the agent's accumulated data and delivers any
+    /// pending work during this window before the connection is closed again.
+    #[serde(default = "PollConfig::default_timeout_secs")]
+    pub timeout_secs: u64,
+}
+
+impl PollConfig {
+    fn default_timeout_secs() -> u64 {
+        30
+    }
 }
 
 impl Default for AgentLayerConfig {
@@ -23,6 +50,7 @@ impl Default for AgentLayerConfig {
         Self {
             read_only: false,
             servers: Vec::new(),
+            poll: None,
         }
     }
 }

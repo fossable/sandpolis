@@ -17,7 +17,9 @@ use bevy::{
 };
 use sandpolis_client::gui::assets::EmbeddedDirReader;
 use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use sandpolis_instance::LayerName;
+use sandpolis_instance::{InstanceType, LayerName};
+use sandpolis_client::gui::instance_layer::{InstanceController, open_database_browser};
+use sandpolis_client::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
 
 // Import GUI types from sandpolis-client submodules
 use sandpolis_client::gui::about::{
@@ -294,6 +296,25 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     #[cfg(feature = "layer-probe")]
     app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
 
+    // Debug "Instance" layer: shows every node regardless of type, with a
+    // node controller that surfaces that node's identity and connection rows.
+    // The controller carries its own layer handles (build() gets no resources).
+    app.register_layer_client(
+        LayerClientInfo::new(LayerName::from("Instance"), "All instances (debug)")
+            .with_visible_instance_types(&[
+                InstanceType::Server,
+                InstanceType::Agent,
+                InstanceType::Client,
+            ])
+            .with_controller(InstanceController {
+                network: state.network.clone(),
+                instance: state.instance.clone(),
+            })
+            .with_toolbar_action("View database", "toolbar/database.svg", |commands| {
+                open_database_browser(commands)
+            }),
+    );
+
     app.run();
     Ok(())
 }
@@ -354,20 +375,34 @@ fn process_database_updates(
     asset_server: Res<AssetServer>,
     node_query: Query<(Entity, &NodeEntity)>,
 ) {
+    // Nodes spawned via `commands` in this pass aren't visible to `node_query`
+    // until the command queue flushes, so track ids spawned here as well to
+    // avoid duplicates within a single batch of updates.
+    let mut spawned_this_pass = std::collections::HashSet::new();
+
     // Process all pending updates
     while let Ok(update) = update_channel.receiver.try_recv() {
         match update {
             DatabaseUpdate::InstanceAdded(instance_id) => {
-                // Spawn new node at random position
-                if let Ok(metadata) = query_instance_metadata(instance_id) {
-                    spawn_node(
-                        &asset_server,
-                        &mut commands,
-                        metadata.instance_id,
-                        metadata.os_type,
-                        metadata.is_server,
-                        None, // Random position for dynamically added nodes
-                    );
+                // A single instance (e.g. a co-located server+client+agent that
+                // shares one InstanceId) can produce several connections, each
+                // firing InstanceAdded. Only spawn one node per InstanceId.
+                let already_spawned = spawned_this_pass.contains(&instance_id)
+                    || node_query
+                        .iter()
+                        .any(|(_, node)| node.instance_id == instance_id);
+                if !already_spawned {
+                    spawned_this_pass.insert(instance_id);
+                    if let Ok(metadata) = query_instance_metadata(instance_id) {
+                        spawn_node(
+                            &asset_server,
+                            &mut commands,
+                            metadata.instance_id,
+                            metadata.os_type,
+                            metadata.is_server,
+                            None, // Random position for dynamically added nodes
+                        );
+                    }
                 }
             }
             DatabaseUpdate::InstanceRemoved(instance_id) => {

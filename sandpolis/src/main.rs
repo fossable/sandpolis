@@ -1,6 +1,4 @@
 use anyhow::{Result, bail};
-#[cfg(not(feature = "client"))]
-use clap::CommandFactory;
 use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
@@ -72,6 +70,19 @@ async fn main() -> Result<ExitCode> {
     // The database location comes from the command line, not the config file.
     config.database.storage = args.database.data_dir.clone();
 
+    // A `--poll` flag selects polling mode for the agent, overriding config.
+    #[cfg(feature = "agent")]
+    if let Some(schedule) = args.agent.poll.clone() {
+        config.agent.poll = Some(sandpolis_agent::config::PollConfig {
+            schedule,
+            timeout_secs: args.agent.poll_timeout.unwrap_or(30),
+        });
+    } else if let Some(timeout) = args.agent.poll_timeout {
+        if let Some(poll) = config.agent.poll.as_mut() {
+            poll.timeout_secs = timeout;
+        }
+    }
+
     debug!(config = ?config, "Instance configuration");
 
     // Default to all compiled instance types
@@ -103,18 +114,11 @@ async fn main() -> Result<ExitCode> {
 
         Some(command) => return command.dispatch(&config).await,
         None => {
-            // Default to the client when one is compiled in; otherwise the
-            // single remaining instance type. Refuse to guess if multiple
-            // non-client instance types are enabled.
-            #[cfg(feature = "client")]
-            {
-                run_instances = vec!["client"];
-            }
-            #[cfg(not(feature = "client"))]
-            if run_instances.len() > 1 {
-                CommandLine::command().print_help()?;
-                bail!("No default instance: specify a subcommand");
-            }
+            // No subcommand: run every compiled instance type. For a co-located
+            // build (e.g. server + agent, or server + agent + client) this
+            // starts the whole stack in one process and wires up the local
+            // loopback connections below, so local testing works with no
+            // configuration.
         }
     }
 
@@ -124,6 +128,17 @@ async fn main() -> Result<ExitCode> {
         "Starting Sandpolis {}",
         run_instances.join(" + ")
     );
+
+    // In an "all-in-one" run (the server runs in this same process), point the
+    // co-located agent at the local server over loopback so no manual server
+    // configuration is needed for local testing.
+    #[cfg(all(feature = "server", feature = "agent"))]
+    if run_instances.contains(&"server") && run_instances.contains(&"agent") {
+        config
+            .agent
+            .servers
+            .push(format!("https://127.0.0.1:{}/default", config.server.listen.port()));
+    }
 
     // Load state
     let state = InstanceState::new(
@@ -139,6 +154,16 @@ async fn main() -> Result<ExitCode> {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::server::main(c, s).await });
+    }
+
+    // Likewise, auto-open a loopback connection from the co-located client to the
+    // local server so it targets the local instance without configuration.
+    #[cfg(all(feature = "server", feature = "client"))]
+    if run_instances.contains(&"server") && run_instances.contains(&"client") {
+        sandpolis::client::spawn_local_server_connection(
+            state.clone(),
+            config.server.listen.port(),
+        );
     }
 
     #[cfg(feature = "agent")]

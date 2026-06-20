@@ -11333,6 +11333,7 @@ dependencies = [
  "bevy_svg",
  "bevy_ui_widgets",
  "built",
+ "chrono",
  "clap 4.6.1",
  "colored",
  "dirs",

@@ -23,7 +23,6 @@ use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
-use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info};
 use url::Url;
@@ -83,8 +82,12 @@ impl ServerLayer {
     }
 
     #[cfg(any(feature = "agent", feature = "client"))] // Temporary
-    pub fn connect_server(&self, url: ServerUrl) -> Result<ServerConnection> {
-        debug!(url = %url, "Configuring server connection");
+    fn connect_server(
+        &self,
+        url: ServerUrl,
+        strategy: ServerConnectStrategy,
+    ) -> Result<ServerConnection> {
+        debug!(url = %url, ?strategy, "Configuring server connection");
 
         // Locate the realm certificate
         #[cfg(feature = "client")]
@@ -105,52 +108,36 @@ impl ServerLayer {
                 .unwrap())
         };
 
-        let token = CancellationToken::new();
-
-        let connection = ServerConnection {
+        Ok(ServerConnection {
             inner: Arc::new(RwLock::new(None)),
-            strategy: ServerConnectStrategy::Continuous,
+            strategy,
             client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
             data: self.database.realm(url.realm)?.resident(())?,
-            retry: Arc::new(RwLock::new(url.retry.clone())),
-            cancel: token.clone(),
+            cancel: CancellationToken::new(),
             banner: ServerBanner::default(),
             realm: cert.name()?,
             cluster_id: cert.cluster_id()?,
-        };
-        let connection_clone = connection.clone();
-
-        tokio::spawn({
-            async move {
-                loop {
-                    tokio::select! {
-                        _ = token.cancelled() => {
-                            break;
-                        }
-                        response = connection.get::<()>("poll", ()) => {
-                            match response {
-                                Ok(_poll_response) => {
-                                    // Pass command to admin socket
-                                },
-                                Err(e) => {
-                                    // Wait before retrying
-                                    let timeout = {connection.retry.write().unwrap().next().unwrap()};
-                                    debug!(error = %e, waiting = ?timeout, "Poll request failed");
-                                    sleep(timeout).await;
-                                },
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        Ok(connection_clone)
+        })
     }
 
+    /// Connect to a server in the default `Continuous` strategy (the live
+    /// connection is held open by the websocket).
     #[cfg(any(feature = "agent", feature = "client"))] // Temporary
     pub async fn connect(&self, url: ServerUrl) -> Result<ServerConnection> {
-        let mut inner = self.connect_server(url)?;
+        self.connect_with_strategy(url, ServerConnectStrategy::Continuous)
+            .await
+    }
+
+    /// Connect to a server with an explicit [`ServerConnectStrategy`]. Agents
+    /// that only check in periodically pass `Polling`; everything else uses
+    /// `Continuous` via [`connect`](Self::connect).
+    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
+    pub async fn connect_with_strategy(
+        &self,
+        url: ServerUrl,
+        strategy: ServerConnectStrategy,
+    ) -> Result<ServerConnection> {
+        let mut inner = self.connect_server(url, strategy)?;
 
         debug!("Fetching server banner");
 
@@ -213,7 +200,6 @@ pub struct ServerConnection {
     client: Arc<tokio::sync::RwLock<Option<reqwest::Client>>>,
     pub strategy: ServerConnectStrategy,
     pub data: Resident<ConnectionData>,
-    pub retry: Arc<RwLock<RetryWait>>,
     pub cancel: CancellationToken,
     pub banner: ServerBanner,
     /// Active websocket connection used for streams / sync, once established.
@@ -258,11 +244,25 @@ impl ServerConnection {
                 .send()
                 .await?
         };
+        // The server reports its own instance id in the upgrade response so we can
+        // record the real peer instead of a freshly-generated default (which would
+        // surface as a phantom graph node, growing on every reconnect).
+        let remote_instance = response
+            .headers()
+            .get("x-instance-id")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|s| s.parse::<InstanceId>().ok());
+
         let socket = response.into_websocket().await?;
 
+        let mut cd = ConnectionData::default();
+        if let Some(id) = remote_instance {
+            cd.remote_instance = id;
+        }
+        cd.established = chrono::Utc::now();
         let data = network
             .connections
-            .push(ConnectionData::default())
+            .push(cd)
             .map_err(|e| anyhow!("{e}"))?;
 
         // Serve our local realm database to the peer's sync subscriptions
@@ -283,6 +283,31 @@ impl ServerConnection {
         network.inbound.write().unwrap().push(connection.clone());
         *self.inner.write().unwrap() = Some(connection.clone());
         Ok(connection)
+    }
+
+    /// Close the sync websocket opened by [`open_websocket`](Self::open_websocket),
+    /// if one is active. Agents in `Polling` mode call this to end a check-in
+    /// window: the socket is cancelled and its bookkeeping (the inbound list and
+    /// the tracked `ConnectionData` row) is cleaned up so repeated windows don't
+    /// accumulate stale connections.
+    #[cfg(any(feature = "client", feature = "agent"))]
+    pub fn close_websocket(&self, network: &NetworkLayer) {
+        let Some(connection) = self.inner.write().unwrap().take() else {
+            return;
+        };
+
+        // Cancel the socket task explicitly. `Drop` would also do this once every
+        // Arc is gone, but the relay or a stream may still hold a reference.
+        connection.cancel.cancel();
+
+        network
+            .inbound
+            .write()
+            .unwrap()
+            .retain(|c| !Arc::ptr_eq(c, &connection));
+
+        let id = connection.data.read()._id;
+        let _ = network.connections.remove(id);
     }
 
     pub async fn get<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>
@@ -311,35 +336,29 @@ impl ServerConnection {
         // Serialize request and record bytes
         let body = serde_json::to_vec(&body)?;
 
-        match &self.strategy {
-            ServerConnectStrategy::Continuous => {
-                debug!(endpoint = %endpoint, "Sending request");
-                let guard = self.client.read().await;
-                let client = guard.as_ref().unwrap();
+        // One-off requests use the pooled `reqwest` client regardless of
+        // strategy: it opens connections on demand, so this works the same
+        // whether the agent holds a `Continuous` websocket or only connects
+        // during a `Polling` window. The strategy only governs the lifetime of
+        // the long-lived sync websocket (see `open_websocket`).
+        debug!(endpoint = %endpoint, "Sending request");
+        let guard = self.client.read().await;
+        let client = guard
+            .as_ref()
+            .ok_or_else(|| anyhow!("connection has no http client"))?;
 
-                Ok(client
-                    .request(
-                        method,
-                        format!("https://{}.{}/{endpoint}", self.cluster_id, self.realm),
-                    )
-                    .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
-                    .header("x-realm", self.realm.to_string())
-                    .body(body)
-                    .send()
-                    .await?
-                    .json()
-                    .await?)
-            }
-            ServerConnectStrategy::Polling { schedule, timeout } => {
-                // Get the next scheduled time from the cron schedule
-                let next_time = schedule.upcoming(chrono::Utc).next();
-                todo!(
-                    "Implement cron-based polling with next_time: {:?}, timeout: {:?}",
-                    next_time,
-                    timeout
-                )
-            }
-        }
+        Ok(client
+            .request(
+                method,
+                format!("https://{}.{}/{endpoint}", self.cluster_id, self.realm),
+            )
+            .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
+            .header("x-realm", self.realm.to_string())
+            .body(body)
+            .send()
+            .await?
+            .json()
+            .await?)
     }
 }
 
@@ -389,6 +408,19 @@ pub enum ServerConnectStrategy {
         /// How long the connection will stay alive
         timeout: Duration,
     },
+}
+
+impl ServerConnectStrategy {
+    /// Build a [`Polling`](ServerConnectStrategy::Polling) strategy from a cron
+    /// expression and a per-window keep-alive duration. Lets callers construct
+    /// the strategy without depending on the `cron` crate directly.
+    pub fn polling(schedule: &str, timeout: Duration) -> Result<Self> {
+        Ok(Self::Polling {
+            schedule: Schedule::from_str(schedule)
+                .map_err(|e| anyhow!("invalid cron schedule {schedule:?}: {e}"))?,
+            timeout,
+        })
+    }
 }
 
 /// There can be multiple servers in a Sandpolis network which improves both

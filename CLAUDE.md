@@ -21,6 +21,30 @@ the mobile app) with different feature flags.
 Functionality is divided into "layers" which can be enabled/disabled at build
 time with Cargo features.
 
+## CoLo mode
+
+When a server feature is compiled alongside the client and/or agent and the
+binary is run with no subcommand, all instance types start in the same process
+and connect to each other automatically over loopback — no `--realm-cert` or
+server configuration is needed. This is meant for convenient local testing:
+targeting the local instance (e.g. starting a desktop stream) "just works".
+
+It is wired in three places:
+
+- `RealmLayer::new` (`sandpolis-instance/src/realm/mod.rs`) derives the
+  client/agent realm certs from the local cluster CA and keeps them in memory,
+  so the co-located client/agent can connect without an out-of-band cert.
+- `sandpolis/src/main.rs` (gated on the run including both `server` and the
+  role) points the agent at `https://127.0.0.1:<listen port>/default` and opens
+  the same loopback connection for the client via
+  `client::spawn_local_server_connection`.
+- `Relay::find` (`sandpolis-instance/src/network/stream.rs`) excludes the origin
+  connection when routing, since the co-located client and agent share one
+  `InstanceId` (from `InstanceId::default()`) and would otherwise be ambiguous.
+
+Running a specific instance via subcommand (e.g. `sandpolis client`) disables
+the auto-connection.
+
 ## Database Layer (`sandpolis-database`)
 
 - Database is based on the native_db crate which saves/loads Rust structs
@@ -60,6 +84,12 @@ cd android && ./gradlew assembleDebug
 - Mount FUSE filesystem of an agent from a client
 - Zooming in on a node enters another level of depth where all other nodes
   disappear. Now shows more detailed operations.
+- `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should not be layers anymore?
+- On desktop, probe, and shell layers: servers are present in the graph (so we
+  have links), but they are not interactable. When the server layer is active,
+  only servers are shown and they become interactable. Clients are only present
+  in the graph when the client layer is active (servers are also present, but
+  not interactable).
 
 ## Layer implementations
 

@@ -380,12 +380,13 @@ pub async fn connect(
 ) -> impl axum::response::IntoResponse {
     let network = state.network.clone();
     let cluster_id = state.instance.cluster_id;
+    let local_instance = state.instance.instance_id;
     let remote_instance = headers
         .get("x-instance-id")
         .and_then(|v| v.to_str().ok())
         .and_then(|s| s.parse::<sandpolis_instance::InstanceId>().ok());
 
-    ws.on_upgrade(move |socket| async move {
+    let mut response = ws.on_upgrade(move |socket| async move {
         let mut cd = ConnectionData::default();
         if let Some(id) = remote_instance {
             cd.remote_instance = id;
@@ -420,5 +421,13 @@ pub async fn connect(
         }
 
         network.inbound.write().unwrap().push(connection);
-    })
+    });
+
+    // Report our own instance id back to the dialer (mirrors the `x-instance-id`
+    // request header) so it can record `remote_instance` instead of leaving a
+    // freshly-generated default, which would surface as a phantom graph node.
+    if let Ok(value) = axum::http::HeaderValue::from_str(&local_instance.to_string()) {
+        response.headers_mut().insert("x-instance-id", value);
+    }
+    response
 }

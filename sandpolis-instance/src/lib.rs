@@ -53,12 +53,28 @@ fn format_uuid(src: u128) -> [u8; 36] {
 
 /// Shared ID across the entire cluster. This never changes throughout the
 /// cluster's lifetime.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ClusterId(u128);
 
 impl ClusterId {
     pub fn as_bytes(&self) -> [u8; 16] {
         self.0.to_be_bytes()
+    }
+}
+
+// `serde_cbor` cannot encode `u128`, so represent the id as its raw little-endian
+// bytes. This is format-agnostic (CBOR, JSON, etc.) and consistent across peers.
+impl Serialize for ClusterId {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.to_le_bytes().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for ClusterId {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(ClusterId(u128::from_le_bytes(<[u8; 16]>::deserialize(
+            deserializer,
+        )?)))
     }
 }
 
@@ -95,8 +111,24 @@ mod test_cluster_id {
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
 #[cfg_attr(feature = "client-gui", derive(bevy::prelude::Component))]
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(u128);
+
+// `serde_cbor` cannot encode `u128`, so represent the id as its raw little-endian
+// bytes. This is format-agnostic (CBOR, JSON, etc.) and consistent across peers.
+impl Serialize for InstanceId {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.to_le_bytes().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for InstanceId {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(InstanceId(u128::from_le_bytes(<[u8; 16]>::deserialize(
+            deserializer,
+        )?)))
+    }
+}
 
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type(s).

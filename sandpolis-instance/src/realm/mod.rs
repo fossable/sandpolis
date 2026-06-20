@@ -159,6 +159,11 @@ impl RealmLayer {
             realms.push(RealmData::default())?;
         }
 
+        #[cfg(feature = "agent")]
+        let mut agent_certs = Vec::new();
+        #[cfg(feature = "client")]
+        let mut client_certs = Vec::new();
+
         #[cfg(feature = "server")]
         {
             for realm in realms.iter() {
@@ -189,6 +194,16 @@ impl RealmLayer {
                     }
                 }
 
+                // When the client and/or agent are compiled into the same
+                // binary (the "all-in-one" build), derive their realm certs from
+                // the local cluster CA and keep them in memory. This lets a
+                // co-located client/agent connect to the local server over
+                // loopback without an out-of-band `--realm-cert`.
+                #[cfg(feature = "client")]
+                client_certs.push(cluster_certs[0].client_cert()?);
+                #[cfg(feature = "agent")]
+                agent_certs.push(cluster_certs[0].agent_cert()?);
+
                 // Get or create server cert
                 let mut server_certs: Vec<RealmServerCert> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
@@ -206,11 +221,6 @@ impl RealmLayer {
         // are kept in memory only and used directly when connecting to a
         // server; nothing is persisted to the database, so they must be
         // supplied on every run.
-        #[cfg(feature = "agent")]
-        let mut agent_certs = Vec::new();
-        #[cfg(feature = "client")]
-        let mut client_certs = Vec::new();
-
         for path in &config.realm_certs {
             #[allow(unused_mut, unused_assignments)]
             let mut loaded = false;
