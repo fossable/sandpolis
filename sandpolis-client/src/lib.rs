@@ -4,8 +4,8 @@ pub mod config;
 #[cfg(feature = "client")]
 pub mod sync;
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 pub mod gui;
 
-#[cfg(feature = "client-tui")]
+#[cfg(all(feature = "client", not(target_os = "android")))]
 pub mod tui;

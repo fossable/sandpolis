@@ -1,2 +1,2 @@
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 pub mod gui;

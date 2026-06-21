@@ -64,6 +64,24 @@ pub fn connection() -> Option<Arc<InstanceConnection>> {
     HANDLE.get().map(|h| h.inner.connection.clone())
 }
 
+/// Wait until the server connection is established (or `timeout` elapses),
+/// returning it. One-shot noninteractive commands use this since the connection
+/// is brought up asynchronously after startup.
+pub async fn wait_for_connection(
+    timeout: std::time::Duration,
+) -> Option<Arc<InstanceConnection>> {
+    let deadline = tokio::time::Instant::now() + timeout;
+    loop {
+        if let Some(c) = connection() {
+            return Some(c);
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return None;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+}
+
 /// Subscribe to a model's records (optionally scoped to one instance). Idempotent
 /// per `(model_id, instance)`.
 pub fn subscribe(model_id: u32, instance: Option<InstanceId>) {

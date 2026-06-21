@@ -110,7 +110,7 @@ mod test_cluster_id {
 
 /// All instances are identified by a unique 128-bit string that's generated on
 /// first start. This identifier is reused for all subsequent runs.
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Component))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Component))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InstanceId(u128);
 
@@ -431,7 +431,7 @@ mod test_instance_id {
 
 /// A layer represents a functional area of Sandpolis (e.g., filesystem, shell, network).
 /// Layers are registered at runtime using the `inventory` crate.
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct LayerName(pub String);
 
@@ -501,8 +501,15 @@ pub struct InstanceLayerData {
     pub os_info: os_info::Info,
 }
 
+/// The sync `model_id` for [`InstanceLayerData`], used by clients to subscribe to
+/// the set of known instances.
+pub fn instance_layer_model_id() -> u32 {
+    use native_model::Model;
+    <InstanceLayerData as Model>::native_model_id()
+}
+
 #[derive(Clone)]
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct InstanceLayer {
     data: Resident<InstanceLayerData>,
     pub instance_id: InstanceId,

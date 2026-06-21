@@ -11,6 +11,9 @@ pub mod session;
 #[cfg(feature = "client")]
 pub mod client;
 
+#[cfg(all(feature = "client", not(target_os = "android")))]
+pub mod cli;
+
 #[cfg(feature = "agent")]
 mod agent;
 

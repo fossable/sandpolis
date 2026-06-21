@@ -7,11 +7,11 @@ It's comprised of multiple applications:
 
 - Server
 - Agent
-  - "Regular" agent
-  - "Boot" agent UKI
+  - "Regular" mode
+  - "UKI" mode
 - Client
-  - GUI based on Bevy and egui
-  - TUI based on Ratatui
+  - GUI based on Bevy
+  - CLI based on clap for scripting or optional TUI based on Ratatui
 
 All of these applications are built from the main `sandpolis` crate (except for
 the mobile app) with feature flags.
@@ -27,9 +27,6 @@ binary is run with no subcommand, all instance types start in the same process
 and connect to each other automatically over loopback — no `--realm-cert` or
 server configuration is needed. This is meant for convenient local testing:
 targeting the local instance (e.g. starting a desktop stream) "just works".
-
-Running a specific instance via subcommand (e.g. `sandpolis client`) disables
-the auto-connection.
 
 ## Mobile App
 
@@ -72,14 +69,6 @@ cd android && ./gradlew assembleDebug
       theme picker, node/edge graph, per-layer controller bodies.
     - `spawn_floating_panel` (`ui/panel.rs`) intentionally stays imperative: it
       returns child entity ids synchronously, which doesn't fit `spawn_scene`.
-  - Replace our bespoke text input with the new native TextInput
-    (https://bevy.org/news/bevy-0-19/#text-input) — DONE. `ui/text_input.rs` now
-    wraps native `EditableText` (cursor/selection/IME/paste). Password masking
-    is dropped for now (unimplemented upstream in 0.19).
-  - Replace bevy_ui_widgets with
-    https://bevy.org/news/bevy-0-19/#more-feathers-widgets — deferred. Feathers
-    ships its own theming that overlaps our custom `Theme`; keeping
-    `bevy_ui_widgets` primitives for now.
 
 ## `sandpolis-tunnel`
 
@@ -159,28 +148,31 @@ for each of the following probe "integrations":
 - Banner image display in login input dialog
   - Fetched once a valid server URL is entered
 - TUI interface redesign
-  - Instead of a unified TUI, we have a CLI that optionally opens a TUI for
+  - Collapse the `client-tui` and `client-gui` features into just `client`
+  - Don't compile the TUI/CLI code on android (via conditional compilation)
+  - Instead of a unified TUI, we need a CLI that optionally opens a TUI for
     specific features. The CLI is also usable noninteractively in scripts. For
     example:
 
 ```sh
-# Run server and/or agent daemon (depending on cargo features)
-sandpolis --daemon
+# Run client (with `client` feature only)
+# Run server (with `server` feature only)
+# Run server + agent CoLo (with `server` + `agent` features)
+# Run client + agent CoLo (with `client` + `agent` features)
+# Run client + server + agent CoLo (with `server` + `agent` + `client` features)
+sandpolis
 
-# Open interactive TUI with agent list
+# Open interactive TUI with agent list. Choose one to restart.
 sandpolis agent restart
 
-# Noninteractive version of the above
+# Noninteractive version of the above that responds with json
 sandpolis agent restart --json --instance UUID
 
 # Open interactive TUI with server list
 sandpolis server
 
-# Run client GUI
-sandpolis
-
-# Open WoL TUI interface
-sandpolis probe wol
+# Open interactive TUI
+sandpolis probe
 
 # Open interactive TUI
 sandpolis desktop

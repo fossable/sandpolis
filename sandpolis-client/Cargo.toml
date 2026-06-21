@@ -32,16 +32,16 @@ include_dir = { workspace = true, optional = true }
 tracing = { workspace = true }
 rand = { workspace = true, optional = true }
 
-# TUI dependencies
+# Terminal (TUI/CLI) dependencies, excluded on Android
+[target.'cfg(not(target_os = "android"))'.dependencies]
 ratatui = { workspace = true, optional = true }
 color-eyre = { version = "0.6.3", optional = true }
 crossterm = { version = "0.29.0", optional = true, features = ["event-stream"] }
 tui-popup = { workspace = true, optional = true }
 
 [features]
-client = ["dep:passwords"]
-client-gui = [
-  "client",
+client = [
+  "dep:passwords",
   "dep:bevy",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
@@ -51,11 +51,8 @@ client-gui = [
   "dep:include_dir",
   "dep:rand",
   "dep:sandpolis-server",
-  "sandpolis-instance/client-gui",
-  "sandpolis-server/client-gui",
-]
-client-tui = [
-  "client",
+  "sandpolis-instance/client",
+  "sandpolis-server/client",
   "dep:ratatui",
   "dep:color-eyre",
   "dep:crossterm",
@@ -66,4 +63,4 @@ client-tui = [
 
 [[example]]
 name = "resident_vec"
-required-features = ["client-tui"]
+required-features = ["client"]

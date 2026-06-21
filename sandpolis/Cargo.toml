@@ -60,18 +60,19 @@ axum-macros = { workspace = true, optional = true }
 axum-server = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 
-# Terminal client exclusive
-ratatui = { workspace = true, optional = true }
-ratatui-image = { workspace = true, optional = true }
-image = { workspace = true, optional = true }
-tui-popup = { workspace = true, optional = true }
-
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 bevy_stl = { workspace = true, optional = true }
 bevy_ui_widgets = { workspace = true, optional = true }
+
+# Terminal (TUI/CLI) client deps, excluded on Android
+[target.'cfg(not(target_os = "android"))'.dependencies]
+ratatui = { workspace = true, optional = true }
+ratatui-image = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+tui-popup = { workspace = true, optional = true }
 
 [features]
 # Instances
@@ -106,6 +107,25 @@ client = [
   "sandpolis-client/client",
   "sandpolis-instance/client",
   "sandpolis-server/client",
+  # GUI (Bevy)
+  "dep:bevy",
+  "dep:bevy_svg",
+  "dep:bevy_rapier2d",
+  "dep:bevy_stl",
+  "dep:bevy_ui_widgets",
+  # Terminal (TUI/CLI); the deps are no-ops on Android
+  "dep:ratatui",
+  "dep:ratatui-image",
+  "dep:image",
+  "dep:tui-popup",
+  # Propagate to optional layers
+  "sandpolis-desktop?/client",
+  "sandpolis-filesystem?/client",
+  "sandpolis-health?/client",
+  "sandpolis-inventory?/client",
+  "sandpolis-probe?/client",
+  "sandpolis-wake?/client",
+  "sandpolis-shell?/client",
 ]
 
 # Layers
@@ -138,61 +158,28 @@ default = [
   "layer-tunnel",
 ]
 
-# Client features
-client-gui = [
-  "client",
-  "dep:bevy",
-  "dep:bevy_svg",
-  "dep:bevy_rapier2d",
-  "dep:bevy_stl",
-  "dep:bevy_ui_widgets",
-  "sandpolis-client/client-gui",
-  "sandpolis-desktop?/client-gui",
-  "sandpolis-filesystem?/client-gui",
-  "sandpolis-health?/client-gui",
-  "sandpolis-instance/client-gui",
-  "sandpolis-inventory?/client-gui",
-  "sandpolis-probe?/client-gui",
-  "sandpolis-wake?/client-gui",
-  "sandpolis-server/client-gui",
-  "sandpolis-shell?/client-gui",
-]
-# client-gui-wayland = ["client-gui", "bevy/wayland"]
-client-tui = [
-  "client",
-  "dep:ratatui",
-  "dep:ratatui-image",
-  "dep:image",
-  "dep:tui-popup",
-  "sandpolis-client/client-tui",
-  "sandpolis-desktop?/client-tui",
-  "sandpolis-filesystem?/client-tui",
-  "sandpolis-health?/client-tui",
-  "sandpolis-inventory?/client-tui",
-  "sandpolis-wake?/client-tui",
-  "sandpolis-shell?/client-tui",
-]
+# client-wayland = ["client", "bevy/wayland"]
 
 [[example]]
 name = "client_tui_server_list"
-required-features = ["client-tui", "server"]
+required-features = ["client", "server"]
 
 [[example]]
 name = "client_gui_basic"
-required-features = ["client-gui"]
+required-features = ["client"]
 
 [[example]]
 name = "client_gui_filesystem"
-required-features = ["client-gui", "layer-filesystem"]
+required-features = ["client", "layer-filesystem"]
 
 [[example]]
 name = "client_gui_network"
-required-features = ["client-gui"]
+required-features = ["client"]
 
 [[example]]
 name = "client_gui_activity"
-required-features = ["client-gui"]
+required-features = ["client"]
 
 [[example]]
 name = "client_gui_controllers"
-required-features = ["client-gui"]
+required-features = ["client"]

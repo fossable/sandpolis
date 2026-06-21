@@ -67,7 +67,7 @@ harness = false
 
 [features]
 agent = ["dep:reqwest", "dep:reqwest-websocket"]
-client = ["dep:reqwest", "dep:reqwest-websocket"]
+client = ["dep:reqwest", "dep:reqwest-websocket", "dep:bevy"]
 server = [
   "dep:rcgen",
   "dep:rustls-pki-types",
@@ -80,4 +80,3 @@ server = [
 
 ]
 bootagent = []
-client-gui = ["client", "dep:bevy"]

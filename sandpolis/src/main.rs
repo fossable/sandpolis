@@ -6,7 +6,6 @@ use sandpolis::config::Configuration;
 use sandpolis_instance::database::DatabaseLayer;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
-use tracing::debug;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 
@@ -24,27 +23,37 @@ async fn main() -> Result<ExitCode> {
     #[allow(unreachable_code)]
     let args = CommandLine::parse();
 
-    // Initialize logging for the instance
-    let subscriber = tracing_subscriber::fmt().with_env_filter(
-        tracing_subscriber::EnvFilter::builder()
-            .with_default_directive(if args.instance.trace {
-                LevelFilter::TRACE.into()
-            } else if args.instance.debug {
-                LevelFilter::DEBUG.into()
-            } else {
-                LevelFilter::INFO.into()
-            })
-            .from_env()?,
-    );
+    // A non-standalone subcommand opens a TUI (or prints JSON), so it owns the
+    // terminal; send logs to a file in that case instead of corrupting the view.
+    let use_log_file = matches!(&args.command, Some(c) if !c.standalone());
 
-    #[cfg(feature = "client-tui")]
-    let subscriber = subscriber.with_writer(
-        std::fs::OpenOptions::new()
+    // Initialize logging for the instance
+    let level = if args.instance.trace {
+        LevelFilter::TRACE
+    } else if args.instance.debug {
+        LevelFilter::DEBUG
+    } else {
+        LevelFilter::INFO
+    };
+    let make_filter = || {
+        tracing_subscriber::EnvFilter::builder()
+            .with_default_directive(level.into())
+            .from_env()
+    };
+    if use_log_file {
+        let file = std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open("sandpolis.log")?,
-    );
-    subscriber.init();
+            .open("sandpolis.log")?;
+        tracing_subscriber::fmt()
+            .with_env_filter(make_filter()?)
+            .with_writer(file)
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_env_filter(make_filter()?)
+            .init();
+    }
 
     // Get ready to do some cryptography
     rustls::crypto::aws_lc_rs::default_provider()
@@ -83,61 +92,17 @@ async fn main() -> Result<ExitCode> {
         }
     }
 
-    debug!(config = ?config, "Instance configuration");
-
-    // Default to all compiled instance types
-    #[allow(unused_mut, unused_assignments)]
-    let mut run_instances = Vec::<&str>::from([
-        #[cfg(feature = "server")]
-        "server",
-        #[cfg(feature = "client")]
-        "client",
-        #[cfg(feature = "agent")]
-        "agent",
-    ]);
-
-    // Dispatch subcommand if one was given
-    #[allow(unused_imports)]
-    use sandpolis::cli::Commands;
-    match args.command {
-        #[cfg(feature = "agent")]
-        #[cfg(any(feature = "server", feature = "client"))]
-        Some(Commands::Agent) => run_instances = vec!["agent"],
-
-        #[cfg(feature = "client")]
-        #[cfg(any(feature = "agent", feature = "server"))]
-        Some(Commands::Client) => run_instances = vec!["client"],
-
-        #[cfg(feature = "server")]
-        #[cfg(any(feature = "agent", feature = "client"))]
-        Some(Commands::Server) => run_instances = vec!["server"],
-
-        Some(command) => return command.dispatch(&config).await,
-        None => {
-            // No subcommand: run every compiled instance type. For a co-located
-            // build (e.g. server + agent, or server + agent + client) this
-            // starts the whole stack in one process and wires up the local
-            // loopback connections below, so local testing works with no
-            // configuration.
+    // Standalone subcommands (cert generation, version info, LSP) run without
+    // starting any instances or opening a connection.
+    if let Some(command) = args.command.as_ref() {
+        if command.standalone() {
+            return args.command.unwrap().dispatch_standalone(&config).await;
         }
-    }
-
-    info!("Starting Sandpolis {}", run_instances.join(" + "));
-
-    // In an "all-in-one" run (the server runs in this same process), point the
-    // co-located agent at the local server over loopback so no manual server
-    // configuration is needed for local testing.
-    #[cfg(all(feature = "server", feature = "agent"))]
-    if run_instances.contains(&"server") && run_instances.contains(&"agent") {
-        config.agent.servers.push(format!(
-            "https://127.0.0.1:{}/default",
-            config.server.listen.port()
-        ));
     }
 
     // TODO do this somewhere else
     #[cfg(all(feature = "server", feature = "layer-probe"))]
-    if run_instances.contains(&"server") {
+    {
         let base = config.clone();
         sandpolis_probe::set_device_persist(move |devices| {
             let mut cfg = base.clone();
@@ -149,6 +114,15 @@ async fn main() -> Result<ExitCode> {
         });
     }
 
+    // In an "all-in-one" run (the server runs in this same process), point the
+    // co-located agent at the local server over loopback so no manual server
+    // configuration is needed for local testing.
+    #[cfg(all(feature = "server", feature = "agent"))]
+    config.agent.servers.push(format!(
+        "https://127.0.0.1:{}/default",
+        config.server.listen.port()
+    ));
+
     // Load state
     let state = InstanceState::new(
         config.clone(),
@@ -156,60 +130,63 @@ async fn main() -> Result<ExitCode> {
     )
     .await?;
 
+    info!("Starting Sandpolis");
+
+    #[allow(unused_variables, unused_mut)]
     let mut tasks: JoinSet<Result<()>> = JoinSet::new();
 
     #[cfg(feature = "server")]
-    if run_instances.contains(&"server") {
+    {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::server::main(c, s).await });
     }
 
-    // Likewise, auto-open a loopback connection from the co-located client to the
-    // local server so it targets the local instance without configuration.
+    // Auto-open a loopback connection from the co-located client to the local
+    // server so it targets the local instance without configuration.
     #[cfg(all(feature = "server", feature = "client"))]
-    if run_instances.contains(&"server") && run_instances.contains(&"client") {
-        sandpolis::client::spawn_local_server_connection(
-            state.clone(),
-            config.server.listen.port(),
-        );
-    }
+    sandpolis::client::spawn_local_server_connection(state.clone(), config.server.listen.port());
 
     #[cfg(feature = "agent")]
-    if run_instances.contains(&"agent") {
+    {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::agent::main(c, s).await });
     }
 
-    // The client must run on the main thread
+    // The client runs on the main thread: bare invocation launches the GUI, a
+    // subcommand opens a focused TUI or runs noninteractively.
     #[cfg(feature = "client")]
-    if run_instances.contains(&"client") {
-        // Check command line preference if both are enabled
-        #[cfg(all(feature = "client-gui", feature = "client-tui"))]
+    {
+        #[cfg(not(target_os = "android"))]
         {
-            if args.client.gui {
-                sandpolis::client::gui::main(config, state).await.unwrap();
-            } else if args.client.tui {
-                sandpolis::client::tui::main(config, state).await.unwrap();
+            // Establish the sync websocket (the GUI does this itself).
+            if args.command.is_some() {
+                sandpolis::client::spawn_client_sync(state.clone());
+                let target = args.target.clone();
+                return args
+                    .command
+                    .unwrap()
+                    .dispatch_client(&config, &state, target)
+                    .await;
             }
+            sandpolis::client::gui::main(config, state).await.unwrap();
+            return Ok(ExitCode::SUCCESS);
         }
-
-        #[cfg(feature = "client-tui")]
-        #[cfg(not(feature = "client-gui"))]
-        sandpolis::client::tui::main(config, state).await.unwrap();
-
-        #[cfg(feature = "client-gui")]
-        #[cfg(not(feature = "client-tui"))]
-        sandpolis::client::gui::main(config, state).await.unwrap();
-    }
-
-    // If this was a client, don't hold up the user by waiting for server/agent
-    if !run_instances.contains(&"client") {
-        while let Some(result) = tasks.join_next().await {
-            result??;
+        #[cfg(target_os = "android")]
+        {
+            sandpolis::client::gui::main(config, state).await.unwrap();
+            return Ok(ExitCode::SUCCESS);
         }
     }
 
+    // No client: run as a daemon until the server/agent tasks finish.
+    #[cfg(not(feature = "client"))]
+    while let Some(result) = tasks.join_next().await {
+        result??;
+    }
+
+    // Unreachable on client builds (the block above always returns).
+    #[allow(unreachable_code)]
     Ok(ExitCode::SUCCESS)
 }

@@ -14,7 +14,6 @@ tracing = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true }
 inventory = { workspace = true }
-ratatui = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 axum-macros = { workspace = true, optional = true }
 zbus = { workspace = true, optional = true }
@@ -23,6 +22,10 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
+
+# Terminal (TUI/CLI) dependencies, excluded on Android
+[target.'cfg(not(target_os = "android"))'.dependencies]
+ratatui = { workspace = true, optional = true }
 
 [dev-dependencies]
 test-log = { version = "0.2.18", features = ["trace"] }
@@ -34,17 +37,7 @@ client = [
   "sandpolis-instance/client",
   "dep:sandpolis-client",
   "sandpolis-client/client",
+  "dep:bevy",
+  "dep:ratatui",
 ]
 server = ["sandpolis-instance/server"]
-client-gui = [
-  "client",
-  "dep:bevy",
-  "dep:sandpolis-client",
-  "sandpolis-client/client-gui",
-]
-client-tui = [
-  "client",
-  "dep:ratatui",
-  "dep:sandpolis-client",
-  "sandpolis-client/client-tui",
-]

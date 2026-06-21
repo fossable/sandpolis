@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use tracing::debug;
 
 /// Application's global config.
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Configuration {

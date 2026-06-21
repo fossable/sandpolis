@@ -61,7 +61,6 @@ client = [
   "totp-rs?/qr",
   "dep:argon2",
   "dep:reqwest-websocket",
+  "dep:bevy",
 ]
 agent = ["sandpolis-instance/agent", "dep:reqwest-websocket"]
-client-tui = ["client"]
-client-gui = ["client", "dep:bevy"]

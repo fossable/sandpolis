@@ -1,2 +1,2 @@
-#[cfg(feature = "client-tui")]
+#[cfg(all(feature = "client", not(target_os = "android")))]
 pub mod tui;

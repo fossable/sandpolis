@@ -22,28 +22,25 @@ serde = { workspace = true }
 serde_cbor = { workspace = true, optional = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-tui-term = { version = "0.3.0", optional = true }
-ratatui = { workspace = true, optional = true }
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
 
+# Terminal (TUI/CLI) dependencies, excluded on Android
+[target.'cfg(not(target_os = "android"))'.dependencies]
+tui-term = { version = "0.3.0", optional = true }
+ratatui = { workspace = true, optional = true }
+
 [features]
 agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory"]
 server = []
-client = ["dep:serde_cbor"]
-client-gui = [
-  "client",
+client = [
+  "dep:serde_cbor",
   "dep:bevy",
   "dep:inventory",
   "dep:sandpolis-client",
-  "sandpolis-client/client-gui",
-]
-client-tui = [
-  "client",
   "dep:tui-term",
   "dep:ratatui",
-  "dep:sandpolis-client",
-  "sandpolis-client/client-tui",
+  "sandpolis-client/client",
 ]

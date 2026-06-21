@@ -141,7 +141,7 @@ mod server {
     inventory::submit!(ResponderRegistration(&DeviceMgmtResponderRegistration));
 }
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 mod client {
     use super::*;
     use crate::REGISTERED_DEVICES;
@@ -230,5 +230,5 @@ mod client {
     }
 }
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 pub use client::{DeviceMgmtRequester, delete_device, register_device, subscribe};

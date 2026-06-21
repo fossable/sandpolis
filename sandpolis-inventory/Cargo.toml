@@ -43,12 +43,9 @@ agent = [
   "dep:serde_json",
 ]
 server = []
-client = []
-client-gui = [
-  "client",
+client = [
   "dep:bevy",
   "dep:inventory",
   "dep:sandpolis-client",
-  "sandpolis-client/client-gui",
+  "sandpolis-client/client",
 ]
-client-tui = ["client"]

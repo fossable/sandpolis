@@ -19,6 +19,8 @@ use crate::execute::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
 
 #[cfg(feature = "client")]
 pub mod client;
+#[cfg(all(feature = "client", not(target_os = "android")))]
+pub mod cli;
 pub mod execute;
 pub mod session;
 pub mod shell;

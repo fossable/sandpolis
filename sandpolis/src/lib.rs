@@ -17,7 +17,7 @@ pub mod lsp;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
 #[derive(Clone)]
 pub struct InstanceState {

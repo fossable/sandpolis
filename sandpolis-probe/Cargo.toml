@@ -33,13 +33,17 @@ inventory = { workspace = true, optional = true }
 include_dir = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 
+# Terminal (TUI/CLI) dependencies, excluded on Android
+[target.'cfg(not(target_os = "android"))'.dependencies]
+ratatui = { workspace = true, optional = true }
+
 [dev-dependencies]
 ron = { workspace = true }
 
 [features]
 agent = ["dep:rups", "dep:vnc", "dep:russh", "dep:retina", "dep:inventory"]
 server = ["dep:rups", "dep:vnc", "dep:russh", "dep:retina", "dep:inventory"]
-client-gui = [
+client = [
   "dep:bevy",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
@@ -48,5 +52,6 @@ client-gui = [
   "dep:openh264",
   "dep:serde_cbor",
   "dep:sandpolis-client",
-  "sandpolis-client/client-gui",
+  "dep:ratatui",
+  "sandpolis-client/client",
 ]

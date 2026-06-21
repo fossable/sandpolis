@@ -44,7 +44,7 @@ pub mod user;
 pub struct ServerLayerData {}
 
 #[derive(Clone)]
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct ServerLayer {
     #[cfg(feature = "server")]
     pub banner: Resident<banner::ServerBannerData>,
@@ -148,9 +148,9 @@ impl ServerLayer {
             .get(
                 "server/banner",
                 GetBannerRequest {
-                    #[cfg(feature = "client-gui")]
+                    #[cfg(feature = "client")]
                     include_image: true,
-                    #[cfg(not(feature = "client-gui"))]
+                    #[cfg(not(feature = "client"))]
                     include_image: false,
                 },
             )

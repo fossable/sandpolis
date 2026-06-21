@@ -292,7 +292,7 @@ inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &RtspResponderRegistration
 ));
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 mod client {
     use super::{RtspFrame, RtspSessionStreamRequest, RtspSessionStreamResponse};
     use anyhow::Result;
@@ -550,5 +550,5 @@ mod client {
     }
 }
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 pub use client::{RtspFrameRgba, RtspSessionStreamRequester, RtspStreamEvent};

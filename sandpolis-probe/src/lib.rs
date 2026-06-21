@@ -24,8 +24,10 @@ pub mod ups;
 pub mod vnc;
 pub mod wol;
 
-#[cfg(feature = "client-gui")]
+#[cfg(feature = "client")]
 pub mod client;
+#[cfg(all(feature = "client", not(target_os = "android")))]
+pub mod cli;
 
 /// Devices registered on this instance (populated from config at startup, kept
 /// in sync over the management stream).
@@ -69,7 +71,7 @@ pub fn devices_to_config(devices: &[RegisteredDevice]) -> ProbeLayerConfig {
 
 /// The probe layer manages device registrations and streaming state.
 #[derive(Clone)]
-#[cfg_attr(feature = "client-gui", derive(bevy::prelude::Resource))]
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct ProbeLayer {
     pub devices: Arc<RwLock<Vec<RegisteredDevice>>>,
 }
