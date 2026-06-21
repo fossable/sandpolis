@@ -3,9 +3,7 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone, Default)]
 pub struct RealmCommandLine {
-    /// Path to a realm cert to import. May be given multiple times. The cert is
-    /// loaded on every run and is required as long as the instance connects to
-    /// a server.
+    /// Path to an external realm cert. May be given multiple times.
     #[clap(long = "realm-cert")]
     pub realm_cert: Vec<PathBuf>,
 }

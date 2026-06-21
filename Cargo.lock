@@ -11509,7 +11509,6 @@ dependencies = [
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
- "sandpolis-wake",
  "serde 1.0.228",
  "serde_json 1.0.150",
  "strum 0.28.0",
@@ -11545,9 +11544,15 @@ dependencies = [
  "axum",
  "axum-macros",
  "clap 4.6.1",
+ "inventory",
+ "native_db",
+ "native_model",
+ "ratatui",
+ "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde 1.0.228",
+ "tokio",
  "tokio-cron-scheduler",
 ]
 
@@ -11897,25 +11902,6 @@ dependencies = [
  "sandpolis-instance",
  "sandpolis-macros",
  "serde 1.0.228",
-]
-
-[[package]]
-name = "sandpolis-wake"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "axum-macros",
- "macaddr",
- "native_db",
- "native_model",
- "ratatui",
- "sandpolis-client",
- "sandpolis-instance",
- "sandpolis-macros",
- "sandpolis-probe",
- "serde 1.0.228",
- "tokio",
 ]
 
 [[package]]

@@ -163,11 +163,10 @@ async fn main() -> Result<ExitCode> {
             // Establish the sync websocket (the GUI does this itself).
             if args.command.is_some() {
                 sandpolis::client::spawn_client_sync(state.clone());
-                let target = args.target.clone();
                 return args
                     .command
                     .unwrap()
-                    .dispatch_client(&config, &state, target)
+                    .dispatch_client(&config, &state)
                     .await;
             }
             sandpolis::client::gui::main(config, state).await.unwrap();
@@ -186,7 +185,7 @@ async fn main() -> Result<ExitCode> {
         result??;
     }
 
-    // Unreachable on client builds (the block above always returns).
+    // Unreachable on client builds
     #[allow(unreachable_code)]
     Ok(ExitCode::SUCCESS)
 }

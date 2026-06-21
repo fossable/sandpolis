@@ -12,6 +12,7 @@ use strum::{EnumIter, IntoEnumIterator};
 use tracing::trace;
 use uuid::Uuid;
 
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod database;

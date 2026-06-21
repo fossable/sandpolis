@@ -30,6 +30,7 @@ use x509_parser::asn1_rs::Oid;
 use x509_parser::prelude::{FromDer, GeneralName};
 use x509_parser::prelude::{ParsedExtension, X509Certificate};
 
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod messages;

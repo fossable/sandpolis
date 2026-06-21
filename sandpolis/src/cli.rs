@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use tracing::info;
 
-#[cfg(all(feature = "client", not(target_os = "android")))]
+#[cfg(feature = "client")]
 use crate::InstanceState;
-#[cfg(all(feature = "client", not(target_os = "android")))]
+#[cfg(feature = "client")]
 use sandpolis_client::cli::TargetArgs;
 
 #[derive(Parser, Debug, Clone)]
@@ -37,17 +37,12 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub agent: sandpolis_agent::cli::AgentCommandLine,
 
-    /// Global `--json` / `--instance` flags for client subcommands.
-    #[cfg(all(feature = "client", not(target_os = "android")))]
-    #[clap(flatten)]
-    pub target: TargetArgs,
-
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
 
 /// Interactive TUI / noninteractive operation on the target agent.
-#[cfg(all(feature = "client", not(target_os = "android")))]
+#[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
 pub enum AgentCommand {
     /// Restart (reboot) the target agent's device
@@ -89,63 +84,102 @@ pub enum Commands {
     #[cfg(feature = "client")]
     Lsp,
 
-    /// List agents, or act on one (interactive TUI unless `--json`)
-    #[cfg(all(feature = "client", not(target_os = "android")))]
+    /// Manage agent instances
+    #[cfg(feature = "client")]
     Agent {
         #[command(subcommand)]
         action: Option<AgentCommand>,
+
+        #[clap(flatten)]
+        target: TargetArgs,
     },
 
-    /// Browse and manage saved servers (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android")))]
-    Server,
+    /// Manage server instances
+    #[cfg(feature = "client")]
+    Server {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Probe devices (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-probe"))]
-    Probe,
+    /// Manage probes
+    #[cfg(all(feature = "client", feature = "layer-probe"))]
+    Probe {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Desktop viewer and screenshots
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-desktop"))]
+    /// Connect to remote desktop sessions
+    #[cfg(all(feature = "client", feature = "layer-desktop"))]
     Desktop {
         #[command(subcommand)]
         action: Option<sandpolis_desktop::cli::DesktopCommand>,
+
+        #[clap(flatten)]
+        target: TargetArgs,
     },
 
-    /// Interactive shell on the target agent
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-shell"))]
-    Shell,
+    /// Connect to remote shell sessions
+    #[cfg(all(feature = "client", feature = "layer-shell"))]
+    Shell {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Inspect agent health (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-health"))]
-    Health,
+    /// Inspect agent health
+    #[cfg(all(feature = "client", feature = "layer-health"))]
+    Health {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Inspect agent inventory (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-inventory"))]
-    Inventory,
+    /// Inspect agent inventory
+    #[cfg(all(feature = "client", feature = "layer-inventory"))]
+    Inventory {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Browse agent filesystems (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-filesystem"))]
-    Filesystem,
+    /// Browse agent filesystems
+    #[cfg(all(feature = "client", feature = "layer-filesystem"))]
+    Filesystem {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Manage accounts (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-account"))]
-    Account,
+    /// Manage accounts
+    #[cfg(all(feature = "client", feature = "layer-account"))]
+    Account {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Manage snapshots (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-snapshot"))]
-    Snapshot,
+    /// Manage cold snapshots
+    #[cfg(all(feature = "client", feature = "layer-snapshot"))]
+    Snapshot {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
     /// Wake / power control (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-wake"))]
-    Wake,
+    #[cfg(feature = "client")]
+    Wake {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
     /// Inspect audit events (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-audit"))]
-    Audit,
+    #[cfg(all(feature = "client", feature = "layer-audit"))]
+    Audit {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 
-    /// Manage tunnels (interactive TUI)
-    #[cfg(all(feature = "client", not(target_os = "android"), feature = "layer-tunnel"))]
-    Tunnel,
+    /// Manage tunnels
+    #[cfg(all(feature = "client", feature = "layer-tunnel"))]
+    Tunnel {
+        #[clap(flatten)]
+        target: TargetArgs,
+    },
 }
 
 impl Commands {
@@ -225,56 +259,55 @@ impl Commands {
 
     /// Dispatch a client subcommand: opens a focused TUI, or runs
     /// noninteractively (`--json`). Requires the live [`InstanceState`].
-    #[cfg(all(feature = "client", not(target_os = "android")))]
+    #[cfg(feature = "client")]
     pub async fn dispatch_client(
         self,
         config: &Configuration,
         state: &crate::InstanceState,
-        target: TargetArgs,
     ) -> Result<ExitCode> {
         let fps = config.client.fps as f32;
         match self {
-            Commands::Agent { action } => client::agent(action, target, state, fps).await,
-            Commands::Server => {
-                let widget = crate::client::tui::server_list::ServerListWidget::new(
-                    state.server.clone(),
-                )?;
+            Commands::Agent { action, target } => client::agent(action, target, state, fps).await,
+            Commands::Server { target: _ } => {
+                let widget =
+                    crate::client::tui::server_list::ServerListWidget::new(state.server.clone())?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
             #[cfg(feature = "layer-probe")]
-            Commands::Probe => sandpolis_probe::cli::dispatch(target, &state.probe, fps).await,
+            Commands::Probe { target } => {
+                sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
+            }
             #[cfg(feature = "layer-desktop")]
-            Commands::Desktop { action } => {
+            Commands::Desktop { action, target } => {
                 sandpolis_desktop::cli::dispatch(action, target, &state.desktop, fps).await
             }
             #[cfg(feature = "layer-shell")]
-            Commands::Shell => {
+            Commands::Shell { target } => {
                 sandpolis_shell::cli::dispatch(target, state.shell.clone(), fps).await
             }
             #[cfg(feature = "layer-health")]
-            Commands::Health => client::stub("health", target, fps).await,
+            Commands::Health { target } => client::stub("health", target, fps).await,
             #[cfg(feature = "layer-inventory")]
-            Commands::Inventory => client::stub("inventory", target, fps).await,
+            Commands::Inventory { target } => client::stub("inventory", target, fps).await,
             #[cfg(feature = "layer-filesystem")]
-            Commands::Filesystem => client::stub("filesystem", target, fps).await,
+            Commands::Filesystem { target } => client::stub("filesystem", target, fps).await,
             #[cfg(feature = "layer-account")]
-            Commands::Account => client::stub("account", target, fps).await,
+            Commands::Account { target } => client::stub("account", target, fps).await,
             #[cfg(feature = "layer-snapshot")]
-            Commands::Snapshot => client::stub("snapshot", target, fps).await,
-            #[cfg(feature = "layer-wake")]
-            Commands::Wake => client::stub("wake", target, fps).await,
+            Commands::Snapshot { target } => client::stub("snapshot", target, fps).await,
+            Commands::Wake { target } => client::stub("wake", target, fps).await,
             #[cfg(feature = "layer-audit")]
-            Commands::Audit => client::stub("audit", target, fps).await,
+            Commands::Audit { target } => client::stub("audit", target, fps).await,
             #[cfg(feature = "layer-tunnel")]
-            Commands::Tunnel => client::stub("tunnel", target, fps).await,
+            Commands::Tunnel { target } => client::stub("tunnel", target, fps).await,
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),
         }
     }
 }
 
-#[cfg(all(feature = "client", not(target_os = "android")))]
+#[cfg(feature = "client")]
 mod client {
     use super::*;
     use anyhow::{Context, bail};
@@ -340,10 +373,7 @@ mod client {
         use sandpolis_instance::realm::RealmName;
         use std::time::Duration;
 
-        sandpolis_client::sync::subscribe(
-            sandpolis_instance::instance_layer_model_id(),
-            None,
-        );
+        sandpolis_client::sync::subscribe(sandpolis_instance::instance_layer_model_id(), None);
 
         if sandpolis_client::sync::wait_for_connection(Duration::from_secs(10))
             .await
@@ -354,8 +384,8 @@ mod client {
         // Give the subscription a moment to deliver records.
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        let db = sandpolis_client::sync::client_database()
-            .context("client database unavailable")?;
+        let db =
+            sandpolis_client::sync::client_database().context("client database unavailable")?;
         let realm = db.realm(RealmName::default())?;
         let r = realm.r_transaction()?;
         let all: Vec<InstanceLayerData> =

@@ -37,7 +37,6 @@ sandpolis-health = { path = "../sandpolis-health", version = "0.0.1", optional =
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-inventory = { path = "../sandpolis-inventory", version = "0.0.1", optional = true }
-sandpolis-wake = { path = "../sandpolis-wake", version = "0.0.1", optional = true }
 sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1" }
 sandpolis-shell = { path = "../sandpolis-shell", version = "0.0.1", optional = true }
@@ -80,13 +79,13 @@ server = [
   "dep:axum",
   "dep:axum-server",
   "dep:axum-macros",
+  "sandpolis-agent/server",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
   "sandpolis-health?/server",
   "sandpolis-instance/server",
   "sandpolis-inventory?/server",
   "sandpolis-probe?/server",
-  "sandpolis-wake?/server",
   "sandpolis-server/server",
   "sandpolis-shell?/server",
 ]
@@ -98,12 +97,12 @@ agent = [
   "sandpolis-instance/agent",
   "sandpolis-inventory?/agent",
   "sandpolis-probe?/agent",
-  "sandpolis-wake?/agent",
   "sandpolis-server/agent",
   "sandpolis-shell?/agent",
 ]
 client = [
   "dep:roniker",
+  "sandpolis-agent/client",
   "sandpolis-client/client",
   "sandpolis-instance/client",
   "sandpolis-server/client",
@@ -124,7 +123,6 @@ client = [
   "sandpolis-health?/client",
   "sandpolis-inventory?/client",
   "sandpolis-probe?/client",
-  "sandpolis-wake?/client",
   "sandpolis-shell?/client",
 ]
 
@@ -139,7 +137,6 @@ layer-inventory = ["dep:sandpolis-inventory"]
 layer-shell = ["dep:sandpolis-shell"]
 layer-snapshot = ["dep:sandpolis-snapshot"]
 layer-probe = ["dep:sandpolis-probe"]
-layer-wake = ["dep:sandpolis-wake"]
 layer-tunnel = []
 
 # Enable all layers
@@ -151,7 +148,6 @@ default = [
   "layer-filesystem",
   "layer-health",
   "layer-inventory",
-  "layer-wake",
   "layer-probe",
   "layer-shell",
   "layer-snapshot",

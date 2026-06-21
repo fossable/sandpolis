@@ -18,6 +18,7 @@ use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod sync;

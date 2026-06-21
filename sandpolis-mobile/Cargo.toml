@@ -21,7 +21,6 @@ sandpolis = { path = "../sandpolis", version = "8.0.0", default-features = false
   "agent",
   "layer-desktop",
   "layer-inventory",
-  "layer-wake",
   "layer-shell",
 ] }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }

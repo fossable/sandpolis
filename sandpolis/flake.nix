@@ -35,7 +35,7 @@
           buildPhase = ''
             cargo build --package sandpolis --bin sandpolis --release \
               --no-default-features \
-              --features agent,layer-wake
+              --features agent
           '';
 
           installPhase = ''

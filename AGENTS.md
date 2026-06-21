@@ -20,6 +20,10 @@ Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
 "layer" that brings some functionality. Layers can depend on each other and some
 are optional (controlled via cargo features).
 
+Most layers implement some functionality for all three instance types. For
+example, the way to think about the `sandpolis-agent` crate is it "does
+something with agents", not that it "implements what an agent does".
+
 ## CoLo mode
 
 When a server feature is compiled alongside the client and/or agent and the
@@ -51,6 +55,7 @@ cd android && ./gradlew assembleDebug
 - Zooming in on a node enters another level of depth where all other nodes
   disappear. Now shows more detailed operations.
 - `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should not be layers anymore?
+  Layers vs subsystems? Layers are just UI?
 - On desktop, probe, and shell layers: servers are present in the graph (so we
   have links), but they are not interactable. When the server layer is active,
   only servers are shown and they become interactable. Clients are only present

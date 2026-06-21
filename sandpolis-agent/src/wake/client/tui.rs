@@ -1,18 +1,16 @@
-use crate::WakeLayer;
+use crate::AgentLayer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
-use sandpolis_instance::InstanceId;
 
-// #[derive(Debug)]
 pub struct WakeWidget {
-    pub wake: WakeLayer,
+    pub agent: AgentLayer,
 }
 
 impl WakeWidget {
-    pub fn new(wake: WakeLayer) -> Self {
-        WakeWidget { wake }
+    pub fn new(agent: AgentLayer) -> Self {
+        WakeWidget { agent }
     }
 }
 
@@ -27,7 +25,7 @@ impl WidgetRef for WakeWidget {
         block.render(area, buf);
 
         // Render the text inside the block
-        let text = vec![
+        let _text = vec![
             Text::raw(format!("Power State: {}\n", "state")),
             Text::raw(format!("Uptime: {} seconds\n", "uptime")),
             Text::raw("\n"),

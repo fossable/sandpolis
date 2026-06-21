@@ -39,6 +39,7 @@ pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterRespo
 
 #[cfg(any(feature = "agent", feature = "client"))]
 pub mod client;
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod messages;

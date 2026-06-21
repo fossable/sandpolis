@@ -8,6 +8,7 @@ use std::{collections::HashMap, sync::LazyLock};
 
 #[cfg(feature = "agent")]
 pub mod agent;
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 #[cfg(feature = "client")]
 pub mod client;
@@ -35,8 +36,6 @@ pub struct InstanceState {
     pub network: sandpolis_instance::network::NetworkLayer,
     #[cfg(feature = "layer-inventory")]
     pub inventory: sandpolis_inventory::InventoryLayer,
-    #[cfg(feature = "layer-wake")]
-    pub wake: sandpolis_wake::WakeLayer,
     pub server: sandpolis_server::ServerLayer,
     #[cfg(feature = "layer-shell")]
     pub shell: sandpolis_shell::ShellLayer,
@@ -82,11 +81,6 @@ impl InstanceState {
         #[cfg(feature = "layer-health")]
         let health = sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
 
-        #[cfg(feature = "layer-wake")]
-        let wake = sandpolis_wake::WakeLayer {
-            network: network.clone(),
-        };
-
         #[cfg(feature = "layer-shell")]
         let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
 
@@ -110,8 +104,6 @@ impl InstanceState {
             inventory,
             #[cfg(feature = "layer-health")]
             health,
-            #[cfg(feature = "layer-wake")]
-            wake,
             #[cfg(feature = "layer-shell")]
             shell,
             #[cfg(feature = "layer-filesystem")]
@@ -139,8 +131,7 @@ impl InstanceState {
 /// irrevocable permissions. By default, additional user accounts are created
 /// without permissions and consequently are allowed to do almost nothing.
 pub enum InstancePermission {
-    #[cfg(feature = "layer-wake")]
-    Wake(sandpolis_wake::WakePermission),
+    Wake(sandpolis_agent::wake::WakePermission),
     #[cfg(feature = "layer-filesystem")]
     Filesystem(sandpolis_filesystem::FilesystemPermission),
 }

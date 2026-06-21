@@ -1,3 +1,4 @@
+#[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 
