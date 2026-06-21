@@ -17,22 +17,26 @@ pub fn spawn_client_sync(state: InstanceState) {
 
     tokio::spawn(async move {
         loop {
-            for connection in server.server_connections() {
+            let conns = server.server_connections();
+            tracing::debug!(count = conns.len(), "spawn_client_sync: checking server connections");
+            for connection in conns {
                 let has_ws = connection.inner.read().unwrap().is_some();
+                tracing::debug!(has_ws, "spawn_client_sync: connection slot");
                 if has_ws {
                     continue;
                 }
+                tracing::info!("spawn_client_sync: opening websocket");
                 match connection.open_websocket(&network, instance_id).await {
                     Ok(ic) => {
-                        sandpolis_client::sync::init(ic, database.clone());
                         tracing::info!("Established sync websocket to server");
+                        sandpolis_client::sync::init(ic, database.clone());
                     }
                     Err(e) => {
-                        tracing::debug!(error = %e, "Failed to open sync websocket");
+                        tracing::info!(error = %e, "Failed to open sync websocket");
                     }
                 }
             }
-            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         }
     });
 }
@@ -78,8 +82,10 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
 
     tokio::spawn(async move {
         loop {
+            tracing::info!(%url, "spawn_local_server_connection: attempting connect");
             match server.connect(url.clone()).await {
                 Ok(connection) => {
+                    tracing::info!("spawn_local_server_connection: connected, pushing to outbound");
                     server
                         .outbound
                         .write()
@@ -89,7 +95,7 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
                     return;
                 }
                 Err(e) => {
-                    tracing::debug!(error = %e, "Local server not ready yet");
+                    tracing::info!(error = %e, "Local server not ready yet, retrying in 2s");
                     tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                 }
             }

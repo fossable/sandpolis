@@ -41,12 +41,26 @@ pub struct CommandLine {
     pub command: Option<Commands>,
 }
 
-/// Interactive TUI / noninteractive operation on the target agent.
+/// Subcommands for `sandpolis agent`.
 #[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
 pub enum AgentCommand {
+    /// List all connected agents as JSON
+    List,
     /// Restart (reboot) the target agent's device
-    Restart,
+    Restart {
+        /// Target instance
+        #[clap(long)]
+        instance: sandpolis_instance::InstanceId,
+    },
+}
+
+/// Subcommands for `sandpolis server`.
+#[cfg(feature = "client")]
+#[derive(Subcommand, Debug, Clone)]
+pub enum ServerCommand {
+    /// List all configured servers as JSON
+    List,
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -89,16 +103,13 @@ pub enum Commands {
     Agent {
         #[command(subcommand)]
         action: Option<AgentCommand>,
-
-        #[clap(flatten)]
-        target: TargetArgs,
     },
 
     /// Manage server instances
     #[cfg(feature = "client")]
     Server {
-        #[clap(flatten)]
-        target: TargetArgs,
+        #[command(subcommand)]
+        action: Option<ServerCommand>,
     },
 
     /// Manage probes
@@ -267,13 +278,8 @@ impl Commands {
     ) -> Result<ExitCode> {
         let fps = config.client.fps as f32;
         match self {
-            Commands::Agent { action, target } => client::agent(action, target, state, fps).await,
-            Commands::Server { target: _ } => {
-                let widget =
-                    crate::client::tui::server_list::ServerListWidget::new(state.server.clone())?;
-                sandpolis_client::tui::run_tui(fps, widget).await?;
-                Ok(ExitCode::SUCCESS)
-            }
+            Commands::Agent { action } => client::agent(action, fps).await,
+            Commands::Server { action } => client::server(action, &state.server, fps).await,
             #[cfg(feature = "layer-probe")]
             Commands::Probe { target } => {
                 sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
@@ -327,62 +333,88 @@ mod client {
         Ok(ExitCode::SUCCESS)
     }
 
-    pub(super) async fn agent(
-        action: Option<AgentCommand>,
-        target: TargetArgs,
-        _state: &InstanceState,
-        fps: f32,
-    ) -> Result<ExitCode> {
+    pub(super) async fn agent(action: Option<AgentCommand>, fps: f32) -> Result<ExitCode> {
         match action {
             None => {
-                if target.json {
-                    return list_agents_json().await;
-                }
                 let widget = crate::client::tui::agent_list::AgentListWidget::new()?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
-            Some(AgentCommand::Restart) => {
-                if target.json {
-                    let Some(instance) = target.instance else {
-                        bail!("--instance is required with --json");
-                    };
-                    // The agent reboot stream is not yet wired end-to-end; report
-                    // honestly rather than pretend success.
-                    println!(
-                        "{}",
-                        serde_json::json!({
-                            "instance": instance.to_string(),
-                            "status": "unimplemented",
-                            "detail": "agent reboot stream is not yet wired",
-                        })
-                    );
-                    return Ok(ExitCode::FAILURE);
-                }
-                let widget = crate::client::tui::agent_list::AgentListWidget::new()?;
-                sandpolis_client::tui::run_tui(fps, widget).await?;
-                Ok(ExitCode::SUCCESS)
+            Some(AgentCommand::List) => list_agents_json().await,
+            Some(AgentCommand::Restart { instance }) => {
+                // The agent reboot stream is not yet wired end-to-end; report
+                // honestly rather than pretend success.
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "instance": instance.to_string(),
+                        "status": "unimplemented",
+                        "detail": "agent reboot stream is not yet wired",
+                    })
+                );
+                Ok(ExitCode::FAILURE)
             }
         }
     }
 
-    /// Print every known agent instance as JSON. Subscribes to the instance
-    /// model, waits briefly for sync, then reads the client database.
+    pub(super) async fn server(
+        action: Option<ServerCommand>,
+        server_layer: &sandpolis_server::ServerLayer,
+        fps: f32,
+    ) -> Result<ExitCode> {
+        match action {
+            None => {
+                let widget = crate::client::tui::server_list::ServerListWidget::new(
+                    server_layer.clone(),
+                )?;
+                sandpolis_client::tui::run_tui(fps, widget).await?;
+                Ok(ExitCode::SUCCESS)
+            }
+            Some(ServerCommand::List) => list_servers_json(server_layer),
+        }
+    }
+
+    fn list_servers_json(server_layer: &sandpolis_server::ServerLayer) -> Result<ExitCode> {
+        let servers: Vec<_> = server_layer
+            .servers
+            .iter()
+            .map(|resident| {
+                let data = resident.read();
+                serde_json::json!({
+                    "address": data.address.to_string(),
+                    "user": data.user.to_string(),
+                })
+            })
+            .collect();
+
+        println!("{}", serde_json::to_string_pretty(&servers)?);
+        Ok(ExitCode::SUCCESS)
+    }
+
+    /// Print every known agent instance as JSON. Waits for the sync websocket
+    /// to be established (CoLo mode starts the server asynchronously), then
+    /// subscribes to the instance model and reads from the client database.
     async fn list_agents_json() -> Result<ExitCode> {
         use sandpolis_instance::InstanceLayerData;
         use sandpolis_instance::realm::RealmName;
         use std::time::Duration;
 
-        sandpolis_client::sync::subscribe(sandpolis_instance::instance_layer_model_id(), None);
-
-        if sandpolis_client::sync::wait_for_connection(Duration::from_secs(10))
+        info!("list_agents_json: waiting for server connection (up to 30s)");
+        if sandpolis_client::sync::wait_for_connection(Duration::from_secs(30))
             .await
             .is_none()
         {
             bail!("no server connection");
         }
+        info!("list_agents_json: connection established, subscribing");
+
+        // Subscribe only after the connection is up so the call isn't a no-op.
+        sandpolis_client::sync::subscribe(sandpolis_instance::instance_layer_model_id(), None);
+
         // Give the subscription a moment to deliver records.
+        info!("list_agents_json: waiting 500ms for sync delivery");
         tokio::time::sleep(Duration::from_millis(500)).await;
+        info!("list_agents_json: reading client database");
 
         let db =
             sandpolis_client::sync::client_database().context("client database unavailable")?;

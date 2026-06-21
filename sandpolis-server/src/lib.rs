@@ -65,6 +65,22 @@ impl ServerLayer {
         network: NetworkLayer,
         realms: RealmLayer,
     ) -> Result<Self> {
+        // Purge stale ConnectionData rows left over from previous runs
+        {
+            let realm = database.realm(RealmName::default())?;
+            let r = realm.r_transaction()?;
+            let stale: Vec<ConnectionData> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            drop(r);
+            if !stale.is_empty() {
+                let rw = realm.rw_transaction()?;
+                for row in stale {
+                    rw.remove(row)?;
+                }
+                rw.commit()?;
+            }
+        }
+
         Ok(Self {
             #[cfg(feature = "server")]
             banner: database.realm(RealmName::default())?.resident(())?,
@@ -263,16 +279,12 @@ impl ServerConnection {
             cd.remote_instance = id;
         }
         cd.established = chrono::Utc::now();
-        let data = network
-            .connections
-            .push(cd)
-            .map_err(|e| anyhow!("{e}"))?;
+        let data = network.connections.push(cd).map_err(|e| anyhow!("{e}"))?;
 
         // Serve our local realm database to the peer's sync subscriptions
         // (an agent answering the server's all-filter requester).
         let realm_db = network.database.realm(self.realm.clone())?;
-        let sync_reg =
-            sandpolis_instance::network::sync::SyncResponderRegistration::new(realm_db);
+        let sync_reg = sandpolis_instance::network::sync::SyncResponderRegistration::new(realm_db);
         let mut handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
             collected_responders().collect();
         handlers.push(&sync_reg);

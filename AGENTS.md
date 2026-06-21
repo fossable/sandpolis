@@ -83,7 +83,16 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-agent`
 
-- Merge deploy crate
+- Merge `sandpolis-deploy` crate into `sandpolis-agent`
+  - The idea is you can install the agent via SSH or via a local executable
+  - Drop outdated code that's no longer useful like the Java/protobuf stuff
+  - Drop the embedded config - we're moving towards all configuration happening
+    via CLI flags
+  - Gate appropriately - systemd features are only needed by the agent, UI
+    features are only needed by the client, and SSH features are only needed by
+    the server.
+  - Scope: just build out the framework, we'll provide the actual prebuilt agent
+    binaries for install later
 
 ## `sandpolis-account`
 

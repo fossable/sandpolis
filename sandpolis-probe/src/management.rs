@@ -184,7 +184,7 @@ mod client {
     /// The returned stream stays registered (and receiving updates) even after the
     /// outbound sender is dropped, so we only need to send the initial request.
     pub fn subscribe(conn: Arc<InstanceConnection>) {
-        tokio::spawn(async move {
+        sandpolis_client::sync::spawn(async move {
             let (id, tx) = conn.register_stream(DeviceMgmtRequester);
             let payload = match serde_cbor::to_vec(&DeviceMgmtRequest::Subscribe) {
                 Ok(p) => p,
@@ -202,7 +202,7 @@ mod client {
 
     /// Send a one-shot management request (Register/Delete) to the server.
     fn send_request(conn: Arc<InstanceConnection>, request: DeviceMgmtRequest) {
-        tokio::spawn(async move {
+        sandpolis_client::sync::spawn(async move {
             let (id, tx) = conn.register_stream(DeviceMgmtRequester);
             let payload = match serde_cbor::to_vec(&request) {
                 Ok(p) => p,
