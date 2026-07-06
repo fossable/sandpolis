@@ -50,10 +50,7 @@ pub struct ShellResponderRegistration;
 impl RegisterResponders for ShellResponderRegistration {
     fn register_responders(&self, registry: &StreamRegistry) {
         registry.register_responder(|| execute::ShellExecuteStreamResponder);
-        registry.register_responder(|| session::ShellSessionStreamResponder {
-            process: tokio::sync::RwLock::new(None),
-            stdin: tokio::sync::RwLock::new(None),
-        });
+        registry.register_responder(session::ShellSessionStreamResponder::default);
     }
 }
 

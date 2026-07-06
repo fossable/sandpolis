@@ -16,22 +16,68 @@ sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 native_db = { workspace = true }
 native_model = { workspace = true }
 
-# Agent dependencies (screen capture & simulated input, via rustdesk's libs)
-scrap = { git = "https://github.com/rustdesk/rustdesk", optional = true, features = [
-  "linux-pkg-config",
-  "wayland",
-] }
-enigo = { git = "https://github.com/rustdesk/rustdesk", optional = true }
+# Agent dependencies: screen capture & input injection. The capture and input
+# modules are adapted from rustdesk's `scrap` and `enigo` crates; these are the
+# leaf dependencies they pull in.
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 tokio = { workspace = true, optional = true }
 zstd = { version = "0.13", optional = true }
 image = { workspace = true, optional = true }
+log = { version = "0.4", optional = true }
+lazy_static = { version = "1.4", optional = true }
+cfg-if = { version = "1.0", optional = true }
+serde_json = { workspace = true, optional = true }
 
 # Client dependencies
 bevy = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 inventory = { workspace = true, optional = true }
 serde_cbor = { workspace = true, optional = true }
+
+# Screen-capture / input backend for X11 & Wayland (Linux).
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = { version = "0.2", optional = true }
+libloading = { version = "0.8", optional = true }
+regex = { workspace = true, optional = true }
+dirs = { version = "6", optional = true }
+x11 = { version = "2.21", features = ["xlib"], optional = true }
+dbus = { version = "0.9", optional = true }
+gstreamer = { version = "0.16", optional = true }
+gstreamer-app = { version = "0.16", features = ["v1_10"], optional = true }
+gstreamer-video = { version = "0.16", optional = true }
+sctk = { package = "smithay-client-toolkit", version = "0.20.0", default-features = false, features = [
+  "calloop",
+], optional = true }
+tfc = { git = "https://github.com/rustdesk-org/The-Fat-Controller", branch = "history/rebase_upstream_20240722", optional = true }
+
+# Screen-capture / input backend for Quartz (macOS).
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = { version = "0.2", optional = true }
+block = { version = "0.1", optional = true }
+core-graphics = { version = "0.22", optional = true }
+objc = { version = "0.2", optional = true }
+unicode-segmentation = { version = "1.10", optional = true }
+
+# Screen-capture / input backend for DXGI (Windows).
+[target.'cfg(target_os = "windows")'.dependencies.winapi]
+version = "0.3"
+features = [
+  "dxgi",
+  "dxgi1_2",
+  "dxgi1_5",
+  "d3d11",
+  "winuser",
+  "winbase",
+  "winerror",
+  "errhandlingapi",
+  "libloaderapi",
+]
+optional = true
+
+# Screen-capture backend for Android.
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { version = "0.21", optional = true }
+ndk-context = { version = "0.1", optional = true }
 
 # Terminal (TUI/CLI) dependencies, excluded on Android
 [target.'cfg(not(target_os = "android"))'.dependencies]
@@ -40,13 +86,37 @@ ratatui-image = { workspace = true, optional = true }
 
 [features]
 agent = [
-  "dep:scrap",
-  "dep:enigo",
   "dep:sandpolis-agent",
   "dep:tokio",
   "dep:zstd",
   "dep:image",
   "dep:inventory",
+  "dep:log",
+  "dep:lazy_static",
+  "dep:cfg-if",
+  "dep:serde_json",
+  # Linux capture/input backend
+  "dep:libc",
+  "dep:libloading",
+  "dep:regex",
+  "dep:dirs",
+  "dep:x11",
+  "dep:dbus",
+  "dep:gstreamer",
+  "dep:gstreamer-app",
+  "dep:gstreamer-video",
+  "dep:sctk",
+  "dep:tfc",
+  # macOS capture/input backend
+  "dep:block",
+  "dep:core-graphics",
+  "dep:objc",
+  "dep:unicode-segmentation",
+  # Windows capture/input backend
+  "dep:winapi",
+  # Android capture backend
+  "dep:jni",
+  "dep:ndk-context",
 ]
 # Client stream requesters decode frames (zstd + color modes) and screenshots
 # (PNG), so they need the same codec deps as the agent encoder.

@@ -19,7 +19,7 @@ impl DesktopDisplayCollector {
 
 impl Collector for DesktopDisplayCollector {
     async fn refresh(&mut self) -> Result<()> {
-        let displays = scrap::Display::all()?;
+        let displays = crate::capture::Display::all()?;
         trace!(count = displays.len(), "Enumerated desktops");
 
         'next_display: for display in displays.iter() {

@@ -24,7 +24,9 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 
 # GUI dependencies
+alacritty_terminal = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true }
+include_dir = { workspace = true, optional = true }
 inventory = { workspace = true, optional = true }
 
 # Terminal (TUI/CLI) dependencies, excluded on Android
@@ -32,12 +34,17 @@ inventory = { workspace = true, optional = true }
 tui-term = { version = "0.3.0", optional = true }
 ratatui = { workspace = true, optional = true }
 
+[target.'cfg(unix)'.dependencies]
+pty-process = { workspace = true, optional = true }
+
 [features]
-agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory"]
+agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory", "dep:pty-process"]
 server = []
 client = [
+  "dep:alacritty_terminal",
   "dep:serde_cbor",
   "dep:bevy",
+  "dep:include_dir",
   "dep:inventory",
   "dep:sandpolis-client",
   "dep:tui-term",

@@ -34,7 +34,7 @@ mod agent {
         type Out = DesktopScreenshotResponse;
 
         async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
-            // Capture + encode on a blocking thread since `scrap` types are not Send.
+            // Capture + encode on a blocking thread since the capture module types are not Send.
             let response = tokio::task::spawn_blocking(move || capture_png(&request.desktop_uuid))
                 .await?
                 .map(DesktopScreenshotResponse::Ok)
@@ -50,9 +50,9 @@ mod agent {
 
     /// Capture one frame from the named display and encode it as PNG.
     fn capture_png(desktop_uuid: &str) -> Result<Vec<u8>> {
-        use scrap::{Frame, TraitCapturer, TraitPixelBuffer};
+        use crate::capture::{Frame, TraitCapturer, TraitPixelBuffer};
 
-        let mut displays = scrap::Display::all()?;
+        let mut displays = crate::capture::Display::all()?;
         if displays.is_empty() {
             bail!("No displays available");
         }
@@ -61,7 +61,7 @@ mod agent {
             None => displays.swap_remove(0),
         };
 
-        let mut capturer = scrap::Capturer::new(display)?;
+        let mut capturer = crate::capture::Capturer::new(display)?;
 
         // Retry a few times to skip the initial empty frames.
         for _ in 0..30 {
@@ -90,11 +90,11 @@ mod agent {
         width: usize,
         height: usize,
         stride: &[usize],
-        pixfmt: scrap::Pixfmt,
+        pixfmt: crate::capture::Pixfmt,
     ) -> Result<Vec<u8>> {
         let row_stride = stride.first().copied().unwrap_or(width * 4);
         let (r_off, b_off) = match pixfmt {
-            scrap::Pixfmt::RGBA => (0usize, 2usize),
+            crate::capture::Pixfmt::RGBA => (0usize, 2usize),
             _ => (2usize, 0usize),
         };
 

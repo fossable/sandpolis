@@ -17,6 +17,17 @@ pub mod cli;
 #[cfg(feature = "agent")]
 mod agent;
 
+/// Screen capture, adapted from rustdesk's `scrap`.
+#[cfg(feature = "agent")]
+pub mod capture;
+
+/// Keyboard/mouse injection, adapted from rustdesk's fork of `enigo`.
+#[cfg(feature = "agent")]
+pub mod input;
+
+#[cfg(feature = "agent")]
+mod platform;
+
 /// A capturable desktop (display) discovered on an agent.
 #[data]
 #[derive(Default)]

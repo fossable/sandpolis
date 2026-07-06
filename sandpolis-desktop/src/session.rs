@@ -200,8 +200,8 @@ mod agent {
     }
 
     /// Locate a display by name, falling back to the primary display.
-    fn find_display(desktop_uuid: &str) -> Result<scrap::Display> {
-        let mut displays = scrap::Display::all()?;
+    fn find_display(desktop_uuid: &str) -> Result<crate::capture::Display> {
+        let mut displays = crate::capture::Display::all()?;
         if let Some(idx) = displays.iter().position(|d| d.name() == desktop_uuid) {
             return Ok(displays.swap_remove(idx));
         }
@@ -223,10 +223,10 @@ mod agent {
         stop: Arc<AtomicBool>,
         sender: Sender<DesktopStreamResponse>,
     ) -> Result<()> {
-        use scrap::{Frame, TraitCapturer, TraitPixelBuffer};
+        use crate::capture::{Frame, TraitCapturer, TraitPixelBuffer};
 
         let display = find_display(&desktop_uuid)?;
-        let mut capturer = scrap::Capturer::new(display)?;
+        let mut capturer = crate::capture::Capturer::new(display)?;
         let width = capturer.width() as i32;
         let height = capturer.height() as i32;
 
@@ -296,14 +296,14 @@ mod agent {
         width: usize,
         height: usize,
         stride: &[usize],
-        pixfmt: scrap::Pixfmt,
+        pixfmt: crate::capture::Pixfmt,
         color_mode: DesktopStreamColorMode,
         compression_mode: DesktopStreamCompressionMode,
     ) -> Vec<u8> {
         let row_stride = stride.first().copied().unwrap_or(width * 4);
         // Byte offsets of the red and blue channels within a 4-byte pixel.
         let (r_off, b_off) = match pixfmt {
-            scrap::Pixfmt::RGBA => (0usize, 2usize),
+            crate::capture::Pixfmt::RGBA => (0usize, 2usize),
             // Default to BGRA layout for everything else.
             _ => (2usize, 0usize),
         };
@@ -354,7 +354,7 @@ mod agent {
         rx: std::sync::mpsc::Receiver<DesktopStreamInputEvent>,
         stop: Arc<AtomicBool>,
     ) {
-        use enigo::{Enigo, Key, KeyboardControllable, MouseButton, MouseControllable};
+        use crate::input::{Enigo, Key, KeyboardControllable, MouseButton, MouseControllable};
 
         fn map_button(button: DesktopStreamPointerButton) -> MouseButton {
             match button {

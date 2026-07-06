@@ -1,21 +1,7 @@
-use crate::{DiscoveredShell, ShellType};
-use anyhow::Result;
-use regex::Regex;
-use sandpolis_instance::database::Resident;
-use sandpolis_instance::network::StreamResponder;
 use sandpolis_macros::Stream;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Duration;
-use tokio::sync::RwLock;
-use tokio::sync::mpsc::Sender;
-use tokio::time::timeout;
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    process::{Child, Command},
-};
-use tracing::{debug, trace};
 
 /// Request message for shell session streams.
 #[derive(Serialize, Deserialize)]
@@ -48,102 +34,177 @@ pub enum ShellSessionStreamRequest {
     },
 }
 
-/// Event containing standard-output and standard-error.
+/// Event containing shell output.
 #[derive(Serialize, Deserialize)]
 pub struct ShellSessionStreamResponse {
     pub stdout: Vec<u8>,
+    /// Always empty on unix agents: the shell runs on a PTY, which merges
+    /// stderr into stdout by design.
     pub stderr: Vec<u8>,
 }
 
-/// Stream that runs a bidirectional shell session.
-#[derive(Stream, Default)]
-pub struct ShellSessionStreamResponder {
-    pub process: RwLock<Option<Child>>,
-    pub stdin: RwLock<Option<tokio::process::ChildStdin>>,
-}
+#[cfg(feature = "agent")]
+mod agent {
+    use super::*;
+    use anyhow::Result;
+    use sandpolis_instance::network::StreamResponder;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::process::Child;
+    use tokio::sync::RwLock;
+    use tokio::sync::mpsc::Sender;
+    use tracing::debug;
 
-impl StreamResponder for ShellSessionStreamResponder {
-    type In = ShellSessionStreamRequest;
-    type Out = ShellSessionStreamResponse;
+    /// Stream that runs a bidirectional shell session.
+    ///
+    /// On unix the shell is attached to a real PTY, so line editing, echo, and
+    /// full-screen programs behave like a local terminal. Other platforms fall
+    /// back to plain pipes.
+    #[derive(Stream, Default)]
+    pub struct ShellSessionStreamResponder {
+        pub process: RwLock<Option<Child>>,
+        /// Write half of the PTY the shell is attached to.
+        #[cfg(unix)]
+        pub pty: RwLock<Option<pty_process::OwnedWritePty>>,
+        /// Pipe to the shell's stdin (no PTY on this platform).
+        #[cfg(not(unix))]
+        pub stdin: RwLock<Option<tokio::process::ChildStdin>>,
+    }
 
-    async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
-        match request {
-            ShellSessionStreamRequest::Start {
-                path,
-                mut environment,
-                rows,
-                cols,
-            } => {
-                // Add a default for TERM
-                if !environment.contains_key("TERM") {
-                    environment.insert("TERM".to_string(), "screen-256color".to_string());
-                }
+    impl StreamResponder for ShellSessionStreamResponder {
+        type In = ShellSessionStreamRequest;
+        type Out = ShellSessionStreamResponse;
 
-                // Add a default for rows/cols
-                let rows = if rows == 0 { 120 } else { rows };
-                let cols = if cols == 0 { 80 } else { cols };
+        async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
+            match request {
+                ShellSessionStreamRequest::Start {
+                    path,
+                    mut environment,
+                    rows,
+                    cols,
+                } => {
+                    // Add a default for TERM
+                    if !environment.contains_key("TERM") {
+                        environment.insert("TERM".to_string(), "xterm-256color".to_string());
+                    }
 
-                environment.insert("ROWS".to_string(), rows.to_string());
-                environment.insert("COLS".to_string(), cols.to_string());
+                    // Add a default for rows/cols
+                    let rows = if rows == 0 { 24 } else { rows };
+                    let cols = if cols == 0 { 80 } else { cols };
 
-                // Spawn the process and extract stdin/stdout
-                let mut child = Command::new(&path)
-                    .envs(environment)
-                    .stdin(std::process::Stdio::piped())
-                    .stdout(std::process::Stdio::piped())
-                    .stderr(std::process::Stdio::piped())
-                    .spawn()?;
-                let mut stdout = child.stdout.take().unwrap();
-                let stdin = child.stdin.take().unwrap();
+                    #[cfg(unix)]
+                    {
+                        let (pty, pts) = pty_process::open()?;
+                        pty.resize(pty_process::Size::new(rows as u16, cols as u16))?;
 
-                // Store the child process and stdin for later use
-                *self.process.write().await = Some(child);
-                *self.stdin.write().await = Some(stdin);
+                        let child = pty_process::Command::new(&path)
+                            .envs(environment)
+                            .spawn(pts)?;
+                        let (mut reader, writer) = pty.into_split();
 
-                // Read stdout in a loop (lock is released before the loop)
-                loop {
-                    let mut response = ShellSessionStreamResponse {
-                        stdout: Vec::new(),
-                        stderr: Vec::new(),
-                    };
-                    match stdout.read_buf(&mut response.stdout).await {
-                        Ok(0) => break, // EOF
-                        Ok(_) => {
-                            if sender.send(response).await.is_err() {
-                                break;
+                        *self.process.write().await = Some(child);
+                        *self.pty.write().await = Some(writer);
+
+                        loop {
+                            let mut response = ShellSessionStreamResponse {
+                                stdout: Vec::new(),
+                                stderr: Vec::new(),
+                            };
+                            match reader.read_buf(&mut response.stdout).await {
+                                Ok(0) => break, // EOF
+                                Ok(_) => {
+                                    if sender.send(response).await.is_err() {
+                                        break;
+                                    }
+                                }
+                                // PTY reads fail with EIO once the child exits
+                                Err(_) => break,
                             }
                         }
-                        Err(_) => break,
+
+                        // Reap the child
+                        if let Some(ref mut child) = *self.process.write().await {
+                            let _ = child.wait().await;
+                        }
+                    }
+
+                    #[cfg(not(unix))]
+                    {
+                        // Spawn the process and extract stdin/stdout
+                        let mut child = tokio::process::Command::new(&path)
+                            .envs(environment)
+                            .stdin(std::process::Stdio::piped())
+                            .stdout(std::process::Stdio::piped())
+                            .stderr(std::process::Stdio::piped())
+                            .spawn()?;
+                        let mut stdout = child.stdout.take().unwrap();
+                        let stdin = child.stdin.take().unwrap();
+
+                        // Store the child process and stdin for later use
+                        *self.process.write().await = Some(child);
+                        *self.stdin.write().await = Some(stdin);
+
+                        // Read stdout in a loop (lock is released before the loop)
+                        loop {
+                            let mut response = ShellSessionStreamResponse {
+                                stdout: Vec::new(),
+                                stderr: Vec::new(),
+                            };
+                            match stdout.read_buf(&mut response.stdout).await {
+                                Ok(0) => break, // EOF
+                                Ok(_) => {
+                                    if sender.send(response).await.is_err() {
+                                        break;
+                                    }
+                                }
+                                Err(_) => break,
+                            }
+                        }
                     }
                 }
-            }
-            ShellSessionStreamRequest::Stdin { data } => {
-                if let Some(ref mut stdin) = *self.stdin.write().await {
-                    let _ = stdin.write_all(&data).await;
+                ShellSessionStreamRequest::Stdin { data } => {
+                    #[cfg(unix)]
+                    if let Some(ref mut pty) = *self.pty.write().await {
+                        let _ = pty.write_all(&data).await;
+                    }
+                    #[cfg(not(unix))]
+                    if let Some(ref mut stdin) = *self.stdin.write().await {
+                        let _ = stdin.write_all(&data).await;
+                    }
+                }
+                ShellSessionStreamRequest::Resize { rows, cols } => {
+                    #[cfg(unix)]
+                    if let Some(ref pty) = *self.pty.read().await {
+                        pty.resize(pty_process::Size::new(rows as u16, cols as u16))?;
+                    }
+                    #[cfg(not(unix))]
+                    let _ = (rows, cols);
                 }
             }
-            ShellSessionStreamRequest::Resize { rows, cols } => todo!(),
+            Ok(())
         }
-        Ok(())
+    }
+
+    impl Drop for ShellSessionStreamResponder {
+        fn drop(&mut self) {
+            debug!("Killing child process");
+            if let Some(ref mut child) = *self.process.get_mut() {
+                let _ = child.start_kill();
+            }
+
+            // self.data.update(ShellSessionDelta::ended);
+        }
     }
 }
 
-impl Drop for ShellSessionStreamResponder {
-    fn drop(&mut self) {
-        debug!("Killing child process");
-        if let Some(ref mut child) = *self.process.get_mut() {
-            let _ = child.start_kill();
-        }
-
-        // self.data.update(ShellSessionDelta::ended);
-    }
-}
+#[cfg(feature = "agent")]
+pub use agent::ShellSessionStreamResponder;
 
 #[cfg(feature = "client")]
 mod client {
     use super::*;
+    use anyhow::Result;
     use sandpolis_instance::network::StreamRequester;
-    use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+    use tokio::sync::mpsc::{Sender, UnboundedReceiver, UnboundedSender, unbounded_channel};
 
     /// An output chunk surfaced to the GUI terminal as a shell session runs.
     pub struct ShellOutput {
@@ -193,42 +254,41 @@ mod client {
 #[cfg(feature = "client")]
 pub use client::{ShellOutput, ShellSessionStreamRequester};
 
-#[cfg(test)]
+#[cfg(all(test, feature = "agent", unix))]
 mod test_shell_session {
     use super::*;
+    use sandpolis_instance::network::StreamResponder;
     use std::collections::HashMap;
     use std::path::PathBuf;
     use std::sync::Arc;
     use tokio::sync::mpsc;
 
-    #[tokio::test]
-    async fn test_start_and_receive_output() {
-        let responder = Arc::new(ShellSessionStreamResponder::default());
-        let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
-
-        // Start a simple echo command
+    /// Start a `/bin/sh` session and return its output stream + join handle.
+    fn start_session(
+        responder: &Arc<ShellSessionStreamResponder>,
+        environment: HashMap<String, String>,
+        rows: u32,
+        cols: u32,
+    ) -> (
+        mpsc::Receiver<ShellSessionStreamResponse>,
+        tokio::task::JoinHandle<anyhow::Result<()>>,
+    ) {
+        let (tx, rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
         let request = ShellSessionStreamRequest::Start {
             path: PathBuf::from("/bin/sh"),
-            environment: HashMap::new(),
-            rows: 24,
-            cols: 80,
+            environment,
+            rows,
+            cols,
         };
 
-        // Run on_message in a separate task since it blocks reading stdout
-        let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
+        // Run on_message in a separate task since it blocks reading output
+        let responder = responder.clone();
+        let handle = tokio::spawn(async move { responder.on_message(request, tx).await });
+        (rx, handle)
+    }
 
-        // Send a command via stdin
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        let stdin_request = ShellSessionStreamRequest::Stdin {
-            data: b"echo hello\nexit\n".to_vec(),
-        };
-        responder
-            .on_message(stdin_request, mpsc::channel(1).0)
-            .await
-            .unwrap();
-
-        // Collect output
+    /// Collect session output until the stream ends or times out.
+    async fn collect_output(mut rx: mpsc::Receiver<ShellSessionStreamResponse>) -> String {
         let mut output = Vec::new();
         while let Ok(response) =
             tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
@@ -238,16 +298,36 @@ mod test_shell_session {
                 None => break,
             }
         }
+        String::from_utf8_lossy(&output).into_owned()
+    }
 
-        // Wait for the handler to finish
+    async fn send_stdin(responder: &ShellSessionStreamResponder, data: &[u8]) {
+        responder
+            .on_message(
+                ShellSessionStreamRequest::Stdin {
+                    data: data.to_vec(),
+                },
+                mpsc::channel(1).0,
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_start_and_receive_output() {
+        let responder = Arc::new(ShellSessionStreamResponder::default());
+        let (rx, handle) = start_session(&responder, HashMap::new(), 24, 80);
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        send_stdin(&responder, b"echo hello\nexit\n").await;
+
+        let output = collect_output(rx).await;
         let _ = handle.await;
 
-        // Verify we got some output containing "hello"
-        let output_str = String::from_utf8_lossy(&output);
         assert!(
-            output_str.contains("hello"),
+            output.contains("hello"),
             "Expected 'hello' in output, got: {}",
-            output_str
+            output
         );
     }
 
@@ -267,127 +347,86 @@ mod test_shell_session {
     #[tokio::test]
     async fn test_environment_defaults() {
         let responder = Arc::new(ShellSessionStreamResponder::default());
-        let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Start with empty environment and zero rows/cols to test defaults
-        let request = ShellSessionStreamRequest::Start {
-            path: PathBuf::from("/bin/sh"),
-            environment: HashMap::new(),
-            rows: 0,
-            cols: 0,
-        };
-
-        let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
+        let (rx, handle) = start_session(&responder, HashMap::new(), 0, 0);
 
         // Wait for shell to start
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-        // Echo environment variables to verify they were set
-        let stdin_request = ShellSessionStreamRequest::Stdin {
-            data: b"echo TERM=$TERM ROWS=$ROWS COLS=$COLS\nexit\n".to_vec(),
-        };
-        responder
-            .on_message(stdin_request, mpsc::channel(1).0)
-            .await
-            .unwrap();
+        // The PTY echoes input back, so assert on expanded values that cannot
+        // appear in the echoed command line itself
+        send_stdin(&responder, b"echo RESULT=$TERM; stty size\nexit\n").await;
 
-        // Collect output
-        let mut output = Vec::new();
-        while let Ok(response) =
-            tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
-        {
-            match response {
-                Some(resp) => output.extend(resp.stdout),
-                None => break,
-            }
-        }
-
+        let output = collect_output(rx).await;
         let _ = handle.await;
 
-        let output_str = String::from_utf8_lossy(&output);
         assert!(
-            output_str.contains("TERM=screen-256color"),
+            output.contains("RESULT=xterm-256color"),
             "Expected default TERM, got: {}",
-            output_str
+            output
         );
         assert!(
-            output_str.contains("ROWS=120"),
-            "Expected default ROWS=120, got: {}",
-            output_str
-        );
-        assert!(
-            output_str.contains("COLS=80"),
-            "Expected default COLS=80, got: {}",
-            output_str
+            output.contains("24 80"),
+            "Expected default winsize 24x80, got: {}",
+            output
         );
     }
 
     #[tokio::test]
     async fn test_environment_custom_values() {
         let responder = Arc::new(ShellSessionStreamResponder::default());
-        let (tx, mut rx) = mpsc::channel::<ShellSessionStreamResponse>(32);
 
         // Start with custom environment
         let mut env = HashMap::new();
-        env.insert("TERM".to_string(), "xterm-256color".to_string());
+        env.insert("TERM".to_string(), "vt100".to_string());
         env.insert("MY_VAR".to_string(), "custom_value".to_string());
 
-        let request = ShellSessionStreamRequest::Start {
-            path: PathBuf::from("/bin/sh"),
-            environment: env,
-            rows: 50,
-            cols: 100,
-        };
-
-        let responder_clone = responder.clone();
-        let handle = tokio::spawn(async move { responder_clone.on_message(request, tx).await });
+        let (rx, handle) = start_session(&responder, env, 50, 100);
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        send_stdin(&responder, b"echo RESULT=$TERM,$MY_VAR; stty size\nexit\n").await;
 
-        let stdin_request = ShellSessionStreamRequest::Stdin {
-            data: b"echo TERM=$TERM ROWS=$ROWS COLS=$COLS MY_VAR=$MY_VAR\nexit\n".to_vec(),
-        };
+        let output = collect_output(rx).await;
+        let _ = handle.await;
+
+        // Custom TERM should be preserved (not overwritten)
+        assert!(
+            output.contains("RESULT=vt100,custom_value"),
+            "Expected custom TERM and MY_VAR, got: {}",
+            output
+        );
+        // Custom rows/cols should be applied to the PTY
+        assert!(
+            output.contains("50 100"),
+            "Expected winsize 50x100, got: {}",
+            output
+        );
+    }
+
+    #[tokio::test]
+    async fn test_resize() {
+        let responder = Arc::new(ShellSessionStreamResponder::default());
+        let (rx, handle) = start_session(&responder, HashMap::new(), 24, 80);
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         responder
-            .on_message(stdin_request, mpsc::channel(1).0)
+            .on_message(
+                ShellSessionStreamRequest::Resize { rows: 31, cols: 99 },
+                mpsc::channel(1).0,
+            )
             .await
             .unwrap();
 
-        let mut output = Vec::new();
-        while let Ok(response) =
-            tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
-        {
-            match response {
-                Some(resp) => output.extend(resp.stdout),
-                None => break,
-            }
-        }
+        send_stdin(&responder, b"stty size\nexit\n").await;
 
+        let output = collect_output(rx).await;
         let _ = handle.await;
 
-        let output_str = String::from_utf8_lossy(&output);
-        // Custom TERM should be preserved (not overwritten)
         assert!(
-            output_str.contains("TERM=xterm-256color"),
-            "Expected custom TERM, got: {}",
-            output_str
-        );
-        // Custom rows/cols should be used
-        assert!(
-            output_str.contains("ROWS=50"),
-            "Expected ROWS=50, got: {}",
-            output_str
-        );
-        assert!(
-            output_str.contains("COLS=100"),
-            "Expected COLS=100, got: {}",
-            output_str
-        );
-        // Custom env var should be passed through
-        assert!(
-            output_str.contains("MY_VAR=custom_value"),
-            "Expected MY_VAR=custom_value, got: {}",
-            output_str
+            output.contains("31 99"),
+            "Expected winsize 31x99 after resize, got: {}",
+            output
         );
     }
 }

@@ -108,6 +108,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     let mut asset_dirs = vec![sandpolis_client::gui::assets::dir()];
     #[cfg(feature = "layer-probe")]
     asset_dirs.push(sandpolis_probe::client::assets::dir());
+    #[cfg(feature = "layer-shell")]
+    asset_dirs.push(sandpolis_shell::client::assets::dir());
     app.register_asset_source(
         AssetSourceId::Default,
         AssetSourceBuilder::new(move || Box::new(EmbeddedDirReader::new(asset_dirs.clone()))),
