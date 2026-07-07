@@ -48,7 +48,7 @@ impl PackageManager for Nix {
             .to_string())
     }
 
-    async fn clean() -> Result<()> {
+    async fn clean(&self) -> Result<()> {
         debug!("Running nix store garbage collection");
 
         let output = Command::new("nix-collect-garbage").output()?;
@@ -63,22 +63,16 @@ impl PackageManager for Nix {
         Ok(())
     }
 
-    async fn get_installed() -> Result<Vec<PackageData>> {
-        let output = Command::new("nix")
-            .args(&[
+    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+        let stdout = self
+            .exec_command(&[
                 "--extra-experimental-features",
                 "nix-command flakes",
                 "profile",
                 "list",
                 "--json",
             ])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("nix profile list failed");
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
+            .await?;
         let json: serde_json::Value = serde_json::from_str(&stdout)?;
 
         let mut packages = Vec::new();
@@ -105,9 +99,9 @@ impl PackageManager for Nix {
         Ok(packages)
     }
 
-    async fn get_metadata(name: String) -> Result<PackageData> {
-        let output = Command::new("nix")
-            .args(&[
+    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+        let stdout = self
+            .exec_command(&[
                 "--extra-experimental-features",
                 "nix-command flakes",
                 "search",
@@ -115,13 +109,7 @@ impl PackageManager for Nix {
                 &name,
                 "--json",
             ])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("nix search nixpkgs {} failed", name);
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
+            .await?;
         let json: serde_json::Value = serde_json::from_str(&stdout)?;
 
         let mut package_data = PackageData {
@@ -149,7 +137,7 @@ impl PackageManager for Nix {
         Ok(package_data)
     }
 
-    async fn get_outdated() -> Result<Vec<PackageData>> {
+    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
         // `nix profile list` doesn't directly report outdated packages.
         // A check would require `nix profile upgrade --dry-run` or comparing
         // current store paths against the latest available — not yet
@@ -157,7 +145,7 @@ impl PackageManager for Nix {
         bail!("Not implemented for nix");
     }
 
-    async fn install(packages: Vec<String>) -> Result<()> {
+    async fn install(&self, packages: Vec<String>) -> Result<()> {
         debug!("Installing {} nix packages", packages.len());
 
         let mut args = vec![
@@ -177,22 +165,12 @@ impl PackageManager for Nix {
                 }
             })
             .collect();
-        let refs: Vec<&str> = qualified.iter().map(|s| s.as_str()).collect();
-        args.extend(refs);
-
-        let output = Command::new("nix").args(&args).output()?;
-
-        if !output.status.success() {
-            bail!(
-                "nix profile install failed with exit code: {}",
-                output.status
-            );
-        }
-
+        args.extend(qualified.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn refresh() -> Result<()> {
+    async fn refresh(&self) -> Result<()> {
         debug!("Refreshing nix channels / flake registry");
 
         // For non-flake setups, refresh channels.
@@ -207,7 +185,7 @@ impl PackageManager for Nix {
         Ok(())
     }
 
-    async fn remove(packages: Vec<String>) -> Result<()> {
+    async fn remove(&self, packages: Vec<String>) -> Result<()> {
         debug!("Removing {} nix packages", packages.len());
 
         let mut args = vec![
@@ -216,22 +194,12 @@ impl PackageManager for Nix {
             "profile",
             "remove",
         ];
-        let refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(refs);
-
-        let output = Command::new("nix").args(&args).output()?;
-
-        if !output.status.success() {
-            bail!(
-                "nix profile remove failed with exit code: {}",
-                output.status
-            );
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn upgrade(packages: Vec<String>) -> Result<()> {
+    async fn upgrade(&self, packages: Vec<String>) -> Result<()> {
         debug!("Upgrading {} nix packages", packages.len());
 
         let mut args = vec![
@@ -244,19 +212,9 @@ impl PackageManager for Nix {
             // Upgrade everything
             args.push(".*");
         } else {
-            let refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-            args.extend(refs);
+            args.extend(packages.iter().map(|s| s.as_str()));
         }
-
-        let output = Command::new("nix").args(&args).output()?;
-
-        if !output.status.success() {
-            bail!(
-                "nix profile upgrade failed with exit code: {}",
-                output.status
-            );
-        }
-
+        self.exec_command(&args).await?;
         Ok(())
     }
 }

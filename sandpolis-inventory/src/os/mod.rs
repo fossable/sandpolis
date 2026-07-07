@@ -3,6 +3,7 @@ use native_model::Model;
 use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 
+pub mod block_device;
 pub mod group;
 pub mod memory;
 pub mod mountpoint;

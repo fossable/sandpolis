@@ -55,6 +55,40 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
         });
     }
 
+    // Periodically refresh the inventory collectors (memory, users, packages).
+    // Their updates land in the local database and sync to the server on demand.
+    #[cfg(feature = "layer-inventory")]
+    {
+        let inventory = state.inventory.clone();
+        tasks.spawn(async move {
+            let mut ticks: u64 = 0;
+            loop {
+                if let Err(e) =
+                    sandpolis_agent::Collector::refresh(&mut *inventory.memory.lock().await).await
+                {
+                    debug!(error = %e, "Failed to refresh memory info");
+                }
+                if let Err(e) =
+                    sandpolis_agent::Collector::refresh(&mut *inventory.users.lock().await).await
+                {
+                    debug!(error = %e, "Failed to refresh users");
+                }
+                // Packages change rarely and are expensive to enumerate, so
+                // refresh them every tenth tick (~5 minutes).
+                if ticks % 10 == 0 {
+                    if let Err(e) =
+                        sandpolis_agent::Collector::refresh(&mut *inventory.packages.lock().await)
+                            .await
+                    {
+                        debug!(error = %e, "Failed to refresh packages");
+                    }
+                }
+                ticks = ticks.wrapping_add(1);
+                sleep(std::time::Duration::from_secs(30)).await;
+            }
+        });
+    }
+
     // Pick the connection strategy from config: a `poll` schedule selects
     // polling mode (periodic check-ins), otherwise the agent stays continuously
     // connected.

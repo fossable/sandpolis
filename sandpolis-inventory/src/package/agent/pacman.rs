@@ -35,11 +35,6 @@ impl Pacman {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
-
-    async fn exec_command_lines(&self, args: &[&str]) -> Result<Vec<String>> {
-        let output = self.exec_command(args).await?;
-        Ok(output.lines().map(|s| s.to_string()).collect())
-    }
 }
 
 impl PackageManager for Pacman {
@@ -60,30 +55,14 @@ impl PackageManager for Pacman {
         bail!("Could not parse pacman version");
     }
 
-    async fn clean() -> Result<()> {
+    async fn clean(&self) -> Result<()> {
         debug!("Cleaning package cache");
-
-        let output = Command::new("pacman")
-            .args(&["-Sc", "--noconfirm"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman clean failed with exit code: {}", output.status);
-        }
-
+        self.exec_command(&["-Sc", "--noconfirm"]).await?;
         Ok(())
     }
 
-    async fn get_installed() -> Result<Vec<PackageData>> {
-        let output = Command::new("pacman")
-            .args(&["-Q"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman -Q failed");
-        }
-
-        let lines = String::from_utf8_lossy(&output.stdout);
+    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+        let lines = self.exec_command(&["-Q"]).await?;
         let mut packages = Vec::new();
 
         for line in lines.lines() {
@@ -104,16 +83,8 @@ impl PackageManager for Pacman {
         Ok(packages)
     }
 
-    async fn get_metadata(name: String) -> Result<PackageData> {
-        let output = Command::new("pacman")
-            .args(&["-Qi", &name])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman -Qi {} failed", name);
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
+    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+        let stdout = self.exec_command(&["-Qi", &name]).await?;
         let mut package_data = PackageData {
             name: name.clone(),
             manager: PM::Pacman,
@@ -176,18 +147,10 @@ impl PackageManager for Pacman {
         Ok(package_data)
     }
 
-    async fn get_outdated() -> Result<Vec<PackageData>> {
+    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
         debug!("Querying for outdated packages");
 
-        let output = Command::new("pacman")
-            .args(&["-Suq", "--print-format", "%n"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman -Suq failed");
-        }
-
-        let lines = String::from_utf8_lossy(&output.stdout);
+        let lines = self.exec_command(&["-Suq", "--print-format", "%n"]).await?;
         let mut packages = Vec::new();
 
         for line in lines.lines() {
@@ -204,71 +167,36 @@ impl PackageManager for Pacman {
         Ok(packages)
     }
 
-    async fn install(packages: Vec<String>) -> Result<()> {
+    async fn install(&self, packages: Vec<String>) -> Result<()> {
         debug!("Installing {} packages", packages.len());
 
         let mut args = vec!["-S", "--noconfirm"];
-        let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(package_refs);
-
-        let output = Command::new("pacman")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman install failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn refresh() -> Result<()> {
+    async fn refresh(&self) -> Result<()> {
         debug!("Refreshing package database");
-
-        let output = Command::new("pacman")
-            .args(&["-Sy"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman refresh failed with exit code: {}", output.status);
-        }
-
+        self.exec_command(&["-Sy"]).await?;
         Ok(())
     }
 
-    async fn remove(packages: Vec<String>) -> Result<()> {
+    async fn remove(&self, packages: Vec<String>) -> Result<()> {
         debug!("Removing {} packages", packages.len());
 
         let mut args = vec!["-R", "--noconfirm"];
-        let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(package_refs);
-
-        let output = Command::new("pacman")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman remove failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn upgrade(packages: Vec<String>) -> Result<()> {
+    async fn upgrade(&self, packages: Vec<String>) -> Result<()> {
         debug!("Upgrading {} packages", packages.len());
 
         let mut args = vec!["-S", "--noconfirm"];
-        let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(package_refs);
-
-        let output = Command::new("pacman")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("pacman upgrade failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 }

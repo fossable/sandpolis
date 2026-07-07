@@ -10556,8 +10556,6 @@ name = "sandpolis-inventory"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "axum",
- "axum-macros",
  "bevy",
  "inventory",
  "native_db",

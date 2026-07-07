@@ -233,7 +233,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
             .unwrap();
         m.define::<sandpolis_inventory::hardware::firmware::FirmwareData>()
             .unwrap();
-        m.define::<sandpolis_inventory::hardware::memory::MemoryData>()
+        m.define::<sandpolis_inventory::hardware::memory::MemoryDeviceData>()
             .unwrap();
         m.define::<sandpolis_inventory::hardware::battery::BatteryData>()
             .unwrap();

@@ -7,14 +7,13 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = { workspace = true }
-axum = { workspace = true, optional = true }
-axum-macros = { workspace = true, optional = true }
 serde = { workspace = true }
 os_info = { workspace = true }
 tracing = { workspace = true }
 native_db = { workspace = true }
 tokio = { workspace = true }
 native_model = { workspace = true }
+inventory = { workspace = true }
 sysinfo = { version = "0.39.3", optional = true }
 which = { version = "7", optional = true }
 regex = { workspace = true, optional = true }
@@ -26,7 +25,6 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional =
 
 # GUI dependencies
 bevy = { workspace = true, optional = true }
-inventory = { workspace = true, optional = true }
 
 [dev-dependencies]
 tempfile = "3.15.0"
@@ -34,9 +32,8 @@ test-log = { version = "0.2.18", features = ["trace"] }
 
 [features]
 agent = [
+  "sandpolis-instance/agent",
   "dep:sysinfo",
-  "dep:axum",
-  "dep:axum-macros",
   "dep:sandpolis-agent",
   "dep:which",
   "dep:regex",
@@ -45,7 +42,6 @@ agent = [
 server = []
 client = [
   "dep:bevy",
-  "dep:inventory",
   "dep:sandpolis-client",
   "sandpolis-client/client",
 ]

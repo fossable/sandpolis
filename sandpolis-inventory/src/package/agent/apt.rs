@@ -32,11 +32,6 @@ impl Apt {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
-
-    async fn exec_command_lines(&self, args: &[&str]) -> Result<Vec<String>> {
-        let output = self.exec_command(args).await?;
-        Ok(output.lines().map(|s| s.to_string()).collect())
-    }
 }
 
 impl PackageManager for Apt {
@@ -49,28 +44,13 @@ impl PackageManager for Apt {
         Ok(output.lines().next().unwrap_or("").to_string())
     }
 
-    async fn clean() -> Result<()> {
-        let output = Command::new("apt")
-            .args(&["clean"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt clean failed with exit code: {}", output.status);
-        }
-
+    async fn clean(&self) -> Result<()> {
+        self.exec_command(&["clean"]).await?;
         Ok(())
     }
 
-    async fn get_installed() -> Result<Vec<PackageData>> {
-        let output = Command::new("apt")
-            .args(&["list", "--installed"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt list --installed failed");
-        }
-
-        let lines = String::from_utf8_lossy(&output.stdout);
+    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+        let lines = self.exec_command(&["list", "--installed"]).await?;
         let mut packages = Vec::new();
 
         for line in lines.lines().skip(1) { // Skip header line
@@ -110,16 +90,8 @@ impl PackageManager for Apt {
         Ok(packages)
     }
 
-    async fn get_metadata(name: String) -> Result<PackageData> {
-        let output = Command::new("apt")
-            .args(&["show", &name])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt show {} failed", name);
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
+    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+        let stdout = self.exec_command(&["show", &name]).await?;
         let mut package_data = PackageData {
             name: name.clone(),
             manager: PM::Apt,
@@ -158,16 +130,8 @@ impl PackageManager for Apt {
         Ok(package_data)
     }
 
-    async fn get_outdated() -> Result<Vec<PackageData>> {
-        let output = Command::new("apt")
-            .args(&["list", "--upgradable"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt list --upgradable failed");
-        }
-
-        let lines = String::from_utf8_lossy(&output.stdout);
+    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
+        let lines = self.exec_command(&["list", "--upgradable"]).await?;
         let mut packages = Vec::new();
 
         for line in lines.lines().skip(1) { // Skip header line
@@ -191,73 +155,36 @@ impl PackageManager for Apt {
         Ok(packages)
     }
 
-    async fn install(packages: Vec<String>) -> Result<()> {
+    async fn install(&self, packages: Vec<String>) -> Result<()> {
         debug!("Installing {} packages", packages.len());
 
         let mut args = vec!["-y", "install"];
-        let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(package_refs);
-
-        let output = Command::new("apt")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt install failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn refresh() -> Result<()> {
+    async fn refresh(&self) -> Result<()> {
         debug!("Refreshing package database");
-
-        let output = Command::new("apt")
-            .args(&["update"])
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt update failed with exit code: {}", output.status);
-        }
-
+        self.exec_command(&["update"]).await?;
         Ok(())
     }
 
-    async fn remove(packages: Vec<String>) -> Result<()> {
+    async fn remove(&self, packages: Vec<String>) -> Result<()> {
         debug!("Removing {} packages", packages.len());
 
         let mut args = vec!["-y", "remove"];
-        let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-        args.extend(package_refs);
-
-        let output = Command::new("apt")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt remove failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 
-    async fn upgrade(packages: Vec<String>) -> Result<()> {
+    async fn upgrade(&self, packages: Vec<String>) -> Result<()> {
         debug!("Upgrading {} packages", packages.len());
 
         let mut args = vec!["-y", "upgrade"];
-        if !packages.is_empty() {
-            let package_refs: Vec<&str> = packages.iter().map(|s| s.as_str()).collect();
-            args.extend(package_refs);
-        }
-
-        let output = Command::new("apt")
-            .args(&args)
-            .output()?;
-
-        if !output.status.success() {
-            bail!("apt upgrade failed with exit code: {}", output.status);
-        }
-
+        args.extend(packages.iter().map(|s| s.as_str()));
+        self.exec_command(&args).await?;
         Ok(())
     }
 }

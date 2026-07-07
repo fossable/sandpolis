@@ -28,3 +28,9 @@ pub struct UserData {
     #[secondary_key]
     pub username: Option<String>,
 }
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| {
+        r.register_scoped::<UserData>(|d| d._instance_id)
+    })
+}

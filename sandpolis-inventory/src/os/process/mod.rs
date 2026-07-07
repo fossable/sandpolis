@@ -2,6 +2,9 @@ use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
 
+pub mod namespace;
+pub mod socket;
+
 #[data]
 pub struct ProcessData {
     /// null
@@ -48,6 +51,8 @@ pub struct ProcessData {
     pub handle_count: u64,
 }
 
+/// A file descriptor owned by a process.
+#[data(instance)]
 pub struct FdData {
     /// Process-specific file descriptor number
     pub fd: u64,

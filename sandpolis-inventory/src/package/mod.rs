@@ -1,5 +1,6 @@
 use native_db::ToKey;
 use native_model::Model;
+use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 
@@ -43,7 +44,11 @@ pub struct PackageManagerData {
 #[data]
 #[derive(Default)]
 pub struct PackageData {
+    #[secondary_key]
+    pub _instance_id: InstanceId,
+
     /// Canonical name/identifier
+    #[secondary_key]
     pub name: String,
 
     /// Package version string
@@ -100,4 +105,10 @@ pub struct PackageData {
 
     /// Epoch timestamp when the package was most recently installed
     pub install_time: Option<u64>,
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| {
+        r.register_scoped::<PackageData>(|d| d._instance_id)
+    })
 }

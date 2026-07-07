@@ -48,9 +48,6 @@ pub struct DesktopStreamInputEvent {
     /// The Y coordinate of the pointer
     pub pointer_y: Option<i32>,
 
-    /// Screen scale factor
-    pub scale_factor: Option<f64>,
-
     /// Clipboard data
     pub clipboard: Option<Vec<u8>>,
 }
@@ -96,9 +93,6 @@ pub enum DesktopStreamRequest {
         /// The desktop to capture (matches `DesktopData::name`)
         desktop_uuid: String,
 
-        /// The screen scale factor
-        scale_factor: f64,
-
         /// How pixels should be encoded
         color_mode: DesktopStreamColorMode,
 
@@ -125,7 +119,7 @@ pub enum DesktopStreamResponse {
 #[cfg(feature = "agent")]
 mod agent {
     use super::*;
-    use anyhow::{Result, bail};
+    use anyhow::Result;
     use sandpolis_instance::network::StreamResponder;
     use sandpolis_macros::Stream;
     use std::sync::Arc;
@@ -150,10 +144,14 @@ mod agent {
             match request {
                 DesktopStreamRequest::Start {
                     desktop_uuid,
-                    scale_factor: _,
                     color_mode,
                     compression_mode,
                 } => {
+                    // Ignore a duplicate Start: a session is already running.
+                    if self.input_tx.read().await.is_some() {
+                        warn!("Desktop stream already running; ignoring Start");
+                        return Ok(());
+                    }
                     self.stop.store(false, Ordering::SeqCst);
 
                     // Spawn the input thread (owns the non-Send `Enigo` instance).
@@ -187,6 +185,9 @@ mod agent {
                 }
                 DesktopStreamRequest::Stop => {
                     self.stop.store(true, Ordering::SeqCst);
+                    // Drop the input sender so the input thread exits and a later
+                    // Start can begin a fresh session.
+                    *self.input_tx.write().await = None;
                 }
             }
             Ok(())
@@ -199,22 +200,6 @@ mod agent {
         }
     }
 
-    /// Locate a display by name, falling back to the primary display.
-    fn find_display(desktop_uuid: &str) -> Result<crate::capture::Display> {
-        let mut displays = crate::capture::Display::all()?;
-        if let Some(idx) = displays.iter().position(|d| d.name() == desktop_uuid) {
-            return Ok(displays.swap_remove(idx));
-        }
-        // Fall back to the primary display.
-        if displays.is_empty() {
-            bail!("No displays available");
-        }
-        if let Some(idx) = displays.iter().position(|d| d.is_primary()) {
-            return Ok(displays.swap_remove(idx));
-        }
-        Ok(displays.swap_remove(0))
-    }
-
     /// Owns a `Capturer` and forwards encoded frames until stopped.
     fn capture_loop(
         desktop_uuid: String,
@@ -225,7 +210,7 @@ mod agent {
     ) -> Result<()> {
         use crate::capture::{Frame, TraitCapturer, TraitPixelBuffer};
 
-        let display = find_display(&desktop_uuid)?;
+        let display = crate::agent::find_display(&desktop_uuid)?;
         let mut capturer = crate::capture::Capturer::new(display)?;
         let width = capturer.width() as i32;
         let height = capturer.height() as i32;
@@ -300,46 +285,27 @@ mod agent {
         color_mode: DesktopStreamColorMode,
         compression_mode: DesktopStreamCompressionMode,
     ) -> Vec<u8> {
-        let row_stride = stride.first().copied().unwrap_or(width * 4);
-        // Byte offsets of the red and blue channels within a 4-byte pixel.
-        let (r_off, b_off) = match pixfmt {
-            crate::capture::Pixfmt::RGBA => (0usize, 2usize),
-            // Default to BGRA layout for everything else.
-            _ => (2usize, 0usize),
-        };
-
         let mut out = match color_mode {
             DesktopStreamColorMode::Rgb888 => Vec::with_capacity(width * height * 3),
             DesktopStreamColorMode::Rgb565 => Vec::with_capacity(width * height * 2),
             DesktopStreamColorMode::Rgb332 => Vec::with_capacity(width * height),
         };
 
-        for y in 0..height {
-            let row = &data[y * row_stride..];
-            for x in 0..width {
-                let i = x * 4;
-                if i + 3 >= row.len() {
-                    break;
+        crate::agent::for_each_rgb(data, width, height, stride, pixfmt, |r, g, b| {
+            match color_mode {
+                DesktopStreamColorMode::Rgb888 => {
+                    out.extend_from_slice(&[r, g, b]);
                 }
-                let r = row[i + r_off];
-                let g = row[i + 1];
-                let b = row[i + b_off];
-                match color_mode {
-                    DesktopStreamColorMode::Rgb888 => {
-                        out.extend_from_slice(&[r, g, b]);
-                    }
-                    DesktopStreamColorMode::Rgb565 => {
-                        let v: u16 = (((r as u16) >> 3) << 11)
-                            | (((g as u16) >> 2) << 5)
-                            | ((b as u16) >> 3);
-                        out.extend_from_slice(&v.to_le_bytes());
-                    }
-                    DesktopStreamColorMode::Rgb332 => {
-                        out.push((r & 0xE0) | ((g & 0xE0) >> 3) | (b >> 6));
-                    }
+                DesktopStreamColorMode::Rgb565 => {
+                    let v: u16 =
+                        (((r as u16) >> 3) << 11) | (((g as u16) >> 2) << 5) | ((b as u16) >> 3);
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+                DesktopStreamColorMode::Rgb332 => {
+                    out.push((r & 0xE0) | ((g & 0xE0) >> 3) | (b >> 6));
                 }
             }
-        }
+        });
 
         match compression_mode {
             DesktopStreamCompressionMode::None => out,
@@ -552,7 +518,6 @@ mod test_desktop_session {
     fn test_request_roundtrip() {
         let req = DesktopStreamRequest::Start {
             desktop_uuid: "display-0".into(),
-            scale_factor: 1.0,
             color_mode: DesktopStreamColorMode::Rgb888,
             compression_mode: DesktopStreamCompressionMode::None,
         };
@@ -571,7 +536,6 @@ mod test_desktop_session {
             pointer_released: None,
             pointer_x: Some(100),
             pointer_y: Some(200),
-            scale_factor: Some(1.0),
             clipboard: None,
         };
         let req = DesktopStreamRequest::Input(event);

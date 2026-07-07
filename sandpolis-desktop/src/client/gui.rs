@@ -2,19 +2,13 @@
 //!
 //! Provides the desktop-viewer node controller and the layer's client plugin.
 //!
-//! The controller wires the full client-side stream pipeline:
-//! [`DesktopStreamRequester`] decodes incoming frames into RGBA8, a Bevy system
-//! drains them and uploads them to the display node's texture, and pointer /
-//! keyboard input over that node is mapped into [`DesktopStreamInputEvent`]s.
-//!
-//! **Transport seam:** a client currently has no stream-capable connection
-//! (`ServerConnection` talks to the server over HTTP polling and never builds a
-//! websocket `InstanceConnection`, and there is no server-side routing to a
-//! target agent). So the requester is constructed and held ready, but it is not
-//! yet registered on a connection — meaning no bytes actually flow. The single
-//! place that registration + outbound forwarding would happen is marked `SEAM`
-//! below. Once client stream transport exists, register `requester` on the
-//! connection and forward the session's `outbound` receiver over the stream.
+//! The controller wires the full client-side stream pipeline. On "Start Stream"
+//! it opens a relayed stream to the agent with [`sandpolis_client::sync`]'s
+//! websocket connection (`open_stream_to`): the server routes requests to the
+//! target agent and responses back. [`DesktopStreamRequester`] decodes incoming
+//! frames into RGBA8, a Bevy system drains them and uploads them to the display
+//! node's texture, and pointer / keyboard input over that node is mapped into
+//! [`DesktopStreamInputEvent`]s and forwarded over the stream's outbound channel.
 
 use bevy::asset::RenderAssetUsages;
 use bevy::image::Image;
@@ -39,19 +33,6 @@ use crate::session::{
     DesktopStreamInputEvent, DesktopStreamPointerButton, DesktopStreamRequest,
     DesktopStreamRequester,
 };
-
-/// Instance metadata.
-#[derive(Clone, Debug, Default)]
-pub struct InstanceMetadata {
-    pub os_type: String,
-    pub hostname: Option<String>,
-}
-
-/// Query instance metadata.
-pub fn query_instance_metadata(_id: InstanceId) -> anyhow::Result<InstanceMetadata> {
-    // TODO: Query from database
-    Ok(InstanceMetadata::default())
-}
 
 /// Active client-side desktop sessions, keyed by instance.
 #[derive(Resource, Default)]
@@ -150,7 +131,6 @@ impl NodeController for DesktopController {
                             // subsequent outbound requests (input, Stop) over it.
                             let initial = DesktopStreamRequest::Start {
                                 desktop_uuid: String::new(),
-                                scale_factor: 1.0,
                                 color_mode: DesktopStreamColorMode::Rgb888,
                                 compression_mode: DesktopStreamCompressionMode::Zstd,
                             };
@@ -221,14 +201,13 @@ impl NodeController for DesktopController {
             p.spawn((
                 text(theme, "", theme.metrics.font_md, Role::Text),
                 bind_text(move || {
-                    let m = query_instance_metadata(instance).unwrap_or_default();
-                    let host = m.hostname.unwrap_or_else(|| "unknown".into());
-                    let os = if m.os_type.is_empty() {
-                        "Unknown".into()
-                    } else {
-                        m.os_type
-                    };
-                    format!("{} — OS: {}", host, os)
+                    match sandpolis_client::gui::queries::query_instance_metadata(instance) {
+                        Ok(m) => {
+                            let host = m.hostname.unwrap_or_else(|| "unknown".into());
+                            format!("{} — OS: {}", host, m.os_type)
+                        }
+                        Err(_) => "OS: unknown".into(),
+                    }
                 }),
             ));
         });
@@ -352,16 +331,19 @@ fn drive_desktop_screenshots(
     for (instance, session) in streams.screenshots.iter_mut() {
         while let Ok(result) = session.result.try_recv() {
             match result {
-                DesktopScreenshotResult::Ok(frame) if frame.width > 0 && frame.height > 0 => {
-                    let handle =
-                        images.add(image_from_rgba(frame.width, frame.height, frame.rgba));
-                    if let Ok(mut node) = nodes.get_mut(session.view) {
-                        node.image = handle;
-                        node.color = Color::WHITE;
+                DesktopScreenshotResult::Ok(png) => match crate::screenshot::decode_png(&png) {
+                    Ok(frame) if frame.width > 0 && frame.height > 0 => {
+                        let handle =
+                            images.add(image_from_rgba(frame.width, frame.height, frame.rgba));
+                        if let Ok(mut node) = nodes.get_mut(session.view) {
+                            node.image = handle;
+                            node.color = Color::WHITE;
+                        }
+                        info!("Screenshot received for {}", instance);
                     }
-                    info!("Screenshot received for {}", instance);
-                }
-                DesktopScreenshotResult::Ok(_) => {}
+                    Ok(_) => {}
+                    Err(e) => warn!(error = %e, "Failed to decode screenshot for {}", instance),
+                },
                 DesktopScreenshotResult::Failed => {
                     warn!("Screenshot failed for {}", instance);
                 }
@@ -435,7 +417,6 @@ fn empty_input() -> DesktopStreamInputEvent {
         pointer_released: None,
         pointer_x: None,
         pointer_y: None,
-        scale_factor: None,
         clipboard: None,
     }
 }

@@ -52,15 +52,7 @@ mod agent {
     fn capture_png(desktop_uuid: &str) -> Result<Vec<u8>> {
         use crate::capture::{Frame, TraitCapturer, TraitPixelBuffer};
 
-        let mut displays = crate::capture::Display::all()?;
-        if displays.is_empty() {
-            bail!("No displays available");
-        }
-        let display = match displays.iter().position(|d| d.name() == desktop_uuid) {
-            Some(idx) => displays.swap_remove(idx),
-            None => displays.swap_remove(0),
-        };
-
+        let display = crate::agent::find_display(desktop_uuid)?;
         let mut capturer = crate::capture::Capturer::new(display)?;
 
         // Retry a few times to skip the initial empty frames.
@@ -92,23 +84,10 @@ mod agent {
         stride: &[usize],
         pixfmt: crate::capture::Pixfmt,
     ) -> Result<Vec<u8>> {
-        let row_stride = stride.first().copied().unwrap_or(width * 4);
-        let (r_off, b_off) = match pixfmt {
-            crate::capture::Pixfmt::RGBA => (0usize, 2usize),
-            _ => (2usize, 0usize),
-        };
-
         let mut rgba = Vec::with_capacity(width * height * 4);
-        for y in 0..height {
-            let row = &data[y * row_stride..];
-            for x in 0..width {
-                let i = x * 4;
-                if i + 3 >= row.len() {
-                    break;
-                }
-                rgba.extend_from_slice(&[row[i + r_off], row[i + 1], row[i + b_off], 255]);
-            }
-        }
+        crate::agent::for_each_rgb(data, width, height, stride, pixfmt, |r, g, b| {
+            rgba.extend_from_slice(&[r, g, b, 255]);
+        });
 
         let buffer = image::RgbaImage::from_raw(width as u32, height as u32, rgba)
             .ok_or_else(|| anyhow::anyhow!("Failed to build image buffer"))?;
@@ -131,13 +110,15 @@ mod client {
     use sandpolis_macros::Stream;
     use tokio::sync::mpsc::{Sender, UnboundedReceiver, UnboundedSender, unbounded_channel};
 
-    /// Outcome of a screenshot request surfaced to the GUI.
+    /// Outcome of a screenshot request surfaced to the client. The `Ok` variant
+    /// carries the agent's PNG bytes verbatim; the CLI writes them directly and
+    /// the GUI decodes them via [`decode_png`] only when it needs a texture.
     pub enum DesktopScreenshotResult {
-        Ok(DesktopFrame),
+        Ok(Vec<u8>),
         Failed,
     }
 
-    /// Client side of a one-shot screenshot: decodes the returned PNG into RGBA8.
+    /// Client side of a one-shot screenshot: forwards the returned PNG bytes.
     #[derive(Stream)]
     pub struct DesktopScreenshotRequester {
         result: UnboundedSender<DesktopScreenshotResult>,
@@ -163,13 +144,7 @@ mod client {
 
         async fn on_message(&self, response: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
             let outcome = match response {
-                DesktopScreenshotResponse::Ok(png) => match decode_png(&png) {
-                    Ok(frame) => DesktopScreenshotResult::Ok(frame),
-                    Err(e) => {
-                        tracing::warn!(error = %e, "Failed to decode screenshot");
-                        DesktopScreenshotResult::Failed
-                    }
-                },
+                DesktopScreenshotResponse::Ok(png) => DesktopScreenshotResult::Ok(png),
                 DesktopScreenshotResponse::Failed => DesktopScreenshotResult::Failed,
             };
             let _ = self.result.send(outcome);

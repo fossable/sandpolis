@@ -3,8 +3,10 @@ use native_model::Model;
 use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 
+/// A physical memory device (DIMM) as reported by SMBIOS. Distinct from
+/// [`crate::os::memory::MemoryData`], which tracks live RAM usage.
 #[data(temporal)]
-pub struct MemoryData {
+pub struct MemoryDeviceData {
     #[secondary_key]
     pub _instance_id: InstanceId,
 

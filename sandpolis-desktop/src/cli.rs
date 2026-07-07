@@ -34,12 +34,24 @@ pub async fn dispatch(
             screenshot(target, desktop, output).await
         }
         None => {
-            // The live viewer isn't wired to a stream yet.
-            sandpolis_client::tui::run_tui(
-                fps,
-                sandpolis_client::tui::PlaceholderPanel::new("desktop viewer"),
-            )
-            .await?;
+            // With --instance, open the live terminal viewer pointed at that
+            // agent; without one, show a placeholder (the agent picker isn't
+            // built yet).
+            match target.instance {
+                Some(instance) => {
+                    let widget = crate::client::tui::DesktopViewerWidget::new(instance);
+                    sandpolis_client::tui::run_tui(fps, widget).await?;
+                }
+                None => {
+                    sandpolis_client::tui::run_tui(
+                        fps,
+                        sandpolis_client::tui::PlaceholderPanel::new(
+                            "desktop viewer (pass --instance <id>)",
+                        ),
+                    )
+                    .await?;
+                }
+            }
             Ok(ExitCode::SUCCESS)
         }
     }
@@ -72,8 +84,8 @@ async fn screenshot(
     let result = tokio::time::timeout(Duration::from_secs(20), rx.recv()).await;
     conn.close_stream(id);
 
-    let frame = match result {
-        Ok(Some(DesktopScreenshotResult::Ok(frame))) => frame,
+    let bytes = match result {
+        Ok(Some(DesktopScreenshotResult::Ok(png))) => png,
         Ok(Some(DesktopScreenshotResult::Failed)) => {
             if target.json {
                 println!("{{\"status\":\"failed\"}}");
@@ -91,12 +103,6 @@ async fn screenshot(
             return Ok(ExitCode::FAILURE);
         }
     };
-
-    let img = image::RgbaImage::from_raw(frame.width, frame.height, frame.rgba)
-        .context("invalid frame dimensions")?;
-    let mut png = std::io::Cursor::new(Vec::new());
-    image::DynamicImage::ImageRgba8(img).write_to(&mut png, image::ImageFormat::Png)?;
-    let bytes = png.into_inner();
 
     if let Some(path) = &output {
         std::fs::write(path, &bytes)?;

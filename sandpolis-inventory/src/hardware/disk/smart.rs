@@ -1,3 +1,8 @@
+use native_db::ToKey;
+use native_model::Model;
+use sandpolis_macros::data;
+
+#[data(instance)]
 pub struct SmartData {
     /// Drive rotations per minute
     pub rotation_rate: u64,

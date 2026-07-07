@@ -1,5 +1,11 @@
+use native_db::ToKey;
+use native_model::Model;
+use sandpolis_macros::data;
+
+pub mod partition;
 pub mod smart;
 
+#[data(instance)]
 pub struct DiskData {
     /// null
     pub name: String,

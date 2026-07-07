@@ -1,14 +1,19 @@
 use native_db::ToKey;
 use native_model::Model;
+use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 
 #[cfg(feature = "agent")]
 pub mod agent;
 
-// TODO id conflict
-#[data(id = 1000)]
+/// Live RAM and swap usage for an instance.
+#[data]
 #[derive(Default)]
 pub struct MemoryData {
+    #[secondary_key]
+    pub _instance_id: InstanceId,
+
+
     /// The amount of physical RAM in bytes
     pub total: u64,
     /// The amount of physical RAM, in bytes, left unused by the system
@@ -29,4 +34,10 @@ pub struct MemoryData {
     pub swap_total: u64,
     /// The total amount of swap free, in bytes
     pub swap_free: u64,
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| {
+        r.register_scoped::<MemoryData>(|d| d._instance_id)
+    })
 }
