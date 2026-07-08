@@ -30,7 +30,7 @@ pub struct UiPointerState {
 pub struct BlocksWorldInput;
 
 /// Tag a focused entity (e.g. a text field) that wants keyboard input.
-#[derive(Component, Default)]
+#[derive(Component, Clone, Default)]
 pub struct WantsKeyboard;
 
 /// System set for [`update_pointer_state`]; world-input systems should run after

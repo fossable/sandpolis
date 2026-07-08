@@ -411,7 +411,13 @@ pub async fn connect(
             .set_relay(std::sync::Arc::downgrade(&network.relay));
 
         // Pull everything from agents into our database (the long-lived sync).
-        if remote_instance.is_some_and(|id| id.is_agent()) {
+        //
+        // Skip co-located peers (`remote_instance == local_instance`): in an
+        // all-in-one build the server, agent, and client share one InstanceId
+        // *and* one database, so pulling from the local agent (or the client,
+        // which also carries the agent bit of the shared id) is redundant and
+        // forms a feedback loop that floods the transport.
+        if remote_instance.is_some_and(|id| id.is_agent() && id != local_instance) {
             if let Err(e) = connection
                 .open_sync(realm_db, vec![sandpolis_instance::database::sync::SyncFilter::all()])
                 .await

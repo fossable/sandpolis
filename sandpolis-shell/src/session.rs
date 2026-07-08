@@ -49,19 +49,26 @@ mod agent {
     use anyhow::Result;
     use sandpolis_instance::network::StreamResponder;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    use tokio::process::Child;
     use tokio::sync::RwLock;
     use tokio::sync::mpsc::Sender;
-    use tracing::debug;
+    use tokio_util::sync::CancellationToken;
 
     /// Stream that runs a bidirectional shell session.
     ///
     /// On unix the shell is attached to a real PTY, so line editing, echo, and
     /// full-screen programs behave like a local terminal. Other platforms fall
     /// back to plain pipes.
+    ///
+    /// The child is owned by a background task that streams its output; the
+    /// [`Start`](ShellSessionStreamRequest::Start) handler spawns that task and
+    /// returns immediately. Blocking here would stall the whole connection's
+    /// dispatch loop, since responder handlers run inline on the socket's
+    /// receive path — no output would flush and no further input (stdin, resize)
+    /// would be read.
     #[derive(Stream, Default)]
     pub struct ShellSessionStreamResponder {
-        pub process: RwLock<Option<Child>>,
+        /// Cancels the background reader task (and kills the child) on drop.
+        cancel: CancellationToken,
         /// Write half of the PTY the shell is attached to.
         #[cfg(unix)]
         pub pty: RwLock<Option<pty_process::OwnedWritePty>>,
@@ -101,30 +108,33 @@ mod agent {
                             .spawn(pts)?;
                         let (mut reader, writer) = pty.into_split();
 
-                        *self.process.write().await = Some(child);
                         *self.pty.write().await = Some(writer);
 
-                        loop {
-                            let mut response = ShellSessionStreamResponse {
-                                stdout: Vec::new(),
-                                stderr: Vec::new(),
-                            };
-                            match reader.read_buf(&mut response.stdout).await {
-                                Ok(0) => break, // EOF
-                                Ok(_) => {
-                                    if sender.send(response).await.is_err() {
-                                        break;
+                        let cancel = self.cancel.clone();
+                        tokio::spawn(async move {
+                            let mut child = child;
+                            loop {
+                                let mut response = ShellSessionStreamResponse {
+                                    stdout: Vec::new(),
+                                    stderr: Vec::new(),
+                                };
+                                tokio::select! {
+                                    _ = cancel.cancelled() => break,
+                                    read = reader.read_buf(&mut response.stdout) => match read {
+                                        Ok(0) => break, // EOF
+                                        Ok(_) => {
+                                            if sender.send(response).await.is_err() {
+                                                break;
+                                            }
+                                        }
+                                        // PTY reads fail with EIO once the child exits
+                                        Err(_) => break,
                                     }
                                 }
-                                // PTY reads fail with EIO once the child exits
-                                Err(_) => break,
                             }
-                        }
-
-                        // Reap the child
-                        if let Some(ref mut child) = *self.process.write().await {
+                            let _ = child.start_kill();
                             let _ = child.wait().await;
-                        }
+                        });
                     }
 
                     #[cfg(not(unix))]
@@ -139,26 +149,32 @@ mod agent {
                         let mut stdout = child.stdout.take().unwrap();
                         let stdin = child.stdin.take().unwrap();
 
-                        // Store the child process and stdin for later use
-                        *self.process.write().await = Some(child);
                         *self.stdin.write().await = Some(stdin);
 
-                        // Read stdout in a loop (lock is released before the loop)
-                        loop {
-                            let mut response = ShellSessionStreamResponse {
-                                stdout: Vec::new(),
-                                stderr: Vec::new(),
-                            };
-                            match stdout.read_buf(&mut response.stdout).await {
-                                Ok(0) => break, // EOF
-                                Ok(_) => {
-                                    if sender.send(response).await.is_err() {
-                                        break;
+                        let cancel = self.cancel.clone();
+                        tokio::spawn(async move {
+                            let mut child = child;
+                            loop {
+                                let mut response = ShellSessionStreamResponse {
+                                    stdout: Vec::new(),
+                                    stderr: Vec::new(),
+                                };
+                                tokio::select! {
+                                    _ = cancel.cancelled() => break,
+                                    read = stdout.read_buf(&mut response.stdout) => match read {
+                                        Ok(0) => break, // EOF
+                                        Ok(_) => {
+                                            if sender.send(response).await.is_err() {
+                                                break;
+                                            }
+                                        }
+                                        Err(_) => break,
                                     }
                                 }
-                                Err(_) => break,
                             }
-                        }
+                            let _ = child.start_kill();
+                            let _ = child.wait().await;
+                        });
                     }
                 }
                 ShellSessionStreamRequest::Stdin { data } => {
@@ -186,12 +202,8 @@ mod agent {
 
     impl Drop for ShellSessionStreamResponder {
         fn drop(&mut self) {
-            debug!("Killing child process");
-            if let Some(ref mut child) = *self.process.get_mut() {
-                let _ = child.start_kill();
-            }
-
-            // self.data.update(ShellSessionDelta::ended);
+            // Signals the background reader task to stop and kill the child.
+            self.cancel.cancel();
         }
     }
 }

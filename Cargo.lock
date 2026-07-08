@@ -10389,6 +10389,7 @@ dependencies = [
  "sandpolis-macros",
  "sandpolis-server",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -10695,6 +10696,7 @@ dependencies = [
  "serde",
  "serde_cbor",
  "tokio",
+ "tokio-util",
  "tracing",
  "tui-term",
 ]

@@ -64,14 +64,25 @@ cd android && ./gradlew assembleDebug
 - Upgrade to bevy 0.19
   - Reimplement all scenes using the new bsn! macro
     (https://bevy.org/news/bevy-0-19/#next-generation-scenes)
-    - The pattern is established in `sandpolis-client/src/gui/ui/scene.rs`
-      (theme colors via captured `{...}` exprs + `Themed*` markers,
-      `template_value` for runtime components, `on(..)` observers, dynamic
-      `Vec<impl Scene>` child lists). The help modal is migrated as the first
-      example.
-    - Still imperative (migrate to `bsn!` incrementally): login modal, add-agent
-      modal, layer picker, node picker, minimap, layer indicator, about panel,
-      theme picker, node/edge graph, per-layer controller bodies.
+    - The pattern and shared scene widgets (`text_line`, `bound_text`, `button`,
+      `text_input`, `modal_scrim_scene`) live in
+      `sandpolis-client/src/gui/ui/scene.rs` (theme colors via captured `{...}`
+      exprs + `Themed*` markers, `template_value` for runtime components,
+      `on(..)` observers, dynamic `Vec<impl Scene>` child lists,
+      `apply_scene(bsn! { Children [..] })` for building into an existing
+      entity).
+    - Migrated: help modal, about panel, add-agent modal, theme picker,
+      health + inventory controller bodies.
+    - Intentionally imperative (bsn! wouldn't simplify them):
+      - login modal: tree branches on the login phase and is rebuilt per phase.
+      - layer/node pickers: rows are rebuilt on state change into a container
+        entity; the static shell alone isn't worth splitting off.
+      - layer toolbar: per-button closure/gate capture is the substance.
+      - minimap: already declarative via `children![]`; dots rebuild per frame.
+      - node/edge graph: rapier physics components lack `Default`, so bsn!
+        would need `template_value` wrapping everywhere and read worse.
+      - shell/desktop/probe controller bodies: dominated by resource-mutating
+        observer closures (and per-device iteration in probe); revisit later.
     - `spawn_floating_panel` (`ui/panel.rs`) intentionally stays imperative: it
       returns child entity ids synchronously, which doesn't fit `spawn_scene`.
 

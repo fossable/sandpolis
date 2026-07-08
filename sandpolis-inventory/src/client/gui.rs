@@ -4,12 +4,9 @@
 
 use super::{query_memory, query_packages, query_users};
 use bevy::prelude::*;
-use sandpolis_client::gui::ui::bind::bind_text;
-use sandpolis_client::gui::ui::controller::{
-    LayerClientInfo, NodeController, RegisterLayerClient,
-};
+use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
+use sandpolis_client::gui::ui::scene::{bound_text, text_line};
 use sandpolis_client::gui::ui::theme::{Role, Theme};
-use sandpolis_client::gui::ui::widgets::{heading, muted, text};
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 
 /// The inventory layer's node controller (system information).
@@ -24,12 +21,13 @@ impl NodeController for InventoryController {
         // Subscribe to live inventory updates for this instance.
         super::subscribe(instance);
 
-        commands.entity(body).with_children(|p| {
-            // Memory usage
-            p.spawn(heading(theme, "Memory Usage"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+        let font_md = theme.metrics.font_md;
+        let font_heading = theme.metrics.font_heading;
+        commands.entity(body).apply_scene(bsn! {
+            Children [
+                // Memory usage
+                {vec![text_line(theme, "Memory Usage", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let Ok(Some(m)) = query_memory(instance) else {
                         return "No data".into();
                     };
@@ -40,14 +38,10 @@ impl NodeController for InventoryController {
                         format_bytes(m.total),
                         percent(used, m.total),
                     )
-                }),
-            ));
-
-            // Swap usage
-            p.spawn(heading(theme, "Swap Usage"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+                })]},
+                // Swap usage
+                {vec![text_line(theme, "Swap Usage", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let Ok(Some(m)) = query_memory(instance) else {
                         return "No data".into();
                     };
@@ -61,14 +55,10 @@ impl NodeController for InventoryController {
                         format_bytes(m.swap_total),
                         percent(used, m.swap_total),
                     )
-                }),
-            ));
-
-            // Users
-            p.spawn(heading(theme, "Users"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+                })]},
+                // Users
+                {vec![text_line(theme, "Users", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let users = query_users(instance).unwrap_or_default();
                     if users.is_empty() {
                         return "No user data".into();
@@ -83,27 +73,23 @@ impl NodeController for InventoryController {
                         .collect();
                     names.sort();
                     format!("{} users — {}", users.len(), names.join(", "))
-                }),
-            ));
-
-            // Packages
-            p.spawn(heading(theme, "Packages"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+                })]},
+                // Packages
+                {vec![text_line(theme, "Packages", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let packages = query_packages(instance).unwrap_or_default();
                     if packages.is_empty() {
                         return "No package data".into();
                     }
                     format!("{} installed packages", packages.len())
-                }),
-            ));
-
-            p.spawn(muted(
-                theme,
-                format!("Instance: {}", instance),
-                theme.metrics.font_sm,
-            ));
+                })]},
+                {vec![text_line(
+                    theme,
+                    format!("Instance: {}", instance),
+                    Role::TextMuted,
+                    theme.metrics.font_sm,
+                )]},
+            ]
         });
     }
 }
@@ -140,9 +126,12 @@ pub struct InventoryClientPlugin;
 impl Plugin for InventoryClientPlugin {
     fn build(&self, app: &mut App) {
         app.register_layer_client(
-            LayerClientInfo::new(LayerName::from("Inventory"), "Hardware and software inventory")
-                .with_controller(InventoryController)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+            LayerClientInfo::new(
+                LayerName::from("Inventory"),
+                "Hardware and software inventory",
+            )
+            .with_controller(InventoryController)
+            .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
         );
     }
 }

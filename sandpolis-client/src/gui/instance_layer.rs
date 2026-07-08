@@ -7,9 +7,8 @@
 //! the cluster id, OS info, and every `ConnectionData` row that references it
 //! (the connection ids, sockets, timestamps and byte counters).
 //!
-//! The layer's toolbar exposes a "View database" action that will open a
-//! generic database browser. That browser is not implemented yet — see
-//! [`open_database_browser`].
+//! The layer's toolbar exposes a "View database" action that opens the generic
+//! database browser (see [`crate::gui::database_browser`]).
 
 use crate::gui::queries;
 use crate::gui::ui::bind::bind_text;
@@ -122,10 +121,6 @@ fn describe_connections(network: &NetworkLayer, instance: InstanceId) -> String 
 }
 
 /// Toolbar callback for the Instance layer's "View database" action.
-///
-/// TODO(instance-layer): open a generic database browser that scans every
-/// registered `#[data]` table (mirroring `sandpolis::MODELS`) and renders the
-/// rows. Stubbed for now.
-pub fn open_database_browser(_commands: &mut Commands) {
-    warn!("Instance layer: database browser is not implemented yet");
+pub fn open_database_browser(commands: &mut Commands) {
+    crate::gui::database_browser::open(commands);
 }

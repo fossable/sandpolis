@@ -240,7 +240,11 @@ impl ServerConnection {
     }
 
     /// Establish the websocket connection used for streams and DB sync, retaining
-    /// it on this `ServerConnection` and in `network.inbound`.
+    /// it on this `ServerConnection`. The connection is deliberately *not* added
+    /// to `network.inbound`: that list backs the server-side stream relay, and in
+    /// an all-in-one build a dialer-side connection there (whose peer is the
+    /// local server itself) would be picked up as a relay target, bouncing
+    /// messages back to the server instead of reaching the agent.
     #[cfg(any(feature = "client", feature = "agent"))]
     pub async fn open_websocket(
         &self,
@@ -295,16 +299,15 @@ impl ServerConnection {
             self.cluster_id,
             &handlers,
         );
-        network.inbound.write().unwrap().push(connection.clone());
         *self.inner.write().unwrap() = Some(connection.clone());
         Ok(connection)
     }
 
     /// Close the sync websocket opened by [`open_websocket`](Self::open_websocket),
     /// if one is active. Agents in `Polling` mode call this to end a check-in
-    /// window: the socket is cancelled and its bookkeeping (the inbound list and
-    /// the tracked `ConnectionData` row) is cleaned up so repeated windows don't
-    /// accumulate stale connections.
+    /// window: the socket is cancelled and its bookkeeping (the tracked
+    /// `ConnectionData` row) is cleaned up so repeated windows don't accumulate
+    /// stale connections.
     #[cfg(any(feature = "client", feature = "agent"))]
     pub fn close_websocket(&self, network: &NetworkLayer) {
         let Some(connection) = self.inner.write().unwrap().take() else {
@@ -312,14 +315,8 @@ impl ServerConnection {
         };
 
         // Cancel the socket task explicitly. `Drop` would also do this once every
-        // Arc is gone, but the relay or a stream may still hold a reference.
+        // Arc is gone, but a stream may still hold a reference.
         connection.cancel.cancel();
-
-        network
-            .inbound
-            .write()
-            .unwrap()
-            .retain(|c| !Arc::ptr_eq(c, &connection));
 
         let id = connection.data.read()._id;
         let _ = network.connections.remove(id);

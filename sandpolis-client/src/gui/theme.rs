@@ -5,10 +5,9 @@
 
 use bevy::prelude::*;
 
-use crate::gui::ui::gating::UiPointerState;
-use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::gating::{BlocksWorldInput, UiPointerState};
+use crate::gui::ui::scene::{button, modal_scrim_scene, text_line};
 use crate::gui::ui::theme::{Role, Theme, ThemePreset, ThemedBg, ThemedBorder};
-use crate::gui::ui::widgets::{button, heading, muted, text};
 
 /// Resource to track theme picker UI state.
 #[derive(Resource, Default)]
@@ -21,7 +20,7 @@ pub struct ThemePickerState {
 pub struct ThemePickerRoot;
 
 /// Marker for a theme preset row.
-#[derive(Component)]
+#[derive(Component, Clone, Default)]
 pub struct ThemePresetRow {
     pub preset: ThemePreset,
 }
@@ -40,6 +39,72 @@ pub fn handle_theme_picker_toggle(
     }
 }
 
+/// A clickable row for one theme preset.
+fn preset_row(theme: &Theme, preset: ThemePreset) -> impl Scene {
+    let surface = theme.color(Role::Surface);
+    let labels = vec![
+        text_line(theme, preset.name(), Role::Text, theme.metrics.font_md),
+        text_line(
+            theme,
+            preset.description(),
+            Role::TextMuted,
+            theme.metrics.font_sm,
+        ),
+    ];
+    bsn! {
+        ThemePresetRow { preset: {preset} }
+        bevy_ui_widgets::Button
+        template_value(Interaction::default())
+        Node {
+            flex_direction: FlexDirection::Column,
+            width: {Val::Percent(100.0)},
+            padding: {UiRect::axes(Val::Px(8.0), Val::Px(6.0))},
+            row_gap: {Val::Px(2.0)},
+        }
+        BackgroundColor({surface})
+        on(on_preset_click)
+        Children [ {labels} ]
+    }
+}
+
+/// The theme picker scene, spawned with `spawn_scene` and then
+/// `.insert((ThemePickerRoot, BlocksWorldInput))` on the root (those markers
+/// don't derive `Clone`).
+fn theme_picker_scene(theme: &Theme) -> impl Scene {
+    let panel = theme.color(Role::Panel);
+    let border = theme.color(Role::Border);
+    let heading = text_line(theme, "Theme", Role::Text, theme.metrics.font_heading);
+    let rows: Vec<_> = ThemePreset::all()
+        .iter()
+        .map(|preset| preset_row(theme, *preset))
+        .collect();
+    let close = button(theme, "Close", on_theme_close);
+
+    bsn! {
+        {modal_scrim_scene()}
+        Children [
+            (
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    width: {Val::Px(340.0)},
+                    padding: {UiRect::all(Val::Px(12.0))},
+                    row_gap: {Val::Px(8.0)},
+                    border: {UiRect::all(Val::Px(1.0))},
+                }
+                BackgroundColor({panel})
+                ThemedBg({Role::Panel})
+                template_value(BorderColor::all(border))
+                ThemedBorder({Role::Border})
+                Children [
+                    {vec![heading]},
+                    {rows},
+                    {vec![close]},
+                ]
+            )
+        ]
+    }
+}
+
 /// Spawn/despawn the native theme picker modal.
 pub fn manage_theme_picker(
     mut commands: Commands,
@@ -50,50 +115,8 @@ pub fn manage_theme_picker(
     let exists = !root.is_empty();
     if picker_state.show && !exists {
         commands
-            .spawn((ThemePickerRoot, modal_scrim()))
-            .with_children(|scrim| {
-                scrim
-                    .spawn((
-                        Node {
-                            flex_direction: FlexDirection::Column,
-                            width: Val::Px(340.0),
-                            padding: UiRect::all(Val::Px(12.0)),
-                            row_gap: Val::Px(8.0),
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..default()
-                        },
-                        BackgroundColor(theme.color(Role::Panel)),
-                        ThemedBg(Role::Panel),
-                        BorderColor::all(theme.color(Role::Border)),
-                        ThemedBorder(Role::Border),
-                    ))
-                    .with_children(|panel| {
-                        panel.spawn(heading(&theme, "Theme"));
-                        for preset in ThemePreset::all() {
-                            let preset = *preset;
-                            panel
-                                .spawn((
-                                    ThemePresetRow { preset },
-                                    bevy_ui_widgets::Button,
-                                    Interaction::default(),
-                                    Node {
-                                        flex_direction: FlexDirection::Column,
-                                        width: Val::Percent(100.0),
-                                        padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
-                                        row_gap: Val::Px(2.0),
-                                        ..default()
-                                    },
-                                    BackgroundColor(theme.color(Role::Surface)),
-                                    children![
-                                        text(&theme, preset.name(), theme.metrics.font_md, Role::Text),
-                                        muted(&theme, preset.description(), theme.metrics.font_sm),
-                                    ],
-                                ))
-                                .observe(on_preset_click);
-                        }
-                        panel.spawn(button(&theme, "Close")).observe(on_theme_close);
-                    });
-            });
+            .spawn_scene(theme_picker_scene(&theme))
+            .insert((ThemePickerRoot, BlocksWorldInput));
     } else if !picker_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

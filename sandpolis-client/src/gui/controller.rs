@@ -99,10 +99,16 @@ pub fn manage_controller(
     }
 }
 
-/// Close the controller when its panel's close button is clicked.
-fn on_panel_closed(closed: On<PanelClosed>, mut state: ResMut<NodeControllerState>) {
-    let _ = closed;
-    state.open = None;
+/// Close the controller when its panel's close button is clicked. Other
+/// floating panels (e.g. the database browser) handle their own `PanelClosed`.
+fn on_panel_closed(
+    closed: On<PanelClosed>,
+    panels: Query<&ControllerPanel>,
+    mut state: ResMut<NodeControllerState>,
+) {
+    if panels.contains(closed.entity) {
+        state.open = None;
+    }
 }
 
 /// Detect a double-click on a node to toggle its controller.

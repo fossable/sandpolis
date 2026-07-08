@@ -5,12 +5,9 @@
 use super::query_systemd_units;
 use crate::systemd::ActiveState;
 use bevy::prelude::*;
-use sandpolis_client::gui::ui::bind::bind_text;
-use sandpolis_client::gui::ui::controller::{
-    LayerClientInfo, NodeController, RegisterLayerClient,
-};
+use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
+use sandpolis_client::gui::ui::scene::{bound_text, text_line};
 use sandpolis_client::gui::ui::theme::{Role, Theme};
-use sandpolis_client::gui::ui::widgets::{heading, muted, text};
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 
 /// The health layer's node controller (service status).
@@ -25,12 +22,13 @@ impl NodeController for HealthController {
         // Subscribe to live systemd updates for this instance.
         super::subscribe(instance);
 
-        commands.entity(body).with_children(|p| {
-            // Summary of unit states
-            p.spawn(heading(theme, "systemd"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+        let font_md = theme.metrics.font_md;
+        let font_heading = theme.metrics.font_heading;
+        commands.entity(body).apply_scene(bsn! {
+            Children [
+                // Summary of unit states
+                {vec![text_line(theme, "systemd", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let units = query_systemd_units(instance).unwrap_or_default();
                     if units.is_empty() {
                         return "No unit data".into();
@@ -44,14 +42,10 @@ impl NodeController for HealthController {
                         .filter(|u| u.active_state == ActiveState::Active)
                         .count();
                     format!("{} units — {} active, {} failed", units.len(), active, failed)
-                }),
-            ));
-
-            // Failed units (most actionable)
-            p.spawn(heading(theme, "Failed Units"));
-            p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
+                })]},
+                // Failed units (most actionable)
+                {vec![text_line(theme, "Failed Units", Role::Text, font_heading)]},
+                {vec![bound_text(theme, Role::Text, font_md, move || {
                     let units = query_systemd_units(instance).unwrap_or_default();
                     let failed: Vec<String> = units
                         .iter()
@@ -63,14 +57,14 @@ impl NodeController for HealthController {
                     } else {
                         failed.join("\n")
                     }
-                }),
-            ));
-
-            p.spawn(muted(
-                theme,
-                format!("Instance: {}", instance),
-                theme.metrics.font_sm,
-            ));
+                })]},
+                {vec![text_line(
+                    theme,
+                    format!("Instance: {}", instance),
+                    Role::TextMuted,
+                    theme.metrics.font_sm,
+                )]},
+            ]
         });
     }
 }

@@ -3,50 +3,68 @@
 //! Bevy 0.19 introduced next-generation scenes: the [`bsn!`] macro builds an
 //! entity tree declaratively, and [`Commands::spawn_scene`] spawns it. This module
 //! establishes the conventions for using it alongside the codebase's existing
-//! retained-mode theming, and provides the first scenes migrated to it.
+//! retained-mode theming, and provides the shared scene-returning widget helpers
+//! ([`text_line`], [`bound_text`], [`button`], [`text_input`],
+//! [`modal_scrim_scene`] — scene counterparts of the `impl Bundle` helpers in
+//! [`super::widgets`], which cannot be spliced into `bsn!`).
 //!
 //! # Pattern
 //!
 //! - **Spawn** a scene with `commands.spawn_scene(my_scene(&theme))`. The returned
 //!   `EntityCommands` lets you `.insert(...)` extra components on the root (handy
 //!   for marker components that don't implement `Clone`/`Default`, which `bsn!`
-//!   requires).
+//!   requires). Markers on *child* entities must be declared inside the scene, so
+//!   they need `Clone + Default` derives.
+//! - **Build into an existing entity** (e.g. a controller body handed to
+//!   [`super::controller::NodeController::build`]) with
+//!   `commands.entity(body).apply_scene(bsn! { Children [ .. ] })`.
 //! - **Theme colors** are captured into locals and embedded with `{...}`:
 //!   `let panel = theme.color(Role::Panel); bsn! { BackgroundColor({panel}) }`.
 //!   Always also attach the matching `Themed*` marker ([`ThemedBg`],
 //!   [`ThemedText`], [`ThemedBorder`]) so the recolor systems in
 //!   [`super::theme`] repaint the node when the theme preset changes.
-//! - **Runtime component values** (anything built by a call, e.g. a [`TextFont`]
-//!   from [`Theme::text_font`], or `BorderColor::all(..)`) are inserted with
+//! - **Runtime component values** (anything built by a call, e.g.
+//!   `BorderColor::all(..)`) are inserted with
 //!   [`template_value(..)`](template_value), which works for any `Clone + Default`
-//!   component.
+//!   component. [`TextFont`] is the notable exception: it has a manual
+//!   `FromTemplate` (asset-templated font field), so patch `font_size` with field
+//!   syntax instead.
 //! - **Behavior** is attached with [`on(..)`](on), which registers an entity
 //!   observer for an [`EntityEvent`] (e.g. `on(on_help_close)` for an
 //!   `On<Activate>` handler).
 //! - **Dynamic children** are a `Vec<impl Scene>` spliced into a `Children [..]`
-//!   list with `{...}`.
+//!   list with `{...}`. A bare `Scene` is not a `SceneList`, so single scenes are
+//!   spliced as `{vec![scene]}`. Beware that scene helpers are generic: two calls
+//!   with different closure/string argument types return *different* `impl Scene`
+//!   types and cannot share one `Vec`.
 //!
-//! # What is *not* migrated here
+//! # What is *not* migrated
 //!
 //! Scenes that must hand back child entity ids synchronously at spawn time — most
 //! notably [`super::panel::spawn_floating_panel`], whose callers spawn controller
 //! content into the returned `body` entity — don't fit the `spawn_scene` model
-//! cleanly and are intentionally left imperative. The remaining modal/dialog
-//! scenes are tracked for migration in `CLAUDE.md`.
+//! cleanly and are intentionally left imperative. The full migration status is
+//! tracked in `AGENTS.md`.
 
+use super::bind::bind_text;
+use super::gating::WantsKeyboard;
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder, ThemedText};
 use super::z;
 use crate::gui::input::on_help_close;
+use bevy::ecs::system::IntoObserverSystem;
+use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::prelude::*;
-use bevy_ui_widgets::Button;
+use bevy::text::{EditableText, TextCursorStyle};
+use bevy_ui_widgets::{Activate, Button};
 
 /// A single themed text line.
-fn text_line(theme: &Theme, content: impl Into<String>, role: Role, size: f32) -> impl Scene {
+pub fn text_line(theme: &Theme, content: impl Into<String>, role: Role, size: f32) -> impl Scene {
     let content = content.into();
     let color = theme.color(role);
-    // `TextFont` isn't `Default` (so not usable via `template_value`); patch the
-    // size with field syntax. A custom `Theme::font` isn't applied here — the
-    // default font is used, which matches the app's default configuration.
+    // `TextFont` has a manual `FromTemplate` (its `font` field is asset-templated),
+    // so it can't be passed to `template_value`; patch the size with field syntax.
+    // A custom `Theme::font` isn't applied here — the default font is used, which
+    // matches the app's default configuration.
     bsn! {
         template_value(Text::new(content))
         TextFont { font_size: {size} }
@@ -55,9 +73,28 @@ fn text_line(theme: &Theme, content: impl Into<String>, role: Role, size: f32) -
     }
 }
 
-/// A themed button whose `On<Activate>` is handled by [`on_help_close`].
-fn help_close_button(theme: &Theme) -> impl Scene {
-    let label = text_line(theme, "Close", Role::Text, theme.metrics.font_md);
+/// A themed text line whose content is kept in sync by a [`super::bind::BindText`]
+/// projection.
+pub fn bound_text(
+    theme: &Theme,
+    role: Role,
+    size: f32,
+    project: impl Fn() -> String + Send + Sync + 'static,
+) -> impl Scene {
+    (
+        text_line(theme, "", role, size),
+        template_value(bind_text(project)),
+    )
+}
+
+/// A themed button with a centered text label whose `On<Activate>` is handled by
+/// `observer`.
+pub fn button<B: Bundle, M: 'static>(
+    theme: &Theme,
+    label: impl Into<String>,
+    observer: impl IntoObserverSystem<Activate, B, M> + Clone + Send + Sync,
+) -> impl Scene {
+    let label = text_line(theme, label, Role::Text, theme.metrics.font_md);
     let surface = theme.color(Role::Surface);
     let border = theme.color(Role::Border);
     let pad_x = theme.metrics.space_md;
@@ -75,8 +112,65 @@ fn help_close_button(theme: &Theme) -> impl Scene {
         BackgroundColor({surface})
         template_value(BorderColor::all(border))
         ThemedBorder({Role::Border})
-        on(on_help_close)
+        on(observer)
         Children [ {vec![label]} ]
+    }
+}
+
+/// A themed single-line [`EditableText`] field; scene counterpart of
+/// [`super::text_input::text_input`]. Attach the caller's query marker on the
+/// same entity, e.g. `( MyInput {scene::text_input(&theme)} )`.
+pub fn text_input(theme: &Theme) -> impl Scene {
+    let font_size = theme.metrics.font_md;
+    let text_color = theme.color(Role::Text);
+    let surface = theme.color(Role::Surface);
+    let border = theme.color(Role::Border);
+    let cursor = TextCursorStyle {
+        color: theme.color(Role::Text),
+        selection_color: theme.color(Role::Accent),
+        ..default()
+    };
+    bsn! {
+        WantsKeyboard
+        EditableText { allow_newlines: false }
+        template_value(TextLayout::no_wrap())
+        template_value(cursor)
+        TextFont { font_size: {font_size} }
+        TextColor({text_color})
+        ThemedText({Role::Text})
+        TabIndex(0)
+        Node {
+            min_width: {Val::Px(220.0)},
+            padding: {UiRect::axes(Val::Px(8.0), Val::Px(5.0))},
+            border: {UiRect::all(Val::Px(1.0))},
+            align_items: AlignItems::Center,
+            overflow: {Overflow::clip()},
+            flex_shrink: 0.0,
+        }
+        BackgroundColor({surface})
+        ThemedBg({Role::Surface})
+        template_value(BorderColor::all(border))
+        ThemedBorder({Role::Border})
+    }
+}
+
+/// A full-screen modal scrim that centers its child content; scene counterpart of
+/// [`super::panel::modal_scrim`]. `BlocksWorldInput` isn't `Clone`, so callers
+/// must insert it (with their root marker) on the spawned root.
+pub fn modal_scrim_scene() -> impl Scene {
+    let scrim = Color::BLACK.with_alpha(0.55);
+    bsn! {
+        Node {
+            position_type: PositionType::Absolute,
+            left: {Val::Px(0.0)},
+            top: {Val::Px(0.0)},
+            right: {Val::Px(0.0)},
+            bottom: {Val::Px(0.0)},
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+        }
+        BackgroundColor({scrim})
+        GlobalZIndex({z::MODAL})
     }
 }
 
@@ -100,7 +194,7 @@ pub fn help_modal_scene(theme: &Theme, shortcuts: &[&str]) -> impl Scene {
         .iter()
         .map(|line| text_line(theme, *line, Role::TextMuted, theme.metrics.font_md))
         .collect();
-    let close = help_close_button(theme);
+    let close = button(theme, "Close", on_help_close);
 
     bsn! {
         Node {

@@ -379,6 +379,11 @@ impl Relay {
         if let Some(target) = message.dst {
             let Some(conn) = self.find(target, origin_tx) else {
                 // Unknown target: swallow it rather than mis-handling locally.
+                tracing::warn!(
+                    target = %target,
+                    stream_id = ?message.stream_id,
+                    "No connection for relay target; dropping stream message"
+                );
                 return true;
             };
             self.routes
@@ -612,16 +617,13 @@ mod relay_tests {
         });
     }
 
-    /// A client opens a stream addressed to an agent; the server relays the
-    /// request to the agent and the agent's response back to the client.
-    #[tokio::test]
-    async fn relays_client_to_agent_and_back() -> anyhow::Result<()> {
+    /// Wire a client and an agent to a relaying server and run one echo
+    /// round-trip. The ids may be equal (as in an all-in-one build, where the
+    /// co-located client and agent share one `InstanceId`).
+    async fn relay_echo_roundtrip(agent_id: InstanceId, client_id: InstanceId) -> anyhow::Result<()> {
         let db = test_db!(ConnectionData);
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
-
-        let agent_id = InstanceId::new(&[InstanceType::Agent]);
-        let client_id = InstanceId::new(&[InstanceType::Client]);
 
         // Channels named by the dispatch they feed.
         let (c2s_tx, c2s_rx) = mpsc::channel(32); // client -> server (client-facing)
@@ -685,5 +687,25 @@ mod relay_tests {
         assert_eq!(got, 42);
 
         Ok(())
+    }
+
+    /// A client opens a stream addressed to an agent; the server relays the
+    /// request to the agent and the agent's response back to the client.
+    #[tokio::test]
+    async fn relays_client_to_agent_and_back() -> anyhow::Result<()> {
+        relay_echo_roundtrip(
+            InstanceId::new(&[InstanceType::Agent]),
+            InstanceId::new(&[InstanceType::Client]),
+        )
+        .await
+    }
+
+    /// Same round-trip when the client and agent share one `InstanceId`, as in
+    /// an all-in-one build. The relay must exclude the origin connection and
+    /// route to the other one.
+    #[tokio::test]
+    async fn relays_with_shared_instance_id() -> anyhow::Result<()> {
+        let shared = InstanceId::new(&[InstanceType::Client, InstanceType::Agent]);
+        relay_echo_roundtrip(shared, shared).await
     }
 }

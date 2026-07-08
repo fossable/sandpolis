@@ -8,6 +8,7 @@ pub mod activity;
 pub mod add_agent;
 pub mod assets;
 pub mod controller;
+pub mod database_browser;
 pub mod drag;
 pub mod edges;
 pub mod input;

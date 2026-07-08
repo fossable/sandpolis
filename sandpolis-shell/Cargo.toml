@@ -21,6 +21,7 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 serde = { workspace = true }
 serde_cbor = { workspace = true, optional = true }
 tokio = { workspace = true }
+tokio-util = { workspace = true, optional = true }
 tracing = { workspace = true }
 
 # GUI dependencies
@@ -38,7 +39,7 @@ ratatui = { workspace = true, optional = true }
 pty-process = { workspace = true, optional = true }
 
 [features]
-agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory", "dep:pty-process"]
+agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory", "dep:pty-process", "dep:tokio-util"]
 server = []
 client = [
   "dep:alacritty_terminal",

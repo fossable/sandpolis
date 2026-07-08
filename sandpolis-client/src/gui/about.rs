@@ -2,9 +2,8 @@
 //!
 //! The about screen can be activated by triple-clicking on the layer indicator.
 
-use crate::gui::ui::panel::modal_scrim;
+use crate::gui::ui::scene::{button, text_line};
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
-use crate::gui::ui::widgets::{button, heading, muted, text};
 use bevy::camera::ClearColorConfig;
 use bevy::prelude::*;
 use bevy_ui_widgets::Activate;
@@ -155,6 +154,72 @@ pub fn rotate_about_logo(time: Res<Time>, mut logo_query: Query<&mut Transform, 
 #[derive(Component)]
 pub struct AboutRoot;
 
+/// The about panel scene, spawned with `spawn_scene` and then
+/// `.insert((AboutRoot, BlocksWorldInput))` on the root (those markers don't
+/// derive `Clone`).
+fn about_scene(theme: &Theme) -> impl Scene {
+    let panel = theme.color(Role::Panel);
+    let border = theme.color(Role::Border);
+    let lines = vec![
+        text_line(
+            theme,
+            "SANDPOLIS".to_string(),
+            Role::Text,
+            theme.metrics.font_heading,
+        ),
+        text_line(
+            theme,
+            "Security & Systems Management Platform".to_string(),
+            Role::TextMuted,
+            theme.metrics.font_md,
+        ),
+        text_line(
+            theme,
+            format!("Version {}", env!("CARGO_PKG_VERSION")),
+            Role::Text,
+            theme.metrics.font_sm,
+        ),
+        text_line(
+            theme,
+            "github.com/fossable/sandpolis".to_string(),
+            Role::TextMuted,
+            theme.metrics.font_sm,
+        ),
+    ];
+    let close = button(theme, "Close", on_about_close);
+
+    bsn! {
+        Node {
+            position_type: PositionType::Absolute,
+            left: {Val::Px(0.0)},
+            right: {Val::Px(0.0)},
+            bottom: {Val::Px(40.0)},
+            justify_content: JustifyContent::Center,
+        }
+        GlobalZIndex({crate::gui::ui::z::CHROME})
+        Children [
+            (
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    width: {Val::Px(360.0)},
+                    padding: {UiRect::all(Val::Px(16.0))},
+                    row_gap: {Val::Px(6.0)},
+                    border: {UiRect::all(Val::Px(1.0))},
+                }
+                BackgroundColor({panel})
+                ThemedBg({Role::Panel})
+                template_value(BorderColor::all(border))
+                ThemedBorder({Role::Border})
+                Children [
+                    {lines},
+                    {vec![close]},
+                ]
+            )
+        ]
+    }
+}
+
 /// Spawn/despawn the native about panel (the 3D logo renders above it).
 pub fn manage_about_panel(
     mut commands: Commands,
@@ -165,56 +230,8 @@ pub fn manage_about_panel(
     let exists = !root.is_empty();
     if about_state.show && !exists {
         commands
-            .spawn((
-                AboutRoot,
-                crate::gui::ui::gating::BlocksWorldInput,
-                GlobalZIndex(crate::gui::ui::z::CHROME),
-                Node {
-                    position_type: PositionType::Absolute,
-                    left: Val::Px(0.0),
-                    right: Val::Px(0.0),
-                    bottom: Val::Px(40.0),
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
-            ))
-            .with_children(|root| {
-                root.spawn((
-                    Node {
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        width: Val::Px(360.0),
-                        padding: UiRect::all(Val::Px(16.0)),
-                        row_gap: Val::Px(6.0),
-                        border: UiRect::all(Val::Px(1.0)),
-                        ..default()
-                    },
-                    BackgroundColor(theme.color(Role::Panel)),
-                    ThemedBg(Role::Panel),
-                    BorderColor::all(theme.color(Role::Border)),
-                    ThemedBorder(Role::Border),
-                ))
-                .with_children(|p| {
-                    p.spawn(heading(&theme, "SANDPOLIS"));
-                    p.spawn(muted(
-                        &theme,
-                        "Security & Systems Management Platform",
-                        theme.metrics.font_md,
-                    ));
-                    p.spawn(text(
-                        &theme,
-                        format!("Version {}", env!("CARGO_PKG_VERSION")),
-                        theme.metrics.font_sm,
-                        Role::Text,
-                    ));
-                    p.spawn(muted(
-                        &theme,
-                        "github.com/fossable/sandpolis",
-                        theme.metrics.font_sm,
-                    ));
-                    p.spawn(button(&theme, "Close")).observe(on_about_close);
-                });
-            });
+            .spawn_scene(about_scene(&theme))
+            .insert((AboutRoot, crate::gui::ui::gating::BlocksWorldInput));
     } else if !about_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

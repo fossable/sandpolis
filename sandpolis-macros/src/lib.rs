@@ -139,6 +139,15 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
     let struct_name = item_struct.ident.to_string();
     let krate = instance_crate();
 
+    // Instance-scoped if the `instance` flag was given (we add `_instance_id`
+    // below) or the user declared an `_instance_id` field themselves. Checked
+    // before the synthetic fields are pushed.
+    let has_instance = attrs.instance
+        || item_struct
+            .fields
+            .iter()
+            .any(|f| f.ident.as_ref().is_some_and(|i| i == "_instance_id"));
+
     if let Fields::Named(ref mut fields) = item_struct.fields {
         // Add id field
         fields.named.push(
@@ -235,11 +244,23 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
     //     model_args.extend(quote! { , try_from = #try_from });
     // }
 
+    let struct_ident = &item_struct.ident;
+    let register = if has_instance {
+        quote! { r.register_scoped::<#struct_ident>(|d| d._instance_id) }
+    } else {
+        quote! { r.register::<#struct_ident>() }
+    };
+
     let tokens = quote! {
         #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug, sandpolis_macros::Data)]
         #[native_model::native_model(#model_args)]
         #[native_db::native_db]
         #item_struct
+
+        // Auto-register in the database viewer's browse registry.
+        #krate::inventory::submit! {
+            #krate::database::browse::BrowseRegistration(|r| #register)
+        }
     };
 
     tokens.into()
