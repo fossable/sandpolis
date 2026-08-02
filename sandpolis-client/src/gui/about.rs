@@ -87,8 +87,10 @@ pub fn spawn_about_logo(
     if about_state.show {
         // Only spawn if not already spawned
         if logo_query.is_empty() {
-            // Load the STL mesh
-            let mesh_handle: Handle<Mesh> = asset_server.load("sandpolis.stl");
+            // Load the logo mesh from the glTF primitive; we apply our own
+            // material below, so only the mesh is needed.
+            let mesh_handle: Handle<Mesh> = asset_server
+                .load(GltfAssetLabel::Primitive { mesh: 0, primitive: 0 }.from_asset("mesh/v7.glb"));
 
             // Spawn the 3D logo
             commands.spawn((

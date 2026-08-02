@@ -26,7 +26,6 @@ native_model = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
-bevy_stl = { workspace = true, optional = true }
 bevy_ui_widgets = { workspace = true, optional = true }
 resvg = { workspace = true, optional = true }
 include_dir = { workspace = true, optional = true }
@@ -46,7 +45,6 @@ client = [
   "dep:bevy",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",
-  "dep:bevy_stl",
   "dep:bevy_ui_widgets",
   "dep:resvg",
   "dep:include_dir",

@@ -1853,7 +1853,9 @@ checksum = "b511e89f7078fd21fdea77061a0ca3e737297c7011bb10c073e0aecb17c9fea6"
 
 [[package]]
 name = "bevy_rapier2d"
-version = "0.34.0"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b683d28059cd1e2d2cebf7c0969673364340bb529ec6bf3a361ac7b3bd77086e"
 dependencies = [
  "bevy",
  "bitflags 2.13.0",
@@ -2108,15 +2110,6 @@ dependencies = [
  "bevy_macro_utils",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "bevy_stl"
-version = "0.18.0"
-dependencies = [
- "bevy",
- "stl_io",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4474,15 +4467,6 @@ name = "float-cmp"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
-
-[[package]]
-name = "float-cmp"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
-dependencies = [
- "num-traits",
-]
 
 [[package]]
 name = "float_next_after"
@@ -8214,7 +8198,9 @@ dependencies = [
 
 [[package]]
 name = "parry2d"
-version = "0.26.1"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64f0ec92e9560ebd24cbdd071e19e07a96df6a6d4970d8719cc898c7dfdc359a"
 dependencies = [
  "approx",
  "arrayvec",
@@ -9239,7 +9225,9 @@ checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 
 [[package]]
 name = "rapier2d"
-version = "0.32.0"
+version = "0.33.0-alpha"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a7bce442e0a45589beb5d077688d8c3a924a3a9584649bbdbaeb898ea28bc14"
 dependencies = [
  "approx",
  "arrayvec",
@@ -10270,7 +10258,6 @@ dependencies = [
  "axum-server",
  "bevy",
  "bevy_rapier2d",
- "bevy_stl",
  "bevy_svg",
  "bevy_ui_widgets",
  "chrono",
@@ -10371,7 +10358,6 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy_rapier2d",
- "bevy_stl",
  "bevy_svg",
  "bevy_ui_widgets",
  "clap",
@@ -11458,16 +11444,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
-name = "stl_io"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da63e75b86345156b191c021b3ce2a13b973941ecdb8c70d6f00cbbfe0076ed7"
-dependencies = [
- "byteorder 1.5.0",
- "float-cmp 0.10.0",
-]
-
-[[package]]
 name = "streaming-iterator"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11479,7 +11455,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
 dependencies = [
- "float-cmp 0.9.0",
+ "float-cmp",
 ]
 
 [[package]]

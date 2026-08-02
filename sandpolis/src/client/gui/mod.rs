@@ -76,6 +76,7 @@ use sandpolis_client::gui::preview::{
 };
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
+use sandpolis_client::gui::terrain::{TerrainConfig, rebuild_terrains, update_terrain_bounds};
 use sandpolis_client::gui::theme::{
     ThemePickerState, handle_theme_picker_toggle, manage_theme_picker, update_theme_rows,
 };
@@ -140,7 +141,6 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
     .add_plugins(bevy::dev_tools::diagnostics_overlay::DiagnosticsOverlayPlugin)
     .add_plugins(bevy_svg::prelude::SvgPlugin)
-    .add_plugins(bevy_stl::StlPlugin)
     .add_plugins(sandpolis_client::gui::ui::UiPlugin)
     .add_plugins(ControllerHostPlugin)
     .add_plugins(CoreLayerToolbarPlugin)
@@ -173,6 +173,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(MousePressed(false))
     .insert_resource(PanningState::default())
     .insert_resource(PreviewsVisible::default())
+    .insert_resource(TerrainConfig::default())
     .add_systems(Startup, setup)
     // Native bevy_ui chrome (migrated off egui).
     .add_systems(Startup, (spawn_minimap, spawn_layer_indicator))
@@ -279,6 +280,9 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             update_node_visibility_for_layer,
             // Node SVG scaling - MUST run after update_node_svgs_for_layer
             scale_node_svgs.after(update_node_svgs_for_layer),
+            // Terrain bounds follow the frame's final node positions
+            rebuild_terrains,
+            update_terrain_bounds.after(rebuild_terrains),
             // Database updates
             process_database_updates,
         ),
