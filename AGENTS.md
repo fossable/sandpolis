@@ -24,6 +24,23 @@ Most layers implement some functionality for all three instance types. For
 example, the way to think about the `sandpolis-agent` crate is it "does
 something with agents", not that it "implements what an agent does".
 
+#### Instances
+
+An _instance_ is a Sandpolis process running as an **agent**, **server**, or
+**client** (or all three in CoLo mode).
+
+#### World View
+
+Users interact with the Sandpolis network via a real-time graph called the
+_world view_. The graph is made of:
+
+- Nodes
+  - A _node_ could be an instance
+- Links
+  - A _link_ expresses some general relationship between two nodes
+- Terrains
+  - A _terrain_ is a grouping of nodes
+
 ## CoLo mode
 
 When a server feature is compiled alongside the client and/or agent and the
@@ -71,16 +88,16 @@ cd android && ./gradlew assembleDebug
       `on(..)` observers, dynamic `Vec<impl Scene>` child lists,
       `apply_scene(bsn! { Children [..] })` for building into an existing
       entity).
-    - Migrated: help modal, about panel, add-agent modal, theme picker,
-      health + inventory controller bodies.
+    - Migrated: help modal, about panel, add-agent modal, theme picker, health +
+      inventory controller bodies.
     - Intentionally imperative (bsn! wouldn't simplify them):
       - login modal: tree branches on the login phase and is rebuilt per phase.
       - layer/node pickers: rows are rebuilt on state change into a container
         entity; the static shell alone isn't worth splitting off.
       - layer toolbar: per-button closure/gate capture is the substance.
       - minimap: already declarative via `children![]`; dots rebuild per frame.
-      - node/edge graph: rapier physics components lack `Default`, so bsn!
-        would need `template_value` wrapping everywhere and read worse.
+      - node/edge graph: rapier physics components lack `Default`, so bsn! would
+        need `template_value` wrapping everywhere and read worse.
       - shell/desktop/probe controller bodies: dominated by resource-mutating
         observer closures (and per-device iteration in probe); revisit later.
     - `spawn_floating_panel` (`ui/panel.rs`) intentionally stays imperative: it

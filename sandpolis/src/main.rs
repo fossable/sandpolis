@@ -6,7 +6,7 @@ use sandpolis::config::Configuration;
 use sandpolis_instance::database::DatabaseLayer;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
-use tracing::info;
+use tracing::{error, info};
 use tracing_subscriber::filter::LevelFilter;
 
 #[tokio::main]
@@ -101,6 +101,22 @@ async fn main() -> Result<ExitCode> {
     }
 
     // TODO do this somewhere else
+    #[cfg(all(feature = "server", feature = "layer-account"))]
+    {
+        let base = config.clone();
+        sandpolis_account::set_account_persist(move |accounts| {
+            let mut cfg = base.clone();
+            let accounts = accounts.to_vec();
+            // Only the account list is replaced; `account.scrape` and every
+            // other section keep whatever is on disk.
+            cfg.modify(|c| {
+                c.account.accounts = accounts.clone();
+                Ok(())
+            })
+        });
+    }
+
+    // TODO do this somewhere else
     #[cfg(all(feature = "server", feature = "layer-probe"))]
     {
         let base = config.clone();
@@ -139,7 +155,15 @@ async fn main() -> Result<ExitCode> {
     {
         let s = state.clone();
         let c = config.clone();
-        tasks.spawn(async move { sandpolis::server::main(c, s).await });
+        // On client builds nothing joins this set (the client owns the main
+        // thread), so a server failure would otherwise be silent.
+        tasks.spawn(async move {
+            let result = sandpolis::server::main(c, s).await;
+            if let Err(e) = &result {
+                error!(error = %e, "Server task failed");
+            }
+            result
+        });
     }
 
     // Auto-open a loopback connection from the co-located client to the local
@@ -163,11 +187,7 @@ async fn main() -> Result<ExitCode> {
             // Establish the sync websocket (the GUI does this itself).
             if args.command.is_some() {
                 sandpolis::client::spawn_client_sync(state.clone());
-                return args
-                    .command
-                    .unwrap()
-                    .dispatch_client(&config, &state)
-                    .await;
+                return args.command.unwrap().dispatch_client(&config, &state).await;
             }
             sandpolis::client::gui::main(config, state).await.unwrap();
             return Ok(ExitCode::SUCCESS);

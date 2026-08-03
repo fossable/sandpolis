@@ -50,7 +50,8 @@ impl InstanceState {
     pub async fn new(config: Configuration, database: DatabaseLayer) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
 
-        let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
+        let instance =
+            sandpolis_instance::InstanceLayer::new(&config.instance, database.clone()).await?;
 
         let realm = sandpolis_instance::realm::RealmLayer::new(
             config.realm,
@@ -214,6 +215,12 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     #[cfg(feature = "layer-account")]
     {
         m.define::<sandpolis_account::AccountLayerData>().unwrap();
+        m.define::<sandpolis_account::AccountData>().unwrap();
+        m.define::<sandpolis_account::AccountLinkData>().unwrap();
+        m.define::<sandpolis_account::scrape::ScrapeTaskData>()
+            .unwrap();
+        m.define::<sandpolis_account::favicon::FaviconData>()
+            .unwrap();
     }
 
     // Health layer

@@ -1,6 +1,6 @@
 use crate::database::{DatabaseLayer, Resident};
 use crate::realm::RealmName;
-use anyhow::Result;
+use anyhow::{Result, bail};
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
@@ -504,6 +504,8 @@ pub struct InstanceLayerData {
     pub cluster_id: ClusterId,
     pub instance_id: InstanceId,
     pub os_info: os_info::Info,
+    /// The domain this instance belongs to (configured via `instance.domain`).
+    pub domain: String,
 }
 
 /// The sync `model_id` for [`InstanceLayerData`], used by clients to subscribe to
@@ -519,16 +521,30 @@ pub struct InstanceLayer {
     data: Resident<InstanceLayerData>,
     pub instance_id: InstanceId,
     pub cluster_id: ClusterId,
+    pub domain: String,
 }
 
 impl InstanceLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+    pub async fn new(config: &crate::config::InstanceConfig, database: DatabaseLayer) -> Result<Self> {
+        // Every instance belongs to exactly one domain, so it must be configured.
+        let domain = match config.domain.as_deref() {
+            Some(domain) if !domain.trim().is_empty() => domain.to_string(),
+            _ => bail!("instance.domain must be configured in sandpolis.ron"),
+        };
+
         let data: Resident<InstanceLayerData> =
             database.realm(RealmName::default())?.resident(())?;
+
+        // Persist the configured domain if it changed since the last start.
+        data.update(|d| {
+            d.domain = domain.clone();
+            Ok(())
+        })?;
 
         Ok(Self {
             instance_id: { data.read().instance_id },
             cluster_id: { data.read().cluster_id },
+            domain,
             data,
         })
     }

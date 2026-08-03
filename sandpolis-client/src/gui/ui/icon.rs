@@ -10,6 +10,9 @@
 //! ([`crate::gui::assets`]), so rasterization doesn't depend on the process
 //! working directory or the on-disk asset layout. Tint per-state via
 //! [`ImageNode::color`] rather than baking the tint into the cache key.
+//!
+//! [`decode_icon_bytes`] handles icons that don't come from the bundle at all —
+//! scraped favicons, which arrive as whatever bytes the site served.
 
 use crate::gui::assets;
 use bevy::asset::RenderAssetUsages;
@@ -18,6 +21,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use resvg::{tiny_skia, usvg};
 use std::collections::HashMap;
+use std::io::Cursor;
 
 /// Installs the icon cache.
 pub struct IconPlugin;
@@ -62,8 +66,13 @@ fn rasterize_svg(path: &str, size: u32) -> Option<Image> {
         warn!("icon not found in embedded assets: {path}");
         None
     })?;
+    rasterize_svg_bytes(bytes, size)
+}
+
+/// Rasterize SVG source into a square RGBA [`Image`], preserving aspect ratio.
+fn rasterize_svg_bytes(bytes: &[u8], size: u32) -> Option<Image> {
     let tree = usvg::Tree::from_data(bytes, &usvg::Options::default())
-        .map_err(|e| warn!("icon parse failed for {path}: {e}"))
+        .map_err(|e| warn!("svg icon parse failed: {e}"))
         .ok()?;
 
     let mut pixmap = tiny_skia::Pixmap::new(size, size)?;
@@ -87,7 +96,89 @@ fn rasterize_svg(path: &str, size: u32) -> Option<Image> {
         }
     }
 
-    Some(Image::new(
+    Some(square_image(size, rgba))
+}
+
+/// Largest icon payload we'll even look at. Favicons are small; anything past
+/// this is either not an icon or not worth decoding.
+const MAX_ICON_BYTES: usize = 2 * 1024 * 1024;
+
+/// Largest source dimension accepted from a raster icon, so a decompression bomb
+/// can't allocate its way through the render thread.
+const MAX_ICON_DIMENSION: u32 = 4096;
+
+/// Decode icon bytes of unknown provenance into a square RGBA [`Image`].
+///
+/// Unlike [`IconCache`] this doesn't go through the embedded asset bundle: the
+/// bytes come from an arbitrary third-party web server (see
+/// `sandpolis_account::favicon`), so both the format and the trustworthiness of
+/// the input are unknown. `content_type` is the server's claim about the format
+/// and is only used to pick the SVG path; raster formats are identified by their
+/// magic bytes instead, since a `.ico` URL frequently serves a PNG.
+///
+/// The result is always exactly `size` × `size`, with the source letterboxed
+/// into the middle of a transparent square.
+pub fn decode_icon_bytes(bytes: &[u8], content_type: Option<&str>, size: u32) -> Option<Image> {
+    if bytes.is_empty() || size == 0 {
+        return None;
+    }
+    if bytes.len() > MAX_ICON_BYTES {
+        warn!("icon rejected: {} bytes exceeds the cap", bytes.len());
+        return None;
+    }
+
+    if looks_like_svg(bytes, content_type) {
+        return rasterize_svg_bytes(bytes, size);
+    }
+
+    let mut reader = image::ImageReader::new(Cursor::new(bytes))
+        .with_guessed_format()
+        .map_err(|e| warn!("icon format detection failed: {e}"))
+        .ok()?;
+    let mut limits = image::Limits::default();
+    limits.max_image_width = Some(MAX_ICON_DIMENSION);
+    limits.max_image_height = Some(MAX_ICON_DIMENSION);
+    reader.limits(limits);
+
+    let decoded = reader
+        .decode()
+        .map_err(|e| warn!("icon decode failed: {e}"))
+        .ok()?;
+
+    // `resize` fits inside the box while preserving aspect ratio, so the result
+    // is at most `size` on each axis but rarely square.
+    let scaled = decoded
+        .resize(size, size, image::imageops::FilterType::Lanczos3)
+        .to_rgba8();
+
+    // `Image::new` panics unless the buffer is exactly `size * size * 4`, so
+    // center the scaled icon on a transparent canvas of the requested size.
+    // `replace` copies rather than blends, keeping the straight alpha that
+    // `to_rgba8` produced.
+    let mut canvas = image::RgbaImage::new(size, size);
+    let x = (size.saturating_sub(scaled.width()) / 2) as i64;
+    let y = (size.saturating_sub(scaled.height()) / 2) as i64;
+    image::imageops::replace(&mut canvas, &scaled, x, y);
+
+    Some(square_image(size, canvas.into_raw()))
+}
+
+/// Whether these bytes should be handed to the SVG rasterizer.
+fn looks_like_svg(bytes: &[u8], content_type: Option<&str>) -> bool {
+    if content_type.is_some_and(|t| t.contains("svg")) {
+        return true;
+    }
+    let head = bytes
+        .iter()
+        .position(|b| !b.is_ascii_whitespace())
+        .map(|start| &bytes[start..])
+        .unwrap_or_default();
+    head.starts_with(b"<svg") || head.starts_with(b"<?xml") || head.starts_with(b"<!DOCTYPE svg")
+}
+
+/// Wrap a `size` × `size` straight-alpha RGBA buffer as an [`Image`].
+fn square_image(size: u32, rgba: Vec<u8>) -> Image {
+    Image::new(
         Extent3d {
             width: size,
             height: size,
@@ -97,5 +188,5 @@ fn rasterize_svg(path: &str, size: u32) -> Option<Image> {
         rgba,
         TextureFormat::Rgba8UnormSrgb,
         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
-    ))
+    )
 }

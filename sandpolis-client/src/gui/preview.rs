@@ -11,12 +11,11 @@ use crate::gui::layer_ui::layer_icon_path;
 use crate::gui::node::NodeEntity;
 use crate::gui::queries;
 use crate::gui::ui::Activate;
-use crate::gui::ui::anchored::WorldAnchored;
+use crate::gui::ui::anchored::{anchored_card, card_icon};
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::icon::IconCache;
-use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::theme::{Role, Theme};
 use crate::gui::ui::widgets::{button, text};
-use crate::gui::ui::z;
 use bevy::image::Image;
 use bevy::prelude::*;
 use sandpolis_instance::InstanceId;
@@ -168,7 +167,7 @@ pub fn sync_node_previews(
     network_layer: Res<NetworkLayer>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    nodes: Query<(Entity, &NodeEntity)>,
+    nodes: Query<(Entity, &NodeEntity, Option<&Visibility>)>,
     previews: Query<(Entity, &NodePreviewUi)>,
 ) {
     if !visible.0 {
@@ -178,8 +177,16 @@ pub fn sync_node_previews(
         return;
     }
 
+    // A card tracks its node's projected screen position, but `WorldAnchored`
+    // never looks at the node's visibility, so hidden nodes have to be filtered
+    // here or their cards float over whatever layer replaced them.
+    let shown = |visibility: Option<&Visibility>| visibility != Some(&Visibility::Hidden);
+
     // Spawn cards for new nodes.
-    for (node_entity, node) in &nodes {
+    for (node_entity, node, visibility) in &nodes {
+        if !shown(visibility) {
+            continue;
+        }
         if previews.iter().any(|(_, p)| p.node == node_entity) {
             continue;
         }
@@ -198,35 +205,10 @@ pub fn sync_node_previews(
                     node: node_entity,
                     instance_id,
                 },
-                WorldAnchored {
-                    target: node_entity,
-                    offset: Vec2::new(0.0, 55.0),
-                },
-                GlobalZIndex(z::ANCHORED),
-                Node {
-                    position_type: PositionType::Absolute,
-                    flex_direction: FlexDirection::Row,
-                    align_items: AlignItems::Center,
-                    column_gap: Val::Px(6.0),
-                    padding: UiRect::all(Val::Px(6.0)),
-                    border: UiRect::all(Val::Px(1.0)),
-                    ..default()
-                },
-                BackgroundColor(theme.color(Role::Panel)),
-                ThemedBg(Role::Panel),
-                BorderColor::all(theme.color(Role::Border)),
-                ThemedBorder(Role::Border),
+                anchored_card(&theme, node_entity, Vec2::new(0.0, 55.0)),
             ))
             .with_children(|card| {
-                card.spawn((
-                    PreviewIcon,
-                    ImageNode::new(icon),
-                    Node {
-                        width: Val::Px(PREVIEW_ICON_PX as f32),
-                        height: Val::Px(PREVIEW_ICON_PX as f32),
-                        ..default()
-                    },
-                ));
+                card.spawn((PreviewIcon, card_icon(icon, PREVIEW_ICON_PX as f32)));
                 card.spawn(Node {
                     flex_direction: FlexDirection::Column,
                     ..default()
@@ -243,9 +225,12 @@ pub fn sync_node_previews(
             });
     }
 
-    // Despawn cards whose node is gone.
+    // Despawn cards whose node is gone or newly hidden.
     for (preview_entity, preview) in &previews {
-        if !nodes.iter().any(|(entity, _)| entity == preview.node) {
+        let live = nodes
+            .iter()
+            .any(|(entity, _, visibility)| entity == preview.node && shown(visibility));
+        if !live {
             commands.entity(preview_entity).despawn();
         }
     }

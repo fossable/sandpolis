@@ -5,7 +5,7 @@ use bevy::{
     input::mouse::{MouseButtonInput, MouseMotion, MouseWheel},
     prelude::*,
 };
-use crate::gui::ui::gating::{BlocksWorldInput, UiPointerState};
+use crate::gui::ui::gating::{BlocksWorldInput, ModalRoot, UiPointerState};
 use crate::gui::ui::scene::help_modal_scene;
 use crate::gui::ui::theme::Theme;
 use bevy_ui_widgets::Activate;
@@ -290,7 +290,10 @@ pub fn toggle_help(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut help_state: ResMut<HelpScreenState>,
 ) {
-    if ui_pointer.wants_keyboard {
+    // An open modal claims the keyboard (see [`UiPointerState`]), so honor that
+    // gate only when this screen isn't the modal in question — otherwise `H`
+    // could open help but never close it.
+    if !help_state.show && ui_pointer.wants_keyboard {
         return;
     }
     if keyboard.just_pressed(KeyCode::KeyH) {
@@ -323,7 +326,7 @@ pub fn manage_help_panel(
         // on the scene root rather than declared inside `bsn!`.
         commands
             .spawn_scene(help_modal_scene(&theme, SHORTCUTS))
-            .insert((HelpRoot, BlocksWorldInput));
+            .insert((HelpRoot, BlocksWorldInput, ModalRoot));
     } else if !help_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

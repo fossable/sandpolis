@@ -68,7 +68,10 @@ pub fn handle_node_picker_toggle(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut picker: ResMut<NodePickerState>,
 ) {
-    if ui_pointer.wants_keyboard {
+    // An open modal claims the keyboard (see [`UiPointerState`]), so honor that
+    // gate only when this picker isn't the modal in question — otherwise `N`
+    // could open the picker but never close it.
+    if !picker.show && ui_pointer.wants_keyboard {
         return;
     }
     if keyboard.just_pressed(KeyCode::KeyN) {

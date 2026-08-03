@@ -78,6 +78,7 @@ server = [
   "dep:axum",
   "dep:axum-server",
   "dep:axum-macros",
+  "sandpolis-account?/server",
   "sandpolis-agent/server",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
@@ -89,6 +90,7 @@ server = [
   "sandpolis-shell?/server",
 ]
 agent = [
+  "sandpolis-account?/agent",
   "sandpolis-agent/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
@@ -116,6 +118,7 @@ client = [
   "dep:image",
   "dep:tui-popup",
   # Propagate to optional layers
+  "sandpolis-account?/client",
   "sandpolis-desktop?/client",
   "sandpolis-filesystem?/client",
   "sandpolis-health?/client",

@@ -18,7 +18,10 @@ pub fn spawn_client_sync(state: InstanceState) {
     tokio::spawn(async move {
         loop {
             let conns = server.server_connections();
-            tracing::debug!(count = conns.len(), "spawn_client_sync: checking server connections");
+            tracing::debug!(
+                count = conns.len(),
+                "spawn_client_sync: checking server connections"
+            );
             for connection in conns {
                 let has_ws = connection.inner.read().unwrap().is_some();
                 tracing::debug!(has_ws, "spawn_client_sync: connection slot");
@@ -62,10 +65,7 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
 
     // Surface the local server in the (database-backed) saved server list so it
     // appears in the TUI, deduplicating so it isn't re-added every run.
-    let already_saved = server
-        .servers
-        .iter()
-        .any(|s| s.read().address == url);
+    let already_saved = server.servers.iter().any(|s| s.read().address == url);
     if !already_saved {
         use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision};
         if let Err(e) = server.save_server(sandpolis_server::client::SavedServerData {

@@ -28,6 +28,7 @@ bevy_svg = { workspace = true, optional = true, features = ["2d"] }
 bevy_rapier2d = { workspace = true, optional = true }
 bevy_ui_widgets = { workspace = true, optional = true }
 resvg = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
 include_dir = { workspace = true, optional = true }
 tracing = { workspace = true }
 rand = { workspace = true, optional = true }
@@ -47,6 +48,7 @@ client = [
   "dep:bevy_rapier2d",
   "dep:bevy_ui_widgets",
   "dep:resvg",
+  "dep:image",
   "dep:include_dir",
   "dep:rand",
   "dep:sandpolis-server",

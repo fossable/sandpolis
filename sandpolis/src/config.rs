@@ -15,6 +15,8 @@ pub struct Configuration {
     #[serde(skip)]
     path: Option<PathBuf>,
 
+    #[cfg(feature = "layer-account")]
+    pub account: sandpolis_account::config::AccountLayerConfig,
     #[cfg(feature = "agent")]
     pub agent: sandpolis_agent::config::AgentLayerConfig,
     #[cfg(feature = "client")]
@@ -34,8 +36,7 @@ pub struct Configuration {
 /// RON parsing options for config files: allow optional fields without an
 /// explicit `Some`.
 fn ron_options() -> ron::Options {
-    ron::Options::default()
-        .with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME)
+    ron::Options::default().with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME)
 }
 
 impl Configuration {

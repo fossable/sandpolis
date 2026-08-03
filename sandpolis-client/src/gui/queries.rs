@@ -2,6 +2,17 @@ use anyhow::Result;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceLayer;
 use sandpolis_instance::network::NetworkLayer;
+use std::sync::OnceLock;
+
+/// The local instance's configured domain, set once at GUI startup via
+/// [`set_local_domain`]. Read by [`query_instance_metadata`] until per-instance
+/// metadata is synced from the server.
+static LOCAL_DOMAIN: OnceLock<String> = OnceLock::new();
+
+/// Record the local instance's domain so queries can surface it.
+pub fn set_local_domain(domain: String) {
+    let _ = LOCAL_DOMAIN.set(domain);
+}
 
 /// Instance metadata returned from database queries
 #[derive(Clone, Debug)]
@@ -10,6 +21,7 @@ pub struct InstanceMetadata {
     pub os_type: os_info::Type,
     pub hostname: Option<String>,
     pub is_server: bool,
+    pub domain: String,
 }
 
 /// Network edge between two instances
@@ -52,6 +64,7 @@ pub fn query_instance_metadata(id: InstanceId) -> Result<InstanceMetadata> {
         os_type: os_info.os_type(),
         hostname: None, // TODO: Get hostname from database or gethostname crate
         is_server: id.is_server(),
+        domain: LOCAL_DOMAIN.get().cloned().unwrap_or_default(),
     })
 }
 

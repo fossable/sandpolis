@@ -94,8 +94,10 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     // connected.
     let strategy = match &config.agent.poll {
         Some(poll) => {
-            match ServerConnectStrategy::polling(&poll.schedule, Duration::from_secs(poll.timeout_secs))
-            {
+            match ServerConnectStrategy::polling(
+                &poll.schedule,
+                Duration::from_secs(poll.timeout_secs),
+            ) {
                 Ok(strategy) => strategy,
                 Err(e) => {
                     warn!(error = %e, "Invalid poll schedule; using continuous mode");

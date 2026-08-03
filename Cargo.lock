@@ -10310,11 +10310,24 @@ name = "sandpolis-account"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "bevy",
+ "bevy_rapier2d",
+ "bevy_svg",
+ "chrono",
+ "inventory",
  "native_db",
  "native_model",
+ "rand 0.10.2",
+ "regex",
+ "reqwest",
+ "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde",
+ "serde_cbor",
+ "tokio",
+ "tracing",
+ "url",
  "validator",
 ]
 
@@ -10363,6 +10376,7 @@ dependencies = [
  "clap",
  "color-eyre",
  "crossterm",
+ "image",
  "include_dir",
  "native_db",
  "native_model",

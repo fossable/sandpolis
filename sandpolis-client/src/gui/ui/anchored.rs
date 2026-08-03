@@ -5,6 +5,9 @@
 //! screen position each frame; the node is hidden when the target is off-screen.
 
 use crate::gui::node::WorldView;
+use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
+use crate::gui::ui::z;
+use bevy::image::Image;
 use bevy::prelude::*;
 
 /// Anchor a UI node to a world entity's on-screen position, plus a screen-space
@@ -15,6 +18,43 @@ pub struct WorldAnchored {
     pub target: Entity,
     /// Screen-space offset applied after centering horizontally on the target.
     pub offset: Vec2,
+}
+
+/// The chrome shared by every card that floats beside a world entity: an
+/// absolutely positioned, themed row anchored under `target`.
+///
+/// Instance node previews and account controller boxes both build on this so the
+/// two can't drift apart visually.
+pub fn anchored_card(theme: &Theme, target: Entity, offset: Vec2) -> impl Bundle {
+    (
+        WorldAnchored { target, offset },
+        GlobalZIndex(z::ANCHORED),
+        Node {
+            position_type: PositionType::Absolute,
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(6.0),
+            padding: UiRect::all(Val::Px(6.0)),
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        },
+        BackgroundColor(theme.color(Role::Panel)),
+        ThemedBg(Role::Panel),
+        BorderColor::all(theme.color(Role::Border)),
+        ThemedBorder(Role::Border),
+    )
+}
+
+/// A square icon sized for an [`anchored_card`].
+pub fn card_icon(image: Handle<Image>, px: f32) -> impl Bundle {
+    (
+        ImageNode::new(image),
+        Node {
+            width: Val::Px(px),
+            height: Val::Px(px),
+            ..default()
+        },
+    )
 }
 
 /// Plugin that runs [`update_world_anchored`] before UI layout.

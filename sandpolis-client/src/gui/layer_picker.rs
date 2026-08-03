@@ -105,7 +105,10 @@ pub fn handle_layer_picker_toggle(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut picker: ResMut<LayerPickerState>,
 ) {
-    if ui_pointer.wants_keyboard {
+    // An open modal claims the keyboard (see [`UiPointerState`]), so honor that
+    // gate only when this picker isn't the modal in question — otherwise `L`
+    // could open the picker but never close it.
+    if !picker.show && ui_pointer.wants_keyboard {
         return;
     }
     if keyboard.just_pressed(KeyCode::KeyL) {

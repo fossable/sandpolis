@@ -24,7 +24,7 @@ use bevy::text::EditableText;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, row};
-use sandpolis_client::gui::node::{ExcludeFromSelection, NeedsScaling, NodeEntity};
+use sandpolis_client::gui::node::{ExcludeFromSelection, NeedsScaling, NodeEntity, NodeHitbox};
 use sandpolis_instance::network::stream::StreamMessage;
 use sandpolis_instance::{InstanceId, InstanceLayer, InstanceType, LayerName};
 use std::collections::HashMap;
@@ -57,6 +57,10 @@ pub struct ProbeNodeBundle {
     pub probe_node: ProbeNode,
     pub node_entity: NodeEntity,
     pub exclude: ExcludeFromSelection,
+    /// Keeps these nodes draggable now that dragging keys on the hitbox instead
+    /// of on `NodeEntity`. `ExcludeFromSelection` still keeps them out of the
+    /// generic selection, which they have their own version of.
+    pub hitbox: NodeHitbox,
     pub collider: Collider,
     pub rigid_body: RigidBody,
     pub velocity: Velocity,
@@ -97,6 +101,7 @@ pub fn spawn_probe_node(
             },
             node_entity: NodeEntity { instance_id },
             exclude: ExcludeFromSelection,
+            hitbox: NodeHitbox { radius: 25.0 },
             collider: Collider::ball(25.0),
             rigid_body: RigidBody::Dynamic,
             velocity: Velocity::zero(),

@@ -18,8 +18,30 @@
 use super::gating::WantsKeyboard;
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder, ThemedText};
 use bevy::input_focus::tab_navigation::TabIndex;
+use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use bevy::text::{EditableText, TextCursorStyle};
+
+/// Move [`InputFocus`] to a text field when it's clicked.
+///
+/// Bevy's input dispatch doesn't focus on click by itself, so clicking a second
+/// field in a form leaves focus on the first one — or nowhere. That matters
+/// beyond the caret: every world hotkey is gated on
+/// [`UiPointerState::wants_keyboard`](super::gating::UiPointerState), which is
+/// derived from focus, so an unfocused field means the user's keystrokes fall
+/// through and fire `L`/`N`/`T`/`P`/`H` instead of typing.
+///
+/// Registered as a global observer by [`super::UiPlugin`], so every
+/// [`text_input`] gets this without opting in.
+pub fn focus_text_input_on_click(
+    click: On<Pointer<Click>>,
+    fields: Query<(), With<EditableText>>,
+    mut focus: ResMut<InputFocus>,
+) {
+    if fields.contains(click.entity) && focus.get() != Some(click.entity) {
+        focus.set(click.entity, FocusCause::Navigated);
+    }
+}
 
 /// A themed single-line [`EditableText`] bundle.
 pub fn text_input(theme: &Theme) -> impl Bundle {

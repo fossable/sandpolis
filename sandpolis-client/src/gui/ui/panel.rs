@@ -4,7 +4,7 @@
 //! affordances we rely on: a full-screen modal scrim (centered, blocks the world)
 //! and a draggable, titled, closable [`FloatingPanel`] (the node controller host).
 
-use super::gating::BlocksWorldInput;
+use super::gating::{BlocksWorldInput, ModalRoot};
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use super::widgets::text;
 use super::z;
@@ -15,6 +15,7 @@ use bevy_ui_widgets::{Activate, Button};
 /// beneath it. Spawn the dialog body as a child.
 pub fn modal_scrim() -> impl Bundle {
     (
+        ModalRoot,
         Node {
             position_type: PositionType::Absolute,
             left: Val::Px(0.0),

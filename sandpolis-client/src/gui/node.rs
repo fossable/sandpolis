@@ -22,10 +22,31 @@ pub struct Selected;
 
 /// Marker for nodes that the generic node-selection handler must ignore (e.g.
 /// probe/device nodes, which have their own per-device selection). These nodes
-/// share their gateway's `InstanceId`, so the `InstanceId`-keyed selection set
-/// can't represent them.
+/// share their gateway's `InstanceId`, so the selection set can't tell them
+/// apart. They're still draggable.
 #[derive(Component)]
 pub struct ExcludeFromSelection;
+
+/// Makes a world entity clickable: the radius, in world units, within which a
+/// click counts as hitting it.
+///
+/// Selection and dragging key on this rather than on [`NodeEntity`], so nodes
+/// that aren't instances — account nodes, which have no `InstanceId` at all —
+/// get the same interaction without duplicating either system. Carrying the
+/// radius per entity also lets differently sized nodes coexist.
+#[derive(Component)]
+pub struct NodeHitbox {
+    pub radius: f32,
+}
+
+impl NodeHitbox {
+    /// A hitbox matching a node drawn at `diameter` world units across.
+    pub fn from_diameter(diameter: f32) -> Self {
+        Self {
+            radius: diameter / 2.0,
+        }
+    }
+}
 
 /// The desired visual diameter for all nodes
 const NODE_VISUAL_DIAMETER: f32 = 100.0;
@@ -38,6 +59,7 @@ pub struct NeedsScaling;
 pub struct Node {
     pub id: InstanceId,
     pub node_entity: NodeEntity,
+    pub hitbox: NodeHitbox,
     pub collider: Collider,
     pub rigid_body: RigidBody,
     pub velocity: Velocity,
@@ -45,6 +67,10 @@ pub struct Node {
     pub damping: Damping,
     pub restitution: Restitution,
     pub transform: Transform,
+    /// Without this, `update_node_visibility_for_layer` (which queries for
+    /// `&mut Visibility`) never matches a node and every layer's
+    /// `visible_instance_types` filter is silently inert.
+    pub visibility: Visibility,
 }
 
 /// Marker component for the SVG child entity
@@ -78,6 +104,7 @@ pub fn spawn_node(
         .spawn((Node {
             id: instance_id,
             node_entity: NodeEntity { instance_id },
+            hitbox: NodeHitbox::from_diameter(NODE_VISUAL_DIAMETER),
             collider: Collider::ball(50.0),
             rigid_body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
@@ -88,6 +115,7 @@ pub fn spawn_node(
             },
             restitution: Restitution::coefficient(0.7),
             transform: Transform::from_xyz(x, y, 0.0),
+            visibility: Visibility::Inherited,
         },))
         .id();
 

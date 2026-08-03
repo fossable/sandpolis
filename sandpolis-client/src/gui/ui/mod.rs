@@ -73,6 +73,7 @@ impl Plugin for UiPlugin {
             .add_plugins(anchored::AnchoredPlugin)
             .add_plugins(bind::BindPlugin)
             .add_plugins(tooltip::TooltipPlugin)
-            .init_resource::<controller::LayerRegistry>();
+            .init_resource::<controller::LayerRegistry>()
+            .add_observer(text_input::focus_text_input_on_click);
     }
 }

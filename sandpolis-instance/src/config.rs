@@ -7,12 +7,17 @@ use tracing::debug;
 pub struct InstanceConfig {
     /// Directory where the admin socket will be created
     pub socket_directory: Option<PathBuf>,
+
+    /// The domain this instance belongs to. Every instance belongs to exactly
+    /// one domain, so this must be configured; startup fails if it's unset.
+    pub domain: Option<String>,
 }
 
 impl Default for InstanceConfig {
     fn default() -> Self {
         Self {
             socket_directory: Some("/tmp".into()),
+            domain: None,
         }
     }
 }

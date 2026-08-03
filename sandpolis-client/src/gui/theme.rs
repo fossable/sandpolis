@@ -5,7 +5,7 @@
 
 use bevy::prelude::*;
 
-use crate::gui::ui::gating::{BlocksWorldInput, UiPointerState};
+use crate::gui::ui::gating::{BlocksWorldInput, ModalRoot, UiPointerState};
 use crate::gui::ui::scene::{button, modal_scrim_scene, text_line};
 use crate::gui::ui::theme::{Role, Theme, ThemePreset, ThemedBg, ThemedBorder};
 
@@ -31,7 +31,10 @@ pub fn handle_theme_picker_toggle(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut picker_state: ResMut<ThemePickerState>,
 ) {
-    if ui_pointer.wants_keyboard {
+    // An open modal claims the keyboard (see [`UiPointerState`]), so honor that
+    // gate only when this picker isn't the modal in question — otherwise `T`
+    // could open the picker but never close it.
+    if !picker_state.show && ui_pointer.wants_keyboard {
         return;
     }
     if keyboard.just_pressed(KeyCode::KeyT) {
@@ -116,7 +119,7 @@ pub fn manage_theme_picker(
     if picker_state.show && !exists {
         commands
             .spawn_scene(theme_picker_scene(&theme))
-            .insert((ThemePickerRoot, BlocksWorldInput));
+            .insert((ThemePickerRoot, BlocksWorldInput, ModalRoot));
     } else if !picker_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

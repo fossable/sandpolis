@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Add account: user badge with a plus badge -->
+  <circle cx="28" cy="22" r="11" fill="#ECEFF1" stroke="#607D8B" stroke-width="2"/>
+  <path d="M10 50c0-10 8-16 18-16s18 6 18 16"
+        fill="#ECEFF1" stroke="#607D8B" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Add badge -->
+  <circle cx="50" cy="50" r="11" fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+  <path d="M50 44V56 M44 50H56"
+        stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+</svg>

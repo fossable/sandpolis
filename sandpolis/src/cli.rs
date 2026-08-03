@@ -431,6 +431,7 @@ mod client {
                     "instance_id": i.instance_id.to_string(),
                     "cluster_id": i.cluster_id.to_string(),
                     "os": i.os_info.to_string(),
+                    "domain": i.domain,
                 })
             })
             .collect();

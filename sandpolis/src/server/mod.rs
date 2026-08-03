@@ -14,6 +14,19 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
+    #[cfg(feature = "layer-account")]
+    {
+        // Before the scrapers start, so the first favicon sweep sees every
+        // configured domain.
+        state.account.seed_accounts(&config.account)?;
+
+        // Background tasks that scrape third-party data (favicons, etc).
+        // Server-only: agents have no reason to reach out on the estate's
+        // behalf, and every client doing it independently would just multiply
+        // the traffic.
+        state.account.spawn_scrapers(&config.account)?;
+    }
+
     let app: Router<InstanceState> = Router::new();
 
     // Server layer

@@ -233,7 +233,11 @@ pub fn manage_about_panel(
     if about_state.show && !exists {
         commands
             .spawn_scene(about_scene(&theme))
-            .insert((AboutRoot, crate::gui::ui::gating::BlocksWorldInput));
+            .insert((
+                AboutRoot,
+                crate::gui::ui::gating::BlocksWorldInput,
+                crate::gui::ui::gating::ModalRoot,
+            ));
     } else if !about_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

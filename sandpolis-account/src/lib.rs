@@ -1,13 +1,81 @@
+//! Models online/offline accounts and the relationships between them.
+//!
+//! An account is identified by the service `domain` it belongs to plus a
+//! `username` and/or `email`. Accounts are created by clients over the
+//! [`management`] stream, stored by the server, and replicated back to clients
+//! by the database sync engine.
+//!
+//! The account set is mirrored into the config file, so `sandpolis.ron` stays a
+//! readable record of the estate's accounts and can be edited by hand: the
+//! server imports anything new there at startup ([`AccountLayer::seed_accounts`])
+//! and rewrites the list whenever an account is created or deleted
+//! ([`persist_accounts`]).
+//!
+//! Whenever the account set changes, the server re-derives [`AccountLinkData`]
+//! rows connecting accounts that share an identity (a common username, a common
+//! email, or an email that matches another account's identity). Those links are
+//! the substrate for the layer's eventual attack-surface and compromise-tracing
+//! analysis, hence [`AccountLinkType::compromisability`].
+
 use anyhow::Result;
 use native_db::*;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::{DatabaseLayer, RealmDatabase};
+use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
+use std::sync::OnceLock;
+use validator::{Validate, ValidationError, ValidationErrors};
 
+#[cfg(feature = "client")]
+pub mod client;
 pub mod config;
+pub mod favicon;
+pub mod management;
+pub mod scrape;
+
+use config::AccountConfig;
+
+/// Hook installed by the top-level `sandpolis` crate (server only) to persist the
+/// account list back to `sandpolis.ron`. The account crate cannot reference the
+/// main crate's `Configuration` directly, so persistence is injected here.
+static ACCOUNT_PERSIST: OnceLock<Box<dyn Fn(&[AccountConfig]) -> Result<()> + Send + Sync>> =
+    OnceLock::new();
+
+/// Install the persistence hook (see [`ACCOUNT_PERSIST`]). Idempotent: the first
+/// caller wins.
+pub fn set_account_persist(f: impl Fn(&[AccountConfig]) -> Result<()> + Send + Sync + 'static) {
+    let _ = ACCOUNT_PERSIST.set(Box::new(f));
+}
+
+/// Persist the current account set if a hook is installed.
+pub fn persist_accounts(accounts: &[AccountData]) {
+    if let Some(f) = ACCOUNT_PERSIST.get() {
+        if let Err(e) = f(&accounts_to_config(accounts)) {
+            tracing::warn!(error = %e, "Failed to persist accounts");
+        }
+    }
+}
+
+/// Rebuild the on-disk account list from the given accounts.
+///
+/// Sorted because the database scan returns rows in primary-key order, which is
+/// effectively random; without this the file would reshuffle on every write.
+pub fn accounts_to_config(accounts: &[AccountData]) -> Vec<AccountConfig> {
+    let mut accounts: Vec<AccountConfig> = accounts
+        .iter()
+        .map(|a| AccountConfig {
+            domain: a.domain.clone(),
+            username: a.username.clone(),
+            email: a.email.clone(),
+        })
+        .collect();
+    accounts.sort_by(|a, b| {
+        (&a.domain, &a.username, &a.email).cmp(&(&b.domain, &b.username, &b.email))
+    });
+    accounts
+}
 
 #[data]
 #[derive(Default)]
@@ -15,20 +83,85 @@ pub struct AccountLayerData {}
 
 #[derive(Clone)]
 pub struct AccountLayer {
+    #[allow(dead_code)]
     database: DatabaseLayer,
+    realm: RealmDatabase,
 }
 
 impl AccountLayer {
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
-        Ok(Self { database })
+        let realm = database.realm(RealmName::default())?;
+
+        // The management stream's responder is registered through the stateless
+        // `inventory` path, so it reaches the database through this handle.
+        #[cfg(feature = "server")]
+        management::install_realm(realm.clone());
+
+        Ok(Self { database, realm })
+    }
+
+    /// The realm this layer's data lives in.
+    pub fn realm(&self) -> &RealmDatabase {
+        &self.realm
+    }
+
+    /// Import accounts declared in the config file that aren't in the database
+    /// yet, then write the merged set back out.
+    ///
+    /// Call once from the server's startup path, before any client can connect.
+    #[cfg(feature = "server")]
+    pub fn seed_accounts(&self, config: &config::AccountLayerConfig) -> Result<()> {
+        management::seed(&self.realm, &config.accounts)
+    }
+
+    /// Start the layer's periodic scraping tasks.
+    ///
+    /// Call once from the server's startup path. Each enabled task then runs on
+    /// its own schedule for the life of the process.
+    #[cfg(feature = "server")]
+    pub fn spawn_scrapers(&self, config: &config::AccountLayerConfig) -> Result<()> {
+        if !config.scrape.enabled {
+            tracing::info!("Account scraping is disabled");
+            return Ok(());
+        }
+
+        let mut runner = scrape::ScrapeRunner::new(self.realm.clone(), &config.scrape)?;
+        if config.scrape.favicon.enabled {
+            runner.register(favicon::FaviconTask::new(&config.scrape.favicon));
+        }
+        runner.spawn();
+        Ok(())
     }
 }
 
+/// Stable identity of an account.
+///
+/// Distinct from the record's `_id`, which changes with every revision. Links
+/// reference accounts by this id so they survive account updates.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct AccountId(u128);
+pub struct AccountId(u64);
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct AccountLinkId(u128);
+impl Default for AccountId {
+    fn default() -> Self {
+        Self(rand::random())
+    }
+}
+
+impl std::fmt::Display for AccountId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:016x}", self.0)
+    }
+}
+
+impl ToKey for AccountId {
+    fn to_key(&self) -> Key {
+        Key::new(self.0.to_be_bytes().to_vec())
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["AccountId".to_string()]
+    }
+}
 
 /// A subjective indicator of how serious a compromise of an `Account` would be.
 /// Accounts with higher ratings are more valuable than those with lower.
@@ -37,27 +170,72 @@ pub struct AccountLinkId(u128);
 )]
 pub struct AccountValue(i32);
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+/// An account on some service, identified by its domain plus a username and/or
+/// email address.
+#[data]
+#[derive(Default)]
 pub struct AccountData {
-    service: Option<String>,
-    username: Option<String>,
-    email: Option<String>,
-    value: AccountValue,
-    /// An instance associated with this account
-    instance: Option<InstanceId>,
-    incoming: Vec<AccountLinkId>,
-    outgoing: Vec<AccountLinkId>,
+    #[secondary_key(unique)]
+    pub account_id: AccountId,
+
+    /// The service domain this account belongs to, for example "github.com".
+    #[secondary_key]
+    pub domain: String,
+
+    /// The username used to authenticate. At least one of `username` or `email`
+    /// is always present.
+    pub username: Option<String>,
+
+    /// The email address associated with the account.
+    pub email: Option<String>,
+
+    pub value: AccountValue,
+
+    /// An instance associated with this account.
+    pub instance: Option<InstanceId>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl AccountData {
+    /// The best available human-readable identity for the account.
+    pub fn identity(&self) -> &str {
+        self.username
+            .as_deref()
+            .or(self.email.as_deref())
+            .unwrap_or("(unknown)")
+    }
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| r.register::<AccountData>())
+}
+
+/// A relationship between two accounts.
+///
+/// `source` and `target` are stored in ascending order for derived links so a
+/// relationship is never represented by two mirrored rows.
+#[data]
+#[derive(Default)]
 pub struct AccountLinkData {
-    r#type: AccountLinkType,
-    incoming: AccountId,
-    outgoing: AccountId,
+    #[secondary_key]
+    pub source: AccountId,
+
+    #[secondary_key]
+    pub target: AccountId,
+
+    pub r#type: AccountLinkType,
+
+    /// Whether the server derived this link from the accounts' fields. Derived
+    /// links are recomputed wholesale whenever the account set changes;
+    /// user-supplied links are left alone.
+    pub derived: bool,
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| r.register::<AccountLinkData>())
 }
 
 /// Represents a directional or bidirectional relationship between two accounts.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum AccountLinkType {
     CommonEmail(String),
     CommonPassword {
@@ -73,15 +251,28 @@ pub enum AccountLinkType {
     },
 }
 
+impl Default for AccountLinkType {
+    // Needed so `AccountLinkData` can derive `Default`; `#[default]` can't apply
+    // to a variant with a payload.
+    fn default() -> Self {
+        AccountLinkType::CommonUsername(String::new())
+    }
+}
+
 /// A subjective indicator of how likely a compromise of an `Account` can
 /// occur given some criteria (as a decimal percentage).
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Compromisability(f32);
 
 impl Validate for Compromisability {
-    fn validate(&self) -> Result<(), validator::ValidationErrors> {
-        // Between 0 and 1
-        todo!()
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        if (0.0..=1.0).contains(&self.0) {
+            Ok(())
+        } else {
+            let mut errors = ValidationErrors::new();
+            errors.add("0", ValidationError::new("range"));
+            Err(errors)
+        }
     }
 }
 

@@ -76,7 +76,9 @@ use sandpolis_client::gui::preview::{
 };
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
-use sandpolis_client::gui::terrain::{TerrainConfig, rebuild_terrains, update_terrain_bounds};
+use sandpolis_client::gui::terrain::{
+    TerrainConfig, rebuild_terrains, sync_instance_terrain_members, update_terrain_bounds,
+};
 use sandpolis_client::gui::theme::{
     ThemePickerState, handle_theme_picker_toggle, manage_theme_picker, update_theme_rows,
 };
@@ -88,6 +90,9 @@ pub use sandpolis_client::gui::preview;
 /// Initialize and start rendering the UI.
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     crate::client::spawn_client_sync(state.clone());
+
+    // Surface the local instance's domain to the terrain renderer.
+    sandpolis_client::gui::queries::set_local_domain(state.instance.domain.clone());
 
     // Create channel for database updates from resident listeners
     let (db_update_tx, db_update_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -281,7 +286,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             // Node SVG scaling - MUST run after update_node_svgs_for_layer
             scale_node_svgs.after(update_node_svgs_for_layer),
             // Terrain bounds follow the frame's final node positions
-            rebuild_terrains,
+            sync_instance_terrain_members,
+            rebuild_terrains.after(sync_instance_terrain_members),
             update_terrain_bounds.after(rebuild_terrains),
             // Database updates
             process_database_updates,
@@ -314,6 +320,8 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     app.add_plugins(sandpolis_shell::client::gui::ShellClientPlugin);
     #[cfg(feature = "layer-probe")]
     app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
+    #[cfg(feature = "layer-account")]
+    app.add_plugins(sandpolis_account::client::gui::AccountClientPlugin);
 
     // Debug "Instance" layer: shows every node regardless of type, with a
     // node controller that surfaces that node's identity and connection rows.

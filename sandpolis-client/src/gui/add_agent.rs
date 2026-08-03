@@ -10,7 +10,7 @@
 
 use crate::gui::input::LoginDialogState;
 use crate::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
-use crate::gui::ui::gating::BlocksWorldInput;
+use crate::gui::ui::gating::{BlocksWorldInput, ModalRoot};
 use crate::gui::ui::scene::{button, modal_scrim_scene, text_input, text_line};
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use bevy::input_focus::{FocusCause, InputFocus};
@@ -148,7 +148,7 @@ pub fn manage_add_agent(
     if state.show && !exists {
         commands
             .spawn_scene(add_agent_scene(&theme))
-            .insert((AddAgentRoot, BlocksWorldInput));
+            .insert((AddAgentRoot, BlocksWorldInput, ModalRoot));
     } else if !state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

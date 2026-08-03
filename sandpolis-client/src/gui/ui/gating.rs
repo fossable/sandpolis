@@ -21,7 +21,8 @@ use bevy::prelude::*;
 pub struct UiPointerState {
     /// The pointer is over a UI element that blocks the world beneath it.
     pub over_ui_blocking: bool,
-    /// A focused text entry wants keyboard input.
+    /// The UI wants keyboard input: a text entry is focused, or a modal dialog
+    /// is open.
     pub wants_keyboard: bool,
 }
 
@@ -32,6 +33,13 @@ pub struct BlocksWorldInput;
 /// Tag a focused entity (e.g. a text field) that wants keyboard input.
 #[derive(Component, Clone, Default)]
 pub struct WantsKeyboard;
+
+/// Tag the root of a modal dialog. While one exists, the UI owns the keyboard
+/// whether or not anything inside it is focused — a stray keystroke in a dialog
+/// must never reach a world hotkey. Added by
+/// [`modal_scrim`](super::panel::modal_scrim).
+#[derive(Component, Default)]
+pub struct ModalRoot;
 
 /// System set for [`update_pointer_state`]; world-input systems should run after
 /// this set so they see up-to-date gating.
@@ -65,6 +73,7 @@ pub fn update_pointer_state(
     parents: Query<&ChildOf>,
     input_focus: Option<Res<InputFocus>>,
     keyboard_capturers: Query<(), With<WantsKeyboard>>,
+    modals: Query<(), With<ModalRoot>>,
     mut state: ResMut<UiPointerState>,
 ) {
     let mut over = false;
@@ -86,8 +95,12 @@ pub fn update_pointer_state(
     }
     state.over_ui_blocking = over;
 
-    state.wants_keyboard = input_focus
+    // An open modal claims the keyboard on its own. Relying on focus alone means
+    // a click that lands on the dialog but not on a field leaves every keystroke
+    // free to trigger a single-letter world hotkey.
+    let focused_capturer = input_focus
         .and_then(|focus| focus.get())
         .map(|entity| keyboard_capturers.contains(entity))
         .unwrap_or(false);
+    state.wants_keyboard = focused_capturer || !modals.is_empty();
 }
