@@ -27,5 +27,6 @@ pub mod preview;
 pub mod queries;
 pub mod responsive;
 pub mod terrain;
+pub mod terrain_layout;
 pub mod theme;
 pub mod ui;

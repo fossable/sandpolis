@@ -79,6 +79,7 @@ use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::terrain::{
     TerrainConfig, rebuild_terrains, sync_instance_terrain_members, update_terrain_bounds,
 };
+use sandpolis_client::gui::terrain_layout::{apply_terrain_cohesion, relax_terrain_overlap};
 use sandpolis_client::gui::theme::{
     ThemePickerState, handle_theme_picker_toggle, manage_theme_picker, update_theme_rows,
 };
@@ -271,6 +272,15 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
             apply_damping,
             check_stabilization,
         ),
+    )
+    // Terrain layout writes node transforms directly (like dragging), so it runs
+    // after the drag systems have placed the held node and before rapier picks
+    // up transform changes in PostUpdate.
+    .add_systems(
+        Update,
+        (relax_terrain_overlap, apply_terrain_cohesion)
+            .chain()
+            .after(update_node_drag),
     )
     .add_systems(
         PostUpdate,

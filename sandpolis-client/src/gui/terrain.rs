@@ -30,7 +30,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
 /// Number of rim vertices used to approximate each terrain blob.
-const RIM: usize = 48;
+pub const RIM: usize = 48;
 
 /// Extra space (world units) between the outermost node and the leaf terrain's
 /// edge. Roughly a node radius plus margin.
@@ -144,7 +144,7 @@ pub struct TerrainMember {
 
 impl TerrainMember {
     /// Just the keys, which is what region paths are matched against.
-    fn keys(&self) -> Vec<String> {
+    pub fn keys(&self) -> Vec<String> {
         self.segments.iter().map(|(key, _)| key.clone()).collect()
     }
 }
@@ -185,6 +185,47 @@ pub struct TerrainRegion {
     pub radii: [f32; RIM],
 }
 
+impl TerrainRegion {
+    /// This region's parent path; empty for a top-level region.
+    pub fn parent_path(&self) -> &[String] {
+        self.path.split_last().map_or(&[], |(_, rest)| rest)
+    }
+
+    /// Whether two regions are siblings: same depth, same parent. Top-level
+    /// regions are all siblings of each other.
+    ///
+    /// Nested regions are excluded for free — a prefix path is necessarily
+    /// shorter — so callers that only act on siblings never need a separate
+    /// nesting check.
+    pub fn is_sibling_of(&self, other: &TerrainRegion) -> bool {
+        self.path.len() == other.path.len() && self.parent_path() == other.parent_path()
+    }
+
+    /// Whether `keys` names this region or one of its descendants.
+    pub fn contains_path(&self, keys: &[String]) -> bool {
+        keys.len() >= self.path.len() && keys[..self.path.len()] == self.path[..]
+    }
+
+    /// Rim radius along the bearing from this region's centroid toward `point`,
+    /// interpolated between the two adjacent buckets.
+    ///
+    /// Interpolating rather than flooring matters for overlap tests: a hard
+    /// bucket boundary makes the measured radius jump by whole steps as two
+    /// regions drift past each other, which reads as jitter.
+    pub fn radius_toward(&self, point: Vec2) -> f32 {
+        let delta = point - self.centroid;
+        if delta.length_squared() < 1e-6 {
+            return self.radii[0];
+        }
+        let angle = delta.y.atan2(delta.x).rem_euclid(std::f32::consts::TAU);
+        let scaled = angle / std::f32::consts::TAU * RIM as f32;
+        let low = scaled.floor();
+        let frac = scaled - low;
+        let i = low as usize % RIM;
+        self.radii[i] * (1.0 - frac) + self.radii[(i + 1) % RIM] * frac
+    }
+}
+
 /// A world-space name label for a terrain, matched to its region by `path`.
 #[derive(Component)]
 pub struct TerrainLabel {
@@ -205,6 +246,15 @@ fn node_segments(id: InstanceId, cfg: &TerrainConfig) -> Vec<(String, String)> {
         }
     }
     segments
+}
+
+/// Rim bucket a direction vector falls in; `0` for a degenerate direction.
+fn rim_bucket(direction: Vec2) -> usize {
+    if direction.length() < 1e-3 {
+        return 0;
+    }
+    let angle = direction.y.atan2(direction.x).rem_euclid(std::f32::consts::TAU);
+    (angle / std::f32::consts::TAU * RIM as f32).floor() as usize % RIM
 }
 
 /// Deterministic fill/label colors for a terrain, keyed on its path so a given
@@ -389,7 +439,7 @@ pub fn update_terrain_bounds(
         // Descendant member positions: those whose path starts with this terrain.
         let members: Vec<Vec2> = member_paths
             .iter()
-            .filter(|(_, path)| path.len() >= region.path.len() && path[..region.path.len()] == region.path[..])
+            .filter(|(_, path)| region.contains_path(path))
             .map(|(pos, _)| *pos)
             .collect();
 
@@ -416,12 +466,7 @@ pub fn update_terrain_bounds(
         for pos in &members {
             let delta = *pos - target_centroid;
             let dist = delta.length() + padding;
-            let bucket = if delta.length() < 1e-3 {
-                0
-            } else {
-                let angle = delta.y.atan2(delta.x).rem_euclid(std::f32::consts::TAU);
-                (angle / std::f32::consts::TAU * RIM as f32).floor() as usize % RIM
-            };
+            let bucket = rim_bucket(delta);
             for offset in -MEMBER_SPREAD..=MEMBER_SPREAD {
                 let i = (bucket as i32 + offset).rem_euclid(RIM as i32) as usize;
                 if dist > target[i] {
@@ -479,5 +524,76 @@ pub fn update_terrain_bounds(
         if *visibility != wanted {
             *visibility = wanted;
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn region(path: &[&str], radii: [f32; RIM]) -> TerrainRegion {
+        TerrainRegion {
+            path: path.iter().map(|key| key.to_string()).collect(),
+            depth: path.len(),
+            centroid: Vec2::ZERO,
+            radii,
+        }
+    }
+
+    #[test]
+    fn top_level_regions_are_siblings() {
+        let a = region(&["a"], [100.0; RIM]);
+        let b = region(&["b"], [100.0; RIM]);
+        assert!(a.is_sibling_of(&b));
+        assert!(a.parent_path().is_empty());
+    }
+
+    #[test]
+    fn nested_regions_are_not_siblings() {
+        let parent = region(&["a"], [100.0; RIM]);
+        let child = region(&["a", "b"], [100.0; RIM]);
+        assert!(!parent.is_sibling_of(&child));
+        assert!(!child.is_sibling_of(&parent));
+        // ...but cousins under different parents are also not siblings; only
+        // same-parent, same-depth pairs are.
+        let cousin = region(&["c", "d"], [100.0; RIM]);
+        assert!(!child.is_sibling_of(&cousin));
+    }
+
+    #[test]
+    fn contains_path_matches_self_and_descendants() {
+        let parent = region(&["a"], [100.0; RIM]);
+        assert!(parent.contains_path(&["a".to_string()]));
+        assert!(parent.contains_path(&["a".to_string(), "b".to_string()]));
+        assert!(!parent.contains_path(&["b".to_string()]));
+        assert!(!parent.contains_path(&[]));
+    }
+
+    #[test]
+    fn radius_toward_is_constant_for_a_uniform_rim() {
+        let uniform = region(&["a"], [140.0; RIM]);
+        for i in 0..RIM {
+            let theta = i as f32 / RIM as f32 * std::f32::consts::TAU + 0.03;
+            let point = Vec2::new(theta.cos(), theta.sin()) * 500.0;
+            assert!((uniform.radius_toward(point) - 140.0).abs() < 1e-3);
+        }
+    }
+
+    #[test]
+    fn radius_toward_interpolates_across_a_bucket_boundary() {
+        let mut radii = [100.0; RIM];
+        radii[1] = 200.0;
+        let stepped = region(&["a"], radii);
+
+        // Halfway between bucket 0 and bucket 1 is halfway between their radii.
+        let half = std::f32::consts::TAU / RIM as f32 / 2.0;
+        let midpoint = Vec2::new(half.cos(), half.sin()) * 500.0;
+        assert!((stepped.radius_toward(midpoint) - 150.0).abs() < 1.0);
+
+        // And the value is continuous: nudging the bearing barely moves it.
+        let nudged = half + 1e-4;
+        let before = stepped.radius_toward(Vec2::new(half.cos(), half.sin()) * 500.0);
+        let after = stepped.radius_toward(Vec2::new(nudged.cos(), nudged.sin()) * 500.0);
+        assert!((before - after).abs() < 1.0);
     }
 }
