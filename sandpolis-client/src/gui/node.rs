@@ -27,6 +27,13 @@ pub struct Selected;
 #[derive(Component)]
 pub struct ExcludeFromSelection;
 
+/// Marks a node standing in for something finer-grained than the instance in its
+/// [`NodeEntity`]. Probe/device nodes borrow their gateway's `InstanceId` and
+/// carry the device id here, which is what lets the controller host tell a probe
+/// apart from the server it orbits.
+#[derive(Component, Clone, Copy)]
+pub struct SubNode(pub u64);
+
 /// Makes a world entity clickable: the radius, in world units, within which a
 /// click counts as hitting it.
 ///

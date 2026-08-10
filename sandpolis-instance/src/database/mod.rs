@@ -24,6 +24,31 @@ pub mod cli;
 pub mod config;
 pub mod sync;
 
+/// Whether an instance's databases may be written locally.
+///
+/// Only the global stratum (GS) server is authoritative. Local stratum (LS)
+/// servers hold replicas: their contents arrive by replication from the GS, and
+/// any local write is a bug because it would silently diverge from the
+/// authority. Agents and clients own their data outright, so they are
+/// `ReadWrite`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum DatabaseAccess {
+    /// Authoritative: local writes are permitted.
+    #[default]
+    ReadWrite,
+
+    /// Replica: writes may only come from replication (see
+    /// [`RealmDatabase::replica_write`]) or from instance-local bookkeeping that
+    /// is never replicated (see [`RealmDatabase::local_write`]).
+    Replica,
+}
+
+impl DatabaseAccess {
+    pub fn is_replica(&self) -> bool {
+        matches!(self, Self::Replica)
+    }
+}
+
 /// This layer manages separate databases for each realm.
 #[derive(Clone)]
 pub struct DatabaseLayer {
@@ -32,14 +57,21 @@ pub struct DatabaseLayer {
     /// Container for all the possible types of `Data` we can interact with
     models: &'static Models,
 
+    /// Whether the databases in this layer accept local writes.
+    access: DatabaseAccess,
+
     /// Separate databases indexed by name
     inner: Arc<RwLock<BTreeMap<RealmName, RealmDatabase>>>,
 }
 
 impl DatabaseLayer {
     /// Create a new `DatabaseLayer` initialized with the default realm.
-    pub fn new(config: DatabaseConfig, models: &'static Models) -> Result<Self> {
-        debug!("Initializing database layer");
+    pub fn new(
+        config: DatabaseConfig,
+        models: &'static Models,
+        access: DatabaseAccess,
+    ) -> Result<Self> {
+        debug!(?access, "Initializing database layer");
 
         let default = if let Some(path) = config.get_storage_dir()? {
             let path = path.join("default.db");
@@ -54,11 +86,17 @@ impl DatabaseLayer {
         Ok(Self {
             config,
             models,
+            access,
             inner: Arc::new(RwLock::new(BTreeMap::from([(
                 RealmName::default(),
-                RealmDatabase::new(default),
+                RealmDatabase::new(default, access),
             )]))),
         })
+    }
+
+    /// Whether the databases in this layer accept local writes.
+    pub fn access(&self) -> DatabaseAccess {
+        self.access
     }
 
     /// Load an existing or create a new `RealmDatabase` for the given realm.
@@ -76,10 +114,16 @@ impl DatabaseLayer {
             let path = path.join(format!("{name}.db"));
 
             debug!(realm = %name, path = %path.display(), "Initializing persistent realm database");
-            RealmDatabase::new(native_db::Builder::new().create(self.models, path)?)
+            RealmDatabase::new(
+                native_db::Builder::new().create(self.models, path)?,
+                self.access,
+            )
         } else {
             debug!(realm = %name, "Initializing ephemeral realm database");
-            RealmDatabase::new(native_db::Builder::new().create_in_memory(self.models)?)
+            RealmDatabase::new(
+                native_db::Builder::new().create_in_memory(self.models)?,
+                self.access,
+            )
         };
         inner.insert(name, db.clone());
 
@@ -103,33 +147,104 @@ macro_rules! test_db {
                 key: Default::default(),
             },
             models,
+            $crate::database::DatabaseAccess::ReadWrite,
+        )?
+    }}
+}
+
+/// Like [`test_db!`] but produces a read-only replica, for testing that a local
+/// stratum server rejects local writes.
+#[macro_export]
+macro_rules! test_replica_db {
+    ($($model:ident),+ $(,)?) => {{
+        let models = Box::leak(Box::new(native_db::Models::new()));
+        $(
+            models.define::<$model>().unwrap();
+        )+
+
+        $crate::database::DatabaseLayer::new(
+            $crate::database::config::DatabaseConfig {
+                storage: None,
+                ephemeral: true,
+                key: Default::default(),
+            },
+            models,
+            $crate::database::DatabaseAccess::Replica,
         )?
     }}
 }
 
 /// Database handle containing all `Data` for a particular realm.
 #[derive(Clone)]
-pub struct RealmDatabase(Arc<native_db::Database<'static>>);
+pub struct RealmDatabase {
+    inner: Arc<native_db::Database<'static>>,
+    access: DatabaseAccess,
+}
 
 impl RealmDatabase {
-    fn new(inner: native_db::Database<'static>) -> Self {
-        Self(Arc::new(inner))
+    fn new(inner: native_db::Database<'static>, access: DatabaseAccess) -> Self {
+        Self {
+            inner: Arc::new(inner),
+            access,
+        }
     }
 
     /// Direct access to the underlying native_db database (for low-level
     /// operations like watches in the sync layer).
     pub(crate) fn db(&self) -> &native_db::Database<'static> {
-        &self.0
+        &self.inner
+    }
+
+    /// Whether this database accepts local writes.
+    pub fn access(&self) -> DatabaseAccess {
+        self.access
     }
 
     /// Direct access to a new read-write transaction.
+    ///
+    /// Fails on a replica: a local stratum server's data is owned by the global
+    /// stratum server, so writes must be sent there and arrive back through
+    /// replication. The two deliberate exceptions are
+    /// [`replica_write`](Self::replica_write) and
+    /// [`local_write`](Self::local_write).
     pub fn rw_transaction(&self) -> Result<RwTransaction<'_>> {
-        Ok(self.0.rw_transaction()?)
+        if self.access.is_replica() {
+            bail!(
+                "database is a read-only replica; writes must go through the global stratum server"
+            );
+        }
+        Ok(self.inner.rw_transaction()?)
+    }
+
+    /// A write transaction for applying records received from an upstream
+    /// authority.
+    ///
+    /// Restricted to the sync engine (`database::sync`), which is the only thing
+    /// entitled to populate a replica. Everything else must go through
+    /// [`rw_transaction`](Self::rw_transaction).
+    pub(crate) fn replica_write(&self) -> Result<RwTransaction<'_>> {
+        Ok(self.inner.rw_transaction()?)
+    }
+
+    /// A write transaction for instance-local state that is never replicated.
+    ///
+    /// A replica still has to record things that belong to *this process* rather
+    /// than to the estate. Permitted callers, and nothing else:
+    ///
+    /// - [`crate::InstanceLayer::new`] — this instance's own id and domain
+    /// - [`crate::realm::RealmLayer::new`] — this instance's own certificates
+    /// - [`crate::network::NetworkLayer`] — live connection bookkeeping
+    /// - `sandpolis_server::ServerLayer::new` — purging stale connection rows
+    ///
+    /// If you are reaching for this to store estate data, you want the global
+    /// stratum server instead.
+    pub fn local_write(&self) -> Result<RwTransaction<'_>> {
+        Ok(self.inner.rw_transaction()?)
     }
 
     /// Direct access to a new read-only transaction.
     pub fn r_transaction(&self) -> Result<RTransaction<'_>> {
-        Ok(self.0.r_transaction()?)
+        Ok(self.inner.r_transaction()?)
     }
 
     pub fn resident<T: Data + Default + 'static>(
@@ -138,16 +253,25 @@ impl RealmDatabase {
     ) -> Result<Resident<T>> {
         // Hold onto this transaction until we've created the watch channel so
         // we don't miss any updates.
-        let r = self.0.r_transaction()?;
+        let r = self.inner.r_transaction()?;
         let mut items = query.query(r.scan())?;
 
         let item = if items.len() > 1 {
             bail!("Too many items");
         } else if items.len() == 1 {
             items.pop().unwrap()
+        } else if self.access.is_replica() {
+            // A replica has nothing to seed from and may not write, so hand back
+            // an unpersisted default. It is replaced as soon as the real record
+            // arrives from the global stratum server.
+            debug!(
+                model = std::any::type_name::<T>(),
+                "Missing record on a replica; using a default until it replicates"
+            );
+            T::default()
         } else {
             let default = T::default();
-            let rw = self.0.rw_transaction()?;
+            let rw = self.inner.rw_transaction()?;
             rw.insert(default.clone())?;
             rw.commit()?;
             default
@@ -156,11 +280,11 @@ impl RealmDatabase {
         // Setup watcher so we get updates
         let (mut channel, watch_id) = if item.expiration().is_none() {
             // Watch exact primary ID because it can't change
-            self.0.watch().get().primary::<T>(item.id())?
+            self.inner.watch().get().primary::<T>(item.id())?
         } else {
             // Otherwise, watch the upper half of the primary ID which is the same for all
             // revisions
-            self.0.watch().scan().primary().range::<T, _>(
+            self.inner.watch().scan().primary().range::<T, _>(
                 DataIdentifier((item.id().revision_id() as u64) << 32)
                     ..=DataIdentifier(((item.id().revision_id() as u64) << 32) | 0xFFFF_FFFF),
             )?
@@ -172,7 +296,7 @@ impl RealmDatabase {
         let token = CancellationToken::new();
         let resident = Resident {
             inner: Arc::new(RwLock::new(item)),
-            db: self.0.clone(),
+            db: self.clone(),
             watch: Some((watch_id, token.clone())),
         };
         let resident_clone = resident.clone();
@@ -206,13 +330,13 @@ impl RealmDatabase {
 
         // Hold onto this transaction until we've created the watch channel so
         // we don't miss any updates.
-        let r = self.0.r_transaction()?;
+        let r = self.inner.r_transaction()?;
         let mut inner = BTreeMap::new();
         for item in query.query(r.scan())? {
             inner.insert(
                 item.id(),
                 Resident {
-                    db: self.0.clone(),
+                    db: self.clone(),
                     inner: Arc::new(RwLock::new(item)),
                     watch: None,
                 },
@@ -222,19 +346,19 @@ impl RealmDatabase {
         // Ideally choose the most restrictive condition for the watcher
         let (mut channel, watch_id) = match conditions.first() {
             Some(DataCondition::Equal(key, value)) => self
-                .0
+                .inner
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone()..=value.clone())?,
             Some(DataCondition::Range(key, value)) => self
-                .0
+                .inner
                 .watch()
                 .scan()
                 .secondary(key.clone())
                 .range::<T, _>(value.clone())?,
             // TODO only latest revisions
-            None => self.0.watch().scan().primary().all::<T>()?,
+            None => self.inner.watch().scan().primary().all::<T>()?,
         };
 
         // Safe to end the transaction once the watcher is registered
@@ -243,7 +367,7 @@ impl RealmDatabase {
         let token = CancellationToken::new();
         let resident = ResidentVec {
             inner: Arc::new(RwLock::new(inner)),
-            db: self.0.clone(),
+            db: self.clone(),
             watch: (watch_id, token.clone()),
             conditions,
             listeners: Arc::new(Mutex::new(Vec::new())),
@@ -528,7 +652,7 @@ pub struct Resident<T>
 where
     T: Data,
 {
-    db: Arc<native_db::Database<'static>>,
+    db: RealmDatabase,
     inner: Arc<RwLock<T>>,
     // listeners: Arc<RwLock<Vec>>,
 
@@ -540,7 +664,7 @@ impl<T: Data> Drop for Resident<T> {
     fn drop(&mut self) {
         if let Some((watch_id, token)) = self.watch.as_ref() {
             token.cancel();
-            self.db.unwatch(*watch_id).unwrap();
+            self.db.db().unwatch(*watch_id).unwrap();
         }
     }
 }
@@ -579,6 +703,24 @@ impl<T: Data> Resident<T> {
     where
         F: Fn(&mut T) -> Result<()>,
     {
+        self.update_inner(mutator, false)
+    }
+
+    /// Like [`update`](Self::update) but permitted on a read-only replica.
+    ///
+    /// Only for instance-local state that is never replicated — see
+    /// [`RealmDatabase::local_write`] for the exhaustive list of callers.
+    pub fn update_local<F>(&self, mutator: F) -> Result<()>
+    where
+        F: Fn(&mut T) -> Result<()>,
+    {
+        self.update_inner(mutator, true)
+    }
+
+    fn update_inner<F>(&self, mutator: F, local: bool) -> Result<()>
+    where
+        F: Fn(&mut T) -> Result<()>,
+    {
         let mut previous = self.inner.write().unwrap();
         let mut next = previous.clone();
         mutator(&mut next)?;
@@ -595,7 +737,11 @@ impl<T: Data> Resident<T> {
 
         trace!(next = ?next, "Updated");
 
-        let rw = self.db.rw_transaction()?;
+        let rw = if local {
+            self.db.local_write()?
+        } else {
+            self.db.rw_transaction()?
+        };
 
         if previous.expiration().is_some() {
             // Derive new id from the previous
@@ -631,6 +777,116 @@ impl<T: Data> Resident<T> {
             .into_iter()
             .filter(|item| item.id().revision_id() == revision_id)
             .collect())
+    }
+}
+
+#[cfg(test)]
+mod test_replica {
+    use super::*;
+    use anyhow::Result;
+    use native_db::*;
+    use native_model::Model;
+    use sandpolis_macros::data;
+
+    #[data]
+    #[derive(Default)]
+    pub struct ReplicaTestData {
+        #[secondary_key]
+        pub a: String,
+    }
+
+    /// A local stratum server's database refuses local writes: its contents
+    /// belong to the global stratum server.
+    #[tokio::test]
+    async fn replica_rejects_local_writes() -> Result<()> {
+        let db = test_replica_db!(ReplicaTestData);
+        let realm = db.realm(RealmName::default())?;
+
+        let Err(err) = realm.rw_transaction() else {
+            panic!("a replica must reject a read-write transaction");
+        };
+        assert!(
+            err.to_string().contains("read-only replica"),
+            "the error should say why: {err}"
+        );
+
+        // Reads are unaffected.
+        realm.r_transaction()?;
+        Ok(())
+    }
+
+    /// An authoritative database (the global stratum server, or an agent) is
+    /// unaffected.
+    #[tokio::test]
+    async fn authoritative_allows_writes() -> Result<()> {
+        let db = test_db!(ReplicaTestData);
+        let realm = db.realm(RealmName::default())?;
+        assert!(realm.rw_transaction().is_ok());
+        Ok(())
+    }
+
+    /// Replication is the one write a replica accepts — otherwise it could never
+    /// be populated at all.
+    #[tokio::test]
+    async fn replica_accepts_replicated_writes() -> Result<()> {
+        let db = test_replica_db!(ReplicaTestData);
+        let realm = db.realm(RealmName::default())?;
+
+        let rw = realm.replica_write()?;
+        rw.insert(ReplicaTestData {
+            a: "from upstream".into(),
+            ..Default::default()
+        })?;
+        rw.commit()?;
+
+        let r = realm.r_transaction()?;
+        let all: Vec<ReplicaTestData> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        assert_eq!(all.len(), 1);
+        assert_eq!(all[0].a, "from upstream");
+        Ok(())
+    }
+
+    /// `Resident::update` is the main way layers write, so it must be refused on
+    /// a replica — while `update_local` (instance-local bookkeeping) still works.
+    #[tokio::test]
+    async fn resident_update_respects_access() -> Result<()> {
+        let db = test_replica_db!(ReplicaTestData);
+        let realm = db.realm(RealmName::default())?;
+        let resident: Resident<ReplicaTestData> = realm.resident(())?;
+
+        assert!(
+            resident.update(|d| {
+                d.a = "estate data".into();
+                Ok(())
+            })
+            .is_err(),
+            "estate data must not be written on a replica"
+        );
+
+        resident.update_local(|d| {
+            d.a = "local bookkeeping".into();
+            Ok(())
+        })?;
+        assert_eq!(resident.read().a, "local bookkeeping");
+        Ok(())
+    }
+
+    /// A missing singleton on a replica yields an unpersisted default rather
+    /// than failing, so layers can still start against an empty replica.
+    #[tokio::test]
+    async fn resident_default_is_not_persisted_on_a_replica() -> Result<()> {
+        let db = test_replica_db!(ReplicaTestData);
+        let realm = db.realm(RealmName::default())?;
+
+        let _resident: Resident<ReplicaTestData> = realm.resident(())?;
+
+        let r = realm.r_transaction()?;
+        let all: Vec<ReplicaTestData> = r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        assert!(
+            all.is_empty(),
+            "the default must not have been written to the replica"
+        );
+        Ok(())
     }
 }
 
@@ -773,7 +1029,7 @@ pub struct ResidentVec<T>
 where
     T: Data,
 {
-    db: Arc<native_db::Database<'static>>,
+    db: RealmDatabase,
     inner: Arc<RwLock<BTreeMap<DataIdentifier, Resident<T>>>>,
     conditions: Vec<DataCondition>,
     listeners: Arc<Mutex<Vec<ResidentVecListener<T>>>>,
@@ -785,7 +1041,7 @@ impl<T: Data> Drop for ResidentVec<T> {
     fn drop(&mut self) {
         let (watch_id, token) = &self.watch;
         token.cancel();
-        self.db.unwatch(*watch_id).unwrap();
+        self.db.db().unwatch(*watch_id).unwrap();
     }
 }
 
@@ -939,6 +1195,18 @@ impl<T: Data> ResidentVec<T> {
 
     /// Appends an element to the back of a collection.
     pub fn push(&self, value: T) -> Result<Resident<T>> {
+        self.push_inner(value, false)
+    }
+
+    /// Like [`push`](Self::push) but permitted on a read-only replica.
+    ///
+    /// Only for instance-local state that is never replicated — see
+    /// [`RealmDatabase::local_write`] for the exhaustive list of callers.
+    pub fn push_local(&self, value: T) -> Result<Resident<T>> {
+        self.push_inner(value, true)
+    }
+
+    fn push_inner(&self, value: T, local: bool) -> Result<Resident<T>> {
         let id = value.id();
         let resident = Resident {
             db: self.db.clone(),
@@ -947,7 +1215,11 @@ impl<T: Data> ResidentVec<T> {
         };
 
         let result = {
-            let rw = self.db.rw_transaction()?;
+            let rw = if local {
+                self.db.local_write()?
+            } else {
+                self.db.rw_transaction()?
+            };
 
             // Check for id collision
             if self.inner.read().unwrap().get(&id).is_some() {
@@ -974,7 +1246,23 @@ impl<T: Data> ResidentVec<T> {
 
     /// Removes an element from the collection by its ID.
     pub fn remove(&self, id: DataIdentifier) -> Result<()> {
-        let rw = self.db.rw_transaction()?;
+        self.remove_inner(id, false)
+    }
+
+    /// Like [`remove`](Self::remove) but permitted on a read-only replica.
+    ///
+    /// Only for instance-local state that is never replicated — see
+    /// [`RealmDatabase::local_write`] for the exhaustive list of callers.
+    pub fn remove_local(&self, id: DataIdentifier) -> Result<()> {
+        self.remove_inner(id, true)
+    }
+
+    fn remove_inner(&self, id: DataIdentifier, local: bool) -> Result<()> {
+        let rw = if local {
+            self.db.local_write()?
+        } else {
+            self.db.rw_transaction()?
+        };
 
         // Check if the item exists
         let inner = self.inner.read().unwrap();

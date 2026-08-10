@@ -5,7 +5,7 @@
 //! icon, the hostname, a layer-specific detail line, and an "Open" button that
 //! opens the node controller. Toggled with `P`.
 
-use crate::gui::controller::NodeControllerState;
+use crate::gui::controller::{ControllerTarget, NodeControllerState};
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_ui::layer_icon_path;
 use crate::gui::node::NodeEntity;
@@ -268,6 +268,6 @@ fn on_preview_open(
     mut controller_state: ResMut<NodeControllerState>,
 ) {
     if let Ok(button) = buttons.get(activate.entity) {
-        controller_state.open = Some(button.instance_id);
+        controller_state.open = Some(ControllerTarget::instance(button.instance_id));
     }
 }

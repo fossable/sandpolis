@@ -10,6 +10,7 @@
 //! The layer's toolbar exposes a "View database" action that opens the generic
 //! database browser (see [`crate::gui::database_browser`]).
 
+use crate::gui::controller::ControllerTarget;
 use crate::gui::queries;
 use crate::gui::ui::bind::bind_text;
 use crate::gui::ui::controller::NodeController;
@@ -34,7 +35,14 @@ impl NodeController for InstanceController {
         "Instance"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        let instance = target.instance;
         let is_local = instance == self.instance.instance_id;
         let cluster = self.instance.cluster_id;
         let types = instance.types();

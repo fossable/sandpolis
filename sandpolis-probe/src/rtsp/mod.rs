@@ -1,23 +1,23 @@
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use anyhow::Result;
-#[cfg(any(feature = "agent", feature = "server"))]
-use retina::client::{SessionGroup, SetupOptions};
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
+use retina::client::{Credentials, SessionGroup, SetupOptions};
+#[cfg(feature = "server")]
 use retina::codec::CodecItem;
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use sandpolis_instance::network::StreamResponder;
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use sandpolis_macros::Stream;
 use serde::{Deserialize, Serialize};
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use std::sync::Arc;
-#[cfg(any(feature = "agent", feature = "server"))]
-use tokio::sync::RwLock;
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use tokio::sync::mpsc::Sender;
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
+use tokio_util::sync::CancellationToken;
+#[cfg(feature = "server")]
 use tracing::debug;
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 use url::Url;
 
 /// Request message for RTSP stream sessions.
@@ -25,11 +25,21 @@ use url::Url;
 pub enum RtspSessionStreamRequest {
     /// Start streaming from the given RTSP URL
     Start {
-        /// Full RTSP URL (e.g., rtsp://user:pass@host:554/stream)
+        /// RTSP URL *without* credentials (e.g. rtsp://host:554/stream). Retina
+        /// rejects a URL carrying userinfo outright, so credentials travel in
+        /// the fields below and are applied as digest auth.
         url: String,
 
         /// Transport protocol preference
         transport: RtspTransport,
+
+        /// Username for RTSP authentication, if the camera requires it.
+        #[serde(default)]
+        username: Option<String>,
+
+        /// Password paired with `username`.
+        #[serde(default)]
+        password: Option<String>,
     },
     /// Stop the stream
     Stop,
@@ -106,188 +116,214 @@ pub enum RtspFrame {
 }
 
 /// Stream responder that connects to an RTSP source and forwards frames.
-#[cfg(any(feature = "agent", feature = "server"))]
+///
+/// The camera session is owned by a background task that
+/// [`Start`](RtspSessionStreamRequest::Start) spawns before returning. Connecting
+/// and reading inline would stall the whole connection's dispatch loop, since
+/// responder handlers run on the socket's receive path — and that same loop is
+/// what flushes outbound messages, so not a single frame would ever reach the
+/// client and the connection's database sync would wedge along with it.
+#[cfg(feature = "server")]
 #[derive(Stream, Default)]
 pub struct RtspSessionStreamResponder {
-    /// Flag to signal the stream should stop
-    stop_flag: Arc<RwLock<bool>>,
+    /// Cancels the background streaming task (on `Stop` or on drop).
+    cancel: CancellationToken,
 }
 
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 impl StreamResponder for RtspSessionStreamResponder {
     type In = RtspSessionStreamRequest;
     type Out = RtspSessionStreamResponse;
 
     async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
         match request {
-            RtspSessionStreamRequest::Start { url, transport } => {
-                // Reset stop flag
-                *self.stop_flag.write().await = false;
-
-                // Parse the URL
-                let parsed_url = Url::parse(&url)?;
-                debug!(
-                    "Connecting to RTSP stream: {}",
-                    parsed_url.host_str().unwrap_or("unknown")
-                );
-
-                // Create session options based on transport preference
-                let session_group = Arc::new(SessionGroup::default());
-                let mut session = retina::client::Session::describe(
-                    parsed_url,
-                    retina::client::SessionOptions::default().session_group(session_group),
-                )
-                .await?;
-
-                // Setup all streams
-                for i in 0..session.streams().len() {
-                    let setup_options = match transport {
-                        RtspTransport::Udp => SetupOptions::default()
-                            .transport(retina::client::Transport::Udp(Default::default())),
-                        RtspTransport::Tcp => SetupOptions::default()
-                            .transport(retina::client::Transport::Tcp(Default::default())),
+            RtspSessionStreamRequest::Start {
+                url,
+                transport,
+                username,
+                password,
+            } => {
+                let cancel = self.cancel.clone();
+                tokio::spawn(async move {
+                    let result = tokio::select! {
+                        _ = cancel.cancelled() => Ok("Stopped by request".to_string()),
+                        result = stream_frames(url, transport, username, password, &sender) => result,
                     };
-                    session.setup(i, setup_options).await?;
-                }
 
-                // Capture codec parameters (SPS/PPS) so the client can decode.
-                let mut param_msgs = Vec::new();
-                for (i, stream) in session.streams().iter().enumerate() {
-                    if let Some(retina::codec::ParametersRef::Video(v)) = stream.parameters() {
-                        let (width, height) = v.pixel_dimensions();
-                        param_msgs.push(RtspSessionStreamResponse {
-                            stream_index: i,
-                            frame: RtspFrame::Parameters {
-                                extra_data: v.extra_data().to_vec(),
-                                width,
-                                height,
-                            },
-                        });
-                    }
-                }
-
-                // Start playing
-                let mut session = session
-                    .play(retina::client::PlayOptions::default())
-                    .await?
-                    .demuxed()?;
-
-                let stop_flag = self.stop_flag.clone();
-
-                // Send codec parameters before any frames.
-                for msg in param_msgs {
-                    if sender.send(msg).await.is_err() {
-                        return Ok(());
-                    }
-                }
-
-                // Read frames in a loop
-                loop {
-                    // Check stop flag
-                    if *stop_flag.read().await {
-                        let _ = sender
-                            .send(RtspSessionStreamResponse {
-                                stream_index: 0,
-                                frame: RtspFrame::End {
-                                    reason: "Stopped by request".to_string(),
-                                },
-                            })
-                            .await;
-                        break;
-                    }
-
-                    use futures::StreamExt;
-                    match session.next().await {
-                        Some(Ok(item)) => {
-                            let response = match item {
-                                CodecItem::VideoFrame(frame) => {
-                                    let stream_id = frame.stream_id();
-                                    let is_keyframe = frame.is_random_access_point();
-                                    let timestamp = frame.timestamp().timestamp();
-                                    let data = frame.into_data();
-
-                                    RtspSessionStreamResponse {
-                                        stream_index: stream_id,
-                                        frame: RtspFrame::H264 {
-                                            data: vec![data],
-                                            timestamp,
-                                            is_keyframe,
-                                        },
-                                    }
-                                }
-                                CodecItem::AudioFrame(frame) => {
-                                    let timestamp = frame.timestamp().timestamp();
-                                    let data = frame.data().to_vec();
-
-                                    RtspSessionStreamResponse {
-                                        stream_index: frame.stream_id(),
-                                        frame: RtspFrame::Aac { data, timestamp },
-                                    }
-                                }
-                                CodecItem::MessageFrame(_) => continue,
-                                _ => continue,
-                            };
-
-                            if sender.send(response).await.is_err() {
-                                break;
-                            }
+                    // Always tell the client why the stream ended. Without this a
+                    // failure to connect is completely invisible: the responder's
+                    // error would be swallowed and the UI would wait forever.
+                    let reason = match result {
+                        Ok(reason) => reason,
+                        Err(e) => {
+                            debug!(error = %e, "RTSP stream failed");
+                            e.to_string()
                         }
-                        Some(Err(e)) => {
-                            let _ = sender
-                                .send(RtspSessionStreamResponse {
-                                    stream_index: 0,
-                                    frame: RtspFrame::End {
-                                        reason: e.to_string(),
-                                    },
-                                })
-                                .await;
-                            break;
-                        }
-                        None => {
-                            let _ = sender
-                                .send(RtspSessionStreamResponse {
-                                    stream_index: 0,
-                                    frame: RtspFrame::End {
-                                        reason: "Stream ended".to_string(),
-                                    },
-                                })
-                                .await;
-                            break;
-                        }
-                    }
-                }
+                    };
+                    let _ = sender
+                        .send(RtspSessionStreamResponse {
+                            stream_index: 0,
+                            frame: RtspFrame::End { reason },
+                        })
+                        .await;
+                });
             }
             RtspSessionStreamRequest::Stop => {
-                *self.stop_flag.write().await = true;
+                self.cancel.cancel();
             }
         }
         Ok(())
     }
 }
 
-#[cfg(any(feature = "agent", feature = "server"))]
-impl Drop for RtspSessionStreamResponder {
-    fn drop(&mut self) {
-        debug!("RTSP session responder dropped");
-        // Signal stop in case the stream is still running
-        if let Ok(mut flag) = self.stop_flag.try_write() {
-            *flag = true;
+/// Connect to `url` and forward frames to `sender` until the stream ends,
+/// returning the reason it ended.
+#[cfg(feature = "server")]
+async fn stream_frames(
+    url: String,
+    transport: RtspTransport,
+    username: Option<String>,
+    password: Option<String>,
+    sender: &Sender<RtspSessionStreamResponse>,
+) -> Result<String> {
+    let mut parsed_url = Url::parse(&url)?;
+
+    // Retina refuses any URL carrying userinfo, so strip it and fold it into the
+    // credentials instead. Normally the client already sends a bare URL; this
+    // keeps an older peer working rather than failing cryptically.
+    let creds = match (username, password) {
+        (Some(username), password) if !username.is_empty() => Some(Credentials {
+            username,
+            password: password.unwrap_or_default(),
+        }),
+        _ if !parsed_url.username().is_empty() => Some(Credentials {
+            username: parsed_url.username().to_string(),
+            password: parsed_url.password().unwrap_or_default().to_string(),
+        }),
+        _ => None,
+    };
+    let _ = parsed_url.set_username("");
+    let _ = parsed_url.set_password(None);
+
+    debug!(
+        "Connecting to RTSP stream: {}",
+        parsed_url.host_str().unwrap_or("unknown")
+    );
+
+    let session_group = Arc::new(SessionGroup::default());
+    let mut session = retina::client::Session::describe(
+        parsed_url,
+        retina::client::SessionOptions::default()
+            .session_group(session_group)
+            .creds(creds),
+    )
+    .await?;
+
+    // Setup all streams
+    for i in 0..session.streams().len() {
+        let setup_options = match transport {
+            RtspTransport::Udp => SetupOptions::default()
+                .transport(retina::client::Transport::Udp(Default::default())),
+            RtspTransport::Tcp => SetupOptions::default()
+                .transport(retina::client::Transport::Tcp(Default::default())),
+        };
+        session.setup(i, setup_options).await?;
+    }
+
+    // Capture codec parameters (SPS/PPS) so the client can decode.
+    let mut param_msgs = Vec::new();
+    for (i, stream) in session.streams().iter().enumerate() {
+        if let Some(retina::codec::ParametersRef::Video(v)) = stream.parameters() {
+            let (width, height) = v.pixel_dimensions();
+            param_msgs.push(RtspSessionStreamResponse {
+                stream_index: i,
+                frame: RtspFrame::Parameters {
+                    extra_data: v.extra_data().to_vec(),
+                    width,
+                    height,
+                },
+            });
+        }
+    }
+
+    // Start playing
+    let mut session = session
+        .play(retina::client::PlayOptions::default())
+        .await?
+        .demuxed()?;
+
+    // Send codec parameters before any frames.
+    for msg in param_msgs {
+        if sender.send(msg).await.is_err() {
+            return Ok("Client disconnected".to_string());
+        }
+    }
+
+    // Read frames in a loop
+    loop {
+        use futures::StreamExt;
+        match session.next().await {
+            Some(Ok(item)) => {
+                let response = match item {
+                    CodecItem::VideoFrame(frame) => {
+                        let stream_id = frame.stream_id();
+                        let is_keyframe = frame.is_random_access_point();
+                        let timestamp = frame.timestamp().timestamp();
+                        let data = frame.into_data();
+
+                        RtspSessionStreamResponse {
+                            stream_index: stream_id,
+                            frame: RtspFrame::H264 {
+                                data: vec![data],
+                                timestamp,
+                                is_keyframe,
+                            },
+                        }
+                    }
+                    CodecItem::AudioFrame(frame) => {
+                        let timestamp = frame.timestamp().timestamp();
+                        let data = frame.data().to_vec();
+
+                        RtspSessionStreamResponse {
+                            stream_index: frame.stream_id(),
+                            frame: RtspFrame::Aac { data, timestamp },
+                        }
+                    }
+                    CodecItem::MessageFrame(_) => continue,
+                    _ => continue,
+                };
+
+                if sender.send(response).await.is_err() {
+                    return Ok("Client disconnected".to_string());
+                }
+            }
+            Some(Err(e)) => return Err(e.into()),
+            None => return Ok("Stream ended".to_string()),
         }
     }
 }
 
+#[cfg(feature = "server")]
+impl Drop for RtspSessionStreamResponder {
+    fn drop(&mut self) {
+        debug!("RTSP session responder dropped");
+        // Stop the background task in case the stream is still running.
+        self.cancel.cancel();
+    }
+}
+
 /// Registers [`RtspSessionStreamResponder`] on each connection.
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 pub struct RtspResponderRegistration;
 
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 impl sandpolis_instance::network::RegisterResponders for RtspResponderRegistration {
     fn register_responders(&self, registry: &sandpolis_instance::network::StreamRegistry) {
         registry.register_responder(RtspSessionStreamResponder::default);
     }
 }
 
-#[cfg(any(feature = "agent", feature = "server"))]
+#[cfg(feature = "server")]
 inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &RtspResponderRegistration
 ));
@@ -312,10 +348,20 @@ mod client {
 
     /// Events surfaced to the GUI as an RTSP stream progresses.
     pub enum RtspStreamEvent {
+        /// The stream was accepted by the multiplexer. Carries the id the GUI
+        /// needs to look up the stream's byte counters on the connection.
+        Opened(sandpolis_instance::network::stream::StreamId),
         Started { width: u32, height: u32 },
         Frame(RtspFrameRgba),
-        Stopped,
+        /// The remote end closed the stream, with the reason it reported.
+        Stopped { reason: String },
+        /// The stream could not be established or decoded locally.
+        Failed(String),
     }
+
+    /// How many consecutive decode failures before we tell the user the stream
+    /// is undecodable rather than letting it sit there blank.
+    const DECODE_ERROR_LIMIT: u32 = 60;
 
     /// Per-stream decoder state.
     struct DecoderState {
@@ -325,6 +371,8 @@ mod client {
         /// NAL length prefix size from the AVCDecoderConfigurationRecord.
         nal_length_size: usize,
         started: bool,
+        /// Consecutive decode failures, reset by each decoded picture.
+        decode_errors: u32,
     }
 
     impl Default for DecoderState {
@@ -334,6 +382,7 @@ mod client {
                 sps_pps: Vec::new(),
                 nal_length_size: 4,
                 started: false,
+                decode_errors: 0,
             }
         }
     }
@@ -347,16 +396,37 @@ mod client {
     }
 
     impl RtspSessionStreamRequester {
-        /// Construct a requester paired with the receiver the GUI drains.
-        pub fn channel() -> (Self, UnboundedReceiver<RtspStreamEvent>) {
+        /// Construct a requester paired with the receiver the GUI drains. The
+        /// sender is handed back too so the caller can report failures that
+        /// happen before the stream is ever opened.
+        pub fn channel() -> (
+            Self,
+            UnboundedSender<RtspStreamEvent>,
+            UnboundedReceiver<RtspStreamEvent>,
+        ) {
             let (events, rx) = unbounded_channel();
             (
                 Self {
-                    events,
+                    events: events.clone(),
                     state: Mutex::new(DecoderState::default()),
                 },
+                events,
                 rx,
             )
+        }
+
+        /// Lazily create the H.264 decoder, reporting why it couldn't be built.
+        fn ensure_decoder(&self, state: &mut DecoderState) -> Result<(), String> {
+            if state.decoder.is_some() {
+                return Ok(());
+            }
+            match openh264::decoder::Decoder::new() {
+                Ok(decoder) => {
+                    state.decoder = Some(decoder);
+                    Ok(())
+                }
+                Err(e) => Err(format!("Failed to initialize H.264 decoder: {e}")),
+            }
         }
     }
 
@@ -381,8 +451,9 @@ mod client {
                     let mut st = self.state.lock().unwrap();
                     st.sps_pps = sps_pps;
                     st.nal_length_size = nal_length_size.max(1);
-                    if st.decoder.is_none() {
-                        st.decoder = openh264::decoder::Decoder::new().ok();
+                    if let Err(e) = self.ensure_decoder(&mut st) {
+                        let _ = self.events.send(RtspStreamEvent::Failed(e));
+                        return Ok(());
                     }
                     if !st.started {
                         st.started = true;
@@ -404,28 +475,52 @@ mod client {
                         avcc_to_annexb(nal, nls, &mut au);
                     }
 
-                    if st.decoder.is_none() {
-                        st.decoder = openh264::decoder::Decoder::new().ok();
+                    if let Err(e) = self.ensure_decoder(&mut st) {
+                        let _ = self.events.send(RtspStreamEvent::Failed(e));
+                        return Ok(());
                     }
-                    if let Some(decoder) = st.decoder.as_mut() {
-                        match decoder.decode(&au) {
-                            Ok(Some(yuv)) => {
+                    // Decoded into an owned frame first so the borrow of `st` ends
+                    // before the error/success counters below touch it.
+                    let decoded = {
+                        let Some(decoder) = st.decoder.as_mut() else {
+                            return Ok(());
+                        };
+                        decoder.decode(&au).map(|picture| {
+                            picture.map(|yuv| {
                                 let (w, h) = yuv.dimensions();
                                 let mut rgba = vec![0u8; w * h * 4];
                                 yuv.write_rgba8(&mut rgba);
-                                let _ = self.events.send(RtspStreamEvent::Frame(RtspFrameRgba {
+                                RtspFrameRgba {
                                     width: w as u32,
                                     height: h as u32,
                                     rgba,
-                                }));
+                                }
+                            })
+                        })
+                    };
+
+                    match decoded {
+                        Ok(Some(frame)) => {
+                            st.decode_errors = 0;
+                            let _ = self.events.send(RtspStreamEvent::Frame(frame));
+                        }
+                        Ok(None) => {}
+                        Err(e) => {
+                            tracing::debug!(error = %e, "H.264 decode error");
+                            // Isolated errors are normal until the first keyframe
+                            // arrives; a sustained run means we'll never produce a
+                            // picture, so say so instead of showing a blank panel.
+                            st.decode_errors += 1;
+                            if st.decode_errors == DECODE_ERROR_LIMIT {
+                                let _ = self.events.send(RtspStreamEvent::Failed(format!(
+                                    "Unable to decode video: {e}"
+                                )));
                             }
-                            Ok(None) => {}
-                            Err(e) => tracing::debug!(error = %e, "H.264 decode error"),
                         }
                     }
                 }
-                RtspFrame::End { .. } => {
-                    let _ = self.events.send(RtspStreamEvent::Stopped);
+                RtspFrame::End { reason } => {
+                    let _ = self.events.send(RtspStreamEvent::Stopped { reason });
                 }
                 // H.265/audio frames are not decoded for MVP.
                 _ => {}

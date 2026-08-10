@@ -19,6 +19,7 @@ use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::ui::RelativeCursorPosition;
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::controller::ControllerTarget;
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
 use sandpolis_client::gui::ui::theme::{Role, Theme};
 use sandpolis_client::gui::ui::widgets::{button, heading, row, text};
@@ -83,7 +84,14 @@ impl NodeController for DesktopController {
         "Desktop Viewer"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        let instance = target.instance;
         commands.entity(body).with_children(|p| {
             p.spawn(heading(theme, "Desktop Stream"));
 
@@ -240,11 +248,7 @@ fn spawn_stream(
                 Err(_) => continue,
             };
             if msg_tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: Some(instance),
-                })
+                .send(StreamMessage::to(id, payload, instance))
                 .await
                 .is_err()
             {

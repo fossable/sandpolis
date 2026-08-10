@@ -51,27 +51,16 @@ impl Configuration {
         }
     }
 
-    /// Load configuration.
+    /// Load the global stratum server's configuration.
     ///
-    /// `config_path` should come from the `--config` flag on the `server`
-    /// subcommand (server instances are the only ones with a writable on-disk
-    /// config). Falls back to `$S7S_CONFIG` then the platform default.
-    pub fn new(config_path: Option<PathBuf>) -> Result<Self> {
-        // For agent instances, prefer the embedded config if present
-        #[cfg(feature = "agent")]
-        {
-            const EMBEDDED_CONFIG: &[u8] = include_bytes!("../config.ron");
-            const PLACEHOLDER: &[u8] =
-                b"// Replace this file to embed a config in the application binary.\n";
-
-            if EMBEDDED_CONFIG != PLACEHOLDER {
-                debug!("Loading embedded configuration");
-                let config: Configuration =
-                    ron_options().from_str(std::str::from_utf8(EMBEDDED_CONFIG)?)?;
-                return Ok(config);
-            }
-        }
-
+    /// The global stratum (GS) server is the **only** instance that reads a
+    /// config file — it owns the authoritative database, so it owns the
+    /// authoritative settings too. Local stratum servers, agents and clients all
+    /// start from [`Configuration::default`] and are configured by CLI flags.
+    ///
+    /// `config_path` comes from `--config`, falling back to `$S7S_CONFIG` and
+    /// then the platform default.
+    pub fn load_global(config_path: Option<PathBuf>) -> Result<Self> {
         let path = config_path
             .or_else(|| std::env::var("S7S_CONFIG").ok().map(PathBuf::from))
             .unwrap_or_else(Self::default_path);

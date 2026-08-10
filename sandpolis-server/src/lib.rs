@@ -38,6 +38,8 @@ pub mod client;
 pub mod config;
 pub mod location;
 pub mod login;
+#[cfg(feature = "server")]
+pub mod stratum;
 pub mod user;
 
 #[data]
@@ -49,6 +51,11 @@ pub struct ServerLayerData {}
 pub struct ServerLayer {
     #[cfg(feature = "server")]
     pub banner: Resident<banner::ServerBannerData>,
+
+    /// Which stratum this instance's server runs in. `Global` on instances that
+    /// aren't running a server at all, which is inert since nothing consults it.
+    pub stratum: ServerStratum,
+
     pub network: NetworkLayer,
     pub realms: RealmLayer,
     pub database: DatabaseLayer,
@@ -64,6 +71,7 @@ impl ServerLayer {
         database: DatabaseLayer,
         network: NetworkLayer,
         realms: RealmLayer,
+        stratum: ServerStratum,
     ) -> Result<Self> {
         // Purge stale ConnectionData rows left over from previous runs
         {
@@ -73,7 +81,9 @@ impl ServerLayer {
                 r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
             drop(r);
             if !stale.is_empty() {
-                let rw = realm.rw_transaction()?;
+                // Connection rows describe this process's own sockets, so they
+                // are local bookkeeping even on a replica.
+                let rw = realm.local_write()?;
                 for row in stale {
                     rw.remove(row)?;
                 }
@@ -84,6 +94,7 @@ impl ServerLayer {
         Ok(Self {
             #[cfg(feature = "server")]
             banner: database.realm(RealmName::default())?.resident(())?,
+            stratum,
             network,
             realms,
             database: database.clone(),
@@ -100,7 +111,7 @@ impl ServerLayer {
         connections
     }
 
-    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     fn connect_server(
         &self,
         url: ServerUrl,
@@ -108,12 +119,23 @@ impl ServerLayer {
     ) -> Result<ServerConnection> {
         debug!(url = %url, ?strategy, "Configuring server connection");
 
-        // Locate the realm certificate
-        #[cfg(feature = "client")]
+        // Locate the realm certificate. A local stratum server dialing its
+        // global stratum server authenticates with a client cert supplied via
+        // `--realm-cert`; there is no separate server-to-server cert type.
+        #[cfg(all(feature = "client", not(feature = "agent")))]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
 
+        // An all-in-one build dials as the agent, matching the previous
+        // behavior where this arm shadowed the client one.
         #[cfg(feature = "agent")]
         let cert = self.realms.find_agent_cert(url.realm.clone())?;
+
+        #[cfg(all(
+            feature = "server",
+            not(feature = "client"),
+            not(feature = "agent")
+        ))]
+        let cert = self.realms.find_client_cert(url.realm.clone())?;
 
         let client_builder = || -> Result<reqwest::Client> {
             Ok(ClientBuilder::new()
@@ -131,17 +153,20 @@ impl ServerLayer {
             inner: Arc::new(RwLock::new(None)),
             strategy,
             client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
-            data: self.database.realm(url.realm)?.resident(())?,
+            data: self.database.realm(url.realm.clone())?.resident(())?,
             cancel: CancellationToken::new(),
             banner: ServerBanner::default(),
             realm: cert.name()?,
             cluster_id: cert.cluster_id()?,
+            url,
+            #[cfg(feature = "server")]
+            stratum: self.stratum.clone(),
         })
     }
 
     /// Connect to a server in the default `Continuous` strategy (the live
     /// connection is held open by the websocket).
-    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub async fn connect(&self, url: ServerUrl) -> Result<ServerConnection> {
         self.connect_with_strategy(url, ServerConnectStrategy::Continuous)
             .await
@@ -150,7 +175,7 @@ impl ServerLayer {
     /// Connect to a server with an explicit [`ServerConnectStrategy`]. Agents
     /// that only check in periodically pass `Polling`; everything else uses
     /// `Continuous` via [`connect`](Self::connect).
-    #[cfg(any(feature = "agent", feature = "client"))] // Temporary
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub async fn connect_with_strategy(
         &self,
         url: ServerUrl,
@@ -225,6 +250,14 @@ pub struct ServerConnection {
     pub inner: Arc<RwLock<Option<Arc<InstanceConnection>>>>,
     pub realm: RealmName,
     pub cluster_id: ClusterId,
+    /// The URL this connection dials, retained so clients can associate data
+    /// (e.g. probes) with a particular server.
+    pub url: ServerUrl,
+
+    /// The stratum of the server making this connection, announced to the peer
+    /// so it can enforce that a network has exactly one global stratum server.
+    #[cfg(feature = "server")]
+    pub stratum: ServerStratum,
 }
 
 impl Drop for ServerConnection {
@@ -245,13 +278,15 @@ impl ServerConnection {
     /// an all-in-one build a dialer-side connection there (whose peer is the
     /// local server itself) would be picked up as a relay target, bouncing
     /// messages back to the server instead of reaching the agent.
-    #[cfg(any(feature = "client", feature = "agent"))]
+    #[cfg(any(feature = "client", feature = "agent", feature = "server"))]
     pub async fn open_websocket(
         &self,
         network: &NetworkLayer,
-        instance_id: InstanceId,
+        instance: &sandpolis_instance::InstanceLayer,
     ) -> Result<Arc<InstanceConnection>> {
         use reqwest_websocket::Upgrade;
+
+        let instance_id = instance.instance_id;
 
         let url = format!("https://{}.{}/connect", self.cluster_id, self.realm);
         let response = {
@@ -259,13 +294,17 @@ impl ServerConnection {
             let client = guard
                 .as_ref()
                 .ok_or_else(|| anyhow!("connection has no http client"))?;
-            client
+            let request = client
                 .get(&url)
                 .header("x-realm", self.realm.to_string())
-                .header("x-instance-id", instance_id.to_string())
-                .upgrade()
-                .send()
-                .await?
+                .header("x-instance-id", instance_id.to_string());
+
+            // Servers announce their stratum so the peer can enforce the
+            // network's shape; agents and clients send nothing here.
+            #[cfg(feature = "server")]
+            let request = request.header("x-stratum", self.stratum.header_value());
+
+            request.upgrade().send().await?
         };
         // The server reports its own instance id in the upgrade response so we can
         // record the real peer instead of a freshly-generated default (which would
@@ -276,6 +315,14 @@ impl ServerConnection {
             .and_then(|v| v.to_str().ok())
             .and_then(|s| s.parse::<InstanceId>().ok());
 
+        // Only the global stratum server has a config file, so the domain is
+        // reported here rather than configured locally.
+        if let Some(domain) = response.headers().get("x-domain").and_then(|v| v.to_str().ok())
+            && let Err(e) = instance.set_domain(domain)
+        {
+            debug!(error = %e, "Failed to record domain reported by server");
+        }
+
         let socket = response.into_websocket().await?;
 
         let mut cd = ConnectionData::default();
@@ -283,7 +330,8 @@ impl ServerConnection {
             cd.remote_instance = id;
         }
         cd.established = chrono::Utc::now();
-        let data = network.connections.push(cd).map_err(|e| anyhow!("{e}"))?;
+        // Live connection bookkeeping is local state, allowed on a replica.
+        let data = network.connections.push_local(cd).map_err(|e| anyhow!("{e}"))?;
 
         // Serve our local realm database to the peer's sync subscriptions
         // (an agent answering the server's all-filter requester).
@@ -308,7 +356,7 @@ impl ServerConnection {
     /// window: the socket is cancelled and its bookkeeping (the tracked
     /// `ConnectionData` row) is cleaned up so repeated windows don't accumulate
     /// stale connections.
-    #[cfg(any(feature = "client", feature = "agent"))]
+    #[cfg(any(feature = "client", feature = "agent", feature = "server"))]
     pub fn close_websocket(&self, network: &NetworkLayer) {
         let Some(connection) = self.inner.write().unwrap().take() else {
             return;
@@ -319,7 +367,7 @@ impl ServerConnection {
         connection.cancel.cancel();
 
         let id = connection.data.read()._id;
-        let _ = network.connections.remove(id);
+        let _ = network.connections.remove_local(id);
     }
 
     pub async fn get<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>
@@ -435,27 +483,77 @@ impl ServerConnectStrategy {
     }
 }
 
-/// There can be multiple servers in a Sandpolis network which improves both
-/// scalability and failure tolerance. There are two roles in which a server can
-/// exist: a global level and a local level.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+/// The role a server plays in a Sandpolis network.
+///
+/// A network has **exactly one** global stratum (GS) server and **any number**
+/// of local stratum (LS) servers. The distinction decides three things:
+///
+/// - **Configuration.** Only the GS reads a `sandpolis.ron`. Every other
+///   instance — LS servers, agents, clients — is configured entirely by CLI
+///   flags.
+/// - **Writability.** The GS database is read-write; every LS database is a
+///   read-only replica ([`DatabaseAccess::Replica`]). A write must reach the GS
+///   first and comes back down through sync.
+/// - **Scope.** An LS holds only the data belonging to the instances directly
+///   connected to it, not the whole estate.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerStratum {
-    /// This server maintains data only for the agents that its directly
-    /// connected to. Local stratum (LS) servers connect to at most one GS
-    /// server. LS servers may not connect directly to each other.
-    ///
-    /// LS servers are optional, but may be useful for on-premise installations
-    /// where the server can continue operating even when the network goes down.
-    ///
-    /// In raft terminology, LS servers are "learners" and don't participate in
-    /// leader voting.
-    Local,
-
-    // TODO only one?
-    /// This server maintains a complete copy of all data in the cluster. Global
-    /// stratum (GS) servers connect to every other GS server (fully-connected)
-    /// for data replication and leader election.
+    /// The single authoritative server. Owns the read-write database and the
+    /// config file.
     Global,
+
+    /// An optional edge server holding a read-only replica scoped to its own
+    /// directly-connected instances.
+    ///
+    /// An LS connects to exactly one GS and never to another LS. It is useful
+    /// for on-premise installations, where it keeps serving the instances around
+    /// it even while the link to the GS is down.
+    Local {
+        /// The global stratum server this one replicates from.
+        global: ServerUrl,
+    },
+}
+
+impl Default for ServerStratum {
+    fn default() -> Self {
+        Self::Global
+    }
+}
+
+impl ServerStratum {
+    pub fn is_global(&self) -> bool {
+        matches!(self, Self::Global)
+    }
+
+    pub fn is_local(&self) -> bool {
+        matches!(self, Self::Local { .. })
+    }
+
+    /// The upstream global stratum server, if this is a local stratum server.
+    pub fn global_url(&self) -> Option<&ServerUrl> {
+        match self {
+            Self::Global => None,
+            Self::Local { global } => Some(global),
+        }
+    }
+
+    /// The value this server sends in the `x-stratum` header, and that a peer
+    /// checks to enforce "exactly one GS".
+    pub fn header_value(&self) -> &'static str {
+        match self {
+            Self::Global => "global",
+            Self::Local { .. } => "local",
+        }
+    }
+}
+
+impl Display for ServerStratum {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Global => write!(f, "global stratum"),
+            Self::Local { global } => write!(f, "local stratum (via {global})"),
+        }
+    }
 }
 
 /// Locates a server instance over the network. These have a format like:

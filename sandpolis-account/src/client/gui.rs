@@ -974,7 +974,8 @@ impl Plugin for AccountClientPlugin {
                         }
                     });
                 },
-            ),
+            )
+            .with_services(),
         );
     }
 }

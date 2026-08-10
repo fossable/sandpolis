@@ -1,3 +1,4 @@
+use sandpolis_server::ServerUrl;
 use serde::Deserialize;
 use serde::Serialize;
 use std::net::IpAddr;
@@ -17,6 +18,11 @@ pub struct ProbeLayerConfig {
 pub struct DeviceConfig {
     /// Human-readable name for the device.
     pub name: Option<String>,
+    /// The server this device is associated with (the server that reaches it).
+    /// `None` on hand-authored/legacy configs; resolved to the local server when
+    /// loaded. Persisted so the global-stratum config records each probe's owner.
+    #[serde(default)]
+    pub server: Option<ServerUrl>,
     /// The device's network address. Protocols that connect to the device (e.g.
     /// RTSP) use this address.
     pub ip: IpAddr,
@@ -38,6 +44,7 @@ impl Default for DeviceConfig {
     fn default() -> Self {
         Self {
             name: None,
+            server: None,
             ip: IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
             rtsp: None,
             wol: None,
@@ -260,6 +267,7 @@ mod tests {
             devices: vec![
                 DeviceConfig {
                     name: Some("Front door camera".into()),
+                    server: Some("https://gs.example.com:8768/default".parse().unwrap()),
                     ip: "10.0.0.220".parse().unwrap(),
                     rtsp: Some(RtspProbeConfig {
                         port: Some(554),

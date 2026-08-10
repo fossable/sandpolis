@@ -16,10 +16,35 @@ use sandpolis_client::cli::TargetArgs;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
 pub struct CommandLine {
-    /// Configuration file path ($S7S_CONFIG)
+    /// Configuration file path ($S7S_CONFIG).
+    ///
+    /// Only the global stratum server reads a config file. Every other instance
+    /// — local stratum servers, agents and clients — is configured entirely by
+    /// flags.
+    #[cfg(feature = "server")]
+    #[clap(long, conflicts_with = "global_server")]
+    pub config: Option<PathBuf>,
+
+    /// Run this server in the local stratum, replicating from the global
+    /// stratum server at this URL.
+    ///
+    /// A local stratum server holds a read-only replica scoped to the instances
+    /// that connect directly to it; writes are forwarded to the global stratum
+    /// server and arrive back through sync.
+    #[cfg(feature = "server")]
+    #[clap(long, value_name = "URL")]
+    pub global_server: Option<sandpolis_server::ServerUrl>,
+
+    /// Address:port for this server to listen on. Overrides `server.listen` for
+    /// a global stratum server, and is the only way to set it on a local
+    /// stratum server.
     #[cfg(feature = "server")]
     #[clap(long)]
-    pub config: Option<PathBuf>,
+    pub listen: Option<std::net::SocketAddr>,
+
+    #[cfg(any(feature = "agent", feature = "client"))]
+    #[clap(flatten)]
+    pub servers: sandpolis_server::cli::ServerCommandLine,
 
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
@@ -37,8 +62,32 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub agent: sandpolis_agent::cli::AgentCommandLine,
 
+    #[cfg(feature = "client")]
+    #[clap(flatten)]
+    pub client: sandpolis_client::cli::ClientCommandLine,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
+}
+
+impl CommandLine {
+    /// Which stratum this process's server runs in.
+    ///
+    /// `--global-server <URL>` selects the local stratum and names the upstream;
+    /// its absence means this is the network's single global stratum server.
+    #[cfg(feature = "server")]
+    pub fn stratum(&self) -> sandpolis_server::ServerStratum {
+        match self.global_server.clone() {
+            Some(global) => sandpolis_server::ServerStratum::Local { global },
+            None => sandpolis_server::ServerStratum::Global,
+        }
+    }
+
+    /// Non-server builds never run a server, so the stratum is inert.
+    #[cfg(not(feature = "server"))]
+    pub fn stratum(&self) -> sandpolis_server::ServerStratum {
+        sandpolis_server::ServerStratum::Global
+    }
 }
 
 /// Subcommands for `sandpolis agent`.
@@ -226,6 +275,7 @@ impl Commands {
                 let database = sandpolis_instance::database::DatabaseLayer::new(
                     config.database.clone(),
                     &crate::MODELS,
+                    sandpolis_instance::database::DatabaseAccess::ReadWrite,
                 )?;
 
                 let db = database.realm(realm.parse()?)?;
@@ -310,6 +360,54 @@ impl Commands {
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),
         }
+    }
+}
+
+#[cfg(all(test, feature = "server"))]
+mod test_stratum_args {
+    use super::*;
+    use sandpolis_server::ServerStratum;
+
+    /// Absent `--global-server`, this is the network's single global stratum
+    /// server.
+    #[test]
+    fn no_global_server_means_global_stratum() {
+        let args = CommandLine::try_parse_from(["sandpolis"]).expect("bare invocation parses");
+        assert_eq!(args.stratum(), ServerStratum::Global);
+    }
+
+    /// `--global-server` names the upstream and selects the local stratum.
+    #[test]
+    fn global_server_means_local_stratum() {
+        let args = CommandLine::try_parse_from([
+            "sandpolis",
+            "--global-server",
+            "https://gs.example.com:8768/default",
+        ])
+        .expect("--global-server parses");
+
+        let ServerStratum::Local { global } = args.stratum() else {
+            panic!("--global-server must select the local stratum");
+        };
+        assert_eq!(global.host, "gs.example.com");
+        assert_eq!(global.port, 8768);
+    }
+
+    /// Only the global stratum server has a config file, so asking for both is
+    /// a contradiction and must be rejected rather than silently resolved.
+    #[test]
+    fn config_conflicts_with_global_server() {
+        let result = CommandLine::try_parse_from([
+            "sandpolis",
+            "--config",
+            "/etc/sandpolis.ron",
+            "--global-server",
+            "https://gs.example.com",
+        ]);
+        assert!(
+            result.is_err(),
+            "a local stratum server must not accept a config file"
+        );
     }
 }
 

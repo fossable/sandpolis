@@ -18,6 +18,10 @@ pub mod lsp;
 #[cfg(feature = "server")]
 pub mod server;
 
+/// Re-exported so embedders (the mobile app) can name the stratum without
+/// depending on `sandpolis-server` directly.
+pub use sandpolis_server::ServerStratum;
+
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
 #[derive(Clone)]
@@ -47,16 +51,31 @@ pub struct InstanceState {
 }
 
 impl InstanceState {
-    pub async fn new(config: Configuration, database: DatabaseLayer) -> Result<Self> {
+    /// `stratum` describes the server this process runs (if any). On builds
+    /// without the server feature it is inert, since nothing consults it.
+    pub async fn new(
+        config: Configuration,
+        database: DatabaseLayer,
+        stratum: sandpolis_server::ServerStratum,
+    ) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
 
-        let instance =
-            sandpolis_instance::InstanceLayer::new(&config.instance, database.clone()).await?;
+        // Only the global stratum server owns the domain; everyone else learns
+        // it from the server they connect to.
+        let instance = sandpolis_instance::InstanceLayer::new(
+            &config.instance,
+            database.clone(),
+            cfg!(feature = "server") && stratum.is_global(),
+        )
+        .await?;
 
+        // Only the global stratum server owns the realm CA; a local stratum
+        // server is issued its certificate by the GS during enrollment.
         let realm = sandpolis_instance::realm::RealmLayer::new(
             config.realm,
             database.clone(),
             instance.clone(),
+            cfg!(feature = "server") && stratum.is_global(),
         )
         .await?;
 
@@ -66,14 +85,21 @@ impl InstanceState {
             instance.clone(),
             database.clone(),
             network.clone(),
+            #[cfg(feature = "server")]
+            stratum.clone(),
         )
         .await?;
 
         let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
         let server =
-            sandpolis_server::ServerLayer::new(database.clone(), network.clone(), realm.clone())
-                .await?;
+            sandpolis_server::ServerLayer::new(
+                database.clone(),
+                network.clone(),
+                realm.clone(),
+                stratum,
+            )
+            .await?;
 
         #[cfg(feature = "layer-inventory")]
         let inventory =
@@ -174,6 +200,8 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     // Instance layer
     {
         m.define::<sandpolis_instance::InstanceLayerData>().unwrap();
+        m.define::<sandpolis_instance::service::ServiceData>()
+            .unwrap();
     }
 
     // User layer
@@ -217,8 +245,6 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_account::AccountLayerData>().unwrap();
         m.define::<sandpolis_account::AccountData>().unwrap();
         m.define::<sandpolis_account::AccountLinkData>().unwrap();
-        m.define::<sandpolis_account::scrape::ScrapeTaskData>()
-            .unwrap();
         m.define::<sandpolis_account::favicon::FaviconData>()
             .unwrap();
     }

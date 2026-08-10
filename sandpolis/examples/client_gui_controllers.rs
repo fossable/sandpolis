@@ -10,7 +10,8 @@
 /// - Close controllers when switching layers
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_instance::database::{DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer, config::DatabaseConfig};
+use sandpolis_server::ServerStratum;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,10 +24,10 @@ async fn main() -> Result<()> {
         ephemeral: true,
         key: Default::default(),
     };
-    let database = DatabaseLayer::new(db_config, &*MODELS)?;
+    let database = DatabaseLayer::new(db_config, &*MODELS, DatabaseAccess::ReadWrite)?;
 
     // Create instance state
-    let state = InstanceState::new(config.clone(), database).await?;
+    let state = InstanceState::new(config.clone(), database, ServerStratum::Global).await?;
 
     // TODO: Populate test data with:
     // - Multiple instances to demonstrate controllers

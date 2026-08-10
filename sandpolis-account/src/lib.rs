@@ -114,22 +114,28 @@ impl AccountLayer {
         management::seed(&self.realm, &config.accounts)
     }
 
-    /// Start the layer's periodic scraping tasks.
+    /// Add the layer's background services to the server's runner.
     ///
-    /// Call once from the server's startup path. Each enabled task then runs on
-    /// its own schedule for the life of the process.
+    /// The config flags here are coarse startup switches: a service they turn off
+    /// is never registered, so it doesn't appear in the client at all. Toggling a
+    /// registered service on and off at runtime is the runner's job.
     #[cfg(feature = "server")]
-    pub fn spawn_scrapers(&self, config: &config::AccountLayerConfig) -> Result<()> {
+    pub fn register_services(
+        &self,
+        config: &config::AccountLayerConfig,
+        runner: &mut sandpolis_instance::service::ServiceRunner,
+    ) -> Result<()> {
         if !config.scrape.enabled {
             tracing::info!("Account scraping is disabled");
             return Ok(());
         }
 
-        let mut runner = scrape::ScrapeRunner::new(self.realm.clone(), &config.scrape)?;
         if config.scrape.favicon.enabled {
-            runner.register(favicon::FaviconTask::new(&config.scrape.favicon));
+            runner.register(favicon::FaviconService::new(
+                self.realm.clone(),
+                &config.scrape,
+            )?);
         }
-        runner.spawn();
         Ok(())
     }
 }

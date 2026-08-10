@@ -45,6 +45,17 @@ static DEVICE_PERSIST: OnceLock<
     Box<dyn Fn(&[RegisteredDevice]) -> anyhow::Result<()> + Send + Sync>,
 > = OnceLock::new();
 
+/// This instance's own id, captured when [`ProbeLayer`] is constructed. Probes are
+/// accessed only from servers, so the server's management responder stamps this as
+/// the gateway of every registered device.
+static GATEWAY: OnceLock<InstanceId> = OnceLock::new();
+
+/// The gateway instance for devices registered on this instance (the server's own
+/// id). `None` before [`ProbeLayer::new`] has run.
+pub fn gateway() -> Option<InstanceId> {
+    GATEWAY.get().copied()
+}
+
 /// Install the persistence hook (see [`DEVICE_PERSIST`]). Idempotent: the first
 /// caller wins.
 pub fn set_device_persist(
@@ -78,6 +89,7 @@ pub struct ProbeLayer {
 
 impl ProbeLayer {
     pub fn new(config: ProbeLayerConfig, gateway: InstanceId) -> Self {
+        let _ = GATEWAY.set(gateway);
         let devices: Vec<RegisteredDevice> = config
             .devices
             .into_iter()

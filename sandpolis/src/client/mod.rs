@@ -13,7 +13,7 @@ pub fn spawn_client_sync(state: InstanceState) {
     let server = state.server.clone();
     let network = state.network.clone();
     let database = state.network.database.clone();
-    let instance_id = state.instance.instance_id;
+    let instance = state.instance.clone();
 
     tokio::spawn(async move {
         loop {
@@ -29,9 +29,15 @@ pub fn spawn_client_sync(state: InstanceState) {
                     continue;
                 }
                 tracing::info!("spawn_client_sync: opening websocket");
-                match connection.open_websocket(&network, instance_id).await {
+                match connection.open_websocket(&network, &instance).await {
                     Ok(ic) => {
                         tracing::info!("Established sync websocket to server");
+                        // Register every server for routing; the first also becomes
+                        // the primary connection backing `sync::connection()`.
+                        sandpolis_client::sync::register_connection(
+                            connection.url.clone(),
+                            ic.clone(),
+                        );
                         sandpolis_client::sync::init(ic, database.clone());
                     }
                     Err(e) => {
@@ -44,6 +50,20 @@ pub fn spawn_client_sync(state: InstanceState) {
     });
 }
 
+/// Connect to each server given on the command line with `--server`.
+///
+/// Clients read no config file, so this is how a standalone client is pointed at
+/// a server without going through the GUI login dialog. Either stratum works —
+/// the client addresses agents by id and the servers route to them.
+pub fn spawn_configured_server_connections(
+    state: InstanceState,
+    urls: &[sandpolis_server::ServerUrl],
+) {
+    for url in urls {
+        spawn_server_connection(state.clone(), url.clone());
+    }
+}
+
 /// In an "all-in-one" build (a server is compiled and running in this same
 /// process), automatically open a loopback connection to the local server so the
 /// client targets it without any manual configuration. Retries until the
@@ -54,7 +74,6 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
     use sandpolis_server::ServerUrl;
     use std::str::FromStr;
 
-    let server = state.server.clone();
     let url = match ServerUrl::from_str(&format!("https://127.0.0.1:{port}/default")) {
         Ok(url) => url,
         Err(e) => {
@@ -63,8 +82,17 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
         }
     };
 
-    // Surface the local server in the (database-backed) saved server list so it
-    // appears in the TUI, deduplicating so it isn't re-added every run.
+    spawn_server_connection(state, url);
+}
+
+/// Open (and retain) a connection to `url`, retrying until it succeeds.
+fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUrl) {
+    let server = state.server.clone();
+
+    // Surface the server in the (database-backed) saved server list so it
+    // appears in the TUI, deduplicating so it isn't re-added every run. On a
+    // read-only replica this list can't be written, which is harmless — the
+    // connection itself still comes up.
     let already_saved = server.servers.iter().any(|s| s.read().address == url);
     if !already_saved {
         use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision};
@@ -82,20 +110,19 @@ pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
 
     tokio::spawn(async move {
         loop {
-            tracing::info!(%url, "spawn_local_server_connection: attempting connect");
+            tracing::debug!(%url, "Attempting server connection");
             match server.connect(url.clone()).await {
                 Ok(connection) => {
-                    tracing::info!("spawn_local_server_connection: connected, pushing to outbound");
                     server
                         .outbound
                         .write()
                         .unwrap()
                         .push(std::sync::Arc::new(connection));
-                    tracing::info!("Connected to local server");
+                    tracing::info!(%url, "Connected to server");
                     return;
                 }
                 Err(e) => {
-                    tracing::info!(error = %e, "Local server not ready yet, retrying in 2s");
+                    tracing::debug!(error = %e, %url, "Server not ready yet, retrying in 2s");
                     tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                 }
             }

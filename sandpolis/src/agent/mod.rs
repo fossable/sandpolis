@@ -10,8 +10,9 @@ use tokio::time::sleep;
 use tracing::{debug, info, warn};
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
-    // Collect server URLs from agent config, plus optional comma-separated
-    // override in $S7S_SERVER.
+    // Server URLs come from `--server` (or, in an all-in-one build, the
+    // co-located server's loopback address), plus an optional comma-separated
+    // override in $S7S_SERVER. Agents read no config file.
     let mut raw: Vec<String> = config.agent.servers.clone();
     if let Ok(env) = std::env::var("S7S_SERVER") {
         raw.extend(env.split(',').map(|s| s.trim().to_string()));
@@ -37,57 +38,22 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     let mut tasks = tokio::task::JoinSet::new();
 
-    // Periodically refresh the systemd collector. Its updates land in the local
-    // database, which the SyncResponder streams to the server on demand.
-    #[cfg(feature = "layer-health")]
-    {
-        let health = state.health.clone();
-        tasks.spawn(async move {
-            loop {
-                {
-                    let mut collector = health.systemd.lock().await;
-                    if let Err(e) = sandpolis_agent::Collector::refresh(&mut *collector).await {
-                        debug!(error = %e, "Failed to refresh systemd units");
-                    }
-                }
-                sleep(std::time::Duration::from_secs(30)).await;
-            }
-        });
-    }
+    // Every layer's collectors go on one runner, which owns their schedules and
+    // lets a client enable or disable them individually. Their updates land in
+    // the local database, which the SyncResponder streams to the server on
+    // demand.
+    let mut services = sandpolis_instance::service::ServiceRunner::new(
+        state.instance.realm().clone(),
+        state.instance.instance_id,
+    );
 
-    // Periodically refresh the inventory collectors (memory, users, packages).
-    // Their updates land in the local database and sync to the server on demand.
+    #[cfg(feature = "layer-health")]
+    state.health.register_services(&mut services);
+
     #[cfg(feature = "layer-inventory")]
-    {
-        let inventory = state.inventory.clone();
-        tasks.spawn(async move {
-            let mut ticks: u64 = 0;
-            loop {
-                if let Err(e) =
-                    sandpolis_agent::Collector::refresh(&mut *inventory.memory.lock().await).await
-                {
-                    debug!(error = %e, "Failed to refresh memory info");
-                }
-                if let Err(e) =
-                    sandpolis_agent::Collector::refresh(&mut *inventory.users.lock().await).await
-                {
-                    debug!(error = %e, "Failed to refresh users");
-                }
-                // Packages change rarely and are expensive to enumerate, so
-                // refresh them every tenth tick (~5 minutes).
-                if ticks % 10 == 0 {
-                    if let Err(e) =
-                        sandpolis_agent::Collector::refresh(&mut *inventory.packages.lock().await)
-                            .await
-                    {
-                        debug!(error = %e, "Failed to refresh packages");
-                    }
-                }
-                ticks = ticks.wrapping_add(1);
-                sleep(std::time::Duration::from_secs(30)).await;
-            }
-        });
-    }
+    state.inventory.register_services(&mut services);
+
+    services.start()?;
 
     // Pick the connection strategy from config: a `poll` schedule selects
     // polling mode (periodic check-ins), otherwise the agent stays continuously
@@ -111,7 +77,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     for url in urls {
         let server = state.server.clone();
         let network = state.network.clone();
-        let instance_id = state.instance.instance_id;
+        let instance = state.instance.clone();
         let strategy = strategy.clone();
         tasks.spawn(async move {
             match &strategy {
@@ -129,7 +95,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
                                 // Establish the websocket so the server can sync
                                 // our database.
-                                if let Err(e) = entry.open_websocket(&network, instance_id).await {
+                                if let Err(e) = entry.open_websocket(&network, &instance).await {
                                     warn!(error = %e, url = %url, "Failed to open websocket");
                                 }
                                 retry = RetryWait::default();
@@ -185,7 +151,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
                         debug!(url = %url, waiting = ?wait, "Waiting for next poll window");
                         sleep(wait).await;
 
-                        match entry.open_websocket(&network, instance_id).await {
+                        match entry.open_websocket(&network, &instance).await {
                             Ok(_) => {
                                 info!(url = %url, timeout = ?timeout, "Poll window open");
                                 sleep(*timeout).await;

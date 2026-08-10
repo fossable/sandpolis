@@ -11,13 +11,77 @@ use sandpolis_instance::database::sync::SyncFilter;
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
 use sandpolis_instance::realm::RealmName;
+use sandpolis_server::ServerUrl;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock, RwLock};
 use tokio::runtime::Handle;
 use tokio::sync::mpsc::Sender;
 
 static HANDLE: OnceLock<SyncHandle> = OnceLock::new();
 static DATABASE: OnceLock<DatabaseLayer> = OnceLock::new();
+
+/// All established server connections, for routing data to the server it's
+/// associated with (e.g. a probe stream to its owning server). The first entry
+/// is the primary (global-stratum) connection that also backs [`connection`] and
+/// the DB-sync subscriptions.
+static CONNECTIONS: LazyLock<RwLock<Vec<ServerConnectionEntry>>> =
+    LazyLock::new(Default::default);
+
+struct ServerConnectionEntry {
+    url: ServerUrl,
+    instance_id: InstanceId,
+    connection: Arc<InstanceConnection>,
+}
+
+/// Record an established server connection for routing. Called for every server
+/// websocket the client brings up (including the primary). Idempotent per server.
+pub fn register_connection(url: ServerUrl, connection: Arc<InstanceConnection>) {
+    let instance_id = connection.data.read().remote_instance;
+    let mut conns = CONNECTIONS.write().unwrap();
+    if conns.iter().any(|c| c.instance_id == instance_id) {
+        return;
+    }
+    conns.push(ServerConnectionEntry {
+        url,
+        instance_id,
+        connection,
+    });
+}
+
+/// The connection to the server at `url`, if one is established.
+pub fn connection_for(url: &ServerUrl) -> Option<Arc<InstanceConnection>> {
+    CONNECTIONS
+        .read()
+        .unwrap()
+        .iter()
+        .find(|c| &c.url == url)
+        .map(|c| c.connection.clone())
+}
+
+/// The instance id of the server at `url`, if connected.
+pub fn instance_for(url: &ServerUrl) -> Option<InstanceId> {
+    CONNECTIONS
+        .read()
+        .unwrap()
+        .iter()
+        .find(|c| &c.url == url)
+        .map(|c| c.instance_id)
+}
+
+/// The URL of the primary (first-established, global-stratum) server connection.
+pub fn primary_server_url() -> Option<ServerUrl> {
+    CONNECTIONS.read().unwrap().first().map(|c| c.url.clone())
+}
+
+/// All known server connections as `(url, instance_id)`, for grouping in the UI.
+pub fn servers() -> Vec<(ServerUrl, InstanceId)> {
+    CONNECTIONS
+        .read()
+        .unwrap()
+        .iter()
+        .map(|c| (c.url.clone(), c.instance_id))
+        .collect()
+}
 
 /// Install the client's database and websocket connection for sync. Call once
 /// after the websocket to the server is established.

@@ -296,6 +296,11 @@ pub struct UserLayer {
 
     #[cfg(feature = "server")]
     pub network: sandpolis_instance::network::NetworkLayer,
+
+    /// The stratum of the server this layer belongs to, so the connect handler
+    /// can enforce the network's shape and pick the right sync behavior.
+    #[cfg(feature = "server")]
+    pub stratum: crate::ServerStratum,
 }
 
 impl UserLayer {
@@ -303,6 +308,7 @@ impl UserLayer {
         instance: InstanceLayer,
         database: DatabaseLayer,
         network: sandpolis_instance::network::NetworkLayer,
+        #[cfg(feature = "server")] stratum: crate::ServerStratum,
     ) -> Result<Self> {
         debug!("Initializing user layer");
         let user_layer = Self {
@@ -313,11 +319,15 @@ impl UserLayer {
             #[cfg(feature = "server")]
             network,
             #[cfg(feature = "server")]
+            stratum,
+            #[cfg(feature = "server")]
             jwt_keys: {
                 let mut jwt_keys = HashMap::new();
                 // TODO all realms
                 let db = database.realm(RealmName::default())?;
-                let rw = db.rw_transaction()?;
+                // This server's own signing secret is local state; a local
+                // stratum server still needs one to authenticate its clients.
+                let rw = db.local_write()?;
                 let secrets: Vec<server::ServerJwtSecret> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 

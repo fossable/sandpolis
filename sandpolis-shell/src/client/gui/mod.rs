@@ -19,6 +19,7 @@ use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use sandpolis_client::gui::ui::Activate;
+use sandpolis_client::gui::controller::ControllerTarget;
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
 use sandpolis_client::gui::ui::gating::WantsKeyboard;
 use sandpolis_client::gui::ui::theme::{Role, Theme};
@@ -125,7 +126,14 @@ impl NodeController for ShellController {
         "Terminal"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        let instance = target.instance;
         // Grid container: captures keyboard focus and renders the terminal.
         let grid = commands
             .spawn((
@@ -274,11 +282,7 @@ fn spawn_shell_stream(
                 Err(_) => continue,
             };
             if msg_tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: Some(instance),
-                })
+                .send(StreamMessage::to(id, payload, instance))
                 .await
                 .is_err()
             {

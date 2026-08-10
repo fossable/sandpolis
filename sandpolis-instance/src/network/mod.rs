@@ -37,13 +37,14 @@ pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterRespo
     inventory::iter::<ResponderRegistration>().map(|r| r.0)
 }
 
-#[cfg(any(feature = "agent", feature = "client"))]
+#[cfg(any(feature = "agent", feature = "client", feature = "server"))]
 pub mod client;
 #[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod messages;
 pub mod ping;
+pub mod reachability;
 #[cfg(feature = "server")]
 pub mod server;
 pub mod stream;
@@ -160,6 +161,24 @@ impl InstanceConnection {
         self.streams.close(stream_id);
     }
 
+    /// Open a stream handled directly by the connected server (no relay target).
+    /// Sends the `initial` request and returns the stream id plus the outbound
+    /// sender.
+    pub async fn open_stream<S: StreamRequester>(
+        &self,
+        handler: S,
+        initial: S::Out,
+    ) -> anyhow::Result<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)>
+    where
+        S::Out: Send + 'static,
+    {
+        let (id, tx) = self.streams.register(handler);
+        let payload = serde_cbor::to_vec(&initial)?;
+        tx.send(StreamMessage::local(id, payload))
+        .await?;
+        Ok((id, tx))
+    }
+
     /// Open a stream addressed to `target`, so a server relays it there. Sends
     /// the `initial` request and returns the stream id plus the outbound sender.
     pub async fn open_stream_to<S: StreamRequester>(
@@ -173,11 +192,7 @@ impl InstanceConnection {
     {
         let (id, tx) = self.streams.register_to(handler, Some(target));
         let payload = serde_cbor::to_vec(&initial)?;
-        tx.send(StreamMessage {
-            stream_id: id,
-            payload,
-            dst: Some(target),
-        })
+        tx.send(StreamMessage::to(id, payload, target))
         .await?;
         Ok((id, tx))
     }

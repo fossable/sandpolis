@@ -11,23 +11,36 @@
 //! layer picker, and per-layer node visibility.
 
 use super::theme::Theme;
+use crate::gui::controller::ControllerTarget;
 use bevy::prelude::*;
-use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use sandpolis_instance::{InstanceType, LayerName};
 use std::sync::Arc;
 
 /// A layer's retained-mode controller.
 ///
 /// [`build`](NodeController::build) is called once when the controller panel opens
-/// for an instance; it should spawn the body UI as children of `body`. To react to
-/// clicks, attach an observer to a spawned button capturing `instance`, e.g.
+/// for a node; it should spawn the body UI as children of `body`. To react to
+/// clicks, attach an observer to a spawned button capturing `target`, e.g.
 /// `child.spawn(button(theme, "Go")).observe(move |_: On<Activate>, ...| { .. })`.
 /// For live-updating labels use [`super::bind::bind_text`].
 pub trait NodeController: Send + Sync + 'static {
     /// Title shown in the controller panel's titlebar.
     fn title(&self) -> &str;
 
+    /// Title for a particular target, when one name doesn't fit every node the
+    /// controller can open for. Defaults to [`title`](NodeController::title).
+    fn title_for(&self, _target: ControllerTarget) -> String {
+        self.title().to_string()
+    }
+
     /// Build the controller body as children of `body`.
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme);
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    );
 }
 
 /// Callback run when a layer toolbar button is clicked. It receives `Commands`
@@ -66,6 +79,10 @@ pub struct LayerClientInfo {
     pub visible_instance_types: &'static [InstanceType],
     /// Whether probe nodes are shown while this layer is active (only Probe).
     pub show_probe_nodes: bool,
+    /// Whether this layer's controller opens for plain instance nodes. Layers
+    /// whose controller describes a sub-node turn this off, so double-clicking
+    /// the instance those sub-nodes hang off does nothing.
+    pub controller_on_instance_nodes: bool,
     /// The layer's node controller, if it has one.
     pub controller: Option<Arc<dyn NodeController>>,
     /// Buttons shown in the layer toolbar while this layer is active.
@@ -81,6 +98,7 @@ impl LayerClientInfo {
             description,
             visible_instance_types: &[InstanceType::Server, InstanceType::Agent],
             show_probe_nodes: false,
+            controller_on_instance_nodes: true,
             controller: None,
             toolbar_actions: Vec::new(),
         }
@@ -126,6 +144,27 @@ impl LayerClientInfo {
         self
     }
 
+    /// Add a "Services" button opening the shared services panel for this layer.
+    ///
+    /// Gated on the layer actually having services, so it dims until some
+    /// instance reports one — a layer whose services are all switched off in
+    /// config never lights it up at all.
+    pub fn with_services(mut self) -> Self {
+        let open_layer = self.layer.clone();
+        let gate_layer = self.layer.clone();
+        self.toolbar_actions.push(ToolbarAction {
+            label: "Services",
+            icon: "toolbar/services.svg",
+            on_click: Arc::new(move |commands: &mut Commands| {
+                super::super::services_panel::open(open_layer.clone(), commands)
+            }),
+            enabled: Arc::new(move |_| {
+                super::super::services_panel::has_services(&gate_layer)
+            }),
+        });
+        self
+    }
+
     /// Override which instance types are visible.
     pub fn with_visible_instance_types(mut self, types: &'static [InstanceType]) -> Self {
         self.visible_instance_types = types;
@@ -135,6 +174,13 @@ impl LayerClientInfo {
     /// Mark this layer as the one that shows probe nodes.
     pub fn showing_probe_nodes(mut self) -> Self {
         self.show_probe_nodes = true;
+        self
+    }
+
+    /// Only open this layer's controller from sub-nodes, never from the plain
+    /// instance nodes they hang off.
+    pub fn without_instance_controller(mut self) -> Self {
+        self.controller_on_instance_nodes = false;
         self
     }
 }

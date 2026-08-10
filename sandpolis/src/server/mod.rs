@@ -15,16 +15,45 @@ use tracing::info;
 
 pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     #[cfg(feature = "layer-account")]
-    {
-        // Before the scrapers start, so the first favicon sweep sees every
-        // configured domain.
-        state.account.seed_accounts(&config.account)?;
+    // Before the services start, so the first favicon sweep sees every
+    // configured domain.
+    state.account.seed_accounts(&config.account)?;
 
-        // Background tasks that scrape third-party data (favicons, etc).
-        // Server-only: agents have no reason to reach out on the estate's
-        // behalf, and every client doing it independently would just multiply
-        // the traffic.
-        state.account.spawn_scrapers(&config.account)?;
+    // Every layer's server-side background work goes on one runner, which owns
+    // the schedules and lets a client enable or disable individual services.
+    let mut services = sandpolis_instance::service::ServiceRunner::new(
+        state.instance.realm().clone(),
+        state.instance.instance_id,
+    );
+
+    // Scraping third-party data (favicons, etc) is server-only: agents have no
+    // reason to reach out on the estate's behalf, and every client doing it
+    // independently would just multiply the traffic.
+    #[cfg(feature = "layer-account")]
+    state
+        .account
+        .register_services(&config.account, &mut services)?;
+
+    services.start()?;
+
+    // A local stratum server can't serve TLS until the global stratum server has
+    // issued its certificate, so this blocks (with retries) before binding.
+    sandpolis_server::stratum::enroll(&state.server, &state.instance).await?;
+
+    // A local stratum server holds a link to its global stratum server for as
+    // long as it runs: reads replicate down it, writes go up it, and it is the
+    // default route for anything not attached here.
+    if state.server.stratum.is_local() {
+        let server = state.server.clone();
+        let network = state.network.clone();
+        let instance = state.instance.clone();
+        tokio::spawn(async move {
+            if let Err(e) = sandpolis_server::stratum::maintain_upstream(server, network, instance)
+                .await
+            {
+                tracing::error!(error = %e, "Upstream stratum link stopped");
+            }
+        });
     }
 
     let app: Router<InstanceState> = Router::new();
@@ -42,6 +71,13 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     // Websocket connection endpoint (clients + agents) for streams / sync
     let app: Router<InstanceState> =
         app.route("/connect", get(sandpolis_server::user::server::connect));
+
+    // Realm layer: the global stratum server issues server certificates to
+    // local stratum servers so the whole network shares one trust root.
+    let app: Router<InstanceState> = app.route(
+        "/realm/server-cert",
+        post(sandpolis_server::stratum::issue_server_cert),
+    );
 
     let app = app.route_layer(axum::middleware::from_fn(
         sandpolis_instance::realm::server::auth_middleware,
@@ -97,7 +133,11 @@ pub async fn test_server() -> Result<TestServer> {
 
     // Create temporary database
     let database =
-        sandpolis_instance::database::DatabaseLayer::new(config.database.clone(), &crate::MODELS)?;
+        sandpolis_instance::database::DatabaseLayer::new(
+            config.database.clone(),
+            &crate::MODELS,
+            sandpolis_instance::database::DatabaseAccess::ReadWrite,
+        )?;
 
     // Generate temporary certs
     let certs = tempdir()?;
@@ -110,7 +150,12 @@ pub async fn test_server() -> Result<TestServer> {
     let port: u16 = rand::rng().random_range(9000..9999);
     config.server.listen = format!("127.0.0.1:{port}",).parse()?;
 
-    let state = InstanceState::new(config.clone(), database).await?;
+    let state = InstanceState::new(
+        config.clone(),
+        database,
+        sandpolis_server::ServerStratum::Global,
+    )
+    .await?;
 
     // Spawn the server
     tokio::spawn(async move { main(config, state).await });

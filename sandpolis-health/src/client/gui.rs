@@ -5,10 +5,11 @@
 use super::query_systemd_units;
 use crate::systemd::ActiveState;
 use bevy::prelude::*;
+use sandpolis_client::gui::controller::ControllerTarget;
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
 use sandpolis_client::gui::ui::scene::{bound_text, text_line};
 use sandpolis_client::gui::ui::theme::{Role, Theme};
-use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use sandpolis_instance::{InstanceType, LayerName};
 
 /// The health layer's node controller (service status).
 pub struct HealthController;
@@ -18,7 +19,14 @@ impl NodeController for HealthController {
         "Service Health"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        let instance = target.instance;
         // Subscribe to live systemd updates for this instance.
         super::subscribe(instance);
 
@@ -77,7 +85,8 @@ impl Plugin for HealthClientPlugin {
         app.register_layer_client(
             LayerClientInfo::new(LayerName::from("Health"), "Service and host health")
                 .with_controller(HealthController)
-                .with_visible_instance_types(&[InstanceType::Agent]),
+                .with_visible_instance_types(&[InstanceType::Agent])
+                .with_services(),
         );
     }
 }

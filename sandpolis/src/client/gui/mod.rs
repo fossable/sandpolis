@@ -93,7 +93,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     crate::client::spawn_client_sync(state.clone());
 
     // Surface the local instance's domain to the terrain renderer.
-    sandpolis_client::gui::queries::set_local_domain(state.instance.domain.clone());
+    sandpolis_client::gui::queries::set_local_domain(state.instance.domain());
 
     // Create channel for database updates from resident listeners
     let (db_update_tx, db_update_rx) = tokio::sync::mpsc::unbounded_channel();

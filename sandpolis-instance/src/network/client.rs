@@ -46,6 +46,7 @@ impl InstanceConnection {
                     // Handle outgoing stream messages
                     Some(msg) = stream_rx.recv() => {
                         let data = serde_cbor::to_vec(&msg).unwrap();
+                        streams_clone.record_tx(msg.stream_id, data.len() as u64);
                         if ws_tx.send(Message::Binary(data.into())).await.is_err() {
                             break;
                         }
@@ -55,6 +56,7 @@ impl InstanceConnection {
                         match msg {
                             Some(Ok(Message::Binary(data))) => {
                                 if let Ok(message) = serde_cbor::from_slice::<StreamMessage>(&data) {
+                                    streams_clone.record_rx(message.stream_id, data.len() as u64);
                                     streams_clone.dispatch(message).await;
                                 }
                             }

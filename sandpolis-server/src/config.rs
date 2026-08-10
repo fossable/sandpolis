@@ -10,10 +10,6 @@ pub struct ServerLayerConfig {
     /// Server listen address:port
     pub listen: SocketAddr,
 
-    /// Run as a local stratum (LS) server instead of in the global stratum
-    /// (GS).
-    pub local: bool,
-
     /// IP addresses that are denied access to the server. Connections from
     /// these addresses are rejected before authentication.
     #[serde(default)]
@@ -31,7 +27,6 @@ impl Default for ServerLayerConfig {
                 IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
                 ServerUrl::default_port(),
             ),
-            local: false,
             blocked_ips: Vec::new(),
             #[cfg(feature = "server")]
             service: crate::location::server::LocationService::default(),

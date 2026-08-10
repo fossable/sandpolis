@@ -30,7 +30,7 @@ pub struct Dragging;
 /// Hidden nodes are skipped: a layer that filters out an instance type leaves
 /// those nodes in the world, and clicking where one used to be shouldn't select
 /// or drag it.
-fn node_at(
+pub fn node_at(
     world_position: Vec2,
     nodes: impl Iterator<Item = (Entity, Vec2, f32, bool)>,
 ) -> Option<Entity> {
@@ -45,12 +45,12 @@ fn node_at(
 }
 
 /// Whether a node with this visibility should respond to the pointer.
-fn is_visible(visibility: Option<&Visibility>) -> bool {
+pub fn is_visible(visibility: Option<&Visibility>) -> bool {
     visibility != Some(&Visibility::Hidden)
 }
 
 /// Where the cursor is in world space, if it's over the window.
-fn cursor_world_position(
+pub fn cursor_world_position(
     windows: &Query<&Window, With<PrimaryWindow>>,
     cameras: &Query<(&Camera, &GlobalTransform), With<WorldView>>,
 ) -> Option<Vec2> {

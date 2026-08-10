@@ -69,6 +69,8 @@ harness = false
 agent = ["dep:reqwest", "dep:reqwest-websocket"]
 client = ["dep:reqwest", "dep:reqwest-websocket", "dep:bevy"]
 server = [
+  "dep:reqwest",
+  "dep:reqwest-websocket",
   "dep:rcgen",
   "dep:rustls-pki-types",
   "dep:tokio-rustls",

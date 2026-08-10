@@ -1,8 +1,8 @@
 //! Favicons for account domains.
 //!
-//! The first [`crate::scrape::ScrapeTask`]: for every distinct domain across all
-//! accounts, fetch the site's favicon and store it so clients can show accounts
-//! with the branding of the service they belong to.
+//! The account layer's first scraping service: for every distinct domain across
+//! all accounts, fetch the site's favicon and store it so clients can show
+//! accounts with the branding of the service they belong to.
 
 use native_db::*;
 use native_model::Model;
@@ -42,51 +42,82 @@ inventory::submit! {
 mod server {
     use super::*;
     use crate::AccountData;
-    use crate::config::FaviconConfig;
-    use crate::scrape::{Fetched, HttpFetcher, ScrapeContext, ScrapeReport, ScrapeTask};
+    use crate::config::{FaviconConfig, ScrapeConfig};
+    use crate::scrape::{Fetched, HttpFetcher};
     use anyhow::{Result, bail};
     use chrono::Utc;
     use regex::Regex;
+    use sandpolis_instance::LayerName;
     use sandpolis_instance::database::RealmDatabase;
+    use sandpolis_instance::service::{Service, ServiceReport, ServiceSchedule};
     use std::collections::BTreeSet;
     use std::sync::LazyLock;
     use std::time::Duration;
+    use tokio_util::sync::CancellationToken;
     use tracing::debug;
     use url::Url;
 
     /// Fetches each account domain's favicon.
-    pub struct FaviconTask {
+    pub struct FaviconService {
+        realm: RealmDatabase,
+        http: HttpFetcher,
         interval: Duration,
         refresh_after: Duration,
     }
 
-    impl FaviconTask {
-        pub fn new(config: &FaviconConfig) -> Self {
-            Self {
-                interval: Duration::from_secs(config.interval.max(1)),
-                refresh_after: Duration::from_secs(config.refresh_after),
-            }
+    impl FaviconService {
+        pub fn new(realm: RealmDatabase, scrape: &ScrapeConfig) -> Result<Self> {
+            Ok(Self {
+                realm,
+                http: HttpFetcher::new(scrape)?,
+                interval: Duration::from_secs(scrape.favicon.interval.max(1)),
+                refresh_after: Duration::from_secs(scrape.favicon.refresh_after),
+            })
+        }
+
+        /// The refresh window this service was configured with.
+        #[cfg(test)]
+        fn for_test(realm: RealmDatabase, config: &FaviconConfig) -> Result<Self> {
+            let scrape = ScrapeConfig {
+                favicon: config.clone(),
+                ..Default::default()
+            };
+            Self::new(realm, &scrape)
         }
     }
 
-    impl ScrapeTask for FaviconTask {
+    impl Service for FaviconService {
         fn name(&self) -> &'static str {
             "favicon"
         }
 
-        fn interval(&self) -> Duration {
-            self.interval
+        fn layer(&self) -> LayerName {
+            LayerName::from("Account")
         }
 
-        async fn run(&self, ctx: &ScrapeContext) -> Result<ScrapeReport> {
+        fn description(&self) -> &'static str {
+            "Fetches favicons for every account domain"
+        }
+
+        fn schedule(&self) -> ServiceSchedule {
+            ServiceSchedule::every(self.interval)
+        }
+
+        async fn run(&self, cancel: CancellationToken) -> Result<ServiceReport> {
             let stale_before =
                 Utc::now().timestamp_millis() - self.refresh_after.as_millis() as i64;
 
-            let mut report = ScrapeReport::default();
-            for domain in stale_domains(&ctx.realm, stale_before)? {
+            let mut report = ServiceReport::default();
+            for domain in stale_domains(&self.realm, stale_before)? {
+                // A sweep can be long and hits third parties the whole way; stop
+                // at the next domain rather than the next pass. The staleness
+                // check means the next sweep picks up where this one left off.
+                if cancel.is_cancelled() {
+                    break;
+                }
                 report.scanned += 1;
 
-                let outcome = fetch_favicon(&ctx.http, &domain).await;
+                let outcome = fetch_favicon(&self.http, &domain).await;
                 if let Err(e) = &outcome {
                     debug!(domain = %domain, error = %e, "Failed to fetch favicon");
                     report.failed += 1;
@@ -96,7 +127,7 @@ mod server {
 
                 // Store either way: recording the failure is what stops the next
                 // sweep from immediately retrying a domain that's simply down.
-                store(&ctx.realm, &domain, outcome)?;
+                store(&self.realm, &domain, outcome)?;
             }
             Ok(report)
         }
@@ -445,7 +476,7 @@ mod server {
         #[tokio::test]
         #[ignore = "requires network access"]
         async fn fetches_real_favicons() -> Result<()> {
-            let http = HttpFetcher::new(&crate::config::ScrapeConfig::default())?;
+            let http = HttpFetcher::new(&ScrapeConfig::default())?;
 
             for domain in ["github.com", "rust-lang.org", "wikipedia.org"] {
                 let favicon = fetch_favicon(&http, domain)
@@ -472,16 +503,13 @@ mod server {
             add_account(&realm, "github.com")?;
             add_account(&realm, "rust-lang.org")?;
 
-            let ctx = ScrapeContext {
-                realm: realm.clone(),
-                http: HttpFetcher::new(&crate::config::ScrapeConfig::default())?,
-            };
-            let task = FaviconTask::new(&FaviconConfig::default());
+            let service = FaviconService::for_test(realm.clone(), &FaviconConfig::default())?;
+            let cancel = CancellationToken::new();
 
-            let first = task.run(&ctx).await?;
+            let first = service.run(cancel.clone()).await?;
             assert_eq!(
                 first,
-                ScrapeReport {
+                ServiceReport {
                     scanned: 2,
                     updated: 2,
                     failed: 0
@@ -503,8 +531,8 @@ mod server {
             }
 
             // Everything is fresh now, so the next pass makes no requests.
-            let second = task.run(&ctx).await?;
-            assert_eq!(second, ScrapeReport::default());
+            let second = service.run(cancel).await?;
+            assert_eq!(second, ServiceReport::default());
             Ok(())
         }
 
@@ -539,4 +567,4 @@ mod server {
 }
 
 #[cfg(feature = "server")]
-pub use server::FaviconTask;
+pub use server::FaviconService;

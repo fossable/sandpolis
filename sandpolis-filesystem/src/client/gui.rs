@@ -10,6 +10,7 @@
 use bevy::prelude::*;
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::controller::ControllerTarget;
 use sandpolis_client::gui::ui::controller::{
     LayerClientInfo, NodeController, RegisterLayerClient,
 };
@@ -56,7 +57,14 @@ impl NodeController for FilesystemController {
         "File Browser"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        let instance = target.instance;
         commands.entity(body).with_children(|p| {
             // Path bar.
             p.spawn(row(theme.metrics.space_sm)).with_children(|bar| {

@@ -11,6 +11,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::mpsc::Sender;
 
@@ -41,6 +42,44 @@ pub struct StreamMessage {
     /// the connection for that instance.
     #[serde(default)]
     pub dst: Option<InstanceId>,
+
+    /// How many servers have already forwarded this message.
+    ///
+    /// A path may legitimately cross two servers (client → GS → LS → agent), but
+    /// a stale or wrong reachability advertisement could otherwise send a message
+    /// around a cycle forever. Incremented on each relay hop and dropped past
+    /// [`MAX_HOPS`]. Construct messages with [`StreamMessage::local`] or
+    /// [`StreamMessage::to`] so this is never forgotten.
+    #[serde(default)]
+    pub hops: u8,
+}
+
+/// The longest relay path the network is expected to need: client → global
+/// stratum → local stratum → agent is two hops, so this leaves headroom without
+/// letting a routing loop run away.
+pub const MAX_HOPS: u8 = 4;
+
+impl StreamMessage {
+    /// A message handled directly by the receiving peer.
+    pub fn local(stream_id: StreamId, payload: Vec<u8>) -> Self {
+        Self::routed(stream_id, payload, None)
+    }
+
+    /// A message a server should forward toward `dst`.
+    pub fn to(stream_id: StreamId, payload: Vec<u8>, dst: InstanceId) -> Self {
+        Self::routed(stream_id, payload, Some(dst))
+    }
+
+    /// A message whose destination is already an `Option`, for callers that
+    /// carry one around (a stream that may or may not be relayed).
+    pub fn routed(stream_id: StreamId, payload: Vec<u8>, dst: Option<InstanceId>) -> Self {
+        Self {
+            stream_id,
+            payload,
+            dst,
+            hops: 0,
+        }
+    }
 }
 
 /// Implemented by stream types to generate unique IDs.
@@ -141,6 +180,17 @@ where
     }
 }
 
+/// Cumulative byte counts for one stream, as seen by a single connection. The
+/// sizes are of the encoded `StreamMessage`, i.e. what actually crossed the
+/// socket rather than the decoded payload.
+#[derive(Default)]
+pub struct StreamCounters {
+    /// Bytes received for this stream.
+    pub rx: AtomicU64,
+    /// Bytes sent for this stream.
+    pub tx: AtomicU64,
+}
+
 /// Registry for managing active streams on a connection.
 ///
 /// This is transport-agnostic and works with `StreamMessage` payloads.
@@ -153,6 +203,10 @@ pub struct StreamRegistry {
     /// Server-side relay for forwarding streams to other connections. Held as a
     /// `Weak` to avoid a reference cycle (relay -> connections -> registry).
     relay: RwLock<Option<std::sync::Weak<Relay>>>,
+    /// Per-stream byte counts. Deliberately scoped to this registry rather than
+    /// kept globally: in an all-in-one build the dialing and accepting sides
+    /// live in one process and would otherwise both count the same stream id.
+    traffic: RwLock<HashMap<StreamId, Arc<StreamCounters>>>,
 }
 
 impl StreamRegistry {
@@ -162,7 +216,40 @@ impl StreamRegistry {
             responder_factories: RwLock::new(HashMap::new()),
             tx,
             relay: RwLock::new(None),
+            traffic: RwLock::new(HashMap::new()),
         }
+    }
+
+    /// Account `bytes` sent for `stream_id`.
+    pub fn record_tx(&self, stream_id: StreamId, bytes: u64) {
+        self.counters(stream_id).tx.fetch_add(bytes, Ordering::Relaxed);
+    }
+
+    /// Account `bytes` received for `stream_id`.
+    pub fn record_rx(&self, stream_id: StreamId, bytes: u64) {
+        self.counters(stream_id).rx.fetch_add(bytes, Ordering::Relaxed);
+    }
+
+    /// Cumulative `(received, sent)` bytes for a stream, if any have been seen.
+    pub fn traffic(&self, stream_id: StreamId) -> Option<(u64, u64)> {
+        self.traffic.read().unwrap().get(&stream_id).map(|c| {
+            (
+                c.rx.load(Ordering::Relaxed),
+                c.tx.load(Ordering::Relaxed),
+            )
+        })
+    }
+
+    fn counters(&self, stream_id: StreamId) -> Arc<StreamCounters> {
+        if let Some(counters) = self.traffic.read().unwrap().get(&stream_id) {
+            return counters.clone();
+        }
+        self.traffic
+            .write()
+            .unwrap()
+            .entry(stream_id)
+            .or_default()
+            .clone()
     }
 
     /// Attach a relay so unknown streams can be forwarded to other connections.
@@ -251,11 +338,7 @@ impl StreamRegistry {
             let stream_id = message.stream_id;
             tokio::spawn(async move {
                 while let Some(payload) = response_rx.recv().await {
-                    let msg = StreamMessage {
-                        stream_id,
-                        payload,
-                        dst: None,
-                    };
+                    let msg = StreamMessage::local(stream_id, payload);
                     if tx.send(msg).await.is_err() {
                         break;
                     }
@@ -302,11 +385,7 @@ impl StreamRegistry {
         let stream_id = id;
         tokio::spawn(async move {
             while let Some(payload) = response_rx.recv().await {
-                let msg = StreamMessage {
-                    stream_id,
-                    payload,
-                    dst,
-                };
+                let msg = StreamMessage::routed(stream_id, payload, dst);
                 if tx.send(msg).await.is_err() {
                     break;
                 }
@@ -331,6 +410,7 @@ impl StreamRegistry {
     /// Remove a stream from the registry and drop any relay route for it.
     pub fn close(&self, stream_id: StreamId) {
         self.streams.write().unwrap().remove(&stream_id);
+        self.traffic.write().unwrap().remove(&stream_id);
         if let Some(relay) = self.relay.read().unwrap().clone().and_then(|r| r.upgrade()) {
             relay.routes.lock().unwrap().remove(&stream_id);
         }
@@ -344,6 +424,16 @@ pub struct Relay {
     connections: Arc<RwLock<Vec<Arc<super::InstanceConnection>>>>,
     /// stream id -> the origin connection's outbound sender (for responses).
     routes: Mutex<HashMap<StreamId, Sender<StreamMessage>>>,
+
+    /// Instances reachable *through* a peer rather than directly, learned from
+    /// reachability advertisements. Held weakly so a dropped connection stops
+    /// being a candidate without needing to be cleaned up first.
+    reachable: RwLock<HashMap<InstanceId, std::sync::Weak<super::InstanceConnection>>>,
+
+    /// Default route for targets that are neither directly connected nor
+    /// advertised. Set on a local stratum server to point at its global stratum
+    /// server; `None` on the global stratum server, which is the end of the line.
+    upstream: RwLock<Option<std::sync::Weak<super::InstanceConnection>>>,
 }
 
 impl Relay {
@@ -351,24 +441,106 @@ impl Relay {
         Self {
             connections,
             routes: Mutex::new(HashMap::new()),
+            reachable: RwLock::new(HashMap::new()),
+            upstream: RwLock::new(None),
         }
     }
 
-    /// Find a connection to `target`, skipping the origin connection. In an
-    /// all-in-one build the local client and agent share one `InstanceId`, so
-    /// both inbound connections match `target`; excluding the origin (the
+    /// Record which instances are reachable through `via`, replacing whatever
+    /// that peer advertised before.
+    ///
+    /// Only server peers advertise: a local stratum server tells its global
+    /// stratum server which agents and clients are connected to it, so the GS can
+    /// route to them. Advertising for an instance that is directly connected here
+    /// does not displace the direct route — [`next_hop`](Self::next_hop) prefers
+    /// direct connections.
+    pub fn advertise(&self, via: &Arc<super::InstanceConnection>, instances: &[InstanceId]) {
+        let via_id = via.data.read().remote_instance;
+        let handle = Arc::downgrade(via);
+
+        let mut reachable = self.reachable.write().unwrap();
+
+        // Drop this peer's previous advertisement so instances that went away
+        // stop being routed to it.
+        reachable.retain(|_, entry| match entry.upgrade() {
+            Some(conn) => conn.data.read().remote_instance != via_id,
+            None => false,
+        });
+
+        for instance in instances {
+            reachable.insert(*instance, handle.clone());
+        }
+
+        tracing::debug!(
+            via = %via_id,
+            count = instances.len(),
+            "Recorded reachability advertisement"
+        );
+    }
+
+    /// Forget every route advertised through `via` (its connection dropped).
+    pub fn withdraw(&self, via: InstanceId) {
+        self.reachable
+            .write()
+            .unwrap()
+            .retain(|_, entry| match entry.upgrade() {
+                Some(conn) => conn.data.read().remote_instance != via,
+                None => false,
+            });
+    }
+
+    /// Set the default route: anything not directly connected or advertised is
+    /// forwarded here.
+    ///
+    /// A local stratum server points this at its global stratum server, which is
+    /// how it reaches instances attached to the GS or behind a sibling LS. The GS
+    /// has no upstream, so an unresolvable target there is genuinely unknown.
+    pub fn set_upstream(&self, upstream: std::sync::Weak<super::InstanceConnection>) {
+        *self.upstream.write().unwrap() = Some(upstream);
+    }
+
+    /// Pick the connection to forward a message for `target` through, skipping
+    /// the origin connection.
+    ///
+    /// In an all-in-one build the local client and agent share one `InstanceId`,
+    /// so both inbound connections match `target`; excluding the origin (the
     /// sender) routes to the *other* one, never back to the sender.
-    fn find(
+    fn next_hop(
         &self,
         target: InstanceId,
         origin_tx: &Sender<StreamMessage>,
     ) -> Option<Arc<super::InstanceConnection>> {
-        self.connections
+        // 1. Directly connected here.
+        let direct = self
+            .connections
             .read()
             .unwrap()
             .iter()
             .find(|c| c.data.read().remote_instance == target && !c.streams.is_origin(origin_tx))
-            .cloned()
+            .cloned();
+        if direct.is_some() {
+            return direct;
+        }
+
+        // 2. Advertised as reachable through a server peer (GS -> LS -> agent).
+        let advertised = self
+            .reachable
+            .read()
+            .unwrap()
+            .get(&target)
+            .and_then(|entry| entry.upgrade())
+            .filter(|c| !c.streams.is_origin(origin_tx));
+        if advertised.is_some() {
+            return advertised;
+        }
+
+        // 3. Default route upstream (LS -> GS, which resolves it from there).
+        self.upstream
+            .read()
+            .unwrap()
+            .as_ref()
+            .and_then(|entry| entry.upgrade())
+            .filter(|c| !c.streams.is_origin(origin_tx))
     }
 
     /// Attempt to route an unhandled message. Returns `true` if it was forwarded
@@ -377,7 +549,17 @@ impl Relay {
         // Client -> agent: an addressed message. Remember the origin so responses
         // can return, then forward to the target connection.
         if let Some(target) = message.dst {
-            let Some(conn) = self.find(target, origin_tx) else {
+            if message.hops >= MAX_HOPS {
+                tracing::warn!(
+                    target = %target,
+                    stream_id = ?message.stream_id,
+                    hops = message.hops,
+                    "Stream message exceeded the hop limit; dropping (routing loop?)"
+                );
+                return true;
+            }
+
+            let Some(conn) = self.next_hop(target, origin_tx) else {
                 // Unknown target: swallow it rather than mis-handling locally.
                 tracing::warn!(
                     target = %target,
@@ -395,6 +577,7 @@ impl Relay {
                     stream_id: message.stream_id,
                     payload: message.payload.clone(),
                     dst: Some(target),
+                    hops: message.hops + 1,
                 })
                 .await;
             return true;
@@ -404,11 +587,7 @@ impl Relay {
         let origin = self.routes.lock().unwrap().get(&message.stream_id).cloned();
         if let Some(origin) = origin {
             let _ = origin
-                .send(StreamMessage {
-                    stream_id: message.stream_id,
-                    payload: message.payload.clone(),
-                    dst: None,
-                })
+                .send(StreamMessage::local(message.stream_id, message.payload.clone()))
                 .await;
             return true;
         }
@@ -440,7 +619,10 @@ where
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
         let msg = match serde_cbor::from_slice::<T::In>(payload) {
             Ok(msg) => msg,
-            Err(_) => return Box::pin(async {}),
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to decode stream response");
+                return Box::pin(async {});
+            }
         };
 
         // Create a typed sender that serializes to raw bytes
@@ -458,7 +640,9 @@ where
         });
 
         Box::pin(async move {
-            let _ = self.handler.on_message(msg, typed_tx).await;
+            if let Err(e) = self.handler.on_message(msg, typed_tx).await {
+                tracing::warn!(error = %e, "Stream requester failed to handle a response");
+            }
         })
     }
 }
@@ -486,7 +670,10 @@ where
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
         let msg = match serde_cbor::from_slice::<T::In>(payload) {
             Ok(msg) => msg,
-            Err(_) => return Box::pin(async {}),
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to decode stream request");
+                return Box::pin(async {});
+            }
         };
 
         // Create a typed sender that serializes to raw bytes
@@ -504,7 +691,9 @@ where
         });
 
         Box::pin(async move {
-            let _ = self.handler.on_message(msg, typed_tx).await;
+            if let Err(e) = self.handler.on_message(msg, typed_tx).await {
+                tracing::warn!(error = %e, "Stream responder failed to handle a request");
+            }
         })
     }
 }
@@ -674,11 +863,7 @@ mod relay_tests {
             RelayEchoRequester { result: result_tx },
             Some(agent_id),
         );
-        tx.send(StreamMessage {
-            stream_id: id,
-            payload: serde_cbor::to_vec(&RelayPing(21))?,
-            dst: Some(agent_id),
-        })
+        tx.send(StreamMessage::to(id, serde_cbor::to_vec(&RelayPing(21))?, agent_id))
         .await?;
 
         let got = timeout(Duration::from_secs(2), result_rx.recv())
@@ -707,5 +892,273 @@ mod relay_tests {
     async fn relays_with_shared_instance_id() -> anyhow::Result<()> {
         let shared = InstanceId::new(&[InstanceType::Client, InstanceType::Agent]);
         relay_echo_roundtrip(shared, shared).await
+    }
+
+    /// Build a server-side connection wrapping `reg`, whose peer is `peer`.
+    fn conn(
+        conns: &crate::database::ResidentVec<ConnectionData>,
+        reg: &Arc<StreamRegistry>,
+        peer: InstanceId,
+    ) -> anyhow::Result<Arc<InstanceConnection>> {
+        let mut data = ConnectionData::default();
+        data.remote_instance = peer;
+        Ok(Arc::new(InstanceConnection {
+            data: conns.push(data)?,
+            realm: RealmName::default(),
+            cluster_id: ClusterId::default(),
+            cancel: CancellationToken::new(),
+            streams: reg.clone(),
+        }))
+    }
+
+    /// A client attached to the global stratum server reaches an agent attached
+    /// to a local stratum server: two relay hops out, two back.
+    ///
+    /// The client addresses the agent by id alone — it never learns that the
+    /// agent is a hop away.
+    #[tokio::test]
+    async fn relays_across_two_strata() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let client_id = InstanceId::new(&[InstanceType::Client]);
+        let ls_id = InstanceId::new(&[InstanceType::Server]);
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+
+        let (client_out, client_out_rx) = mpsc::channel(32);
+        let (gs_to_client, gs_to_client_rx) = mpsc::channel(32);
+        let (gs_to_ls, gs_to_ls_rx) = mpsc::channel(32);
+        let (ls_to_gs, ls_to_gs_rx) = mpsc::channel(32);
+        let (ls_to_agent, ls_to_agent_rx) = mpsc::channel(32);
+        let (agent_out, agent_out_rx) = mpsc::channel(32);
+
+        let client_reg = Arc::new(StreamRegistry::new(client_out));
+        let gs_client_reg = Arc::new(StreamRegistry::new(gs_to_client));
+        let gs_ls_reg = Arc::new(StreamRegistry::new(gs_to_ls));
+        let ls_gs_reg = Arc::new(StreamRegistry::new(ls_to_gs));
+        let ls_agent_reg = Arc::new(StreamRegistry::new(ls_to_agent));
+        let agent_reg = Arc::new(StreamRegistry::new(agent_out));
+
+        agent_reg.register_responder(RelayEchoResponder::default);
+
+        // Global stratum: the client and the local stratum server attach here.
+        let gs_client_conn = conn(&conns, &gs_client_reg, client_id)?;
+        let gs_ls_conn = conn(&conns, &gs_ls_reg, ls_id)?;
+        let gs_relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![
+            gs_client_conn,
+            gs_ls_conn.clone(),
+        ]))));
+        gs_client_reg.set_relay(Arc::downgrade(&gs_relay));
+        gs_ls_reg.set_relay(Arc::downgrade(&gs_relay));
+
+        // Local stratum: only the agent attaches here; the upstream link is the
+        // default route rather than a member of `connections`.
+        let ls_agent_conn = conn(&conns, &ls_agent_reg, agent_id)?;
+        let ls_upstream_conn = conn(&conns, &ls_gs_reg, ls_id)?;
+        let ls_relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![ls_agent_conn]))));
+        ls_relay.set_upstream(Arc::downgrade(&ls_upstream_conn));
+        ls_agent_reg.set_relay(Arc::downgrade(&ls_relay));
+        ls_gs_reg.set_relay(Arc::downgrade(&ls_relay));
+
+        // The local stratum server tells the global one which instances it can
+        // reach. Without this the GS has no route to the agent.
+        gs_relay.advertise(&gs_ls_conn, &[agent_id]);
+
+        pump(client_out_rx, gs_client_reg.clone());
+        pump(gs_to_client_rx, client_reg.clone());
+        pump(gs_to_ls_rx, ls_gs_reg.clone());
+        pump(ls_to_gs_rx, gs_ls_reg.clone());
+        pump(ls_to_agent_rx, agent_reg.clone());
+        pump(agent_out_rx, ls_agent_reg.clone());
+
+        let (result_tx, mut result_rx) = mpsc::channel(8);
+        let (id, tx) =
+            client_reg.register_to(RelayEchoRequester { result: result_tx }, Some(agent_id));
+        tx.send(StreamMessage::to(
+            id,
+            serde_cbor::to_vec(&RelayPing(21))?,
+            agent_id,
+        ))
+        .await?;
+
+        let got = timeout(Duration::from_secs(2), result_rx.recv())
+            .await?
+            .expect("response relayed back across both strata");
+        assert_eq!(got, 42);
+
+        Ok(())
+    }
+
+    /// An instance that is neither attached here nor advertised goes to the
+    /// default route, which is how a local stratum server reaches the rest of
+    /// the estate without knowing anything about it.
+    #[tokio::test]
+    async fn unknown_target_goes_upstream() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let (peer_out, _peer_rx) = mpsc::channel(32);
+        let (upstream_out, mut upstream_rx) = mpsc::channel(32);
+        let peer_reg = Arc::new(StreamRegistry::new(peer_out));
+        let upstream_reg = Arc::new(StreamRegistry::new(upstream_out));
+
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(&[InstanceType::Agent]))?;
+        let upstream_conn = conn(&conns, &upstream_reg, InstanceId::new(&[InstanceType::Server]))?;
+
+        let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![peer_conn]))));
+        relay.set_upstream(Arc::downgrade(&upstream_conn));
+
+        // A registry for some third connection that receives the message.
+        let (origin_out, _origin_rx) = mpsc::channel(32);
+        let origin_reg = Arc::new(StreamRegistry::new(origin_out));
+        origin_reg.set_relay(Arc::downgrade(&relay));
+
+        let stranger = InstanceId::new(&[InstanceType::Agent]);
+        origin_reg
+            .dispatch(StreamMessage::to(
+                RelayEchoRequester::generate_id(),
+                vec![1, 2, 3],
+                stranger,
+            ))
+            .await;
+
+        let forwarded = timeout(Duration::from_secs(2), upstream_rx.recv())
+            .await?
+            .expect("forwarded to the default route");
+        assert_eq!(forwarded.dst, Some(stranger));
+        assert_eq!(forwarded.hops, 1, "the hop count must advance");
+
+        Ok(())
+    }
+
+    /// A directly attached instance is preferred over an advertised route, so a
+    /// stale advertisement can't capture traffic for a local peer.
+    #[tokio::test]
+    async fn direct_route_beats_advertised() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+
+        let (direct_out, mut direct_rx) = mpsc::channel(32);
+        let (advertised_out, mut advertised_rx) = mpsc::channel(32);
+        let direct_reg = Arc::new(StreamRegistry::new(direct_out));
+        let advertised_reg = Arc::new(StreamRegistry::new(advertised_out));
+
+        let direct_conn = conn(&conns, &direct_reg, agent_id)?;
+        let peer_conn = conn(
+            &conns,
+            &advertised_reg,
+            InstanceId::new(&[InstanceType::Server]),
+        )?;
+
+        let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![direct_conn]))));
+        relay.advertise(&peer_conn, &[agent_id]);
+
+        let (origin_out, _origin_rx) = mpsc::channel(32);
+        let origin_reg = Arc::new(StreamRegistry::new(origin_out));
+        origin_reg.set_relay(Arc::downgrade(&relay));
+
+        origin_reg
+            .dispatch(StreamMessage::to(
+                RelayEchoRequester::generate_id(),
+                vec![7],
+                agent_id,
+            ))
+            .await;
+
+        timeout(Duration::from_secs(2), direct_rx.recv())
+            .await?
+            .expect("delivered over the direct connection");
+        assert!(
+            advertised_rx.try_recv().is_err(),
+            "must not also go via the advertised route"
+        );
+
+        Ok(())
+    }
+
+    /// A fresh advertisement replaces the previous one, so an instance that left
+    /// a local stratum server stops being routed there.
+    #[tokio::test]
+    async fn readvertising_drops_departed_instances() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let departed = InstanceId::new(&[InstanceType::Agent]);
+        let stayed = InstanceId::new(&[InstanceType::Agent]);
+
+        let (peer_out, mut peer_rx) = mpsc::channel(32);
+        let peer_reg = Arc::new(StreamRegistry::new(peer_out));
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(&[InstanceType::Server]))?;
+
+        let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![]))));
+        relay.advertise(&peer_conn, &[departed, stayed]);
+        relay.advertise(&peer_conn, &[stayed]);
+
+        let (origin_out, _origin_rx) = mpsc::channel(32);
+        let origin_reg = Arc::new(StreamRegistry::new(origin_out));
+        origin_reg.set_relay(Arc::downgrade(&relay));
+
+        // No route and no default route: the message is dropped, not forwarded.
+        origin_reg
+            .dispatch(StreamMessage::to(
+                RelayEchoRequester::generate_id(),
+                vec![1],
+                departed,
+            ))
+            .await;
+        assert!(
+            peer_rx.try_recv().is_err(),
+            "the departed instance must no longer be routed to this peer"
+        );
+
+        origin_reg
+            .dispatch(StreamMessage::to(
+                RelayEchoRequester::generate_id(),
+                vec![1],
+                stayed,
+            ))
+            .await;
+        timeout(Duration::from_secs(2), peer_rx.recv())
+            .await?
+            .expect("the still-attached instance is routed");
+
+        Ok(())
+    }
+
+    /// A message that has already crossed the maximum number of servers is
+    /// dropped rather than forwarded again.
+    #[tokio::test]
+    async fn hop_limit_breaks_routing_loops() -> anyhow::Result<()> {
+        let db = test_db!(ConnectionData);
+        let realm = db.realm(RealmName::default())?;
+        let conns = realm.resident_vec::<ConnectionData>(())?;
+
+        let target = InstanceId::new(&[InstanceType::Agent]);
+        let (next_out, mut next_rx) = mpsc::channel(32);
+        let next_reg = Arc::new(StreamRegistry::new(next_out));
+        let next_conn = conn(&conns, &next_reg, target)?;
+
+        let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![next_conn]))));
+        let (origin_out, _origin_rx) = mpsc::channel(32);
+        let origin_reg = Arc::new(StreamRegistry::new(origin_out));
+        origin_reg.set_relay(Arc::downgrade(&relay));
+
+        let mut message =
+            StreamMessage::to(RelayEchoRequester::generate_id(), vec![1], target);
+        message.hops = MAX_HOPS;
+        origin_reg.dispatch(message).await;
+
+        assert!(
+            next_rx.try_recv().is_err(),
+            "a message at the hop limit must be dropped, not forwarded"
+        );
+
+        Ok(())
     }
 }

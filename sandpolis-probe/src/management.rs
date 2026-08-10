@@ -8,7 +8,7 @@
 
 use crate::RegisteredDevice;
 use crate::config::DeviceConfig;
-use sandpolis_instance::InstanceId;
+use sandpolis_server::ServerUrl;
 use serde::{Deserialize, Serialize};
 
 /// Requests from a client to the server's device manager.
@@ -16,9 +16,9 @@ use serde::{Deserialize, Serialize};
 pub enum DeviceMgmtRequest {
     /// Begin receiving the device list (snapshot + updates).
     Subscribe,
-    /// Register a new device on `gateway`.
+    /// Register a new device associated with the server at `server`.
     Register {
-        gateway: InstanceId,
+        server: ServerUrl,
         device: DeviceConfig,
     },
     /// Delete the device with this id.
@@ -103,13 +103,18 @@ mod server {
                         }
                     });
                 }
-                DeviceMgmtRequest::Register { gateway, device } => {
+                DeviceMgmtRequest::Register { server, mut device } => {
+                    // Record which server this probe is associated with so the
+                    // global-stratum config persists the ownership.
+                    device.server = Some(server);
                     {
                         let mut devices = REGISTERED_DEVICES.write().unwrap();
                         let id = devices.iter().map(|d| d.id).max().unwrap_or(0) + 1;
                         devices.push(RegisteredDevice {
                             id,
-                            gateway,
+                            // Probes are accessed only from servers, so the gateway
+                            // is always this server's own id.
+                            gateway: crate::gateway().unwrap_or_default(),
                             device,
                             online: false,
                             status_message: None,
@@ -191,11 +196,7 @@ mod client {
                 Err(_) => return,
             };
             let _ = tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: None,
-                })
+                .send(StreamMessage::local(id, payload))
                 .await;
         });
     }
@@ -209,19 +210,15 @@ mod client {
                 Err(_) => return,
             };
             let _ = tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: None,
-                })
+                .send(StreamMessage::local(id, payload))
                 .await;
             conn.close_stream(id);
         });
     }
 
-    /// Register a new device on `gateway`.
-    pub fn register_device(conn: Arc<InstanceConnection>, gateway: InstanceId, device: DeviceConfig) {
-        send_request(conn, DeviceMgmtRequest::Register { gateway, device });
+    /// Register a new device associated with the server at `server`.
+    pub fn register_device(conn: Arc<InstanceConnection>, server: ServerUrl, device: DeviceConfig) {
+        send_request(conn, DeviceMgmtRequest::Register { server, device });
     }
 
     /// Delete the device with `id`.

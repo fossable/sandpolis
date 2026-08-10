@@ -3,10 +3,10 @@ use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer};
 use std::process::ExitCode;
 use tokio::task::JoinSet;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use tracing_subscriber::filter::LevelFilter;
 
 #[tokio::main]
@@ -60,17 +60,24 @@ async fn main() -> Result<ExitCode> {
         .install_default()
         .expect("crypto provider is available");
 
-    // Only server instances accept a --config path; other instances use
-    // $S7S_CONFIG or the default.
-    #[allow(unused_mut)]
-    let mut config_path: Option<std::path::PathBuf> = None;
-    #[cfg(feature = "server")]
-    {
-        config_path = args.config.clone();
-    }
+    let stratum = args.stratum();
 
-    // Load config
-    let mut config = Configuration::new(config_path)?;
+    // Only the global stratum server reads a config file — it owns the
+    // authoritative database, so it owns the authoritative settings. Local
+    // stratum servers, agents and clients are configured entirely by flags.
+    #[allow(unused_mut)]
+    let mut config = if stratum.is_global() {
+        #[cfg(feature = "server")]
+        {
+            Configuration::load_global(args.config.clone())?
+        }
+        #[cfg(not(feature = "server"))]
+        {
+            Configuration::default()
+        }
+    } else {
+        Configuration::default()
+    };
 
     // Realm certs come from the command line only; they're loaded fresh on
     // every run and never persisted to the config or database.
@@ -78,6 +85,27 @@ async fn main() -> Result<ExitCode> {
 
     // The database location comes from the command line, not the config file.
     config.database.storage = args.database.data_dir.clone();
+    if args.database.ephemeral {
+        config.database.ephemeral = true;
+    }
+
+    #[cfg(feature = "server")]
+    if let Some(listen) = args.listen {
+        config.server.listen = listen;
+    }
+
+    #[cfg(feature = "client")]
+    if let Some(fps) = args.client.fps {
+        config.client.fps = fps;
+    }
+
+    // Servers to connect to. A local stratum server dials its global stratum
+    // server (handled by `sandpolis::server`); agents and clients take theirs
+    // from `--server`.
+    #[cfg(feature = "agent")]
+    if let Some(servers) = args.servers.server.as_ref() {
+        config.agent.servers = servers.iter().map(|url| url.to_string()).collect();
+    }
 
     // A `--poll` flag selects polling mode for the agent, overriding config.
     #[cfg(feature = "agent")]
@@ -101,8 +129,11 @@ async fn main() -> Result<ExitCode> {
     }
 
     // TODO do this somewhere else
+    //
+    // Config lives on the global stratum server only, so it is also the only
+    // instance that writes changes back to it.
     #[cfg(all(feature = "server", feature = "layer-account"))]
-    {
+    if stratum.is_global() {
         let base = config.clone();
         sandpolis_account::set_account_persist(move |accounts| {
             let mut cfg = base.clone();
@@ -117,8 +148,11 @@ async fn main() -> Result<ExitCode> {
     }
 
     // TODO do this somewhere else
+    //
+    // Only the global stratum server keeps the authoritative probe config; local
+    // stratum servers don't persist a probe list of their own.
     #[cfg(all(feature = "server", feature = "layer-probe"))]
-    {
+    if stratum.is_global() {
         let base = config.clone();
         sandpolis_probe::set_device_persist(move |devices| {
             let mut cfg = base.clone();
@@ -130,23 +164,49 @@ async fn main() -> Result<ExitCode> {
         });
     }
 
+    // A local stratum server's database is a read-only replica of the global
+    // stratum server's. Everything else owns its data outright.
+    let access = if stratum.is_local() {
+        DatabaseAccess::Replica
+    } else {
+        DatabaseAccess::ReadWrite
+    };
+
+    // A co-located agent shares this process's database, and its collectors
+    // write estate data — which a replica must reject. So an all-in-one build
+    // running in the local stratum doesn't start one; agents belong in their own
+    // process, pointed at this server with `--server`.
+    #[allow(unused_mut)]
+    let mut run_colocated_agent = true;
+    #[cfg(all(feature = "server", feature = "agent"))]
+    if stratum.is_local() {
+        run_colocated_agent = false;
+        warn!(
+            "Not starting the co-located agent: a local stratum server's database is read-only. \
+             Run the agent as its own process with --server."
+        );
+    }
+
     // In an "all-in-one" run (the server runs in this same process), point the
     // co-located agent at the local server over loopback so no manual server
     // configuration is needed for local testing.
     #[cfg(all(feature = "server", feature = "agent"))]
-    config.agent.servers.push(format!(
-        "https://127.0.0.1:{}/default",
-        config.server.listen.port()
-    ));
+    if run_colocated_agent {
+        config.agent.servers.push(format!(
+            "https://127.0.0.1:{}/default",
+            config.server.listen.port()
+        ));
+    }
 
     // Load state
     let state = InstanceState::new(
         config.clone(),
-        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS)?,
+        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS, access)?,
+        stratum.clone(),
     )
     .await?;
 
-    info!("Starting Sandpolis");
+    info!(%stratum, "Starting Sandpolis");
 
     #[allow(unused_variables, unused_mut)]
     let mut tasks: JoinSet<Result<()>> = JoinSet::new();
@@ -171,8 +231,14 @@ async fn main() -> Result<ExitCode> {
     #[cfg(all(feature = "server", feature = "client"))]
     sandpolis::client::spawn_local_server_connection(state.clone(), config.server.listen.port());
 
+    // A standalone client is pointed at its server(s) with `--server`.
+    #[cfg(feature = "client")]
+    if let Some(servers) = args.servers.server.as_ref() {
+        sandpolis::client::spawn_configured_server_connections(state.clone(), servers);
+    }
+
     #[cfg(feature = "agent")]
-    {
+    if run_colocated_agent {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::agent::main(c, s).await });

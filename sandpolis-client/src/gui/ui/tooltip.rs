@@ -3,6 +3,9 @@
 //! Attach a [`Tooltip`] to any hoverable widget (anything with an
 //! [`Interaction`]); while it is hovered, a single transient popup follows the
 //! cursor showing the tooltip's text. There is at most one popup at a time.
+//!
+//! World-space hovers have no `Interaction` to hang a [`Tooltip`] on, so they
+//! drive the same popup through the [`WorldTooltip`] resource instead.
 
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use super::widgets::text;
@@ -15,9 +18,16 @@ pub struct TooltipPlugin;
 
 impl Plugin for TooltipPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, manage_tooltip);
+        app.init_resource::<WorldTooltip>()
+            .add_systems(Update, manage_tooltip);
     }
 }
+
+/// Tooltip text requested by a world-space hover, where there's no `bevy_ui`
+/// node to carry a [`Tooltip`]. Whoever is hovering sets it each frame and
+/// clears it when the hover ends; a widget tooltip takes precedence.
+#[derive(Resource, Default)]
+pub struct WorldTooltip(pub Option<String>);
 
 /// Full-text tooltip shown while the host widget is hovered.
 #[derive(Component)]
@@ -45,13 +55,17 @@ pub fn manage_tooltip(
     theme: Res<Theme>,
     windows: Query<&Window>,
     hovered: Query<(&Interaction, &Tooltip)>,
+    world: Res<WorldTooltip>,
     popup: Query<Entity, With<TooltipPopup>>,
     mut popup_node: Query<&mut Node, With<TooltipPopup>>,
     mut popup_text: Query<&mut Text, With<TooltipText>>,
 ) {
-    let target = hovered.iter().find_map(|(interaction, tooltip)| {
-        matches!(interaction, Interaction::Hovered).then(|| tooltip.text.clone())
-    });
+    let target = hovered
+        .iter()
+        .find_map(|(interaction, tooltip)| {
+            matches!(interaction, Interaction::Hovered).then(|| tooltip.text.clone())
+        })
+        .or_else(|| world.0.clone());
 
     let Some(label) = target else {
         for entity in &popup {

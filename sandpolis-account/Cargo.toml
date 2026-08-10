@@ -13,6 +13,7 @@ native_model = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
+tokio-util = { workspace = true }
 tracing = { workspace = true }
 inventory = { workspace = true }
 chrono = { workspace = true }
@@ -33,8 +34,9 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional =
 
 [features]
 agent = []
-server = ["dep:reqwest", "dep:regex", "dep:url"]
+server = ["dep:reqwest", "dep:regex", "dep:url", "sandpolis-instance/server"]
 client = [
+  "sandpolis-instance/client",
   "dep:bevy",
   "dep:bevy_svg",
   "dep:bevy_rapier2d",

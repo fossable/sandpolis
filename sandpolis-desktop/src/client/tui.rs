@@ -307,11 +307,7 @@ fn spawn_desktop_stream(
                 Err(_) => continue,
             };
             if msg_tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: Some(instance),
-                })
+                .send(StreamMessage::to(id, payload, instance))
                 .await
                 .is_err()
             {

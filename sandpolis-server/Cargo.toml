@@ -33,6 +33,7 @@ reqwest-websocket = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 serde_bytes = { workspace = true }
+serde_cbor = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
 serde = { workspace = true }
@@ -49,6 +50,7 @@ validator = { workspace = true }
 [features]
 server = [
   "sandpolis-instance/server",
+  "dep:reqwest-websocket",
   "dep:argon2",
   "dep:totp-rs",
   "totp-rs?/gen_secret",

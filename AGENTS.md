@@ -29,6 +29,59 @@ something with agents", not that it "implements what an agent does".
 An _instance_ is a Sandpolis process running as an **agent**, **server**, or
 **client** (or all three in CoLo mode).
 
+#### Strata
+
+Servers exist in one of two _strata_. Every network has **exactly one global
+stratum (GS) server** and **any number of local stratum (LS) servers**.
+
+An LS is an edge cache, useful for on-premise installations where it keeps
+serving the instances around it even when the link to the GS is down. It
+connects to exactly one GS, and never to another LS.
+
+The distinction decides five things:
+
+- **Configuration.** Only the GS reads `sandpolis.ron`. Every other instance —
+  LS servers, agents, clients — is configured entirely by CLI flags and learns
+  its domain from the server it connects to.
+- **Trust.** The GS holds the realm CA and is the network's single trust root. An
+  LS never generates a CA; on first start it enrolls with the GS, which issues it
+  a server certificate. The CA's private key never leaves the GS, so an LS can
+  verify peers but never issue certificates of its own. Enrollment blocks the
+  listener (with backoff) until it succeeds, since the certificate is what the
+  listener presents.
+- **Writability.** The GS database is read-write. Every LS database is a
+  read-only replica: `RealmDatabase::rw_transaction` fails there, and the only
+  exceptions are replication from the GS and instance-local bookkeeping (see
+  `RealmDatabase::local_write`).
+- **Scope.** An LS holds only the data belonging to the instances directly
+  connected to it, not the whole estate. It subscribes to the GS with one filter
+  per attached instance, rebuilt whenever that set changes.
+- **Routing.** Streams cross strata. A client addresses an agent by `InstanceId`
+  and never learns the topology: an LS advertises its attached instances to the
+  GS, and points its own default route at the GS for everything else.
+
+```sh
+# The global stratum server — the only instance with a config file
+sandpolis --config /etc/sandpolis.ron
+
+# A local stratum server; --config and --global-server conflict.
+# --realm-cert is how it authenticates to the GS in order to enroll, so
+# an LS in an all-in-one build also needs one for its co-located client.
+sandpolis --global-server https://gs.example.com:8768/default \
+          --realm-cert /etc/sandpolis/client.pem \
+          --listen 0.0.0.0:8769
+
+# An agent, attached to either stratum
+sandpolis --server https://ls.example.com:8769/default \
+          --realm-cert /etc/sandpolis/agent.pem
+```
+
+Writes always travel up. An agent attached to an LS has its records forwarded to
+the GS over an ingest stream rather than applied locally, and they return to the
+LS through its own subscription. This is why an LS in CoLo mode does **not**
+start a co-located agent: the agent's collectors write estate data, which its
+own process's replica must reject. Run agents as their own processes.
+
 #### World View
 
 Users interact with the Sandpolis network via a real-time graph called the

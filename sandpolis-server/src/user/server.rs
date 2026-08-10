@@ -363,13 +363,17 @@ impl FromRequestParts<UserLayer> for Claims {
     }
 }
 
-/// Accept a websocket from a client or agent.
+/// Accept a websocket from a client, agent, or local stratum server.
 ///
 /// Authentication is by realm cert (the `x-realm` header is validated upstream by
 /// `auth_middleware`). The peer reports its own `InstanceId` via `x-instance-id`
 /// so the server can tell agents (which it pulls all data from) from clients
 /// (which subscribe to subsets). The resulting connection is retained in
 /// `network.inbound`; dropping it would cancel the socket.
+///
+/// The peer also reports its stratum via `x-stratum`, which enforces the shape of
+/// the network: there is exactly one global stratum server, and local stratum
+/// servers only ever connect upward.
 // TODO: verify the reported instance id against the connection's certificate.
 #[axum_macros::debug_handler]
 pub async fn connect(
@@ -377,14 +381,54 @@ pub async fn connect(
     TypedHeader(realm): TypedHeader<RealmName>,
     headers: axum::http::HeaderMap,
     ws: WebSocketUpgrade,
-) -> impl axum::response::IntoResponse {
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+
     let network = state.network.clone();
     let cluster_id = state.instance.cluster_id;
     let local_instance = state.instance.instance_id;
+    let local_domain = state.instance.domain();
+    let stratum = state.stratum.clone();
     let remote_instance = headers
         .get("x-instance-id")
         .and_then(|v| v.to_str().ok())
         .and_then(|s| s.parse::<sandpolis_instance::InstanceId>().ok());
+    let peer_stratum = headers
+        .get("x-stratum")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+
+    // A peer identifying as a server, by its instance id or its stratum header.
+    // The header is what a *server* build sends; the id bit is the fallback.
+    let peer_is_server =
+        !peer_stratum.is_empty() || remote_instance.is_some_and(|id| id.is_server());
+
+    // A network has exactly one global stratum server, so another one announcing
+    // itself is a misconfiguration rather than a topology to accommodate.
+    if peer_stratum == "global" {
+        tracing::warn!(
+            "Rejecting connection from another global stratum server; a network has exactly one"
+        );
+        return (
+            StatusCode::CONFLICT,
+            "this network already has a global stratum server",
+        )
+            .into_response();
+    }
+
+    // Local stratum servers connect upward only, never to each other, so an
+    // inbound server connection here means someone is pointed at the wrong host.
+    if stratum.is_local() && peer_is_server {
+        tracing::warn!(
+            "Rejecting inbound server connection: local stratum servers connect upward only"
+        );
+        return (
+            StatusCode::CONFLICT,
+            "connect servers to the global stratum server, not a local stratum server",
+        )
+            .into_response();
+    }
 
     let mut response = ws.on_upgrade(move |socket| async move {
         let mut cd = ConnectionData::default();
@@ -392,7 +436,8 @@ pub async fn connect(
             cd.remote_instance = id;
         }
         cd.established = chrono::Utc::now();
-        let data = network.connections.push(cd).unwrap();
+        // Live connection bookkeeping is local state, allowed on a replica.
+        let data = network.connections.push_local(cd).unwrap();
 
         // Serve this peer's subscriptions from our local realm database.
         let realm_db = network.database.realm(realm.clone()).unwrap();
@@ -402,6 +447,16 @@ pub async fn connect(
         let mut handlers: Vec<&dyn sandpolis_instance::network::RegisterResponders> =
             sandpolis_instance::network::collected_responders().collect();
         handlers.push(&sync_reg);
+
+        // Accepting pushed records is a write straight into the authoritative
+        // database, so it is offered to server peers only. Agents and clients
+        // publish by serving their own data, which we pull and can filter.
+        let ingest_reg =
+            sandpolis_instance::network::sync::IngestResponderRegistration::new(realm_db.clone());
+        if peer_is_server {
+            handlers.push(&ingest_reg);
+        }
+
         let connection =
             InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
 
@@ -410,7 +465,16 @@ pub async fn connect(
             .streams
             .set_relay(std::sync::Arc::downgrade(&network.relay));
 
-        // Pull everything from agents into our database (the long-lived sync).
+        // Likewise server-only: advertising lets a peer claim to carry traffic
+        // for other instances, which an agent or client must never be able to do.
+        if peer_is_server {
+            sandpolis_instance::network::reachability::accept_advertisements(
+                &connection,
+                network.relay.clone(),
+            );
+        }
+
+        // Pull everything from agents (the long-lived sync).
         //
         // Skip co-located peers (`remote_instance == local_instance`): in an
         // all-in-one build the server, agent, and client share one InstanceId
@@ -418,10 +482,27 @@ pub async fn connect(
         // which also carries the agent bit of the shared id) is redundant and
         // forms a feedback loop that floods the transport.
         if remote_instance.is_some_and(|id| id.is_agent() && id != local_instance) {
-            if let Err(e) = connection
-                .open_sync(realm_db, vec![sandpolis_instance::database::sync::SyncFilter::all()])
-                .await
-            {
+            let filters = vec![sandpolis_instance::database::sync::SyncFilter::all()];
+
+            if stratum.is_local() {
+                // Our database is a read-only replica, so the agent's records
+                // are forwarded to the global stratum server rather than applied
+                // here. They return through our own subscription.
+                match crate::stratum::UPSTREAM_INGEST.current() {
+                    Some((ingest_id, ingest_tx)) => {
+                        if let Err(e) = connection
+                            .open_sync_proxy(ingest_tx, ingest_id, filters)
+                            .await
+                        {
+                            tracing::warn!(error = %e, "Failed to open agent sync proxy");
+                        }
+                    }
+                    None => tracing::warn!(
+                        "Agent connected before the upstream link was established; \
+                         its data will sync once the link is up and it reconnects"
+                    ),
+                }
+            } else if let Err(e) = connection.open_sync(realm_db, filters).await {
                 tracing::warn!(error = %e, "Failed to open agent sync stream");
             }
         }
@@ -435,5 +516,13 @@ pub async fn connect(
     if let Ok(value) = axum::http::HeaderValue::from_str(&local_instance.to_string()) {
         response.headers_mut().insert("x-instance-id", value);
     }
+
+    // Report the network's domain too. Only the global stratum server has a
+    // config file, so this is how agents and clients learn which domain they
+    // belong to without being told on the command line.
+    if let Ok(value) = axum::http::HeaderValue::from_str(&local_domain) {
+        response.headers_mut().insert("x-domain", value);
+    }
+
     response
 }

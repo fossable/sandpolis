@@ -148,8 +148,8 @@ pub enum ListUpsCommandsResponse {
     UpsNotFound,
 }
 
-#[cfg(feature = "agent")]
-mod client {
+#[cfg(feature = "server")]
+mod server {
     use super::*;
     use rups::blocking::Connection;
     use rups::{Auth, ConfigBuilder, Host};
@@ -280,5 +280,5 @@ mod client {
     }
 }
 
-#[cfg(feature = "agent")]
-pub use client::*;
+#[cfg(feature = "server")]
+pub use server::*;

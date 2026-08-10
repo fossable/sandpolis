@@ -35,6 +35,7 @@ agent = [
   "sandpolis-instance/agent",
   "dep:sysinfo",
   "dep:sandpolis-agent",
+  "sandpolis-agent/agent",
   "dep:which",
   "dep:regex",
   "dep:serde_json",

@@ -47,4 +47,16 @@ impl HealthLayer {
             data: database.realm(RealmName::default())?.resident(())?,
         })
     }
+
+    /// Add the layer's background services to the agent's runner.
+    #[cfg(feature = "agent")]
+    pub fn register_services(&self, runner: &mut sandpolis_instance::service::ServiceRunner) {
+        runner.register(sandpolis_agent::CollectorService::new(
+            self.systemd.clone(),
+            "Health",
+            "systemd",
+            "Collects the state of the host's systemd units",
+            std::time::Duration::from_secs(30),
+        ));
+    }
 }

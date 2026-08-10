@@ -83,6 +83,103 @@ pub fn send_wol_packet(request: &WolPacketRequest) -> WolPacketResponse {
     }
 }
 
+/// Server side: sends the magic packet on behalf of a client. Probes are accessed
+/// only from servers, so Wake-on-LAN runs here rather than on the client.
+#[cfg(feature = "server")]
+mod server {
+    use super::*;
+    use anyhow::Result;
+    use sandpolis_instance::network::{
+        RegisterResponders, ResponderRegistration, StreamRegistry, StreamResponder,
+    };
+    use sandpolis_macros::Stream;
+    use tokio::sync::mpsc::Sender;
+
+    #[derive(Stream, Default)]
+    pub struct WolStreamResponder;
+
+    impl StreamResponder for WolStreamResponder {
+        type In = WolPacketRequest;
+        type Out = WolPacketResponse;
+
+        async fn on_message(&self, request: Self::In, sender: Sender<Self::Out>) -> Result<()> {
+            let _ = sender.send(send_wol_packet(&request)).await;
+            Ok(())
+        }
+    }
+
+    /// Registers [`WolStreamResponder`] on each connection.
+    pub struct WolResponderRegistration;
+
+    impl RegisterResponders for WolResponderRegistration {
+        fn register_responders(&self, registry: &StreamRegistry) {
+            registry.register_responder(WolStreamResponder::default);
+        }
+    }
+
+    inventory::submit!(ResponderRegistration(&WolResponderRegistration));
+}
+
+/// Client side: asks the connected server to send the magic packet and logs the
+/// outcome it reports back.
+#[cfg(feature = "client")]
+mod client {
+    use super::*;
+    use anyhow::Result;
+    use sandpolis_instance::network::InstanceConnection;
+    use sandpolis_instance::network::StreamRequester;
+    use sandpolis_instance::network::stream::StreamMessage;
+    use sandpolis_macros::Stream;
+    use std::sync::Arc;
+    use tokio::sync::mpsc::Sender;
+
+    #[derive(Stream, Default)]
+    pub struct WolStreamRequester;
+
+    impl StreamRequester for WolStreamRequester {
+        type In = WolPacketResponse;
+        type Out = WolPacketRequest;
+
+        async fn new(_: Self::Out, _: Sender<Self::Out>) -> Result<Self> {
+            anyhow::bail!("WolStreamRequester must be constructed directly")
+        }
+
+        async fn on_message(&self, response: Self::In, _: Sender<Self::Out>) -> Result<()> {
+            match response {
+                WolPacketResponse::Ok => tracing::info!("Wake-on-LAN magic packet sent"),
+                WolPacketResponse::InvalidBroadcastAddress(addr) => {
+                    tracing::warn!("Invalid broadcast address: {}", addr)
+                }
+                WolPacketResponse::SendFailed(e) => {
+                    tracing::warn!("Wake-on-LAN send failed: {}", e)
+                }
+            }
+            Ok(())
+        }
+    }
+
+    /// Ask the server to send a Wake-on-LAN magic packet.
+    pub fn send_wake(conn: Arc<InstanceConnection>, request: WolPacketRequest) {
+        sandpolis_client::sync::spawn(async move {
+            let (id, tx) = conn.register_stream(WolStreamRequester);
+            let payload = match serde_cbor::to_vec(&request) {
+                Ok(p) => p,
+                Err(_) => return,
+            };
+            let _ = tx
+                .send(StreamMessage::local(id, payload))
+                .await;
+            // Keep the stream registered long enough to receive and log the
+            // server's response, then release it.
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            conn.close_stream(id);
+        });
+    }
+}
+
+#[cfg(feature = "client")]
+pub use client::send_wake;
+
 #[cfg(test)]
 mod tests {
     use super::*;

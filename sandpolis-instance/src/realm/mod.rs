@@ -138,15 +138,27 @@ pub struct RealmLayer {
     agent_certs: Vec<RealmAgentCert>,
 
     /// Client realm certs loaded from `--realm-cert`. Kept in memory only.
-    #[cfg(feature = "client")]
+    ///
+    /// Also used by a local stratum server to authenticate to its global stratum
+    /// server — there is no separate server-to-server certificate type.
+    #[cfg(any(feature = "client", feature = "server"))]
     client_certs: Vec<RealmClientCert>,
 }
 
 impl RealmLayer {
+    /// `authoritative` is true only on the global stratum server, which owns the
+    /// realm CA.
+    ///
+    /// A local stratum server must never mint a CA of its own — that would make
+    /// it a separate trust root and its agents unreachable from the rest of the
+    /// network. It starts with no certificates and is issued a server
+    /// certificate by the global stratum server (see
+    /// [`install_enrollment`](Self::install_enrollment)).
     pub async fn new(
         config: RealmConfig,
         database: DatabaseLayer,
         instance: InstanceLayer,
+        #[allow(unused_variables)] authoritative: bool,
     ) -> Result<Self> {
         debug!("Initializing realm layer");
 
@@ -157,24 +169,31 @@ impl RealmLayer {
         let realms: ResidentVec<RealmData> = default_realm.resident_vec(())?;
 
         if realms.len() == 0 {
-            realms.push(RealmData::default())?;
+            // Realm membership isn't replicated, so even a read-only replica has
+            // to record the default realm for itself.
+            realms.push_local(RealmData::default())?;
         }
 
         #[cfg(feature = "agent")]
         let mut agent_certs = Vec::new();
-        #[cfg(feature = "client")]
+        #[cfg(any(feature = "client", feature = "server"))]
+        #[allow(unused_mut)]
         let mut client_certs = Vec::new();
 
+        // Only the global stratum server holds the realm CA and can issue from
+        // it. A local stratum server gets its server certificate from the GS
+        // instead, so that the whole network shares one trust root.
         #[cfg(feature = "server")]
-        {
+        if authoritative {
             for realm in realms.iter() {
                 let realm_db = database.realm(realm.read().name.clone())?;
 
-                let rw = realm_db.rw_transaction()?;
+                // This instance's own certificates are local state, not estate
+                // data replicated from the global stratum server.
+                let rw = realm_db.local_write()?;
                 let mut cluster_certs: Vec<RealmClusterCert> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
-                // TODO only GS
                 if cluster_certs.len() == 0 {
                     cluster_certs.push(RealmClusterCert::new(
                         instance.cluster_id,
@@ -200,6 +219,9 @@ impl RealmLayer {
                 // the local cluster CA and keep them in memory. This lets a
                 // co-located client/agent connect to the local server over
                 // loopback without an out-of-band `--realm-cert`.
+                //
+                // Only possible here, where the CA is: an all-in-one local
+                // stratum server needs `--realm-cert` for its co-located client.
                 #[cfg(feature = "client")]
                 client_certs.push(cluster_certs[0].client_cert()?);
                 #[cfg(feature = "agent")]
@@ -233,7 +255,7 @@ impl RealmLayer {
                 loaded = true;
             }
 
-            #[cfg(feature = "client")]
+            #[cfg(any(feature = "client", feature = "server"))]
             if !loaded {
                 if let Ok(cert) = RealmClientCert::read(path) {
                     info!(path = %path.display(), "Loaded client realm certificate");
@@ -253,7 +275,7 @@ impl RealmLayer {
             realms,
             #[cfg(feature = "agent")]
             agent_certs,
-            #[cfg(feature = "client")]
+            #[cfg(any(feature = "client", feature = "server"))]
             client_certs,
         })
     }
@@ -268,7 +290,86 @@ impl RealmLayer {
         bail!("Realm does not exist");
     }
 
-    #[cfg(feature = "client")]
+    /// Whether this instance already holds the certificates it needs to serve
+    /// `realm`: the realm CA (to verify peers) and its own server certificate
+    /// (to present).
+    #[cfg(feature = "server")]
+    pub fn has_server_cert(&self, realm: RealmName, instance_id: crate::InstanceId) -> bool {
+        let Ok(db) = self.database.realm(realm) else {
+            return false;
+        };
+        let Ok(r) = db.r_transaction() else {
+            return false;
+        };
+
+        let has_ca = (|| -> Result<bool> {
+            let cas: Vec<RealmClusterCert> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            Ok(!cas.is_empty())
+        })()
+        .unwrap_or(false);
+
+        let has_cert = (|| -> Result<bool> {
+            let certs: Vec<RealmServerCert> =
+                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+            Ok(certs.iter().any(|c| c._instance_id == instance_id))
+        })()
+        .unwrap_or(false);
+
+        has_ca && has_cert
+    }
+
+    /// Store the realm CA and server certificate issued by the global stratum
+    /// server.
+    ///
+    /// `ca` is the CA certificate **without** its private key — a local stratum
+    /// server can verify peers against the realm's trust root but can never
+    /// issue from it. These are this instance's own credentials, so they are
+    /// written locally even though the database is a replica.
+    #[cfg(feature = "server")]
+    pub fn install_enrollment(
+        &self,
+        realm: RealmName,
+        ca: Vec<u8>,
+        cert: Vec<u8>,
+        key: Vec<u8>,
+        instance_id: crate::InstanceId,
+    ) -> Result<()> {
+        let db = self.database.realm(realm.clone())?;
+        let rw = db.local_write()?;
+
+        let existing: Vec<RealmClusterCert> =
+            rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        for old in existing {
+            rw.remove(old)?;
+        }
+        rw.insert(RealmClusterCert {
+            name: realm.clone(),
+            cert: ca,
+            key: None,
+            ..Default::default()
+        })?;
+
+        let existing: Vec<RealmServerCert> =
+            rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        for old in existing {
+            if old._instance_id == instance_id {
+                rw.remove(old)?;
+            }
+        }
+        rw.insert(RealmServerCert {
+            cert,
+            key: Some(key),
+            _instance_id: instance_id,
+            ..Default::default()
+        })?;
+
+        rw.commit()?;
+        info!(realm = %realm, "Installed server certificate issued by the global stratum server");
+        Ok(())
+    }
+
+    #[cfg(any(feature = "client", feature = "server"))]
     pub fn find_client_cert(&self, realm: RealmName) -> Result<RealmClientCert> {
         for cert in &self.client_certs {
             if cert.name()? == realm {
@@ -493,12 +594,12 @@ impl RealmClientCert {
         Ok(())
     }
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "client", feature = "server"))]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
-    #[cfg(feature = "client")]
+    #[cfg(any(feature = "client", feature = "server"))]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
@@ -535,6 +636,148 @@ impl RealmClientCert {
             .parse()?;
 
         Ok(name)
+    }
+}
+
+#[cfg(all(test, feature = "server"))]
+mod test_enrollment {
+    use super::*;
+    use crate::database::DatabaseAccess;
+    use crate::{InstanceId, InstanceType};
+
+    fn models() -> &'static native_db::Models {
+        static MODELS: std::sync::OnceLock<native_db::Models> = std::sync::OnceLock::new();
+        MODELS.get_or_init(|| {
+            let mut m = native_db::Models::new();
+            m.define::<RealmLayerData>().unwrap();
+            m.define::<RealmData>().unwrap();
+            m.define::<RealmClusterCert>().unwrap();
+            m.define::<RealmServerCert>().unwrap();
+            m
+        })
+    }
+
+    fn replica() -> Result<DatabaseLayer> {
+        Ok(DatabaseLayer::new(
+            crate::database::config::DatabaseConfig {
+                storage: None,
+                ephemeral: true,
+                key: Default::default(),
+            },
+            models(),
+            DatabaseAccess::Replica,
+        )?)
+    }
+
+    fn layer(database: DatabaseLayer) -> RealmLayer {
+        RealmLayer {
+            data: database
+                .realm(RealmName::default())
+                .unwrap()
+                .resident(())
+                .unwrap(),
+            realms: database
+                .realm(RealmName::default())
+                .unwrap()
+                .resident_vec(())
+                .unwrap(),
+            database,
+            #[cfg(feature = "agent")]
+            agent_certs: Vec::new(),
+            #[cfg(any(feature = "client", feature = "server"))]
+            client_certs: Vec::new(),
+        }
+    }
+
+    /// A local stratum server starts with nothing: it must not invent a CA, and
+    /// it can't serve until the global stratum server has issued its cert.
+    #[tokio::test]
+    async fn replica_starts_without_certificates() -> Result<()> {
+        let realms = layer(replica()?);
+        let id = InstanceId::new(&[InstanceType::Server]);
+        assert!(!realms.has_server_cert(RealmName::default(), id));
+        Ok(())
+    }
+
+    /// Installing what the global stratum server issued makes the server ready,
+    /// and the CA arrives without its private key so a local stratum server can
+    /// verify peers but never issue certificates of its own.
+    #[tokio::test]
+    async fn enrollment_installs_ca_without_its_key() -> Result<()> {
+        let cluster_id = crate::ClusterId::default();
+        let ca = RealmClusterCert::new(cluster_id, RealmName::default())?;
+        let id = InstanceId::new(&[InstanceType::Server]);
+        let issued = ca.server_cert(id)?;
+
+        let realms = layer(replica()?);
+        realms.install_enrollment(
+            RealmName::default(),
+            ca.cert.clone(),
+            issued.cert.clone(),
+            issued.key.clone().expect("issued cert carries a key"),
+            id,
+        )?;
+
+        assert!(realms.has_server_cert(RealmName::default(), id));
+
+        let db = realms.database.realm(RealmName::default())?;
+        let r = db.r_transaction()?;
+        let stored: Vec<RealmClusterCert> =
+            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+
+        assert_eq!(stored.len(), 1, "exactly one CA is stored");
+        assert_eq!(stored[0].cert, ca.cert, "the CA certificate is the GS's");
+        assert!(
+            stored[0].key.is_none(),
+            "the CA private key must never reach a local stratum server"
+        );
+        assert!(
+            stored[0].ca().is_err(),
+            "without the key, a local stratum server cannot issue certificates"
+        );
+        Ok(())
+    }
+
+    /// Re-enrolling replaces the previous credentials rather than accumulating
+    /// them, so `resident()` (which expects a singleton CA) keeps working.
+    #[tokio::test]
+    async fn re_enrolling_replaces_credentials() -> Result<()> {
+        let id = InstanceId::new(&[InstanceType::Server]);
+        let realms = layer(replica()?);
+
+        for _ in 0..2 {
+            let ca = RealmClusterCert::new(crate::ClusterId::default(), RealmName::default())?;
+            let issued = ca.server_cert(id)?;
+            realms.install_enrollment(
+                RealmName::default(),
+                ca.cert.clone(),
+                issued.cert,
+                issued.key.expect("issued cert carries a key"),
+                id,
+            )?;
+        }
+
+        let db = realms.database.realm(RealmName::default())?;
+        let r = db.r_transaction()?;
+        let cas: Vec<RealmClusterCert> =
+            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        let certs: Vec<RealmServerCert> =
+            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+
+        assert_eq!(cas.len(), 1);
+        assert_eq!(certs.len(), 1);
+        Ok(())
+    }
+
+    /// A server certificate is only ever issued to a server.
+    #[tokio::test]
+    async fn server_cert_requires_a_server_id() -> Result<()> {
+        let ca = RealmClusterCert::new(crate::ClusterId::default(), RealmName::default())?;
+        assert!(
+            ca.server_cert(InstanceId::new(&[InstanceType::Agent]))
+                .is_err()
+        );
+        Ok(())
     }
 }
 

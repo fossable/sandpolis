@@ -57,4 +57,36 @@ impl InventoryLayer {
             data: database.realm(RealmName::default())?.resident(())?,
         })
     }
+
+    /// Add the layer's background services to the agent's runner.
+    ///
+    /// Packages get their own longer interval because enumerating them is
+    /// expensive and they change rarely, unlike memory and users.
+    #[cfg(feature = "agent")]
+    pub fn register_services(&self, runner: &mut sandpolis_instance::service::ServiceRunner) {
+        use sandpolis_agent::CollectorService;
+        use std::time::Duration;
+
+        runner.register(CollectorService::new(
+            self.memory.clone(),
+            "Inventory",
+            "memory",
+            "Collects the host's memory usage",
+            Duration::from_secs(30),
+        ));
+        runner.register(CollectorService::new(
+            self.users.clone(),
+            "Inventory",
+            "users",
+            "Collects the host's user accounts",
+            Duration::from_secs(30),
+        ));
+        runner.register(CollectorService::new(
+            self.packages.clone(),
+            "Inventory",
+            "packages",
+            "Collects the host's installed packages",
+            Duration::from_secs(300),
+        ));
+    }
 }

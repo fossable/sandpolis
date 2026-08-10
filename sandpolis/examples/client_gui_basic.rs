@@ -7,10 +7,11 @@
 /// - Force-directed graph layout
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_instance::database::{DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer, config::DatabaseConfig};
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::{InstanceId, InstanceType};
+use sandpolis_server::ServerStratum;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,11 +24,11 @@ async fn main() -> Result<()> {
         ephemeral: true,
         key: Default::default(),
     };
-    let database = DatabaseLayer::new(db_config, &*MODELS)?;
+    let database = DatabaseLayer::new(db_config, &*MODELS, DatabaseAccess::ReadWrite)?;
 
     // Create instance state
     // The local instance will be spawned automatically
-    let state = InstanceState::new(config.clone(), database.clone()).await?;
+    let state = InstanceState::new(config.clone(), database.clone(), ServerStratum::Global).await?;
 
     // Populate the database with test nodes to demonstrate the GUI
     // This creates several agent and server connections that will appear in the world view

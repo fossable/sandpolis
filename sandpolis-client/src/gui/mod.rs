@@ -26,6 +26,7 @@ pub mod node_picker;
 pub mod preview;
 pub mod queries;
 pub mod responsive;
+pub mod services_panel;
 pub mod terrain;
 pub mod terrain_layout;
 pub mod theme;

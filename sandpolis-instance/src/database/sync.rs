@@ -129,7 +129,8 @@ impl SyncRegistry {
         let apply: ApplyFn = Box::new(|db, op, bytes| {
             let (item, _): (T, u32) = native_model::decode(bytes.to_vec())
                 .map_err(|e| anyhow::anyhow!("decode failed: {e}"))?;
-            let rw = db.rw_transaction()?;
+            // Replication is the one write a replica is entitled to.
+            let rw = db.replica_write()?;
             match op {
                 SyncOp::Upsert => {
                     rw.upsert(item)?;

@@ -22,13 +22,19 @@ use sandpolis_client::gui::ui::controller::{
 use sandpolis_client::gui::ui::panel::modal_scrim;
 use bevy::text::EditableText;
 use sandpolis_client::gui::ui::text_input::text_input;
-use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
-use sandpolis_client::gui::ui::widgets::{button, heading, muted, row};
-use sandpolis_client::gui::node::{ExcludeFromSelection, NeedsScaling, NodeEntity, NodeHitbox};
-use sandpolis_instance::network::stream::StreamMessage;
-use sandpolis_instance::{InstanceId, InstanceLayer, InstanceType, LayerName};
+use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder, ThemedText};
+use sandpolis_client::gui::ui::widgets::{button, heading, muted, row, text};
+use sandpolis_client::gui::controller::ControllerTarget;
+use sandpolis_client::gui::node::{
+    ExcludeFromSelection, NeedsScaling, NodeEntity, NodeHitbox, SubNode,
+};
+use sandpolis_instance::network::InstanceConnection;
+use sandpolis_instance::network::stream::{StreamId, StreamMessage};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use sandpolis_server::ServerUrl;
+use std::sync::Arc;
 use std::collections::HashMap;
-use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, channel};
+use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, UnboundedSender, channel};
 
 use crate::config::{DeviceConfig, RtspProbeConfig, WolProbeConfig};
 use crate::rtsp::{
@@ -40,6 +46,7 @@ use crate::{ProbeType, RegisteredDevice};
 /// Marker component for device nodes (smaller nodes attached to gateways).
 #[derive(Component)]
 pub struct ProbeNode {
+    // NOTE: fields are `pub` because `super::link` renders these nodes' links.
     /// The device ID.
     pub device_id: u64,
     /// The protocol used for the node's icon.
@@ -56,6 +63,9 @@ pub const PROBE_NODE_VISUAL_DIAMETER: f32 = 50.0;
 pub struct ProbeNodeBundle {
     pub probe_node: ProbeNode,
     pub node_entity: NodeEntity,
+    /// Carries the device id, which is what lets the controller host tell a
+    /// probe apart from the gateway server whose `InstanceId` it borrows.
+    pub sub_node: SubNode,
     pub exclude: ExcludeFromSelection,
     /// Keeps these nodes draggable now that dragging keys on the hitbox instead
     /// of on `NodeEntity`. `ExcludeFromSelection` still keeps them out of the
@@ -79,7 +89,16 @@ pub fn spawn_probe_node(
     parent_position: Vec3,
     visible: bool,
 ) {
-    let instance_id = device.gateway;
+    // Attach the probe to its owning server's node. Resolve the server URL to a
+    // connected instance id; fall back to the recorded gateway if that server
+    // isn't connected yet.
+    let gateway = device
+        .device
+        .server
+        .as_ref()
+        .and_then(sandpolis_client::sync::instance_for)
+        .unwrap_or(device.gateway);
+    let instance_id = gateway;
     let icon = device.device.primary().unwrap_or(ProbeType::Http);
 
     // Position device nodes in an orbit around the parent, using the device id for
@@ -90,16 +109,15 @@ pub fn spawn_probe_node(
     let x = parent_position.x + orbit_radius * angle.cos();
     let y = parent_position.y + orbit_radius * angle.sin();
 
-    let svg_path = get_probe_svg(icon);
-
     let node_entity = commands
         .spawn(ProbeNodeBundle {
             probe_node: ProbeNode {
                 device_id: device.id,
                 icon,
-                gateway: device.gateway,
+                gateway,
             },
             node_entity: NodeEntity { instance_id },
+            sub_node: SubNode(device.id),
             exclude: ExcludeFromSelection,
             hitbox: NodeHitbox { radius: 25.0 },
             collider: Collider::ball(25.0),
@@ -122,15 +140,43 @@ pub fn spawn_probe_node(
 
     // Deliberately not tagged with NodeSvg so the layer visual systems don't
     // replace the icon or rescale it to regular node size.
-    commands.entity(node_entity).with_children(|parent| {
-        parent.spawn((
-            Svg2d(asset_server.load(svg_path)),
-            Origin::Center,
-            Transform::default(),
-            NeedsScaling,
-            ProbeNodeSvg,
-        ));
-    });
+    spawn_probe_icon(commands, asset_server, node_entity, ProbeNodeIcon::Svg(icon));
+}
+
+/// Attach an icon child of the given kind to a probe node. The SVG variant keeps
+/// the vector icon (scaled by `scale_probe_node_svgs`); the thumbnail variant
+/// shows a captured stream frame sized to the node.
+fn spawn_probe_icon(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    node: Entity,
+    icon: ProbeNodeIcon,
+) {
+    let child = match &icon {
+        ProbeNodeIcon::Svg(probe_type) => commands
+            .spawn((
+                Svg2d(asset_server.load(get_probe_svg(*probe_type))),
+                Origin::Center,
+                Transform::default(),
+                NeedsScaling,
+                ProbeNodeSvg,
+            ))
+            .id(),
+        // Sprites are center-anchored and `custom_size` does the scaling, so this
+        // needs none of the manual recentring the SVG path does.
+        ProbeNodeIcon::Thumbnail(handle) => commands
+            .spawn((
+                Sprite {
+                    image: handle.clone(),
+                    custom_size: Some(Vec2::splat(PROBE_NODE_VISUAL_DIAMETER)),
+                    ..default()
+                },
+                Transform::default(),
+            ))
+            .id(),
+    };
+    commands.entity(child).insert(icon);
+    commands.entity(node).add_child(child);
 }
 
 /// Marker component for device node SVGs (for scaling to smaller size).
@@ -264,7 +310,7 @@ pub fn query_devices(gateway: InstanceId) -> Vec<RegisteredDevice> {
 }
 
 /// Look up a single device by id.
-fn device_by_id(id: u64) -> Option<RegisteredDevice> {
+pub(crate) fn device_by_id(id: u64) -> Option<RegisteredDevice> {
     crate::REGISTERED_DEVICES
         .read()
         .unwrap()
@@ -273,23 +319,28 @@ fn device_by_id(id: u64) -> Option<RegisteredDevice> {
         .cloned()
 }
 
-/// Send a Wake-on-LAN magic packet and describe the outcome.
-fn send_wake(wol: &WolProbeConfig) -> String {
+/// Ask the owning server to send a Wake-on-LAN magic packet. Probes are accessed
+/// only from servers, so the packet is sent server-side.
+fn send_wake(wol: &WolProbeConfig, server: Option<&ServerUrl>) {
     let mac_address = match wol.mac_address.parse::<macaddr::MacAddr6>() {
         Ok(mac) => mac,
-        Err(e) => return format!("Invalid MAC address: {}", e),
+        Err(e) => {
+            warn!("Invalid MAC address: {}", e);
+            return;
+        }
     };
-
-    match crate::wol::send_wol_packet(&crate::wol::WolPacketRequest {
+    let request = crate::wol::WolPacketRequest {
         mac_address,
         broadcast_address: wol.broadcast_address.clone(),
         port: wol.port,
-    }) {
-        crate::wol::WolPacketResponse::Ok => format!("Magic packet sent to {}", wol.mac_address),
-        crate::wol::WolPacketResponse::InvalidBroadcastAddress(addr) => {
-            format!("Invalid broadcast address: {}", addr)
-        }
-        crate::wol::WolPacketResponse::SendFailed(e) => format!("Send failed: {}", e),
+    };
+    let conn = server
+        .and_then(sandpolis_client::sync::connection_for)
+        .or_else(sandpolis_client::sync::connection);
+    if let Some(conn) = conn {
+        crate::wol::send_wake(conn, request);
+    } else {
+        warn!("No server connection; cannot send Wake-on-LAN packet");
     }
 }
 
@@ -311,16 +362,15 @@ pub fn get_probe_svg(probe_type: ProbeType) -> &'static str {
     }
 }
 
-/// Build the RTSP URL from the device's IP and the probe's port/path/credentials.
+/// Build the RTSP URL from the device's IP and the probe's port/path.
+///
+/// Credentials are deliberately *not* embedded here — they travel in the start
+/// request and are applied as digest auth server-side, because `retina` refuses
+/// outright to open a URL that carries userinfo.
 fn build_rtsp_url(ip: std::net::IpAddr, cfg: &RtspProbeConfig) -> String {
     let port = cfg.port.unwrap_or(554);
-    let creds = match (cfg.username.as_deref(), cfg.password.as_deref()) {
-        (Some(u), Some(p)) if !u.is_empty() => format!("{}:{}@", u, p),
-        (Some(u), _) if !u.is_empty() => format!("{}@", u),
-        _ => String::new(),
-    };
     let path = cfg.path.trim_start_matches('/');
-    format!("rtsp://{}{}:{}/{}", creds, ip, port, path)
+    format!("rtsp://{}:{}/{}", ip, port, path)
 }
 
 fn rtsp_transport(cfg: &RtspProbeConfig) -> RtspTransport {
@@ -332,20 +382,81 @@ fn rtsp_transport(cfg: &RtspProbeConfig) -> RtspTransport {
 
 /// Active client-side RTSP sessions, keyed by device id.
 #[derive(Resource, Default)]
-struct ProbeStreams {
-    streams: HashMap<u64, StreamSession>,
+pub(crate) struct ProbeStreams {
+    pub(crate) streams: HashMap<u64, StreamSession>,
+    /// Why the last stream for a device ended, shown once its session is gone.
+    /// Also carries the reason a start never got off the ground at all.
+    last_status: HashMap<u64, StreamStatus>,
 }
 
-struct StreamSession {
+/// What a device's stream is currently doing, mirrored into its status label.
+#[derive(Clone)]
+pub(crate) enum StreamStatus {
+    /// Waiting for the owning server's connection to come up.
+    Pending,
+    /// The stream is open; no frames decoded yet.
+    Connecting,
+    Streaming(u32, u32),
+    /// The remote end closed the stream normally.
+    Ended(String),
+    Failed(String),
+}
+
+pub(crate) struct StreamSession {
     events: UnboundedReceiver<RtspStreamEvent>,
     outbound: Sender<RtspSessionStreamRequest>,
-    view: Entity,
-    size: Option<(u32, u32)>,
+    pub(crate) status: StreamStatus,
+    /// Launch parameters held until a server connection is available. Probe nodes
+    /// are spawned from config before the sync websocket is up, so a stream can be
+    /// requested too early; `launch_pending_streams` takes this once sync is ready.
+    pending: Option<PendingLaunch>,
+    /// The connection carrying this stream, and the stream's id on it. Both are
+    /// only known once the stream is actually open; together they're what the
+    /// link renderer reads byte counters from.
+    pub(crate) conn: Option<Arc<InstanceConnection>>,
+    pub(crate) stream_id: Option<StreamId>,
+}
+
+/// How long to wait for the owning server's connection before giving up on a
+/// deferred stream start.
+const PENDING_LAUNCH_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
+/// A stream start deferred until the owning server's connection is ready.
+struct PendingLaunch {
+    /// The server that reaches this device; `None` uses the primary connection.
+    server: Option<ServerUrl>,
+    requester: RtspSessionStreamRequester,
+    events: UnboundedSender<RtspStreamEvent>,
+    initial: RtspSessionStreamRequest,
+    outbound_rx: Receiver<RtspSessionStreamRequest>,
+    /// When the start was requested, so a connection that never arrives is
+    /// reported instead of retried silently forever.
+    since: std::time::Instant,
+}
+
+/// Latest captured frame per device id, used as the node icon thumbnail. Populated
+/// passively while a stream runs; reusable by any probe type that decodes frames.
+#[derive(Resource, Default)]
+struct ProbeThumbnails(HashMap<u64, Handle<Image>>);
+
+/// A probe node's icon child kind. The variants can't share an entity: `Svg2d`
+/// requires `Mesh2d` and inserts its own material, so switching to a `Sprite` means
+/// despawning and respawning the child.
+#[derive(Component, Clone, PartialEq)]
+enum ProbeNodeIcon {
+    Svg(ProbeType),
+    Thumbnail(Handle<Image>),
 }
 
 /// The display node showing a device's RTSP stream.
 #[derive(Component)]
 struct RtspStreamView {
+    device_id: u64,
+}
+
+/// A status label reflecting the stream state for a device.
+#[derive(Component)]
+struct RtspStatusText {
     device_id: u64,
 }
 
@@ -373,8 +484,11 @@ struct DeviceTabContent {
     index: usize,
 }
 
-/// The probe layer's node controller: lists the gateway's devices, each with a
-/// tab per protocol.
+/// The probe layer's node controller.
+///
+/// Opened from a probe node, it shows just that device. Server nodes don't open
+/// it at all (`without_instance_controller`); the gateway-wide list below is a
+/// fallback for any caller that targets a bare instance.
 pub struct ProbeController;
 
 impl NodeController for ProbeController {
@@ -382,7 +496,38 @@ impl NodeController for ProbeController {
         "Devices"
     }
 
-    fn build(&self, commands: &mut Commands, body: Entity, instance: InstanceId, theme: &Theme) {
+    fn title_for(&self, target: ControllerTarget) -> String {
+        target
+            .sub
+            .and_then(device_by_id)
+            .map(|device| device.display_name())
+            .unwrap_or_else(|| self.title().to_string())
+    }
+
+    fn build(
+        &self,
+        commands: &mut Commands,
+        body: Entity,
+        target: ControllerTarget,
+        theme: &Theme,
+    ) {
+        if let Some(device_id) = target.sub {
+            commands.entity(body).with_children(|p| {
+                match device_by_id(device_id) {
+                    Some(device) => build_device_section(p, theme, &device),
+                    None => {
+                        p.spawn(muted(
+                            theme,
+                            "This device is no longer registered.",
+                            theme.metrics.font_md,
+                        ));
+                    }
+                }
+            });
+            return;
+        }
+
+        let instance = target.instance;
         let devices = query_devices(instance);
 
         commands.entity(body).with_children(|p| {
@@ -502,14 +647,16 @@ fn build_tab_content(
                     ..default()
                 },
             ));
+            content.spawn((
+                RtspStatusText { device_id },
+                text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+            ));
             content.spawn(row(theme.metrics.space_sm)).with_children(|controls| {
                 controls
                     .spawn(button(theme, "Start stream"))
                     .observe(
-                        move |_: On<Activate>,
-                              mut streams: ResMut<ProbeStreams>,
-                              views: Query<(Entity, &RtspStreamView)>| {
-                            start_rtsp_stream(device_id, &mut streams, &views);
+                        move |_: On<Activate>, mut streams: ResMut<ProbeStreams>| {
+                            start_rtsp_stream(device_id, &mut streams);
                         },
                     );
                 controls
@@ -517,23 +664,27 @@ fn build_tab_content(
                     .observe(
                         move |_: On<Activate>,
                               mut streams: ResMut<ProbeStreams>,
-                              mut nodes: Query<&mut ImageNode>| {
-                            if let Some(session) = streams.streams.remove(&device_id) {
-                                let _ = session.outbound.try_send(RtspSessionStreamRequest::Stop);
-                                if let Ok(mut node) = nodes.get_mut(session.view) {
-                                    node.color = Color::NONE;
-                                }
-                            }
+                              mut thumbnails: ResMut<ProbeThumbnails>,
+                              mut views: Query<(&RtspStreamView, &mut ImageNode)>| {
+                            let Some(session) = streams.streams.remove(&device_id) else {
+                                return;
+                            };
+                            let _ = session.outbound.try_send(RtspSessionStreamRequest::Stop);
+                            streams
+                                .last_status
+                                .insert(device_id, StreamStatus::Ended("Stopped".into()));
+                            clear_stream_view(device_id, &mut thumbnails, &mut views);
                         },
                     );
             });
         }
         ProbeType::Wol => {
             if let Some(wol) = device.device.wol.clone() {
+                let server = device.device.server.clone();
                 content
                     .spawn(button(theme, "Wake"))
                     .observe(move |_: On<Activate>| {
-                        info!("{}", send_wake(&wol));
+                        send_wake(&wol, server.as_ref());
                     });
             }
         }
@@ -547,76 +698,137 @@ fn build_tab_content(
     }
 }
 
-/// Open an RTSP stream for `device_id` if one isn't already running.
-fn start_rtsp_stream(
-    device_id: u64,
-    streams: &mut ProbeStreams,
-    views: &Query<(Entity, &RtspStreamView)>,
-) {
+/// Open an RTSP stream for `device_id` if one isn't already running. Every way
+/// this can decline to start records a reason, so the tab's status label can say
+/// what happened instead of the button appearing to do nothing.
+fn start_rtsp_stream(device_id: u64, streams: &mut ProbeStreams) {
     if streams.streams.contains_key(&device_id) {
         return;
     }
     let Some(device) = device_by_id(device_id) else {
+        streams.last_status.insert(
+            device_id,
+            StreamStatus::Failed("Device is no longer registered".into()),
+        );
         return;
     };
     let Some(rtsp) = device.device.rtsp.clone() else {
-        return;
-    };
-    let Some((view, _)) = views.iter().find(|(_, v)| v.device_id == device_id) else {
+        streams.last_status.insert(
+            device_id,
+            StreamStatus::Failed("Device has no RTSP configuration".into()),
+        );
         return;
     };
 
-    let (requester, events) = RtspSessionStreamRequester::channel();
+    let (requester, events_tx, events) = RtspSessionStreamRequester::channel();
     let (outbound, outbound_rx) = channel(16);
     let initial = RtspSessionStreamRequest::Start {
         url: build_rtsp_url(device.device.ip, &rtsp),
         transport: rtsp_transport(&rtsp),
+        username: rtsp.username.clone(),
+        password: rtsp.password.clone(),
     };
-    spawn_stream(device.gateway, requester, initial, outbound_rx);
 
+    streams.last_status.remove(&device_id);
     streams.streams.insert(
         device_id,
         StreamSession {
             events,
             outbound,
-            view,
-            size: None,
+            status: StreamStatus::Pending,
+            conn: None,
+            stream_id: None,
+            pending: Some(PendingLaunch {
+                server: device.device.server.clone(),
+                requester,
+                events: events_tx,
+                initial,
+                outbound_rx,
+                since: std::time::Instant::now(),
+            }),
         },
     );
     info!("RTSP stream requested for device {}", device_id);
 }
 
-/// Open a relayed RTSP stream to `gateway` and forward outbound requests (Stop)
-/// over it until the channel closes.
+/// Launch any deferred stream starts once the owning server's connection is up.
+fn launch_pending_streams(mut streams: ResMut<ProbeStreams>) {
+    let mut timed_out = Vec::new();
+
+    for (device_id, session) in streams.streams.iter_mut() {
+        if session.pending.is_none() {
+            continue;
+        }
+        // Route to the server that owns the device; fall back to the primary.
+        let conn = session
+            .pending
+            .as_ref()
+            .and_then(|p| p.server.as_ref())
+            .and_then(sandpolis_client::sync::connection_for)
+            .or_else(sandpolis_client::sync::connection);
+        let Some(conn) = conn else {
+            // A connection that never arrives used to leave this spinning
+            // silently forever; give up and say why.
+            if session
+                .pending
+                .as_ref()
+                .is_some_and(|p| p.since.elapsed() > PENDING_LAUNCH_TIMEOUT)
+            {
+                timed_out.push(*device_id);
+            }
+            continue;
+        };
+        let launch = session.pending.take().unwrap();
+        session.status = StreamStatus::Connecting;
+        session.conn = Some(conn.clone());
+        spawn_stream(
+            conn,
+            launch.requester,
+            launch.events,
+            launch.initial,
+            launch.outbound_rx,
+        );
+    }
+
+    for device_id in timed_out {
+        streams.streams.remove(&device_id);
+        streams.last_status.insert(
+            device_id,
+            StreamStatus::Failed("No connection to the owning server".into()),
+        );
+        warn!("No server connection; cannot open RTSP stream for device {device_id}");
+    }
+}
+
+/// Open an RTSP stream handled directly by the owning server and forward outbound
+/// requests (Stop) over it until the channel closes.
 fn spawn_stream(
-    gateway: InstanceId,
+    conn: Arc<InstanceConnection>,
     requester: RtspSessionStreamRequester,
+    events: UnboundedSender<RtspStreamEvent>,
     initial: RtspSessionStreamRequest,
     mut outbound_rx: Receiver<RtspSessionStreamRequest>,
 ) {
-    let Some(conn) = sandpolis_client::sync::connection() else {
-        warn!("No server connection; cannot start RTSP stream");
-        return;
-    };
-    tokio::spawn(async move {
-        let (id, msg_tx) = match conn.open_stream_to(gateway, requester, initial).await {
+    sandpolis_client::sync::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream(requester, initial).await {
             Ok(v) => v,
             Err(e) => {
                 warn!(error = %e, "Failed to open RTSP stream");
+                let _ = events.send(RtspStreamEvent::Failed(format!(
+                    "Failed to open stream: {e}"
+                )));
                 return;
             }
         };
+        // Hand the id back so the link renderer can read this stream's counters.
+        let _ = events.send(RtspStreamEvent::Opened(id));
         while let Some(req) = outbound_rx.recv().await {
             let payload = match serde_cbor::to_vec(&req) {
                 Ok(p) => p,
                 Err(_) => continue,
             };
             if msg_tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: Some(gateway),
-                })
+                .send(StreamMessage::local(id, payload))
                 .await
                 .is_err()
             {
@@ -642,21 +854,47 @@ fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> Image {
     )
 }
 
+/// Blank a device's stream view and drop its node thumbnail.
+fn clear_stream_view(
+    device_id: u64,
+    thumbnails: &mut ProbeThumbnails,
+    views: &mut Query<(&RtspStreamView, &mut ImageNode)>,
+) {
+    thumbnails.0.remove(&device_id);
+    for (view, mut node) in views.iter_mut() {
+        if view.device_id == device_id {
+            node.image = Handle::default();
+            node.color = Color::NONE;
+        }
+    }
+}
+
 /// Drain decoded RTSP frames and upload the latest to each display texture.
 fn drive_probe_streams(
     mut streams: ResMut<ProbeStreams>,
     mut images: ResMut<Assets<Image>>,
-    mut nodes: Query<&mut ImageNode>,
+    mut views: Query<(&RtspStreamView, &mut ImageNode)>,
+    mut thumbnails: ResMut<ProbeThumbnails>,
 ) {
-    for session in streams.streams.values_mut() {
+    // Sessions that ended this tick, with the status to leave behind.
+    let mut finished: Vec<(u64, StreamStatus)> = Vec::new();
+
+    for (device_id, session) in streams.streams.iter_mut() {
         let mut latest: Option<RtspFrameRgba> = None;
         while let Ok(event) = session.events.try_recv() {
             match event {
+                RtspStreamEvent::Opened(id) => session.stream_id = Some(id),
                 RtspStreamEvent::Started { width, height } => {
-                    session.size = Some((width, height));
+                    session.status = StreamStatus::Streaming(width, height);
                 }
                 RtspStreamEvent::Frame(frame) => latest = Some(frame),
-                RtspStreamEvent::Stopped => {}
+                RtspStreamEvent::Stopped { reason } => {
+                    finished.push((*device_id, StreamStatus::Ended(reason)));
+                }
+                RtspStreamEvent::Failed(reason) => {
+                    warn!(device_id, %reason, "RTSP stream failed");
+                    finished.push((*device_id, StreamStatus::Failed(reason)));
+                }
             }
         }
 
@@ -664,13 +902,119 @@ fn drive_probe_streams(
             if frame.width == 0 || frame.height == 0 {
                 continue;
             }
-            session.size = Some((frame.width, frame.height));
+            session.status = StreamStatus::Streaming(frame.width, frame.height);
             let handle = images.add(image_from_rgba(frame.width, frame.height, frame.rgba));
-            if let Ok(mut node) = nodes.get_mut(session.view) {
-                node.image = handle;
-                node.color = Color::WHITE;
+            // Passively capture the latest frame as the node's thumbnail.
+            thumbnails.0.insert(*device_id, handle.clone());
+            // Resolved by device id rather than a cached entity: the node
+            // controller panel is rebuilt when reopened, so any entity captured
+            // at start time goes stale.
+            for (view, mut node) in views.iter_mut() {
+                if view.device_id == *device_id {
+                    node.image = handle.clone();
+                    node.color = Color::WHITE;
+                }
             }
         }
+    }
+
+    // Drop ended sessions so the next "Start stream" isn't a no-op.
+    for (device_id, status) in finished {
+        streams.streams.remove(&device_id);
+        streams.last_status.insert(device_id, status);
+        clear_stream_view(device_id, &mut thumbnails, &mut views);
+    }
+}
+
+/// Reflect each device's stream state in its status label.
+fn update_rtsp_status(
+    streams: Res<ProbeStreams>,
+    theme: Res<Theme>,
+    mut labels: Query<(&RtspStatusText, &mut Text, &mut TextColor, &mut ThemedText)>,
+) {
+    for (status, mut label, mut color, mut themed) in &mut labels {
+        let state = streams
+            .streams
+            .get(&status.device_id)
+            .map(|session| session.status.clone())
+            .or_else(|| streams.last_status.get(&status.device_id).cloned());
+
+        let (value, role) = match state {
+            Some(StreamStatus::Pending) => ("Waiting for server connection…".to_string(), Role::TextMuted),
+            Some(StreamStatus::Connecting) => ("Connecting…".to_string(), Role::TextMuted),
+            Some(StreamStatus::Streaming(w, h)) => {
+                (format!("Streaming {w}×{h}"), Role::TextMuted)
+            }
+            Some(StreamStatus::Ended(reason)) => (format!("Stream ended: {reason}"), Role::TextMuted),
+            Some(StreamStatus::Failed(reason)) => (reason, Role::Error),
+            None => ("Stream inactive".to_string(), Role::TextMuted),
+        };
+
+        if label.0 != value {
+            label.0 = value;
+        }
+        // Both are set: `ThemedText` so a theme switch repaints with the right
+        // role, `TextColor` because the theme system only repaints on change.
+        if themed.0 != role {
+            themed.0 = role;
+        }
+        let want = theme.color(role);
+        if color.0 != want {
+            color.0 = want;
+        }
+    }
+}
+
+/// Swap a probe node's icon between its protocol SVG and a captured stream
+/// thumbnail as frames arrive (and back if the thumbnail is cleared).
+fn update_probe_node_icons(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    thumbnails: Res<ProbeThumbnails>,
+    nodes: Query<(Entity, &ProbeNode, Option<&Children>)>,
+    mut icons: Query<&mut ProbeNodeIcon>,
+    mut sprites: Query<&mut Sprite>,
+) {
+    if !thumbnails.is_changed() {
+        return;
+    }
+
+    for (entity, probe, children) in nodes.iter() {
+        let desired = match thumbnails.0.get(&probe.device_id) {
+            Some(handle) => ProbeNodeIcon::Thumbnail(handle.clone()),
+            None => ProbeNodeIcon::Svg(probe.icon),
+        };
+
+        let current = children
+            .into_iter()
+            .flatten()
+            .find_map(|child| icons.get(*child).ok().map(|_| *child));
+
+        let Some(child) = current else {
+            spawn_probe_icon(&mut commands, &asset_server, entity, desired);
+            continue;
+        };
+
+        let icon = icons.get(child).unwrap().clone();
+        if icon == desired {
+            continue;
+        }
+
+        // Thumbnail handle changed (new frame): update the sprite in place rather
+        // than despawning a child every frame.
+        if let (ProbeNodeIcon::Thumbnail(_), ProbeNodeIcon::Thumbnail(new_handle)) =
+            (&icon, &desired)
+        {
+            if let Ok(mut sprite) = sprites.get_mut(child) {
+                sprite.image = new_handle.clone();
+            }
+            *icons.get_mut(child).unwrap() = desired;
+            continue;
+        }
+
+        // Variant change (SVG <-> thumbnail): despawn and respawn the child.
+        commands.entity(child).despawn();
+        spawn_probe_icon(&mut commands, &asset_server, entity, desired);
     }
 }
 
@@ -827,6 +1171,8 @@ fn delete_selected_devices(commands: &mut Commands) {
 pub struct RegisterProbeDialogState {
     pub show: bool,
     pub name: String,
+    /// Server URL to associate the probe with; blank means the primary server.
+    pub server: String,
     pub ip: String,
     pub rtsp_path: String,
     pub rtsp_port: String,
@@ -839,6 +1185,8 @@ pub struct RegisterProbeDialogState {
 pub struct RegisterProbeRoot;
 #[derive(Component)]
 struct NameInput;
+#[derive(Component)]
+struct ServerInput;
 #[derive(Component)]
 struct IpInput;
 #[derive(Component)]
@@ -888,6 +1236,12 @@ pub fn manage_register_probe(
                         p.spawn(heading(&theme, "Register Device"));
                         p.spawn(muted(&theme, "Name", theme.metrics.font_sm));
                         p.spawn((NameInput, text_input(&theme)));
+                        p.spawn(muted(
+                            &theme,
+                            "Server URL (blank = default)",
+                            theme.metrics.font_sm,
+                        ));
+                        p.spawn((ServerInput, text_input(&theme)));
                         p.spawn(muted(&theme, "IP address", theme.metrics.font_sm));
                         p.spawn((IpInput, text_input(&theme)));
 
@@ -936,6 +1290,7 @@ pub fn focus_register_probe_input(
 pub fn sync_register_probe_inputs(
     mut state: ResMut<RegisterProbeDialogState>,
     name: Query<&EditableText, With<NameInput>>,
+    server: Query<&EditableText, With<ServerInput>>,
     ip: Query<&EditableText, With<IpInput>>,
     path: Query<&EditableText, With<RtspPathInput>>,
     port: Query<&EditableText, With<RtspPortInput>>,
@@ -947,6 +1302,12 @@ pub fn sync_register_probe_inputs(
         let value = i.value().to_string();
         if state.name != value {
             state.name = value;
+        }
+    }
+    if let Ok(i) = server.single() {
+        let value = i.value().to_string();
+        if state.server != value {
+            state.server = value;
         }
     }
     if let Ok(i) = ip.single() {
@@ -987,11 +1348,7 @@ pub fn sync_register_probe_inputs(
     }
 }
 
-fn on_register_submit(
-    _activate: On<Activate>,
-    mut state: ResMut<RegisterProbeDialogState>,
-    instance_layer: Res<InstanceLayer>,
-) {
+fn on_register_submit(_activate: On<Activate>, mut state: ResMut<RegisterProbeDialogState>) {
     let ip = match state.ip.trim().parse::<std::net::IpAddr>() {
         Ok(ip) => ip,
         Err(_) => {
@@ -1026,8 +1383,29 @@ fn on_register_submit(
         return;
     }
 
+    // Resolve the associated server: an explicit URL if given, else the primary.
+    let server = if state.server.trim().is_empty() {
+        match sandpolis_client::sync::primary_server_url() {
+            Some(url) => url,
+            None => {
+                warn!("No server connection; cannot register device");
+                return;
+            }
+        }
+    } else {
+        match state.server.trim().parse() {
+            Ok(url) => url,
+            Err(e) => {
+                warn!("Register device: invalid server URL: {}", e);
+                return;
+            }
+        }
+    };
+
+    // Registration always targets the authoritative server (primary/GS), which
+    // records the association and persists the device list.
     if let Some(conn) = sandpolis_client::sync::connection() {
-        crate::management::register_device(conn, instance_layer.instance_id, device);
+        crate::management::register_device(conn, server, device);
     } else {
         warn!("No server connection; cannot register device");
     }
@@ -1057,7 +1435,9 @@ impl Plugin for ProbeClientPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RegisterProbeDialogState>();
         app.init_resource::<ProbeStreams>();
+        app.init_resource::<ProbeThumbnails>();
         app.init_resource::<DeviceSelectionSet>();
+        app.init_resource::<super::link::ProbeLinkTraffic>();
         app.add_systems(
             Update,
             (
@@ -1067,25 +1447,38 @@ impl Plugin for ProbeClientPlugin {
                 manage_register_probe,
                 focus_register_probe_input,
                 sync_register_probe_inputs,
+                launch_pending_streams,
                 drive_probe_streams,
+                update_rtsp_status.after(drive_probe_streams),
+                update_probe_node_icons,
                 update_device_tabs,
                 handle_device_selection,
                 update_device_selection_visuals,
                 open_device_subscription,
+                super::link::sample_link_traffic.after(drive_probe_streams),
+                super::link::hover_probe_links,
             ),
         );
         // Must run after the generic node visibility system (which also matches
         // device nodes) so probe-specific visibility wins.
         app.add_systems(
             PostUpdate,
-            update_probe_node_visibility
-                .after(sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer),
+            (
+                update_probe_node_visibility.after(
+                    sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer,
+                ),
+                super::link::render_probe_links,
+            ),
         );
         app.register_layer_client(
             LayerClientInfo::new(LayerName::from("Probe"), "Device monitoring probes")
                 .with_controller(ProbeController)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                // Probes are reachable only from servers (`management.rs` stamps
+                // the serving server's own id as the gateway), so agent nodes
+                // would just be clutter here.
+                .with_visible_instance_types(&[InstanceType::Server])
                 .showing_probe_nodes()
+                .without_instance_controller()
                 .with_toolbar_action("Register probe", "toolbar/register_probe.svg", |commands| {
                     commands.queue(|world: &mut World| {
                         if let Some(mut state) =

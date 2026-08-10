@@ -659,11 +659,7 @@ mod client {
                 Err(_) => return,
             };
             let _ = tx
-                .send(StreamMessage {
-                    stream_id: id,
-                    payload,
-                    dst: None,
-                })
+                .send(StreamMessage::local(id, payload))
                 .await;
             conn.close_stream(id);
         });

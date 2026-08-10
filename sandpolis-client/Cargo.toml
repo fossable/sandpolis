@@ -7,6 +7,7 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = { workspace = true }
+chrono = { workspace = true }
 os_info = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
@@ -20,6 +21,7 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1", optional = true }
 native_db = { workspace = true, optional = true }
+serde_cbor = { workspace = true, optional = true }
 native_model = { workspace = true, optional = true }
 
 # GUI dependencies
@@ -52,6 +54,7 @@ client = [
   "dep:include_dir",
   "dep:rand",
   "dep:sandpolis-server",
+  "dep:serde_cbor",
   "sandpolis-instance/client",
   "sandpolis-server/client",
   "dep:ratatui",

@@ -32,7 +32,7 @@ test-log = { version = "0.2.18", features = ["trace"] }
 tokio = { workspace = true }
 
 [features]
-agent = ["dep:sandpolis-agent", "dep:zbus"]
+agent = ["dep:sandpolis-agent", "dep:zbus", "sandpolis-instance/agent", "sandpolis-agent/agent"]
 client = [
   "sandpolis-instance/client",
   "dep:sandpolis-client",

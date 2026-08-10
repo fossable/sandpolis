@@ -3,6 +3,9 @@ pub mod cli;
 pub mod config;
 
 #[cfg(feature = "client")]
+pub mod service;
+
+#[cfg(feature = "client")]
 pub mod sync;
 
 #[cfg(feature = "client")]

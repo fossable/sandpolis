@@ -49,7 +49,13 @@ pub fn main() {
             // Load state
             let state = InstanceState::new(
                 config.clone(),
-                DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS).unwrap(),
+                DatabaseLayer::new(
+                    config.database.clone(),
+                    &sandpolis::MODELS,
+                    sandpolis_instance::database::DatabaseAccess::ReadWrite,
+                )
+                .unwrap(),
+                sandpolis::ServerStratum::Global,
             )
             .await
             .unwrap();
