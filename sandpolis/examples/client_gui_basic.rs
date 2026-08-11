@@ -7,7 +7,7 @@
 /// - Force-directed graph layout
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::{InstanceId, InstanceType};
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
         ephemeral: true,
         key: Default::default(),
     };
-    let database = DatabaseLayer::new(db_config, &*MODELS, DatabaseAccess::ReadWrite)?;
+    let database = DatabaseLayer::new(db_config, &*MODELS, WriteAuthority::Full)?;
 
     // Create instance state
     // The local instance will be spawned automatically
@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     // This creates several agent and server connections that will appear in the world view
     {
         let db = database.realm(RealmName::default())?;
-        let rw = db.rw_transaction()?;
+        let rw = db.write(sandpolis_instance::database::DataScope::Instance(state.instance.instance_id))?;
 
         // Create several test agent connections
         for i in 1..=5 {

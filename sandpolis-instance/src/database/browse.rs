@@ -182,7 +182,7 @@ pub static BROWSE: LazyLock<BrowseRegistry> = LazyLock::new(|| {
 mod tests {
     use super::*;
     use crate::InstanceId;
-    use crate::database::DatabaseLayer;
+    use crate::database::{DataScope, DatabaseLayer};
     use crate::realm::RealmName;
     use crate::test_db;
     use anyhow::Result;
@@ -209,7 +209,7 @@ mod tests {
         let a = InstanceId::default();
         let b = InstanceId::default();
 
-        let rw = realm.rw_transaction()?;
+        let rw = realm.write(DataScope::Instance(a))?;
         rw.insert(BrowseTestData {
             _instance_id: a,
             name: "x".into(),

@@ -81,17 +81,6 @@ impl InstanceState {
 
         let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
 
-        let user = sandpolis_server::user::UserLayer::new(
-            instance.clone(),
-            database.clone(),
-            network.clone(),
-            #[cfg(feature = "server")]
-            stratum.clone(),
-        )
-        .await?;
-
-        let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
-
         let server =
             sandpolis_server::ServerLayer::new(
                 database.clone(),
@@ -100,6 +89,19 @@ impl InstanceState {
                 stratum,
             )
             .await?;
+
+        let user = sandpolis_server::user::UserLayer::new(
+            instance.clone(),
+            database.clone(),
+            network.clone(),
+            #[cfg(feature = "server")]
+            server.stratum.clone(),
+            #[cfg(feature = "server")]
+            server.ownership.clone(),
+        )
+        .await?;
+
+        let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
         #[cfg(feature = "layer-inventory")]
         let inventory =
@@ -221,6 +223,9 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_server::ServerLayerData>().unwrap();
         #[cfg(feature = "server")]
         m.define::<sandpolis_server::banner::ServerBannerData>()
+            .unwrap();
+        #[cfg(feature = "server")]
+        m.define::<sandpolis_server::ownership::OwnershipData>()
             .unwrap();
         #[cfg(feature = "client")]
         m.define::<sandpolis_server::client::SavedServerData>()

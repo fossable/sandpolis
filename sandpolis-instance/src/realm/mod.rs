@@ -642,7 +642,7 @@ impl RealmClientCert {
 #[cfg(all(test, feature = "server"))]
 mod test_enrollment {
     use super::*;
-    use crate::database::DatabaseAccess;
+    use crate::database::{ScopeTable, WriteAuthority};
     use crate::{InstanceId, InstanceType};
 
     fn models() -> &'static native_db::Models {
@@ -665,7 +665,7 @@ mod test_enrollment {
                 key: Default::default(),
             },
             models(),
-            DatabaseAccess::Replica,
+            WriteAuthority::Scoped(std::sync::Arc::new(ScopeTable::default())),
         )?)
     }
 

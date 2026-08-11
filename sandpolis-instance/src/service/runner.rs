@@ -4,7 +4,7 @@ use super::{
     ErasedService, Service, ServiceData, ServiceReport, ServiceSchedule, ServiceState, service_key,
 };
 use crate::InstanceId;
-use crate::database::RealmDatabase;
+use crate::database::{DataScope, RealmDatabase};
 use anyhow::{Result, bail};
 use chrono::Utc;
 use std::collections::BTreeMap;
@@ -357,7 +357,9 @@ fn update(
     key: &str,
     f: impl FnOnce(&mut ServiceData, bool),
 ) -> Result<ServiceData> {
-    let rw = realm.rw_transaction()?;
+    // A runner only ever books its own instance's rows, so this is the self
+    // scope — writable even on a local stratum server.
+    let rw = realm.write(DataScope::Instance(instance_id))?;
 
     let rows: Vec<ServiceData> = rw
         .scan()

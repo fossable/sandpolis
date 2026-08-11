@@ -23,19 +23,34 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
     let krate = instance_crate();
 
-    let expiration = if input
-        .fields
-        .iter()
-        .find(|field| {
+    let has_field = |name: &str| {
+        input.fields.iter().any(|field| {
             field
                 .ident
                 .as_ref()
                 .map(|i| i.to_string())
                 .unwrap_or_default()
-                == "_expiration"
+                == name
         })
-        .is_some()
-    {
+    };
+
+    // Instance-scoped data belongs to the instance in `_instance_id`;
+    // everything else is estate-wide.
+    let scope = if has_field("_instance_id") {
+        quote! {
+            fn scope(&self) -> #krate::database::DataScope {
+                #krate::database::DataScope::Instance(self._instance_id)
+            }
+        }
+    } else {
+        quote! {
+            fn scope(&self) -> #krate::database::DataScope {
+                #krate::database::DataScope::Global
+            }
+        }
+    };
+
+    let expiration = if has_field("_expiration") {
         quote! {
             fn expiration(&self) -> Option<#krate::database::DataExpiration> {
                 Some(self._expiration)
@@ -71,6 +86,8 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
             fn creation(&self) -> #krate::database::DataCreation {
                 self._creation
             }
+
+            #scope
 
             #expiration
         }

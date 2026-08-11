@@ -503,7 +503,10 @@ inventory::collect!(LayerName);
 #[derive(Default)]
 pub struct InstanceLayerData {
     pub cluster_id: ClusterId,
-    pub instance_id: InstanceId,
+    /// The instance this row describes — also this row's owning scope, so a
+    /// server can own exactly the identity rows of the instances attached to it.
+    #[secondary_key]
+    pub _instance_id: InstanceId,
     pub os_info: os_info::Info,
     /// The domain this instance belongs to.
     ///
@@ -519,7 +522,7 @@ pub struct InstanceLayerData {
 // instances never replicates at all and every peer looks empty.
 inventory::submit! {
     crate::database::sync::SyncRegistration(
-        |r| r.register_scoped::<InstanceLayerData>(|d| d.instance_id))
+        |r| r.register_scoped::<InstanceLayerData>(|d| d._instance_id))
 }
 
 /// The sync `model_id` for [`InstanceLayerData`], used by clients to subscribe to
@@ -562,6 +565,28 @@ impl InstanceLayer {
         }
 
         let realm = database.realm(RealmName::default())?;
+
+        // The identity row is generated on first start and reused forever after.
+        // It is seeded as instance-local bookkeeping rather than through the
+        // scope gate: the row's own scope is this instance's id, which isn't
+        // known until the row exists.
+        {
+            let r = realm.r_transaction()?;
+            let existing = r
+                .scan()
+                .primary::<InstanceLayerData>()?
+                .all()?
+                .next()
+                .transpose()?;
+            drop(r);
+
+            if existing.is_none() {
+                let rw = realm.local_write()?;
+                rw.insert(InstanceLayerData::default())?;
+                rw.commit()?;
+            }
+        }
+
         let data: Resident<InstanceLayerData> = realm.resident(())?;
 
         // Persist the configured domain if it changed since the last start. A
@@ -574,8 +599,15 @@ impl InstanceLayer {
             })?;
         }
 
+        let instance_id = data.read()._instance_id;
+
+        // With scoped authority, the self scope becomes writable from here on.
+        if let Some(table) = database.authority().scope_table() {
+            table.set_self(instance_id);
+        }
+
         Ok(Self {
-            instance_id: { data.read().instance_id },
+            instance_id,
             cluster_id: { data.read().cluster_id },
             realm,
             data,

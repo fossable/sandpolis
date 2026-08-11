@@ -3,10 +3,10 @@ use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
 use sandpolis::config::Configuration;
-use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer};
+use sandpolis_instance::database::{DatabaseLayer, ScopeTable, WriteAuthority};
 use std::process::ExitCode;
 use tokio::task::JoinSet;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 use tracing_subscriber::filter::LevelFilter;
 
 #[tokio::main]
@@ -164,44 +164,31 @@ async fn main() -> Result<ExitCode> {
         });
     }
 
-    // A local stratum server's database is a read-only replica of the global
-    // stratum server's. Everything else owns its data outright.
-    let access = if stratum.is_local() {
-        DatabaseAccess::Replica
+    // A local stratum server holds per-instance write authority: it owns the
+    // data of the instances directly connected to it (as granted by the global
+    // stratum server) and replicates everything else. The global stratum
+    // server, agents, and clients own their databases outright.
+    let authority = if stratum.is_local() {
+        WriteAuthority::Scoped(std::sync::Arc::new(ScopeTable::default()))
     } else {
-        DatabaseAccess::ReadWrite
+        WriteAuthority::Full
     };
-
-    // A co-located agent shares this process's database, and its collectors
-    // write estate data — which a replica must reject. So an all-in-one build
-    // running in the local stratum doesn't start one; agents belong in their own
-    // process, pointed at this server with `--server`.
-    #[allow(unused_mut)]
-    let mut run_colocated_agent = true;
-    #[cfg(all(feature = "server", feature = "agent"))]
-    if stratum.is_local() {
-        run_colocated_agent = false;
-        warn!(
-            "Not starting the co-located agent: a local stratum server's database is read-only. \
-             Run the agent as its own process with --server."
-        );
-    }
 
     // In an "all-in-one" run (the server runs in this same process), point the
     // co-located agent at the local server over loopback so no manual server
-    // configuration is needed for local testing.
+    // configuration is needed for local testing. This works in either stratum:
+    // the co-located agent shares this process's InstanceId, and a server
+    // always holds write authority for its own scope.
     #[cfg(all(feature = "server", feature = "agent"))]
-    if run_colocated_agent {
-        config.agent.servers.push(format!(
-            "https://127.0.0.1:{}/default",
-            config.server.listen.port()
-        ));
-    }
+    config.agent.servers.push(format!(
+        "https://127.0.0.1:{}/default",
+        config.server.listen.port()
+    ));
 
     // Load state
     let state = InstanceState::new(
         config.clone(),
-        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS, access)?,
+        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS, authority)?,
         stratum.clone(),
     )
     .await?;
@@ -238,7 +225,7 @@ async fn main() -> Result<ExitCode> {
     }
 
     #[cfg(feature = "agent")]
-    if run_colocated_agent {
+    {
         let s = state.clone();
         let c = config.clone();
         tasks.spawn(async move { sandpolis::agent::main(c, s).await });

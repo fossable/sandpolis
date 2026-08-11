@@ -40,9 +40,20 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     // issued its certificate, so this blocks (with retries) before binding.
     sandpolis_server::stratum::enroll(&state.server, &state.instance).await?;
 
+    // The global stratum server claims its own attached instances against the
+    // grant table; this is what revokes a local stratum server when an agent
+    // moves here.
+    if state.server.stratum.is_global() {
+        tokio::spawn(sandpolis_server::ownership::maintain_local_claims(
+            state.server.ownership.clone(),
+            state.network.clone(),
+            state.instance.instance_id,
+        ));
+    }
+
     // A local stratum server holds a link to its global stratum server for as
-    // long as it runs: reads replicate down it, writes go up it, and it is the
-    // default route for anything not attached here.
+    // long as it runs: estate data replicates down it, ownership is claimed up
+    // it, and it is the default route for anything not attached here.
     if state.server.stratum.is_local() {
         let server = state.server.clone();
         let network = state.network.clone();
@@ -54,6 +65,19 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
                 tracing::error!(error = %e, "Upstream stratum link stopped");
             }
         });
+
+        // Pull each owned, attached agent's records into the local database.
+        // Independent of the upstream link, so agents keep syncing while the
+        // global stratum server is unreachable.
+        if let Some(table) = state.server.database.authority().scope_table() {
+            tokio::spawn(sandpolis_server::ownership::maintain_agent_sync(
+                state.network.clone(),
+                state.instance.realm().clone(),
+                table.clone(),
+                state.server.ownership.clone(),
+                state.instance.instance_id,
+            ));
+        }
     }
 
     let app: Router<InstanceState> = Router::new();
@@ -136,7 +160,7 @@ pub async fn test_server() -> Result<TestServer> {
         sandpolis_instance::database::DatabaseLayer::new(
             config.database.clone(),
             &crate::MODELS,
-            sandpolis_instance::database::DatabaseAccess::ReadWrite,
+            sandpolis_instance::database::WriteAuthority::Full,
         )?;
 
     // Generate temporary certs

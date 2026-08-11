@@ -10,6 +10,12 @@ use sandpolis_instance::realm::RealmName;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+// The `#[data]` macro expands to `crate::database::...` and `crate::inventory`
+// paths when compiled inside the `sandpolis-instance` package — which, for a
+// bench, is this file's own crate root. Re-export the real modules so those
+// paths resolve.
+pub use sandpolis_instance::{database, inventory};
+
 // Test data structures
 #[data]
 #[derive(Default)]
@@ -42,6 +48,7 @@ fn create_test_db() -> DatabaseLayer {
             key: Default::default(),
         },
         models,
+        sandpolis_instance::database::WriteAuthority::Full,
     )
     .unwrap()
 }
@@ -228,7 +235,7 @@ fn bench_query_operations(c: &mut Criterion) {
 
                     // Setup: insert test data
                     {
-                        let rw = db.rw_transaction().unwrap();
+                        let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
                         for i in 0..size {
                             rw.insert(BenchData {
                                 name: format!("item_{}", i % 10),
@@ -262,7 +269,7 @@ fn bench_query_operations(c: &mut Criterion) {
 
                     // Setup: insert test data
                     {
-                        let rw = db.rw_transaction().unwrap();
+                        let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
                         for i in 0..size {
                             rw.insert(BenchData {
                                 name: format!("item_{:04}", i),
@@ -415,7 +422,7 @@ fn bench_transaction_throughput(c: &mut Criterion) {
                     let database = create_test_db();
                     let db = database.realm(RealmName::default()).unwrap();
 
-                    let rw = db.rw_transaction().unwrap();
+                    let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
                     for i in 0..size {
                         rw.insert(BenchData {
                             name: format!("item_{}", i),

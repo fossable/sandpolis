@@ -48,7 +48,7 @@ mod server {
     use chrono::Utc;
     use regex::Regex;
     use sandpolis_instance::LayerName;
-    use sandpolis_instance::database::RealmDatabase;
+    use sandpolis_instance::database::{DataScope, RealmDatabase};
     use sandpolis_instance::service::{Service, ServiceReport, ServiceSchedule};
     use std::collections::BTreeSet;
     use std::sync::LazyLock;
@@ -178,7 +178,7 @@ mod server {
 
     /// Write the outcome of one domain's fetch, replacing any previous row.
     fn store(realm: &RealmDatabase, domain: &str, outcome: Result<Favicon>) -> Result<()> {
-        let rw = realm.rw_transaction()?;
+        let rw = realm.write(DataScope::Global)?;
 
         let existing: Vec<FaviconData> = rw
             .scan()
@@ -357,7 +357,7 @@ mod server {
         }
 
         fn add_account(realm: &RealmDatabase, domain: &str) -> Result<()> {
-            let rw = realm.rw_transaction()?;
+            let rw = realm.write(DataScope::Global)?;
             rw.insert(AccountData {
                 account_id: AccountId::default(),
                 domain: domain.into(),

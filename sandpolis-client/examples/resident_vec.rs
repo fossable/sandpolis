@@ -6,8 +6,9 @@ use ratatui::{
     text::Text,
     widgets::ListItem,
 };
-use sandpolis_client::tui::{Panel, selectable_list::ResidentVecWidget};
-use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision, test_db};
+use sandpolis_client::tui::{Panel, resident_vec::ResidentVecWidget};
+use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision};
+use sandpolis_instance::test_db;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 

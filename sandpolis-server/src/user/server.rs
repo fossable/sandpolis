@@ -16,6 +16,7 @@ use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
 use rand::RngExt;
+use sandpolis_instance::database::DataScope;
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::RequestResult;
@@ -204,7 +205,7 @@ impl UserLayer {
         );
 
         let db = self.database.realm(RealmName::default())?;
-        let rw = db.rw_transaction()?;
+        let rw = db.write(DataScope::Global)?;
 
         let password = PasswordData {
             user,
@@ -244,7 +245,7 @@ impl UserLayer {
         );
 
         let db = self.database.realm(RealmName::default())?;
-        let rw = db.rw_transaction()?;
+        let rw = db.write(DataScope::Global)?;
 
         let password = PasswordData {
             iterations: USER_PASSWORD_HASH_ITERATIONS.get(),
@@ -367,9 +368,10 @@ impl FromRequestParts<UserLayer> for Claims {
 ///
 /// Authentication is by realm cert (the `x-realm` header is validated upstream by
 /// `auth_middleware`). The peer reports its own `InstanceId` via `x-instance-id`
-/// so the server can tell agents (which it pulls all data from) from clients
-/// (which subscribe to subsets). The resulting connection is retained in
-/// `network.inbound`; dropping it would cancel the socket.
+/// so the server can tell agents (whose own data it pulls, directly or through
+/// the ownership machinery) from clients (which subscribe to subsets). The
+/// resulting connection is retained in `network.inbound`; dropping it would
+/// cancel the socket.
 ///
 /// The peer also reports its stratum via `x-stratum`, which enforces the shape of
 /// the network: there is exactly one global stratum server, and local stratum
@@ -389,6 +391,7 @@ pub async fn connect(
     let local_instance = state.instance.instance_id;
     let local_domain = state.instance.domain();
     let stratum = state.stratum.clone();
+    let ownership = state.ownership.clone();
     let remote_instance = headers
         .get("x-instance-id")
         .and_then(|v| v.to_str().ok())
@@ -404,9 +407,14 @@ pub async fn connect(
     let peer_is_server =
         !peer_stratum.is_empty() || remote_instance.is_some_and(|id| id.is_server());
 
+    // A co-located agent or client dialing its own process over loopback shares
+    // this server's InstanceId (and, in a server build, sends its `x-stratum`).
+    // It is not a peer server, so the topology checks below don't apply to it.
+    let self_connection = remote_instance.is_some_and(|id| id == local_instance);
+
     // A network has exactly one global stratum server, so another one announcing
     // itself is a misconfiguration rather than a topology to accommodate.
-    if peer_stratum == "global" {
+    if peer_stratum == "global" && !self_connection {
         tracing::warn!(
             "Rejecting connection from another global stratum server; a network has exactly one"
         );
@@ -419,7 +427,7 @@ pub async fn connect(
 
     // Local stratum servers connect upward only, never to each other, so an
     // inbound server connection here means someone is pointed at the wrong host.
-    if stratum.is_local() && peer_is_server {
+    if stratum.is_local() && peer_is_server && !self_connection {
         tracing::warn!(
             "Rejecting inbound server connection: local stratum servers connect upward only"
         );
@@ -448,15 +456,6 @@ pub async fn connect(
             sandpolis_instance::network::collected_responders().collect();
         handlers.push(&sync_reg);
 
-        // Accepting pushed records is a write straight into the authoritative
-        // database, so it is offered to server peers only. Agents and clients
-        // publish by serving their own data, which we pull and can filter.
-        let ingest_reg =
-            sandpolis_instance::network::sync::IngestResponderRegistration::new(realm_db.clone());
-        if peer_is_server {
-            handlers.push(&ingest_reg);
-        }
-
         let connection =
             InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
 
@@ -466,43 +465,42 @@ pub async fn connect(
             .set_relay(std::sync::Arc::downgrade(&network.relay));
 
         // Likewise server-only: advertising lets a peer claim to carry traffic
-        // for other instances, which an agent or client must never be able to do.
-        if peer_is_server {
+        // for other instances, and an ownership claim carries the right to
+        // write an instance's data into the estate — an agent or client must
+        // never be able to do either. A co-located peer shares this process's
+        // database, so there is nothing to advertise or claim.
+        if peer_is_server && !self_connection {
             sandpolis_instance::network::reachability::accept_advertisements(
                 &connection,
                 network.relay.clone(),
             );
+            crate::ownership::accept_claims(&connection, ownership.clone(), realm_db.clone());
         }
 
-        // Pull everything from agents (the long-lived sync).
+        // Pull everything an attached agent owns (the long-lived sync). The
+        // filter is scoped to the agent's own instance, so a peer can never
+        // smuggle in records belonging to someone else.
         //
         // Skip co-located peers (`remote_instance == local_instance`): in an
         // all-in-one build the server, agent, and client share one InstanceId
         // *and* one database, so pulling from the local agent (or the client,
         // which also carries the agent bit of the shared id) is redundant and
-        // forms a feedback loop that floods the transport.
-        if remote_instance.is_some_and(|id| id.is_agent() && id != local_instance) {
-            let filters = vec![sandpolis_instance::database::sync::SyncFilter::all()];
-
+        // forms a feedback loop that floods the transport. Skip server peers
+        // too (an all-in-one local stratum server carries the agent bit): their
+        // data arrives through the ownership machinery instead.
+        if let Some(id) = remote_instance
+            .filter(|id| id.is_agent() && !id.is_server() && *id != local_instance)
+        {
             if stratum.is_local() {
-                // Our database is a read-only replica, so the agent's records
-                // are forwarded to the global stratum server rather than applied
-                // here. They return through our own subscription.
-                match crate::stratum::UPSTREAM_INGEST.current() {
-                    Some((ingest_id, ingest_tx)) => {
-                        if let Err(e) = connection
-                            .open_sync_proxy(ingest_tx, ingest_id, filters)
-                            .await
-                        {
-                            tracing::warn!(error = %e, "Failed to open agent sync proxy");
-                        }
-                    }
-                    None => tracing::warn!(
-                        "Agent connected before the upstream link was established; \
-                         its data will sync once the link is up and it reconnects"
-                    ),
-                }
-            } else if let Err(e) = connection.open_sync(realm_db, filters).await {
+                // Ownership decides: the reconciler (`ownership::maintain_agent_sync`)
+                // opens this pull once the scope is granted and hydrated.
+            } else if let Err(e) = connection
+                .open_sync(
+                    realm_db,
+                    vec![sandpolis_instance::database::sync::SyncFilter::instance(id)],
+                )
+                .await
+            {
                 tracing::warn!(error = %e, "Failed to open agent sync stream");
             }
         }

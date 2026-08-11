@@ -36,7 +36,7 @@ mod server {
     use crate::config::AccountConfig;
     use crate::{AccountData, AccountLinkData, AccountLinkType};
     use anyhow::{Result, bail};
-    use sandpolis_instance::database::RealmDatabase;
+    use sandpolis_instance::database::{DataScope, RealmDatabase};
     use sandpolis_instance::network::{
         RegisterResponders, ResponderRegistration, StreamRegistry, StreamResponder,
     };
@@ -142,7 +142,7 @@ mod server {
     ) -> Result<()> {
         let (domain, username, email) = validated(domain, username, email)?;
 
-        let rw = realm.rw_transaction()?;
+        let rw = realm.write(DataScope::Global)?;
         rw.insert(AccountData {
             account_id: AccountId::default(),
             domain,
@@ -202,7 +202,7 @@ mod server {
             }
             seen.push(key);
 
-            let rw = realm.rw_transaction()?;
+            let rw = realm.write(DataScope::Global)?;
             rw.insert(AccountData {
                 account_id: AccountId::default(),
                 domain,
@@ -226,7 +226,7 @@ mod server {
     }
 
     fn delete(realm: &RealmDatabase, id: AccountId) -> Result<()> {
-        let rw = realm.rw_transaction()?;
+        let rw = realm.write(DataScope::Global)?;
 
         let accounts: Vec<AccountData> = rw
             .scan()
@@ -259,7 +259,7 @@ mod server {
     /// wholesale rather than diffed. Links the user created explicitly (which
     /// can't be inferred from account fields) are left untouched.
     fn recompute_links(realm: &RealmDatabase) -> Result<()> {
-        let rw = realm.rw_transaction()?;
+        let rw = realm.write(DataScope::Global)?;
 
         let accounts: Vec<AccountData> = rw
             .scan()

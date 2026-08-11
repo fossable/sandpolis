@@ -25,12 +25,13 @@ pub struct CommandLine {
     #[clap(long, conflicts_with = "global_server")]
     pub config: Option<PathBuf>,
 
-    /// Run this server in the local stratum, replicating from the global
-    /// stratum server at this URL.
+    /// Run this server in the local stratum, attached to the global stratum
+    /// server at this URL.
     ///
-    /// A local stratum server holds a read-only replica scoped to the instances
-    /// that connect directly to it; writes are forwarded to the global stratum
-    /// server and arrive back through sync.
+    /// A local stratum server owns the data of the instances that connect
+    /// directly to it (as granted by the global stratum server) and replicates
+    /// estate-wide data down; the global stratum server pulls its owned scopes
+    /// back up.
     #[cfg(feature = "server")]
     #[clap(long, value_name = "URL")]
     pub global_server: Option<sandpolis_server::ServerUrl>,
@@ -275,7 +276,7 @@ impl Commands {
                 let database = sandpolis_instance::database::DatabaseLayer::new(
                     config.database.clone(),
                     &crate::MODELS,
-                    sandpolis_instance::database::DatabaseAccess::ReadWrite,
+                    sandpolis_instance::database::WriteAuthority::Full,
                 )?;
 
                 let db = database.realm(realm.parse()?)?;
@@ -523,10 +524,10 @@ mod client {
 
         let agents: Vec<_> = all
             .into_iter()
-            .filter(|i| i.instance_id.is_agent())
+            .filter(|i| i._instance_id.is_agent())
             .map(|i| {
                 serde_json::json!({
-                    "instance_id": i.instance_id.to_string(),
+                    "instance_id": i._instance_id.to_string(),
                     "cluster_id": i.cluster_id.to_string(),
                     "os": i.os_info.to_string(),
                     "domain": i.domain,

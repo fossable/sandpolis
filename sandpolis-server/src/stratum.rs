@@ -1,26 +1,27 @@
 //! The local stratum server's link to its global stratum server.
 //!
-//! A local stratum (LS) server is an edge cache with no authority of its own:
+//! A local stratum (LS) server owns the instances attached to it and replicates
+//! everything else:
 //!
-//! - **Reads** arrive by replication. The LS subscribes to the GS with one
-//!   filter per instance currently attached to it, so it holds exactly the data
-//!   its own peers need and nothing else. The subscription is rebuilt whenever
-//!   that set changes.
-//! - **Writes** go up. The LS's database is a read-only replica, so an agent's
-//!   updates are pushed to the GS over an ingest stream instead of being applied
-//!   locally. They come back down through the subscription above.
+//! - **Estate data** (users, accounts, realms) replicates down: the LS holds a
+//!   standing subscription to the GS for global-scope models.
+//! - **Ownership** is claimed up. The LS announces its attached instances over
+//!   the claim stream (see [`crate::ownership`]); grants come back, each scope
+//!   is hydrated from the GS, and from then on the LS applies those agents'
+//!   records to its own database — the GS pulls them back up.
 //! - **Routing** works in both directions. The LS advertises its attached
 //!   instances so the GS can reach them, and points its own default route at the
 //!   GS so it can reach everything else.
 
+use crate::ownership::{OwnershipRequest, OwnershipRequester, attached_instances};
 use crate::{ServerLayer, ServerStratum};
 use anyhow::{Result, anyhow};
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::InstanceLayer;
 use sandpolis_instance::database::sync::SyncFilter;
-use sandpolis_instance::network::stream::{StreamId, StreamMessage};
-use sandpolis_instance::network::{InstanceConnection, NetworkLayer, RetryWait};
 use sandpolis_instance::network::reachability::ReachabilityRequest;
+use sandpolis_instance::network::stream::StreamMessage;
+use sandpolis_instance::network::{InstanceConnection, NetworkLayer, RetryWait};
 use sandpolis_instance::realm::RealmName;
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -300,16 +301,12 @@ async fn attempt_link(
     info!(url = %global, "Connected to global stratum server");
 
     let established = tokio::time::Instant::now();
-    if let Err(e) = run_link(&link, network, instance.instance_id).await {
+    if let Err(e) = run_link(server, &link, network, instance.instance_id).await {
         warn!(error = %e, "Upstream link setup failed");
     }
 
     // Block until the link drops.
     link.cancel.cancelled().await;
-
-    // Stop handing out a sender nobody is reading: without this, sync proxies
-    // would silently write into a dead stream instead of failing.
-    let _ = UPSTREAM_INGEST.set_current(None);
 
     Ok(established.elapsed())
 }
@@ -333,6 +330,7 @@ impl Drop for OutboundGuard<'_> {
 
 /// Set up everything that rides on one established upstream link.
 async fn run_link(
+    server: &ServerLayer,
     link: &Arc<InstanceConnection>,
     network: &NetworkLayer,
     local_instance: InstanceId,
@@ -343,14 +341,37 @@ async fn run_link(
     network.relay.set_upstream(Arc::downgrade(link));
     link.streams.set_relay(Arc::downgrade(&network.relay));
 
-    // Held open for the life of the link: every agent's updates are funnelled
-    // through this one stream to the only instance allowed to write them.
-    let (ingest_id, ingest_tx) = link.open_ingest();
-
     let realm = network.database.realm(RealmName::default())?;
 
-    // Recompute the peer set on change, rebuilding the subscription and
-    // re-advertising reachability together — both answer the same question.
+    // Estate-wide data always replicates down from the global stratum server.
+    // Instance data flows the other way: scopes owned here are pulled *by* the
+    // GS, so there is nothing per-instance to subscribe to.
+    if let Err(e) = link
+        .open_sync(realm.clone(), vec![SyncFilter::global()])
+        .await
+    {
+        warn!(error = %e, "Failed to open the global subscription");
+    }
+
+    // The claim stream: grants and revocations arrive here and drive the scope
+    // table (hydrating each new grant before it becomes writable).
+    let table = network
+        .database
+        .authority()
+        .scope_table()
+        .cloned()
+        .ok_or_else(|| anyhow!("a local stratum server holds scoped write authority"))?;
+    let (claim_id, claim_tx) = link.streams.register(OwnershipRequester {
+        table,
+        ownership: server.ownership.clone(),
+        realm,
+        via: Arc::downgrade(link),
+    });
+
+    // Recompute the attached set on change: the reachability advertisement and
+    // the ownership claim answer the same question. The first pass always runs,
+    // even with nothing attached — the empty claim is what prompts the GS to
+    // report any scopes still owned from a previous run.
     let notify = Arc::new(Notify::new());
     {
         let notify = notify.clone();
@@ -362,17 +383,16 @@ async fn run_link(
     let link = link.clone();
     let network = network.clone();
     tokio::spawn(async move {
-        let mut current: Option<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)> = None;
-        let mut previous: BTreeSet<InstanceId> = BTreeSet::new();
+        let mut previous: Option<BTreeSet<InstanceId>> = None;
 
         loop {
             let peers = attached_instances(&network, local_instance);
 
-            if peers != previous {
+            if previous.as_ref() != Some(&peers) {
                 debug!(count = peers.len(), "Attached instance set changed");
+                let list: Vec<InstanceId> = peers.iter().copied().collect();
 
                 // Let the global stratum server route to our peers.
-                let list: Vec<InstanceId> = peers.iter().copied().collect();
                 match serde_cbor::to_vec(&ReachabilityRequest::advertise(&list)) {
                     Ok(payload) => {
                         let (advert_id, advert_tx) = link.open_reachability();
@@ -386,28 +406,20 @@ async fn run_link(
                     Err(e) => warn!(error = %e, "Failed to encode reachability advertisement"),
                 }
 
-                // Replace the subscription so we hold exactly our peers' data.
-                if let Some((id, tx)) = current.take() {
-                    let _ = link.close_sync(id, &tx).await;
-                }
-
-                let filters: Vec<SyncFilter> = peers
-                    .iter()
-                    .chain(std::iter::once(&local_instance))
-                    .map(|instance| SyncFilter {
-                        model_id: None,
-                        instance: Some(*instance),
-                    })
-                    .collect();
-
-                if !filters.is_empty() {
-                    match link.open_sync(realm.clone(), filters).await {
-                        Ok(handle) => current = Some(handle),
-                        Err(e) => warn!(error = %e, "Failed to open downstream subscription"),
+                // Claim ownership of the instances attached to us.
+                match serde_cbor::to_vec(&OwnershipRequest::Claim { instances: list }) {
+                    Ok(payload) => {
+                        if let Err(e) = claim_tx
+                            .send(StreamMessage::local(claim_id, payload))
+                            .await
+                        {
+                            warn!(error = %e, "Failed to send ownership claim");
+                        }
                     }
+                    Err(e) => warn!(error = %e, "Failed to encode ownership claim"),
                 }
 
-                previous = peers;
+                previous = Some(peers);
             }
 
             tokio::select! {
@@ -417,66 +429,11 @@ async fn run_link(
             }
         }
 
-        debug!("Upstream link torn down; stopping subscription watcher");
+        debug!("Upstream link torn down; stopping claim watcher");
     });
-
-    // Keep the ingest stream alive for the connection's lifetime; the sync
-    // proxies opened per-agent send onto it.
-    UPSTREAM_INGEST
-        .set_current(Some((ingest_id, ingest_tx)))
-        .map_err(|e| anyhow!("{e}"))?;
 
     Ok(())
 }
-
-/// The instances directly attached to this server, excluding ourselves and any
-/// server peer (a server is reached by routing, not advertised as a leaf).
-fn attached_instances(network: &NetworkLayer, local_instance: InstanceId) -> BTreeSet<InstanceId> {
-    network
-        .inbound
-        .read()
-        .unwrap()
-        .iter()
-        .filter(|c| !c.cancel.is_cancelled())
-        .map(|c| c.data.read().remote_instance)
-        .filter(|id| *id != local_instance && !id.is_server())
-        .collect()
-}
-
-/// The live ingest stream to the global stratum server.
-///
-/// A process runs at most one upstream link, and the connection handler that
-/// needs this (in `user::server::connect`) has no path to the link itself, so it
-/// is published here rather than threaded through the axum state.
-pub struct UpstreamIngest {
-    inner: std::sync::RwLock<Option<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)>>,
-}
-
-impl UpstreamIngest {
-    const fn new() -> Self {
-        Self {
-            inner: std::sync::RwLock::new(None),
-        }
-    }
-
-    fn set_current(
-        &self,
-        value: Option<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)>,
-    ) -> Result<()> {
-        *self
-            .inner
-            .write()
-            .map_err(|_| anyhow!("upstream ingest lock poisoned"))? = value;
-        Ok(())
-    }
-
-    /// The current ingest stream, if the upstream link is established.
-    pub fn current(&self) -> Option<(StreamId, tokio::sync::mpsc::Sender<StreamMessage>)> {
-        self.inner.read().ok()?.clone()
-    }
-}
-
-pub static UPSTREAM_INGEST: UpstreamIngest = UpstreamIngest::new();
 
 #[cfg(test)]
 mod test_upstream_retry {

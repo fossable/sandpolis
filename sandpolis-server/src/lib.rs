@@ -39,6 +39,8 @@ pub mod config;
 pub mod location;
 pub mod login;
 #[cfg(feature = "server")]
+pub mod ownership;
+#[cfg(feature = "server")]
 pub mod stratum;
 pub mod user;
 
@@ -61,6 +63,11 @@ pub struct ServerLayer {
     pub database: DatabaseLayer,
     #[cfg(feature = "client")]
     pub servers: ResidentVec<client::SavedServerData>,
+
+    /// The per-instance ownership grant table (authoritative on the global
+    /// stratum server, this server's own mirror on a local stratum server).
+    #[cfg(feature = "server")]
+    pub ownership: Arc<ownership::Ownership>,
 
     /// Outbound connections to servers
     pub outbound: Arc<RwLock<Vec<Arc<ServerConnection>>>>,
@@ -94,6 +101,21 @@ impl ServerLayer {
         Ok(Self {
             #[cfg(feature = "server")]
             banner: database.realm(RealmName::default())?.resident(())?,
+            #[cfg(feature = "server")]
+            ownership: {
+                let ownership = Arc::new(ownership::Ownership::new(
+                    &database.realm(RealmName::default())?,
+                )?);
+
+                // A local stratum server restores the scopes it owned before the
+                // last shutdown, so a GS outage spanning a restart doesn't stop
+                // it serving its instances.
+                if let Some(table) = database.authority().scope_table() {
+                    ownership.restore(table);
+                }
+
+                ownership
+            },
             stratum,
             network,
             realms,
@@ -491,25 +513,29 @@ impl ServerConnectStrategy {
 /// - **Configuration.** Only the GS reads a `sandpolis.ron`. Every other
 ///   instance — LS servers, agents, clients — is configured entirely by CLI
 ///   flags.
-/// - **Writability.** The GS database is read-write; every LS database is a
-///   read-only replica ([`DatabaseAccess::Replica`]). A write must reach the GS
-///   first and comes back down through sync.
-/// - **Scope.** An LS holds only the data belonging to the instances directly
-///   connected to it, not the whole estate.
+/// - **Writability.** The GS holds full write authority over the estate. An LS
+///   holds scoped authority ([`WriteAuthority::Scoped`]): it owns the data of
+///   the instances directly connected to it — as granted by the GS — and
+///   writes to anything else must happen at the owner and arrive back through
+///   replication.
+/// - **Scope.** An LS holds the data belonging to its own instances plus a
+///   replica of the estate-wide data, not the whole estate.
+///
+/// [`WriteAuthority::Scoped`]: sandpolis_instance::database::WriteAuthority
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerStratum {
-    /// The single authoritative server. Owns the read-write database and the
-    /// config file.
+    /// The single trust root, holding the whole estate and full write authority
+    /// over everything not owned by a local stratum server. Owns the config
+    /// file.
     Global,
 
-    /// An optional edge server holding a read-only replica scoped to its own
-    /// directly-connected instances.
+    /// An optional edge server owning exactly the instances attached to it.
     ///
     /// An LS connects to exactly one GS and never to another LS. It is useful
-    /// for on-premise installations, where it keeps serving the instances around
-    /// it even while the link to the GS is down.
+    /// for on-premise installations, where it keeps serving (and recording for)
+    /// the instances around it even while the link to the GS is down.
     Local {
-        /// The global stratum server this one replicates from.
+        /// The global stratum server this one enrolls with and replicates from.
         global: ServerUrl,
     },
 }

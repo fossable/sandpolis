@@ -301,6 +301,11 @@ pub struct UserLayer {
     /// can enforce the network's shape and pick the right sync behavior.
     #[cfg(feature = "server")]
     pub stratum: crate::ServerStratum,
+
+    /// The ownership grant table, so the connect handler can accept claims from
+    /// local stratum servers.
+    #[cfg(feature = "server")]
+    pub ownership: std::sync::Arc<crate::ownership::Ownership>,
 }
 
 impl UserLayer {
@@ -309,6 +314,7 @@ impl UserLayer {
         database: DatabaseLayer,
         network: sandpolis_instance::network::NetworkLayer,
         #[cfg(feature = "server")] stratum: crate::ServerStratum,
+        #[cfg(feature = "server")] ownership: std::sync::Arc<crate::ownership::Ownership>,
     ) -> Result<Self> {
         debug!("Initializing user layer");
         let user_layer = Self {
@@ -320,6 +326,8 @@ impl UserLayer {
             network,
             #[cfg(feature = "server")]
             stratum,
+            #[cfg(feature = "server")]
+            ownership,
             #[cfg(feature = "server")]
             jwt_keys: {
                 let mut jwt_keys = HashMap::new();
@@ -358,8 +366,12 @@ impl UserLayer {
             database,
         };
 
+        // Users are estate data owned by the global stratum server; a local
+        // stratum server receives them by replication instead of creating any.
         #[cfg(feature = "server")]
-        user_layer.try_create_admin().await?;
+        if user_layer.database.authority().is_full() {
+            user_layer.try_create_admin().await?;
+        }
 
         Ok(user_layer)
     }

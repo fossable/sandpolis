@@ -52,7 +52,7 @@ pub fn main() {
                 DatabaseLayer::new(
                     config.database.clone(),
                     &sandpolis::MODELS,
-                    sandpolis_instance::database::DatabaseAccess::ReadWrite,
+                    sandpolis_instance::database::WriteAuthority::Full,
                 )
                 .unwrap(),
                 sandpolis::ServerStratum::Global,

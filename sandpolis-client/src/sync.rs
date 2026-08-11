@@ -7,7 +7,7 @@
 
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::database::DatabaseLayer;
-use sandpolis_instance::database::sync::SyncFilter;
+use sandpolis_instance::database::sync::{FilterScope, SyncFilter};
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
 use sandpolis_instance::realm::RealmName;
@@ -205,7 +205,7 @@ impl SyncHandle {
         self.inner.runtime.spawn(async move {
             let filters = vec![SyncFilter {
                 model_id: Some(model_id),
-                instance,
+                scope: instance.map_or(FilterScope::All, FilterScope::Instance),
             }];
             match this.inner.connection.open_sync(realm, filters).await {
                 Ok((id, tx)) => {

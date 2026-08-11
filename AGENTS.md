@@ -49,13 +49,23 @@ The distinction decides five things:
   verify peers but never issue certificates of its own. Enrollment blocks the
   listener (with backoff) until it succeeds, since the certificate is what the
   listener presents.
-- **Writability.** The GS database is read-write. Every LS database is a
-  read-only replica: `RealmDatabase::rw_transaction` fails there, and the only
-  exceptions are replication from the GS and instance-local bookkeeping (see
+- **Ownership.** Every piece of instance data has exactly one owner at a time:
+  the server that instance is directly connected to. A server always owns its
+  own scope; estate-wide data (users, accounts, realms) is always owned by the
+  GS. The GS arbitrates through a persistent grant table: servers *claim* their
+  attached instances (the GS claims locally, an LS over a claim stream), each
+  transfer bumps a fencing epoch, and disconnection is **not** a release — an
+  LS keeps its scopes, and keeps writing, through a GS outage and across its
+  own restarts. Ownership only moves when an instance shows up attached
+  somewhere else.
+- **Writability.** `RealmDatabase::write(scope)` gates every write on the
+  ownership above: the GS holds full authority, an LS holds
+  `WriteAuthority::Scoped`. A freshly granted scope is not writable until it
+  has been *hydrated* — fully replicated down from the GS — so its revision
+  counters continue where the previous owner left off. The only paths around
+  the gate are replication itself (revision-guarded, so an older record never
+  clobbers a newer one) and instance-local bookkeeping (see
   `RealmDatabase::local_write`).
-- **Scope.** An LS holds only the data belonging to the instances directly
-  connected to it, not the whole estate. It subscribes to the GS with one filter
-  per attached instance, rebuilt whenever that set changes.
 - **Routing.** Streams cross strata. A client addresses an agent by `InstanceId`
   and never learns the topology: an LS advertises its attached instances to the
   GS, and points its own default route at the GS for everything else.
@@ -76,11 +86,14 @@ sandpolis --server https://ls.example.com:8769/default \
           --realm-cert /etc/sandpolis/agent.pem
 ```
 
-Writes always travel up. An agent attached to an LS has its records forwarded to
-the GS over an ingest stream rather than applied locally, and they return to the
-LS through its own subscription. This is why an LS in CoLo mode does **not**
-start a co-located agent: the agent's collectors write estate data, which its
-own process's replica must reject. Run agents as their own processes.
+Replication always follows ownership, and it is always pull-based: the owner
+serves, the replica subscribes. An agent attached to an LS has its records
+applied to the LS's database (once the scope is granted and hydrated), and the
+GS pulls them back up with one subscription per LS covering that server's owned
+scopes plus its own. Estate-wide data flows the other way, down a standing
+global-scope subscription. Because the GS only ever pulls an instance's records
+from that instance's current owner, a stale owner's writes can never enter the
+estate — the pull subscription is the fence.
 
 #### World View
 

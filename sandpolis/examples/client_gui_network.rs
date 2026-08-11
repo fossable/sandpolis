@@ -6,7 +6,7 @@
 /// - Server/agent icon differentiation
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, config::Configuration};
-use sandpolis_instance::database::{DatabaseAccess, DatabaseLayer, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
 use sandpolis_server::ServerStratum;
 
 #[tokio::main]
@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
         ephemeral: true,
         key: Default::default(),
     };
-    let database = DatabaseLayer::new(db_config, &*MODELS, DatabaseAccess::ReadWrite)?;
+    let database = DatabaseLayer::new(db_config, &*MODELS, WriteAuthority::Full)?;
 
     // Create instance state
     let state = InstanceState::new(config.clone(), database, ServerStratum::Global).await?;

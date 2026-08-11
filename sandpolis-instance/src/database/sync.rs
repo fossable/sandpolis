@@ -36,38 +36,26 @@ pub struct SyncRecord {
 }
 
 /// Describes a subset of data a `SyncStream` cares about.
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 pub struct SyncFilter {
     /// Restrict to a single model; `None` matches every registered model.
     pub model_id: Option<u32>,
-    /// Restrict to a single instance's data; `None` matches every instance.
-    ///
-    /// Serialized as a string because the wire codec (cbor) cannot represent the
-    /// 128-bit `InstanceId`.
-    #[serde(with = "instance_id_opt")]
-    pub instance: Option<InstanceId>,
+    /// Restrict by owning instance.
+    pub scope: FilterScope,
 }
 
-mod instance_id_opt {
-    use crate::InstanceId;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::str::FromStr;
-
-    pub fn serialize<S: Serializer>(
-        value: &Option<InstanceId>,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error> {
-        value.map(|id| id.to_string()).serialize(serializer)
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(
-        deserializer: D,
-    ) -> Result<Option<InstanceId>, D::Error> {
-        Option::<String>::deserialize(deserializer)?
-            .map(|s| InstanceId::from_str(&s))
-            .transpose()
-            .map_err(serde::de::Error::custom)
-    }
+/// Which records match a [`SyncFilter`], by owning instance.
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
+pub enum FilterScope {
+    /// Every record: instance-scoped and estate-wide alike.
+    #[default]
+    All,
+    /// Only models with no owning instance (estate-wide data such as users and
+    /// accounts). This is what lets a local stratum server replicate global data
+    /// without pulling every instance's records along with it.
+    Global,
+    /// Only records belonging to this instance.
+    Instance(InstanceId),
 }
 
 impl SyncFilter {
@@ -75,13 +63,29 @@ impl SyncFilter {
     pub fn all() -> Self {
         Self::default()
     }
+
+    /// A filter matching estate-wide data only (no instance-scoped models).
+    pub fn global() -> Self {
+        Self {
+            model_id: None,
+            scope: FilterScope::Global,
+        }
+    }
+
+    /// A filter matching everything belonging to one instance.
+    pub fn instance(id: InstanceId) -> Self {
+        Self {
+            model_id: None,
+            scope: FilterScope::Instance(id),
+        }
+    }
 }
 
 type ApplyFn = Box<dyn Fn(&RealmDatabase, SyncOp, &[u8]) -> Result<()> + Send + Sync>;
 type SnapshotFn =
-    Box<dyn Fn(&RealmDatabase, Option<InstanceId>) -> Result<Vec<SyncRecord>> + Send + Sync>;
+    Box<dyn Fn(&RealmDatabase, FilterScope) -> Result<Vec<SyncRecord>> + Send + Sync>;
 type WatchFn = Box<
-    dyn Fn(&RealmDatabase, Option<InstanceId>, Sender<SyncRecord>, CancellationToken) -> Result<()>
+    dyn Fn(&RealmDatabase, FilterScope, Sender<SyncRecord>, CancellationToken) -> Result<()>
         + Send
         + Sync,
 >;
@@ -133,6 +137,14 @@ impl SyncRegistry {
             let rw = db.replica_write()?;
             match op {
                 SyncOp::Upsert => {
+                    // There is exactly one writer per record, so `_revision` is
+                    // totally ordered per row: a replayed or reordered older
+                    // record must never clobber a newer one.
+                    if let Some(existing) = rw.get().primary::<T>(item.id())? {
+                        if existing.revision() >= item.revision() {
+                            return Ok(());
+                        }
+                    }
                     rw.upsert(item)?;
                 }
                 SyncOp::Delete => {
@@ -144,7 +156,7 @@ impl SyncRegistry {
             Ok(())
         });
 
-        let snapshot: SnapshotFn = Box::new(move |db, instance| {
+        let snapshot: SnapshotFn = Box::new(move |db, scope| {
             let r = db.r_transaction()?;
             let items: Vec<T> = r
                 .scan()
@@ -155,7 +167,7 @@ impl SyncRegistry {
 
             let mut out = Vec::new();
             for item in items {
-                if !instance_matches(instance, instance_of, &item) {
+                if !scope_matches(scope, instance_of, &item) {
                     continue;
                 }
                 out.push(SyncRecord {
@@ -168,7 +180,7 @@ impl SyncRegistry {
             Ok(out)
         });
 
-        let spawn_watch: WatchFn = Box::new(move |db, instance, tx, cancel| {
+        let spawn_watch: WatchFn = Box::new(move |db, scope, tx, cancel| {
             let (mut channel, watch_id) = db.db().watch().scan().primary().all::<T>()?;
             let db = db.clone();
             tokio::spawn(async move {
@@ -178,7 +190,7 @@ impl SyncRegistry {
                         event = channel.recv() => match event {
                             Some(event) => {
                                 if let Some(record) =
-                                    event_to_record::<T>(event, model_id, instance, instance_of)
+                                    event_to_record::<T>(event, model_id, scope, instance_of)
                                 {
                                     if tx.send(record).await.is_err() {
                                         break;
@@ -219,7 +231,7 @@ impl SyncRegistry {
             if filter.model_id.is_some_and(|m| m != *id) {
                 continue;
             }
-            out.extend((t.snapshot)(db, filter.instance)?);
+            out.extend((t.snapshot)(db, filter.scope)?);
         }
         Ok(out)
     }
@@ -237,7 +249,7 @@ impl SyncRegistry {
             if filter.model_id.is_some_and(|m| m != *id) {
                 continue;
             }
-            (t.spawn_watch)(db, filter.instance, tx.clone(), cancel.clone())?;
+            (t.spawn_watch)(db, filter.scope, tx.clone(), cancel.clone())?;
         }
         Ok(())
     }
@@ -264,23 +276,26 @@ pub static SYNC: LazyLock<SyncRegistry> = LazyLock::new(|| {
     registry
 });
 
-fn instance_matches<T>(
-    want: Option<InstanceId>,
+fn scope_matches<T>(
+    scope: FilterScope,
     instance_of: Option<fn(&T) -> InstanceId>,
     item: &T,
 ) -> bool {
-    match (want, instance_of) {
-        (None, _) => true,
-        (Some(want), Some(get)) => get(item) == want,
+    match (scope, instance_of) {
+        (FilterScope::All, _) => true,
+        // Estate-wide data is exactly the models with no owning instance.
+        (FilterScope::Global, None) => true,
+        (FilterScope::Global, Some(_)) => false,
+        (FilterScope::Instance(want), Some(get)) => get(item) == want,
         // Instance-scoped query against a type with no instance — no match.
-        (Some(_), None) => false,
+        (FilterScope::Instance(_), None) => false,
     }
 }
 
 fn event_to_record<T>(
     event: Event,
     model_id: u32,
-    instance: Option<InstanceId>,
+    scope: FilterScope,
     instance_of: Option<fn(&T) -> InstanceId>,
 ) -> Option<SyncRecord>
 where
@@ -291,7 +306,7 @@ where
         Event::Update(d) => (SyncOp::Upsert, d.inner_new::<T>().ok()?),
         Event::Delete(d) => (SyncOp::Delete, d.inner::<T>().ok()?),
     };
-    if !instance_matches(instance, instance_of, &item) {
+    if !scope_matches(scope, instance_of, &item) {
         return None;
     }
     Some(SyncRecord {
@@ -354,21 +369,18 @@ mod tests {
         assert_eq!(reg.snapshot(&realm, &SyncFilter::all())?.len(), 2);
 
         // Snapshot filtered to one instance.
-        let only_a = reg.snapshot(
-            &realm,
-            &SyncFilter {
-                model_id: None,
-                instance: Some(a),
-            },
-        )?;
+        let only_a = reg.snapshot(&realm, &SyncFilter::instance(a))?;
         assert_eq!(only_a.len(), 1);
+
+        // An instance-scoped model doesn't match a global-only filter.
+        assert_eq!(reg.snapshot(&realm, &SyncFilter::global())?.len(), 0);
 
         // An instance filter against the wrong model id matches nothing.
         let wrong_model = reg.snapshot(
             &realm,
             &SyncFilter {
                 model_id: Some(0xDEAD),
-                instance: None,
+                scope: FilterScope::All,
             },
         )?;
         assert_eq!(wrong_model.len(), 0);
@@ -380,6 +392,116 @@ mod tests {
         };
         reg.apply(&realm, &del)?;
         assert_eq!(reg.snapshot(&realm, &SyncFilter::all())?.len(), 1);
+
+        Ok(())
+    }
+
+    /// A global-only filter matches unscoped models and nothing else, so a local
+    /// stratum server can replicate estate-wide data without pulling every
+    /// instance's records along with it.
+    #[tokio::test]
+    async fn global_filter_matches_unscoped_models_only() -> Result<()> {
+        #[data]
+        #[derive(Default)]
+        struct GlobalTestData {
+            name: String,
+        }
+
+        let mut reg = SyncRegistry::new();
+        reg.register_scoped::<SyncTestData>(|d| d._instance_id);
+        reg.register::<GlobalTestData>();
+
+        let db: DatabaseLayer = test_db!(SyncTestData, GlobalTestData);
+        let realm = db.realm(RealmName::default())?;
+
+        reg.apply(&realm, &record(SyncOp::Upsert, InstanceId::default(), "x", 1))?;
+        let global_item = GlobalTestData {
+            name: "g".into(),
+            ..Default::default()
+        };
+        reg.apply(
+            &realm,
+            &SyncRecord {
+                model_id: <GlobalTestData as Model>::native_model_id(),
+                op: SyncOp::Upsert,
+                bytes: native_model::encode(&global_item).unwrap(),
+            },
+        )?;
+
+        let global = reg.snapshot(&realm, &SyncFilter::global())?;
+        assert_eq!(global.len(), 1);
+        assert_eq!(
+            global[0].model_id,
+            <GlobalTestData as Model>::native_model_id()
+        );
+
+        // The unscoped model never matches an instance filter.
+        let by_instance = reg.snapshot(&realm, &SyncFilter::instance(InstanceId::default()))?;
+        assert_eq!(by_instance.len(), 0);
+
+        assert_eq!(reg.snapshot(&realm, &SyncFilter::all())?.len(), 2);
+        Ok(())
+    }
+
+    /// An older or replayed record must never clobber a newer one: with exactly
+    /// one writer per record, `_revision` is totally ordered per row and arrival
+    /// order is not.
+    #[tokio::test]
+    async fn apply_rejects_stale_revisions() -> Result<()> {
+        use crate::database::{Data, DataRevision};
+
+        let mut reg = SyncRegistry::new();
+        reg.register_scoped::<SyncTestData>(|d| d._instance_id);
+
+        let db: DatabaseLayer = test_db!(SyncTestData);
+        let realm = db.realm(RealmName::default())?;
+
+        let mut item = SyncTestData {
+            _instance_id: InstanceId::default(),
+            name: "x".into(),
+            value: 1,
+            ..Default::default()
+        };
+        item.set_revision(DataRevision::Latest(2));
+
+        let encode = |item: &SyncTestData| SyncRecord {
+            model_id: <SyncTestData as Model>::native_model_id(),
+            op: SyncOp::Upsert,
+            bytes: native_model::encode(item).unwrap(),
+        };
+
+        reg.apply(&realm, &encode(&item))?;
+
+        // A stale revision of the same row arrives late: dropped.
+        let mut stale = item.clone();
+        stale.set_revision(DataRevision::Latest(1));
+        stale.value = 99;
+        reg.apply(&realm, &encode(&stale))?;
+
+        let snapshot = reg.snapshot(&realm, &SyncFilter::all())?;
+        assert_eq!(snapshot.len(), 1);
+        let (stored, _): (SyncTestData, u32) =
+            native_model::decode(snapshot[0].bytes.clone()).unwrap();
+        assert_eq!(stored.value, 1);
+
+        // An equal revision is an idempotent replay: also dropped.
+        let mut replay = item.clone();
+        replay.value = 50;
+        reg.apply(&realm, &encode(&replay))?;
+        let snapshot = reg.snapshot(&realm, &SyncFilter::all())?;
+        let (stored, _): (SyncTestData, u32) =
+            native_model::decode(snapshot[0].bytes.clone()).unwrap();
+        assert_eq!(stored.value, 1);
+
+        // A newer revision goes through.
+        let mut newer = item.clone();
+        newer.set_revision(DataRevision::Latest(3));
+        newer.value = 3;
+        reg.apply(&realm, &encode(&newer))?;
+        let snapshot = reg.snapshot(&realm, &SyncFilter::all())?;
+        let (stored, _): (SyncTestData, u32) =
+            native_model::decode(snapshot[0].bytes.clone()).unwrap();
+        assert_eq!(stored.value, 3);
 
         Ok(())
     }
