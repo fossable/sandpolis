@@ -31,8 +31,8 @@ where
             Some(Ok(event)) = events.next() => {
                 // The root handler gets first crack; anything it doesn't consume
                 // can quit the app.
-                if let Some(Event::Key(key)) = root.handle_event(event) {
-                    if key.kind == KeyEventKind::Press {
+                if let Some(Event::Key(key)) = root.handle_event(event)
+                    && key.kind == KeyEventKind::Press {
                         match key.code {
                             KeyCode::Char('q') => should_quit = true,
                             KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -41,7 +41,6 @@ where
                             _ => {}
                         }
                     }
-                }
             }
         }
     }
@@ -97,16 +96,12 @@ where
         tokio::select! {
             _ = interval.tick() => { terminal.draw(|frame| widget.render_ref(frame.area(), frame.buffer_mut()))?; },
             Some(Ok(event)) = events.next() => {
-                if let Event::Key(key) = event {
-                    if key.kind == KeyEventKind::Press {
-                        match key.code {
-                            KeyCode::Esc => {
-                                should_quit = true;
-                            }
-                            _ => {}
+                if let Event::Key(key) = event
+                    && key.kind == KeyEventKind::Press {
+                        if key.code == KeyCode::Esc {
+                            should_quit = true;
                         }
                     }
-                }
                 widget.handle_event(event); },
         }
     }

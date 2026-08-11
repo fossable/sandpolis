@@ -1,5 +1,5 @@
 use crate::{InstanceState, config::Configuration};
-use anyhow::{Context, Result, bail};
+use anyhow::Result;
 use axum::{
     Router,
     routing::{get, post},
@@ -166,7 +166,7 @@ pub async fn test_server() -> Result<TestServer> {
     // Generate temporary certs
     let certs = tempdir()?;
     let ca_cert = RealmClusterCert::new(cluster_id, "test".parse()?)?;
-    let server_cert = ca_cert.server_cert(instance_id)?;
+    let _server_cert = ca_cert.server_cert(instance_id)?;
     let client_cert = ca_cert.client_cert()?;
     client_cert.write(certs.path().join("client.cert"))?;
 

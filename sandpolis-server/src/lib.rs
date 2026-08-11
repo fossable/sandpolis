@@ -164,7 +164,7 @@ impl ServerLayer {
                 .add_root_certificate(cert.ca()?)
                 .identity(cert.identity()?)
                 .resolve_to_addrs(
-                    &format!("{}.{}", cert.cluster_id()?, &cert.name()?),
+                    &format!("{}.{}", cert.cluster_id()?, cert.name()?),
                     &url.resolve()?,
                 )
                 .build()
@@ -523,10 +523,12 @@ impl ServerConnectStrategy {
 ///
 /// [`WriteAuthority::Scoped`]: sandpolis_instance::database::WriteAuthority
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Default)]
 pub enum ServerStratum {
     /// The single trust root, holding the whole estate and full write authority
     /// over everything not owned by a local stratum server. Owns the config
     /// file.
+    #[default]
     Global,
 
     /// An optional edge server owning exactly the instances attached to it.
@@ -540,11 +542,6 @@ pub enum ServerStratum {
     },
 }
 
-impl Default for ServerStratum {
-    fn default() -> Self {
-        Self::Global
-    }
-}
 
 impl ServerStratum {
     pub fn is_global(&self) -> bool {
@@ -604,7 +601,7 @@ pub struct ServerUrl {
 impl ServerUrl {
     /// Resolve the URL into IP addresses.
     pub fn resolve(&self) -> Result<Vec<SocketAddr>> {
-        Ok(format!("{}:{}", &self.host, &self.port)
+        Ok(format!("{}:{}", self.host, self.port)
             .to_socket_addrs()?
             .collect())
     }
@@ -671,7 +668,7 @@ impl Display for ServerUrl {
 
         if self.port != ServerUrl::default_port() {
             f.write_str(":")?;
-            f.write_str(&format!("{}", &self.port))?;
+            f.write_str(&format!("{}", self.port))?;
         }
 
         if self.realm != RealmName::default() {

@@ -28,9 +28,9 @@ fn px_mut(base: *mut u8, stride: usize, row: usize, col: usize) -> *mut u8 {
 }
 
 #[inline]
-unsafe fn copy_px(src: *const u8, dst: *mut u8) {
+unsafe fn copy_px(src: *const u8, dst: *mut u8) { unsafe {
     std::ptr::copy_nonoverlapping(src, dst, BPP);
-}
+}}
 
 /// Rotate a 32-bit image. `width`/`height` are the *source* dimensions; for
 /// 90°/270° rotations the destination is `height` x `width`. Following

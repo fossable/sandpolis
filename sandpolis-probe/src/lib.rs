@@ -66,11 +66,10 @@ pub fn set_device_persist(
 
 /// Persist the current device list if a hook is installed.
 pub fn persist_devices(devices: &[RegisteredDevice]) {
-    if let Some(f) = DEVICE_PERSIST.get() {
-        if let Err(e) = f(devices) {
+    if let Some(f) = DEVICE_PERSIST.get()
+        && let Err(e) = f(devices) {
             tracing::warn!(error = %e, "Failed to persist probe devices");
         }
-    }
 }
 
 /// Rebuild the on-disk config from the current device list.

@@ -243,7 +243,7 @@ fn keysequence<'a>(key: Key) -> Cow<'a, str> {
         return Cow::Owned(format!("U{:X}", c as u32));
     }
     if let Key::Raw(k) = key {
-        return Cow::Owned(format!("{}", k as u16));
+        return Cow::Owned(format!("{}", { k }));
     }
     #[allow(deprecated)]
     // I mean duh, we still need to support deprecated keys until they're removed
@@ -445,7 +445,7 @@ impl KeyboardControllable for EnigoXdo {
     where
         Self: Sized,
     {
-        if let Err(..) = self.key_sequence_parse_try(sequence) {
+        if self.key_sequence_parse_try(sequence).is_err() {
             println!("Could not parse sequence");
         }
     }

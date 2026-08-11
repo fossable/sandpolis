@@ -37,15 +37,15 @@ serde_cbor = { workspace = true, optional = true }
 # Screen-capture / input backend for X11 & Wayland (Linux).
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = { version = "0.2", optional = true }
-libloading = { version = "0.8", optional = true }
+libloading = { version = "0.9", optional = true }
 regex = { workspace = true, optional = true }
 dirs = { version = "6", optional = true }
 x11 = { version = "2.21", features = ["xlib"], optional = true }
 dbus = { version = "0.9", optional = true }
-gstreamer = { version = "0.16", optional = true }
-gstreamer-app = { version = "0.16", features = ["v1_10"], optional = true }
-gstreamer-video = { version = "0.16", optional = true }
-sctk = { package = "smithay-client-toolkit", version = "0.20.0", default-features = false, features = [
+gstreamer = { version = "0.25", optional = true }
+gstreamer-app = { version = "0.25", features = ["v1_16"], optional = true }
+gstreamer-video = { version = "0.25", optional = true }
+sctk = { package = "smithay-client-toolkit", version = "0.21.1", default-features = false, features = [
   "calloop",
 ], optional = true }
 tfc = { git = "https://github.com/rustdesk-org/The-Fat-Controller", branch = "history/rebase_upstream_20240722", optional = true }
@@ -54,7 +54,7 @@ tfc = { git = "https://github.com/rustdesk-org/The-Fat-Controller", branch = "hi
 [target.'cfg(target_os = "macos")'.dependencies]
 libc = { version = "0.2", optional = true }
 block = { version = "0.1", optional = true }
-core-graphics = { version = "0.22", optional = true }
+core-graphics = { version = "0.25", optional = true }
 objc = { version = "0.2", optional = true }
 unicode-segmentation = { version = "1.10", optional = true }
 
@@ -76,7 +76,7 @@ optional = true
 
 # Screen-capture backend for Android.
 [target.'cfg(target_os = "android")'.dependencies]
-jni = { version = "0.21", optional = true }
+jni = { version = "0.22.4", optional = true }
 ndk-context = { version = "0.1", optional = true }
 
 # Terminal (TUI/CLI) dependencies, excluded on Android

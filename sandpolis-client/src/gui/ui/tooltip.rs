@@ -85,11 +85,10 @@ pub fn manage_tooltip(
     if let Ok(mut node) = popup_node.single_mut() {
         node.left = Val::Px(x);
         node.top = Val::Px(y);
-        if let Ok(mut current) = popup_text.single_mut() {
-            if current.0 != label {
+        if let Ok(mut current) = popup_text.single_mut()
+            && current.0 != label {
                 current.0 = label;
             }
-        }
     } else {
         commands.spawn((
             TooltipPopup,

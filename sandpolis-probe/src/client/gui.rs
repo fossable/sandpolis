@@ -104,7 +104,7 @@ pub fn spawn_probe_node(
     // Position device nodes in an orbit around the parent, using the device id for
     // consistent golden-angle placement.
     let angle =
-        (device.id as f32 * 0.618033988749895 * std::f32::consts::TAU) % std::f32::consts::TAU;
+        (device.id as f32 * 0.618_034 * std::f32::consts::TAU) % std::f32::consts::TAU;
     let orbit_radius = 120.0;
     let x = parent_position.x + orbit_radius * angle.cos();
     let y = parent_position.y + orbit_radius * angle.sin();
@@ -238,11 +238,10 @@ pub fn update_probe_nodes(
         .collect();
 
     for device in &all_devices {
-        if !existing_ids.contains(&device.id) {
-            if let Some(&parent_pos) = gateway_positions.get(&device.gateway) {
+        if !existing_ids.contains(&device.id)
+            && let Some(&parent_pos) = gateway_positions.get(&device.gateway) {
                 spawn_probe_node(&asset_server, &mut commands, device, parent_pos, show_probes);
             }
-        }
     }
 
     let db_ids: std::collections::HashSet<u64> = all_devices.iter().map(|d| d.id).collect();

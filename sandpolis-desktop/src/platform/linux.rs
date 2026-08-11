@@ -93,7 +93,7 @@ pub fn get_wayland_displays() -> Result<Vec<WaylandDisplayInfo>> {
         sctk::registry_handlers!();
     }
 
-    sctk::delegate_output!(WaylandEnv);
+    sctk::delegate_dispatch2!(WaylandEnv);
     sctk::delegate_registry!(WaylandEnv);
 
     let conn = Connection::connect_to_env()?;

@@ -140,11 +140,10 @@ impl SyncRegistry {
                     // There is exactly one writer per record, so `_revision` is
                     // totally ordered per row: a replayed or reordered older
                     // record must never clobber a newer one.
-                    if let Some(existing) = rw.get().primary::<T>(item.id())? {
-                        if existing.revision() >= item.revision() {
+                    if let Some(existing) = rw.get().primary::<T>(item.id())?
+                        && existing.revision() >= item.revision() {
                             return Ok(());
                         }
-                    }
                     rw.upsert(item)?;
                 }
                 SyncOp::Delete => {
@@ -191,11 +190,9 @@ impl SyncRegistry {
                             Some(event) => {
                                 if let Some(record) =
                                     event_to_record::<T>(event, model_id, scope, instance_of)
-                                {
-                                    if tx.send(record).await.is_err() {
+                                    && tx.send(record).await.is_err() {
                                         break;
                                     }
-                                }
                             }
                             None => break,
                         }

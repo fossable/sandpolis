@@ -306,7 +306,7 @@ pub fn derive_stream_requester(input: TokenStream) -> TokenStream {
         .trim_end_matches("Requester")
         .trim_end_matches("Responder")
         .to_string();
-    let type_tag = struct_name_to_id(&base_name);
+    let type_tag = struct_name_to_id(base_name);
 
     let expanded = quote! {
         impl #krate::network::stream::Stream for #name {

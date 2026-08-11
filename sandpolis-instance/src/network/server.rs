@@ -22,7 +22,7 @@ impl InstanceConnection {
         cluster_id: ClusterId,
         handlers: &[&dyn RegisterResponders],
     ) -> Arc<Self> {
-        let (outgoing_tx, mut outgoing_rx) = tokio::sync::mpsc::channel::<Message>(32);
+        let (_outgoing_tx, mut outgoing_rx) = tokio::sync::mpsc::channel::<Message>(32);
         let cancel = CancellationToken::new();
         let cancel_clone = cancel.clone();
 

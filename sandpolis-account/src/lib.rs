@@ -51,11 +51,10 @@ pub fn set_account_persist(f: impl Fn(&[AccountConfig]) -> Result<()> + Send + S
 
 /// Persist the current account set if a hook is installed.
 pub fn persist_accounts(accounts: &[AccountData]) {
-    if let Some(f) = ACCOUNT_PERSIST.get() {
-        if let Err(e) = f(&accounts_to_config(accounts)) {
+    if let Some(f) = ACCOUNT_PERSIST.get()
+        && let Err(e) = f(&accounts_to_config(accounts)) {
             tracing::warn!(error = %e, "Failed to persist accounts");
         }
-    }
 }
 
 /// Rebuild the on-disk account list from the given accounts.

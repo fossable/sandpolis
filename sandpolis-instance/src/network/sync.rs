@@ -91,11 +91,10 @@ impl StreamRequester for SyncRequester {
                 tracing::debug!(error = %e, model = record.model_id, "Failed to apply sync record");
             }
         }
-        if update.snapshot_complete {
-            if let Some(notify) = &self.snapshot_complete {
+        if update.snapshot_complete
+            && let Some(notify) = &self.snapshot_complete {
                 notify.notify_one();
             }
-        }
         Ok(())
     }
 }

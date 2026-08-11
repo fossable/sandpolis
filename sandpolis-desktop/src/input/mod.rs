@@ -443,7 +443,7 @@ pub trait KeyboardControllable {
     where
         Self: Sized,
     {
-        if let Err(..) = self.key_sequence_parse_try(sequence) {
+        if self.key_sequence_parse_try(sequence).is_err() {
             println!("Could not parse sequence");
         }
     }

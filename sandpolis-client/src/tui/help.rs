@@ -2,10 +2,10 @@ use crate::tui::EventHandler;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
+    layout::Rect,
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, WidgetRef},
+    widgets::{Paragraph, WidgetRef},
 };
 use std::time::{Duration, Instant};
 
@@ -53,11 +53,10 @@ impl HelpWidget {
     }
 
     fn is_key_highlighted(&self, key: &KeyCode) -> bool {
-        if let Some((highlighted_key, timestamp)) = &self.highlighted_key {
-            if highlighted_key == key {
+        if let Some((highlighted_key, timestamp)) = &self.highlighted_key
+            && highlighted_key == key {
                 return timestamp.elapsed() < self.highlight_duration;
             }
-        }
         false
     }
 
@@ -210,8 +209,8 @@ impl WidgetRef for HelpWidget {
 
 impl EventHandler for HelpWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
-        if let Event::Key(key) = &event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = &event
+            && key.kind == KeyEventKind::Press {
                 // Check if this key is in our keybindings and highlight it (only if enabled)
                 for (keybinding, _, enabled) in &self.keybindings {
                     if keybinding == &key.code && *enabled {
@@ -220,7 +219,6 @@ impl EventHandler for HelpWidget {
                     }
                 }
             }
-        }
         // Never consume events - always pass them through
         Some(event)
     }

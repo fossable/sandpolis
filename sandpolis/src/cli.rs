@@ -9,8 +9,6 @@ use std::process::ExitCode;
 use tracing::info;
 
 #[cfg(feature = "client")]
-use crate::InstanceState;
-#[cfg(feature = "client")]
 use sandpolis_client::cli::TargetArgs;
 
 #[derive(Parser, Debug, Clone)]

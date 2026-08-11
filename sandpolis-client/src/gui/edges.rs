@@ -1,5 +1,5 @@
 use crate::gui::input::CurrentLayer;
-use crate::gui::node::{NodeEntity, WorldView};
+use crate::gui::node::NodeEntity;
 use crate::gui::queries;
 use bevy::prelude::*;
 use sandpolis_instance::InstanceId;

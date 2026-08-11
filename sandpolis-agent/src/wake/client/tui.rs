@@ -25,14 +25,12 @@ impl WidgetRef for WakeWidget {
         block.render(area, buf);
 
         // Render the text inside the block
-        let _text = vec![
-            Text::raw(format!("Power State: {}\n", "state")),
+        let _text = [Text::raw(format!("Power State: {}\n", "state")),
             Text::raw(format!("Uptime: {} seconds\n", "uptime")),
             Text::raw("\n"),
             Text::raw("Controls:"),
             Text::raw("\n- Press 'r' to Restart"),
-            Text::raw("\n- Press 's' to Shut Down"),
-        ];
+            Text::raw("\n- Press 's' to Shut Down")];
 
         // Display the text inside the block area
         let paragraph = Paragraph::new(Text::raw(format!("Power State: {}\n", "state")))
@@ -43,8 +41,8 @@ impl WidgetRef for WakeWidget {
 
 impl EventHandler for WakeWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Char('j') | KeyCode::Down => {
                         return None;
@@ -55,7 +53,6 @@ impl EventHandler for WakeWidget {
                     _ => {}
                 }
             }
-        }
         Some(event)
     }
 }

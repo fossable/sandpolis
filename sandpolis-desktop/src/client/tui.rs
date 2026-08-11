@@ -149,8 +149,8 @@ fn key_char(code: KeyCode) -> Option<char> {
 impl WidgetRef for DesktopViewerWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         // Drain decoded events, coalescing to the most recent frame.
-        if let Ok(mut guard) = self.events.lock() {
-            if let Some(rx) = guard.as_mut() {
+        if let Ok(mut guard) = self.events.lock()
+            && let Some(rx) = guard.as_mut() {
                 let mut latest: Option<DesktopFrame> = None;
                 while let Ok(event) = rx.try_recv() {
                     match event {
@@ -162,8 +162,8 @@ impl WidgetRef for DesktopViewerWidget {
                     }
                 }
 
-                if let Some(frame) = latest {
-                    if frame.width > 0 && frame.height > 0 {
+                if let Some(frame) = latest
+                    && frame.width > 0 && frame.height > 0 {
                         *self.size.lock().unwrap() = Some((frame.width, frame.height));
                         if let Some(img) =
                             image::RgbaImage::from_raw(frame.width, frame.height, frame.rgba)
@@ -184,9 +184,7 @@ impl WidgetRef for DesktopViewerWidget {
                             ));
                         }
                     }
-                }
             }
-        }
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -253,8 +251,8 @@ impl WidgetRef for DesktopViewerWidget {
 
 impl EventHandler for DesktopViewerWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 // Ctrl+C disconnects; if already disconnected, let it bubble to quit.
                 if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     if self.connected {
@@ -275,7 +273,6 @@ impl EventHandler for DesktopViewerWidget {
                     return None;
                 }
             }
-        }
         // Unconsumed: let `run_tui` handle quit keys (q / Ctrl+C when idle).
         Some(event)
     }

@@ -30,7 +30,7 @@ pub fn update_node_svgs_for_layer(
     // Update each node's SVG based on current layer
     for (entity, node_entity) in node_query.iter() {
         let svg_path =
-            get_layer_svg_path(&current_layer, &*instance_layer, node_entity.instance_id);
+            get_layer_svg_path(&current_layer, &instance_layer, node_entity.instance_id);
 
         // Find the SVG child entity
         if let Ok(children) = children_query.get(entity) {

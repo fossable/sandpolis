@@ -178,8 +178,8 @@ where
 
         let event_handler = self.event_handler.unwrap_or_else(|| {
             Box::new(|event, list| {
-                if let Event::Key(key) = event {
-                    if key.kind == KeyEventKind::Press {
+                if let Event::Key(key) = event
+                    && key.kind == KeyEventKind::Press {
                         match key.code {
                             KeyCode::Char('j') | KeyCode::Down => {
                                 list.select_next();
@@ -192,7 +192,6 @@ where
                             _ => {}
                         }
                     }
-                }
                 Some(event)
             })
         });

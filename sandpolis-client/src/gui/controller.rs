@@ -123,7 +123,7 @@ pub fn manage_controller(
                 let panel = spawn_floating_panel(
                     &mut commands,
                     &theme,
-                    &controller.title_for(target),
+                    controller.title_for(target),
                     pos,
                     Vec2::new(w, h),
                 );

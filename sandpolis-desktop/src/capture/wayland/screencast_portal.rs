@@ -82,7 +82,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
 
     fn available_source_types(&self) -> Result<u32, dbus::Error> {
         <Self as blocking::stdintf::org_freedesktop_dbus::Properties>::get(
-            &self,
+            self,
             "org.freedesktop.portal.ScreenCast",
             "AvailableSourceTypes",
         )
@@ -90,7 +90,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
 
     fn available_cursor_modes(&self) -> Result<u32, dbus::Error> {
         <Self as blocking::stdintf::org_freedesktop_dbus::Properties>::get(
-            &self,
+            self,
             "org.freedesktop.portal.ScreenCast",
             "AvailableCursorModes",
         )
@@ -98,7 +98,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
 
     fn version(&self) -> Result<u32, dbus::Error> {
         <Self as blocking::stdintf::org_freedesktop_dbus::Properties>::get(
-            &self,
+            self,
             "org.freedesktop.portal.ScreenCast",
             "version",
         )

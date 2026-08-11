@@ -640,11 +640,10 @@ impl OwnershipRequester {
                             // The grant may have been revoked while we hydrated.
                             if table.state(scope.instance) == Some(ScopeState::Hydrating) {
                                 table.set_owned(scope.instance, scope.epoch);
-                                if let Some(self_id) = table.self_id() {
-                                    if let Err(e) = ownership.mirror_set(self_id, scope) {
+                                if let Some(self_id) = table.self_id()
+                                    && let Err(e) = ownership.mirror_set(self_id, scope) {
                                         warn!(error = %e, instance = %scope.instance, "Failed to mirror grant");
                                     }
-                                }
                                 ownership.changed.notify_one();
                                 info!(instance = %scope.instance, "Scope hydrated; now owned");
                             }

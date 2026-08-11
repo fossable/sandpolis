@@ -17,7 +17,7 @@ pub struct DisplayIter {
 }
 
 impl DisplayIter {
-    pub unsafe fn new(server: Rc<Server>) -> DisplayIter {
+    pub unsafe fn new(server: Rc<Server>) -> DisplayIter { unsafe {
         let mut outer = xcb_setup_roots_iterator(server.setup());
         let inner = Self::next_screen(&mut outer, &server);
         DisplayIter {
@@ -25,7 +25,7 @@ impl DisplayIter {
             inner,
             server,
         }
-    }
+    }}
 
     fn next_screen(
         outer: &mut xcb_screen_iterator_t,
@@ -105,7 +105,7 @@ fn get_atom_name(conn: *mut xcb_connection_t, atom: xcb_atom_t) -> String {
     unsafe {
         let mut e: *mut xcb_generic_error_t = std::ptr::null_mut();
         let reply = xcb_get_atom_name_reply(conn, xcb_get_atom_name(conn, atom), &mut e as _);
-        if reply == std::ptr::null() {
+        if reply.is_null() {
             return empty;
         }
         let length = xcb_get_atom_name_name_length(reply);
@@ -120,7 +120,7 @@ fn get_atom_name(conn: *mut xcb_connection_t, atom: xcb_atom_t) -> String {
     }
 }
 
-unsafe fn get_pixfmt(conn: *mut xcb_connection_t, root: xcb_window_t) -> Option<Pixfmt> {
+unsafe fn get_pixfmt(conn: *mut xcb_connection_t, root: xcb_window_t) -> Option<Pixfmt> { unsafe {
     let geo_cookie = xcb_get_geometry_unchecked(conn, root);
     let geo = xcb_get_geometry_reply(conn, geo_cookie, ptr::null_mut());
     if geo.is_null() {
@@ -135,4 +135,4 @@ unsafe fn get_pixfmt(conn: *mut xcb_connection_t, root: xcb_window_t) -> Option<
         32 => Some(Pixfmt::BGRA),
         _ => None,
     }
-}
+}}

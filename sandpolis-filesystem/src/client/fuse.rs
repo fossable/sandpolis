@@ -105,7 +105,7 @@ impl SandpolisFilesystem {
             MountOption::FSName("sandpolis".to_string()),
         ];
 
-        fuser::mount2(self, mountpoint, &config)?;
+        fuser::mount(self, mountpoint, &config)?;
         Ok(())
     }
 

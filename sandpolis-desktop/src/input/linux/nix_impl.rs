@@ -78,16 +78,14 @@ impl Enigo {
             None => false,
             Some(tfc) => {
                 if let Key::Layout(chr) = key {
-                    if down {
-                        if let Err(_) = tfc.unicode_char_down(chr) {
+                    if down
+                        && tfc.unicode_char_down(chr).is_err() {
                             return false;
                         }
-                    }
-                    if up {
-                        if let Err(_) = tfc.unicode_char_up(chr) {
+                    if up
+                        && tfc.unicode_char_up(chr).is_err() {
                             return false;
                         }
-                    }
                     return true;
                 }
                 let key = match convert_to_tfc_key(key) {
@@ -97,17 +95,15 @@ impl Enigo {
                     }
                 };
 
-                if down {
-                    if let Err(_) = tfc.key_down(key) {
+                if down
+                    && tfc.key_down(key).is_err() {
                         return false;
-                    }
-                };
-                if up {
-                    if let Err(_) = tfc.key_up(key) {
+                    };
+                if up
+                    && tfc.key_up(key).is_err() {
                         return false;
-                    }
-                };
-                return true;
+                    };
+                true
             }
         }
     }
@@ -222,11 +218,11 @@ fn get_led_state(key: Key) -> bool {
         }
     };
 
-    let status = if let Ok(mut file) = std::fs::File::open(&led_file) {
+    let status = if let Ok(mut file) = std::fs::File::open(led_file) {
         let mut content = String::new();
         file.read_to_string(&mut content).ok();
-        let status = content.trim_end().to_string().parse::<i32>().unwrap_or(0);
-        status
+        
+        content.trim_end().to_string().parse::<i32>().unwrap_or(0)
     } else {
         0
     };

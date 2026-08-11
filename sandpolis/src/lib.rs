@@ -3,7 +3,6 @@ use config::Configuration;
 use native_db::Models;
 use sandpolis_instance::LayerVersion;
 use sandpolis_instance::database::DatabaseLayer;
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::LazyLock};
 
 #[cfg(feature = "agent")]

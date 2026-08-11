@@ -80,11 +80,10 @@ fn try_xrandr_primary() -> Option<String> {
 
     let text = String::from_utf8_lossy(&output.stdout);
     for line in text.lines() {
-        if line.contains("primary") && line.contains("connected") {
-            if let Some(name) = line.split_whitespace().next() {
+        if line.contains("primary") && line.contains("connected")
+            && let Some(name) = line.split_whitespace().next() {
                 return Some(name.to_string());
             }
-        }
     }
     None
 }

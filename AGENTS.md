@@ -43,29 +43,28 @@ The distinction decides five things:
 - **Configuration.** Only the GS reads `sandpolis.ron`. Every other instance —
   LS servers, agents, clients — is configured entirely by CLI flags and learns
   its domain from the server it connects to.
-- **Trust.** The GS holds the realm CA and is the network's single trust root. An
-  LS never generates a CA; on first start it enrolls with the GS, which issues it
-  a server certificate. The CA's private key never leaves the GS, so an LS can
-  verify peers but never issue certificates of its own. Enrollment blocks the
-  listener (with backoff) until it succeeds, since the certificate is what the
-  listener presents.
+- **Trust.** The GS holds the realm CA and is the network's single trust root.
+  An LS never generates a CA; on first start it enrolls with the GS, which
+  issues it a server certificate. The CA's private key never leaves the GS, so
+  an LS can verify peers but never issue certificates of its own. Enrollment
+  blocks the listener (with backoff) until it succeeds, since the certificate is
+  what the listener presents.
 - **Ownership.** Every piece of instance data has exactly one owner at a time:
   the server that instance is directly connected to. A server always owns its
   own scope; estate-wide data (users, accounts, realms) is always owned by the
-  GS. The GS arbitrates through a persistent grant table: servers *claim* their
+  GS. The GS arbitrates through a persistent grant table: servers _claim_ their
   attached instances (the GS claims locally, an LS over a claim stream), each
-  transfer bumps a fencing epoch, and disconnection is **not** a release — an
-  LS keeps its scopes, and keeps writing, through a GS outage and across its
-  own restarts. Ownership only moves when an instance shows up attached
-  somewhere else.
+  transfer bumps a fencing epoch, and disconnection is **not** a release — an LS
+  keeps its scopes, and keeps writing, through a GS outage and across its own
+  restarts. Ownership only moves when an instance shows up attached somewhere
+  else.
 - **Writability.** `RealmDatabase::write(scope)` gates every write on the
   ownership above: the GS holds full authority, an LS holds
-  `WriteAuthority::Scoped`. A freshly granted scope is not writable until it
-  has been *hydrated* — fully replicated down from the GS — so its revision
-  counters continue where the previous owner left off. The only paths around
-  the gate are replication itself (revision-guarded, so an older record never
-  clobbers a newer one) and instance-local bookkeeping (see
-  `RealmDatabase::local_write`).
+  `WriteAuthority::Scoped`. A freshly granted scope is not writable until it has
+  been _hydrated_ — fully replicated down from the GS — so its revision counters
+  continue where the previous owner left off. The only paths around the gate are
+  replication itself (revision-guarded, so an older record never clobbers a
+  newer one) and instance-local bookkeeping (see `RealmDatabase::local_write`).
 - **Routing.** Streams cross strata. A client addresses an agent by `InstanceId`
   and never learns the topology: an LS advertises its attached instances to the
   GS, and points its own default route at the GS for everything else.
@@ -190,7 +189,8 @@ cd android && ./gradlew assembleDebug
 ## `sandpolis-probe`
 
 In the UI, the probes should have a node controller window below them with tabs
-for each of the following probe "integrations":
+for each of the following probe "integrations". A probe may support multiple
+types.
 
 - Docker probe (`docker.rs`)
   - Control the docker daemon by starting/stopping containers, etc
@@ -208,6 +208,8 @@ for each of the following probe "integrations":
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
 - SNMP probe — partial, needs MIB-driven discovery
 - ARP probe (`arp/`) — verify completeness
+
+Figure out how SSh probes are interacted with: maybe from the shell layer?
 
 ## `sandpolis-filesystem`
 

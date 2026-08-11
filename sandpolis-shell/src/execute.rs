@@ -1,8 +1,5 @@
 use super::ShellCommand;
-use crate::{DiscoveredShell, ShellType};
 use anyhow::Result;
-use regex::Regex;
-use sandpolis_instance::database::Resident;
 use sandpolis_instance::network::{StreamRequester, StreamResponder};
 use sandpolis_macros::Stream;
 use serde::{Deserialize, Serialize};
@@ -13,10 +10,9 @@ use tokio::sync::RwLock;
 use tokio::sync::mpsc::Sender;
 use tokio::time::timeout;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    process::{Child, Command},
+    io::AsyncWriteExt,
+    process::Command,
 };
-use tracing::{debug, trace};
 
 /// Register a scheduled command to execute in a shell.
 #[derive(Serialize, Deserialize)]
@@ -86,11 +82,11 @@ impl StreamRequester for ShellExecuteStreamRequester {
         match response {
             ShellExecuteStreamResponse::Done {
                 exit_code,
-                duration,
+                duration: _,
             } => {
                 *self.exit_code.write().await = Some(exit_code);
             }
-            ShellExecuteStreamResponse::Progress { output } => todo!(),
+            ShellExecuteStreamResponse::Progress { output: _ } => todo!(),
             ShellExecuteStreamResponse::Failed => todo!(),
             ShellExecuteStreamResponse::NotFound => todo!(),
             ShellExecuteStreamResponse::Timeout => todo!(),
@@ -122,7 +118,7 @@ impl StreamResponder for ShellExecuteStreamResponder {
         if request.capture_output {
             // TODO progress
             match timeout(Duration::from_secs(request.timeout), cmd.wait_with_output()).await {
-                Ok(output) => todo!(),
+                Ok(_output) => todo!(),
                 Err(_) => sender.send(ShellExecuteStreamResponse::Timeout).await?,
             }
         } else {

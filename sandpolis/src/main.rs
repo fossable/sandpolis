@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
@@ -114,19 +114,17 @@ async fn main() -> Result<ExitCode> {
             schedule,
             timeout_secs: args.agent.poll_timeout.unwrap_or(30),
         });
-    } else if let Some(timeout) = args.agent.poll_timeout {
-        if let Some(poll) = config.agent.poll.as_mut() {
+    } else if let Some(timeout) = args.agent.poll_timeout
+        && let Some(poll) = config.agent.poll.as_mut() {
             poll.timeout_secs = timeout;
         }
-    }
 
     // Standalone subcommands (cert generation, version info, LSP) run without
     // starting any instances or opening a connection.
-    if let Some(command) = args.command.as_ref() {
-        if command.standalone() {
+    if let Some(command) = args.command.as_ref()
+        && command.standalone() {
             return args.command.unwrap().dispatch_standalone(&config).await;
         }
-    }
 
     // TODO do this somewhere else
     //

@@ -93,25 +93,25 @@ impl Server {
     }
 }
 
-unsafe fn check_x11_shm_available(c: *mut xcb_connection_t) -> Result<(), Error> {
+unsafe fn check_x11_shm_available(c: *mut xcb_connection_t) -> Result<(), Error> { unsafe {
     let cookie = xcb_shm_query_version(c);
     let mut e: *mut xcb_generic_error_t = std::ptr::null_mut();
     let reply = xcb_shm_query_version_reply(c, cookie, &mut e as _);
     if reply.is_null() {
         // TODO: Should separate SHM disabled from SHM not supported?
-        return Err(Error::UnsupportedExtension);
+        Err(Error::UnsupportedExtension)
     } else {
         // https://github.com/FFmpeg/FFmpeg/blob/6229e4ac425b4566446edefb67d5c225eb397b58/libavdevice/xcbgrab.c#L229
         libc::free(reply as *mut _);
         if e.is_null() {
-            return Ok(());
+            Ok(())
         } else {
             libc::free(e as *mut _);
             // TODO: Does "This request does never generate any errors" in manual means `e` is never set, so we would never reach here?
-            return Err(Error::Generic);
+            Err(Error::Generic)
         }
     }
-}
+}}
 
 impl Drop for Server {
     fn drop(&mut self) {

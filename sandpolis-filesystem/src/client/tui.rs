@@ -239,7 +239,7 @@ impl FilesystemViewerWidget {
                 SortBy::Type => {
                     let a_ext = a.path.extension().unwrap_or_default();
                     let b_ext = b.path.extension().unwrap_or_default();
-                    a_ext.cmp(&b_ext)
+                    a_ext.cmp(b_ext)
                 }
             };
 
@@ -253,8 +253,8 @@ impl FilesystemViewerWidget {
 
     /// Navigate to the selected directory or file
     pub fn navigate_to_selected(&mut self) {
-        if let Some(selected) = self.list_state.selected() {
-            if let Some(entry) = self.entries.get(selected) {
+        if let Some(selected) = self.list_state.selected()
+            && let Some(entry) = self.entries.get(selected) {
                 if entry.is_directory {
                     self.current_path = entry.path.clone();
                     self.refresh_directory();
@@ -262,7 +262,6 @@ impl FilesystemViewerWidget {
                     self.status_message = format!("Selected file: {}", entry.name);
                 }
             }
-        }
     }
 
     /// Navigate up one directory level
@@ -499,8 +498,8 @@ impl FilesystemViewerWidget {
 
 impl EventHandler for FilesystemViewerWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
                         self.select_previous();
@@ -553,7 +552,6 @@ impl EventHandler for FilesystemViewerWidget {
                     _ => {}
                 }
             }
-        }
         Some(event)
     }
 }

@@ -108,7 +108,7 @@ pub trait StreamRequester: Stream + Send + Sync + Sized + 'static {
     fn on_message(
         &self,
         _: Self::In,
-        tx: Sender<Self::Out>,
+        _tx: Sender<Self::Out>,
     ) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }
@@ -308,11 +308,10 @@ impl StreamRegistry {
 
         // No local handler. On a server, try to relay to another connection.
         let relay = self.relay.read().unwrap().clone();
-        if let Some(relay) = relay.and_then(|r| r.upgrade()) {
-            if relay.route(&message, &self.tx).await {
+        if let Some(relay) = relay.and_then(|r| r.upgrade())
+            && relay.route(&message, &self.tx).await {
                 return;
             }
-        }
 
         // Otherwise create a responder from a registered factory.
         let type_tag = message.stream_id.tag();
@@ -631,11 +630,10 @@ where
         // Spawn task to forward typed messages to raw sender
         tokio::spawn(async move {
             while let Some(typed_msg) = typed_rx.recv().await {
-                if let Ok(bytes) = serde_cbor::to_vec(&typed_msg) {
-                    if raw_sender.send(bytes).await.is_err() {
+                if let Ok(bytes) = serde_cbor::to_vec(&typed_msg)
+                    && raw_sender.send(bytes).await.is_err() {
                         break;
                     }
-                }
             }
         });
 
@@ -682,11 +680,10 @@ where
         // Spawn task to forward typed messages to raw sender
         tokio::spawn(async move {
             while let Some(typed_msg) = typed_rx.recv().await {
-                if let Ok(bytes) = serde_cbor::to_vec(&typed_msg) {
-                    if raw_sender.send(bytes).await.is_err() {
+                if let Ok(bytes) = serde_cbor::to_vec(&typed_msg)
+                    && raw_sender.send(bytes).await.is_err() {
                         break;
                     }
-                }
             }
         });
 

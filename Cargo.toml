@@ -31,12 +31,12 @@ axum-extra = { version = "0.12.6", features = ["typed-header"] }
 axum-macros = "0.5.0"
 axum-server = { version = "0.8.0", features = ["tls-rustls"] }
 axum = { version = "0.8.8", features = ["ws", "json"] }
-base64 = "0.22.1"
+base64 = "0.23.1"
 cached = "0.54.0"
 chrono = { version = "0.4.42", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "string"] }
 colored = "3.0.0"
-cron = { version = "0.16.0", features = ["serde"] }
+cron = { version = "0.17.0", features = ["serde"] }
 futures = "0.3.30"
 futures-util = "0.3.31"
 headers = "0.4.1"
@@ -48,13 +48,13 @@ native_db = { git = "https://github.com/vincent-herlemont/native_db", features =
 native_model = "0.6.1"
 os_info = "3.8.2"
 passwords = { version = "3.1.16" }
-pem = "3.0.4"
+pem = "4.0.0"
 pty-process = { version = "0.5.3", features = ["async"] }
 png = "0.18.1"
 rand = "0.10.1"
 regex = "1.11.1"
 ron = "0.12.0"
-russh = { version = "0.61.2" }
+russh = { version = "0.62.5" }
 rustls = { version = "0.23.36", default-features = false, features = [
   "aws_lc_rs",
 ] }
@@ -72,11 +72,11 @@ tokio-util = "0.7.15"
 tokio = { version = "1.49.0", features = ["full"] }
 tower = "0.5.2"
 roniker = { git = "https://github.com/fossable/roniker" }
-tower-http = { version = "0.6.1", features = ["trace"] }
+tower-http = { version = "0.7.0", features = ["trace"] }
 tracing = "0.1.40"
 url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
-validator = { version = "0.20", features = ["derive"] }
+validator = { version = "0.21", features = ["derive"] }
 inventory = "0.3"
 zbus = { version = "5.5.0", default-features = false, features = ["tokio"] }
 reqwest = { version = "0.13.4", default-features = false, features = [
@@ -97,10 +97,10 @@ ratatui-image = { version = "11.0.4", default-features = false, features = [
 tui-popup = { version = "0.7.2" }
 
 # GUI client exclusive
-alacritty_terminal = { version = "0.25.1", default-features = false }
+alacritty_terminal = { version = "0.26.0", default-features = false }
 bevy = { version = "0.19.0", features = ["bevy_dev_tools", "bevy_scene"] }
 bevy_svg = { git = "https://github.com/cilki/bevy_svg", features = ["2d"] }
-bevy_rapier2d = "0.35.0"
+bevy_rapier2d = "0.36.0"
 bevy_ui_widgets = { version = "0.19.0" }
-resvg = { version = "0.45" }
+resvg = { version = "0.48.1" }
 include_dir = { version = "0.7" }

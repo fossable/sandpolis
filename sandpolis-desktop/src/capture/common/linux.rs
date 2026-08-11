@@ -64,12 +64,12 @@ impl Display {
         Ok(if super::is_x11() {
             x11::Display::all()?
                 .drain(..)
-                .map(|x| Display::X11(x))
+                .map(Display::X11)
                 .collect()
         } else {
             wayland::Display::all()?
                 .drain(..)
-                .map(|x| Display::WAYLAND(x))
+                .map(Display::WAYLAND)
                 .collect()
         })
     }

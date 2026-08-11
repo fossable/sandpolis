@@ -92,7 +92,7 @@ pub fn bound_text(
 pub fn button<B: Bundle, M: 'static>(
     theme: &Theme,
     label: impl Into<String>,
-    observer: impl IntoObserverSystem<Activate, B, M> + Clone + Send + Sync,
+    observer: impl IntoObserverSystem<Activate, B, M> + Clone + Sync,
 ) -> impl Scene {
     let label = text_line(theme, label, Role::Text, theme.metrics.font_md);
     let surface = theme.color(Role::Surface);

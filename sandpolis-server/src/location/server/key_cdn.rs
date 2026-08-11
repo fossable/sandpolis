@@ -9,6 +9,12 @@ pub struct KeyCdnLocator {
     client: reqwest::Client,
 }
 
+impl Default for KeyCdnLocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl KeyCdnLocator {
     pub fn new() -> Self {
         Self {

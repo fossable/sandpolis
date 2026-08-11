@@ -65,11 +65,10 @@ async fn change_power_state(action: &WakeAction) -> anyhow::Result<()> {
 
     // Prefer systemctl when available, falling back to the classic `shutdown`.
     let status = Command::new("systemctl").arg(systemctl_verb).status().await;
-    if let Ok(status) = status {
-        if status.success() {
+    if let Ok(status) = status
+        && status.success() {
             return Ok(());
         }
-    }
 
     let status = Command::new("shutdown")
         .arg(shutdown_arg)

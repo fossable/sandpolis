@@ -1,15 +1,9 @@
 use crate::login::LoginPassword;
 use anyhow::Result;
-#[cfg(any(feature = "client", feature = "server"))]
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString},
-};
 use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
 use regex::Regex;
-use sandpolis_instance::ClusterId;
 use sandpolis_instance::InstanceLayer;
 use sandpolis_instance::database::ResidentVec;
 use sandpolis_instance::database::{DatabaseLayer, Resident};
@@ -18,11 +12,9 @@ use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::net::SocketAddr;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::LazyLock;
-use std::time::Duration;
 use tracing::debug;
 use validator::{Validate, ValidationErrors};
 
@@ -340,7 +332,7 @@ impl UserLayer {
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 assert!(secrets.len() <= 1);
-                let secret = if secrets.len() == 0 {
+                let secret = if secrets.is_empty() {
                     // Time to generate
                     debug!("Generating new JWT secrets");
 

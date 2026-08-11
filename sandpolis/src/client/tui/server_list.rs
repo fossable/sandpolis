@@ -7,7 +7,7 @@ use ratatui::{
     style::{Style, Stylize},
     text::{Line, Text},
     widgets::{
-        Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget, WidgetRef,
+        Block, Borders, ListItem, Paragraph, StatefulWidget, Widget, WidgetRef,
     },
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
@@ -15,22 +15,17 @@ use sandpolis_client::tui::{
     EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget,
 };
 use sandpolis_instance::database::{
-    Data, DataCreation, DataIdentifier, Resident, ResidentVecEvent,
+    Data, DataCreation, DataIdentifier,
 };
 use sandpolis_server::ServerUrl;
 use sandpolis_server::login::{LoginPassword, LoginRequest, LoginResponse};
-use sandpolis_server::user::ClientAuthToken;
 use sandpolis_server::user::UserName;
 use sandpolis_server::{ServerLayer, client::SavedServerData};
 use std::{
-    ops::Deref,
     sync::{Arc, RwLock},
     time::Duration,
 };
-use tokio::{
-    sync::{broadcast, mpsc::Receiver},
-    time::sleep,
-};
+use tokio::time::sleep;
 use tracing::debug;
 use tui_popup::{KnownSize, Popup};
 use validator::Validate;
@@ -76,8 +71,8 @@ impl ServerListWidget {
                 ListItem::from(&server_item)
             })
             .event_handler(|event, list| {
-                if let Event::Key(key) = event {
-                    if key.kind == KeyEventKind::Press {
+                if let Event::Key(key) = event
+                    && key.kind == KeyEventKind::Press {
                         match key.code {
                             KeyCode::Char('j') | KeyCode::Down => {
                                 list.select_next();
@@ -90,7 +85,6 @@ impl ServerListWidget {
                             _ => {}
                         }
                     }
-                }
                 Some(event)
             })
             .build()?;
@@ -271,12 +265,12 @@ impl From<&ServerListItem> for ListItem<'_> {
 
         // Add online status
         match &*item.status.read().unwrap() {
-            ServerListItemStatus::Loading => text.extend([format!("Loading").gray()]),
-            ServerListItemStatus::Ok => text.extend([format!("Online").green()]),
-            ServerListItemStatus::ConnectionFailed => text.extend([format!("Offline")]),
-            ServerListItemStatus::Failed => text.extend([format!("Error").red()]),
-            ServerListItemStatus::Unknown => text.extend([format!("Unknown").gray()]),
-            ServerListItemStatus::LoginFailed => text.extend([format!("Login failed").red()]),
+            ServerListItemStatus::Loading => text.extend(["Loading".to_string().gray()]),
+            ServerListItemStatus::Ok => text.extend(["Online".to_string().green()]),
+            ServerListItemStatus::ConnectionFailed => text.extend(["Offline".to_string()]),
+            ServerListItemStatus::Failed => text.extend(["Error".to_string().red()]),
+            ServerListItemStatus::Unknown => text.extend(["Unknown".to_string().gray()]),
+            ServerListItemStatus::LoginFailed => text.extend(["Login failed".to_string().red()]),
         }
         ListItem::new(text)
     }
@@ -287,8 +281,8 @@ impl EventHandler for ServerListWidget {
         // Let help widget handle event first (it never consumes)
         let mut state = self.state.write().unwrap();
 
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 match state.mode {
                     ServerListWidgetMode::Normal => {
                         state.help_widget.handle_event(event.clone())?;
@@ -333,7 +327,7 @@ impl EventHandler for ServerListWidget {
                                             .connect(server_data.address.clone())
                                             .await
                                         {
-                                            Ok(connection) => {
+                                            Ok(_connection) => {
                                                 debug!(
                                                     "Connected successfully, attempting authentication with saved token"
                                                 );
@@ -364,14 +358,11 @@ impl EventHandler for ServerListWidget {
                             }
                         }
                     }
-                    ServerListWidgetMode::TryingLogin => match key.code {
-                        KeyCode::Esc => {
-                            state.mode = ServerListWidgetMode::Normal;
-                            state.add_server_widget = AddServerWidget::default(); // Reset form
-                            debug!("Exiting add server mode");
-                            return None;
-                        }
-                        _ => {}
+                    ServerListWidgetMode::TryingLogin => if key.code == KeyCode::Esc {
+                        state.mode = ServerListWidgetMode::Normal;
+                        state.add_server_widget = AddServerWidget::default(); // Reset form
+                        debug!("Exiting add server mode");
+                        return None;
                     },
                     ServerListWidgetMode::Adding => match key.code {
                         KeyCode::Esc => {
@@ -487,7 +478,6 @@ impl EventHandler for ServerListWidget {
                     _ => todo!(),
                 }
             }
-        }
         Some(event)
     }
 }
@@ -637,7 +627,7 @@ impl AddServerWidget {
 
         if self.server_url.trim().is_empty() {
             errors.push("Server URL is required".to_string());
-        } else if let Err(err) = self.server_url.parse::<ServerUrl>() {
+        } else if let Err(_err) = self.server_url.parse::<ServerUrl>() {
             errors.push("Invalid server URL".to_string());
         }
 

@@ -119,8 +119,8 @@ impl PackageManager for Nix {
         };
 
         // Pick the first match (search returns a map keyed by attr path)
-        if let Some(map) = json.as_object() {
-            if let Some((_, entry)) = map.iter().next() {
+        if let Some(map) = json.as_object()
+            && let Some((_, entry)) = map.iter().next() {
                 if let Some(v) = entry.get("version").and_then(|v| v.as_str()) {
                     package_data.version = v.to_string();
                     package_data.latest_available = Some(v.to_string());
@@ -132,7 +132,6 @@ impl PackageManager for Nix {
                     package_data.name = p.to_string();
                 }
             }
-        }
 
         Ok(package_data)
     }
@@ -174,13 +173,12 @@ impl PackageManager for Nix {
         debug!("Refreshing nix channels / flake registry");
 
         // For non-flake setups, refresh channels.
-        let channel_status = Command::new("nix-channel").args(&["--update"]).status();
+        let channel_status = Command::new("nix-channel").args(["--update"]).status();
 
-        if let Ok(status) = channel_status {
-            if !status.success() {
+        if let Ok(status) = channel_status
+            && !status.success() {
                 bail!("nix-channel --update failed with exit code: {}", status);
             }
-        }
 
         Ok(())
     }
@@ -227,13 +225,11 @@ fn parse_profile_entry(name: &str, entry: &serde_json::Value) -> PackageData {
     };
 
     // Store paths give us the version when present.
-    if let Some(store_paths) = entry.get("storePaths").and_then(|v| v.as_array()) {
-        if let Some(first) = store_paths.iter().filter_map(|v| v.as_str()).next() {
-            if let Some(version) = parse_version_from_store_path(first) {
+    if let Some(store_paths) = entry.get("storePaths").and_then(|v| v.as_array())
+        && let Some(first) = store_paths.iter().filter_map(|v| v.as_str()).next()
+            && let Some(version) = parse_version_from_store_path(first) {
                 pkg.version = version;
             }
-        }
-    }
 
     if let Some(url) = entry.get("originalUrl").and_then(|v| v.as_str()) {
         pkg.repository = Some(url.to_string());

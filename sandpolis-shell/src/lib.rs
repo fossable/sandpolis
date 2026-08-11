@@ -5,17 +5,14 @@ use regex::Regex;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_instance::network::{RegisterResponders, StreamRegistry, StreamRequester};
-use sandpolis_macros::{Stream, data};
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::process::Command;
-use tokio::sync::mpsc::Sender;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::Mutex;
 use tracing::trace;
 
-use crate::execute::{ShellExecuteStreamRequest, ShellExecuteStreamResponse};
 
 #[cfg(feature = "client")]
 pub mod client;

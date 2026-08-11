@@ -105,7 +105,7 @@ pub fn handle_node_selection(
         || keyboard.pressed(KeyCode::SuperLeft)  // Command on Mac
         || keyboard.pressed(KeyCode::SuperRight);
 
-    let mut clear_all = |commands: &mut Commands, selection_set: &mut SelectionSet| {
+    let clear_all = |commands: &mut Commands, selection_set: &mut SelectionSet| {
         for entity in selection_set.selected_nodes.drain(..) {
             if let Ok(mut entity) = commands.get_entity(entity) {
                 entity.remove::<Selected>();

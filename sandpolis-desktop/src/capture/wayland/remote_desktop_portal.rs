@@ -109,8 +109,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
             "org.freedesktop.portal.RemoteDesktop",
             "CreateSession",
             (options,),
-        )
-        .and_then(|r: (dbus::Path<'static>,)| Ok(r.0))
+        ).map(|r: (dbus::Path<'static>,)| r.0)
     }
 
     fn select_devices(
@@ -122,8 +121,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
             "org.freedesktop.portal.RemoteDesktop",
             "SelectDevices",
             (session_handle, options),
-        )
-        .and_then(|r: (dbus::Path<'static>,)| Ok(r.0))
+        ).map(|r: (dbus::Path<'static>,)| r.0)
     }
 
     fn start(
@@ -136,8 +134,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
             "org.freedesktop.portal.RemoteDesktop",
             "Start",
             (session_handle, parent_window, options),
-        )
-        .and_then(|r: (dbus::Path<'static>,)| Ok(r.0))
+        ).map(|r: (dbus::Path<'static>,)| r.0)
     }
 
     fn notify_pointer_motion(
@@ -293,13 +290,12 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
             "org.freedesktop.portal.RemoteDesktop",
             "ConnectToEIS",
             (session_handle, options),
-        )
-        .and_then(|r: (arg::OwnedFd,)| Ok(r.0))
+        ).map(|r: (arg::OwnedFd,)| r.0)
     }
 
     fn available_device_types(&self) -> Result<u32, dbus::Error> {
         <Self as blocking::stdintf::org_freedesktop_dbus::Properties>::get(
-            &self,
+            self,
             "org.freedesktop.portal.RemoteDesktop",
             "AvailableDeviceTypes",
         )
@@ -307,7 +303,7 @@ impl<'a, T: blocking::BlockingSender, C: ::std::ops::Deref<Target = T>>
 
     fn version(&self) -> Result<u32, dbus::Error> {
         <Self as blocking::stdintf::org_freedesktop_dbus::Properties>::get(
-            &self,
+            self,
             "org.freedesktop.portal.RemoteDesktop",
             "version",
         )

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::os::unix::io::AsRawFd;
-use std::process::Command;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex,
@@ -236,12 +235,12 @@ fn get_res(capturable: PipeWireCapturable) -> Result<(usize, usize), Box<dyn Err
         .try_pull_sample(gst::ClockTime::from_mseconds(300))
     {
         let cap = sample
-            .get_caps()
+            .caps()
             .ok_or("Failed get caps")?
-            .get_structure(0)
+            .structure(0)
             .ok_or("Failed to get structure")?;
-        let w: i32 = cap.get_value("width")?.get_some()?;
-        let h: i32 = cap.get_value("height")?.get_some()?;
+        let w: i32 = cap.get("width")?;
+        let h: i32 = cap.get("height")?;
         let w = w as usize;
         let h = h as usize;
         Ok((w, h))
@@ -266,16 +265,16 @@ pub struct PipeWireRecorder {
 
 impl PipeWireRecorder {
     pub fn new(capturable: PipeWireCapturable) -> ResultType<Self> {
-        let pipeline = gst::Pipeline::new(None);
+        let pipeline = gst::Pipeline::new();
 
-        let src = gst::ElementFactory::make("pipewiresrc", None)?;
-        src.set_property("fd", &capturable.fd.as_raw_fd())?;
-        src.set_property("path", &format!("{}", capturable.path))?;
-        src.set_property("keepalive_time", &1_000.as_raw_fd())?;
+        let src = gst::ElementFactory::make("pipewiresrc").build()?;
+        src.set_property("fd", capturable.fd.as_raw_fd());
+        src.set_property("path", format!("{}", capturable.path));
+        src.set_property("keepalive_time", 1_000.as_raw_fd());
 
         // For some reason pipewire blocks on destruction of AppSink if this is not set to true,
         // see: https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/982
-        src.set_property("always-copy", &true)?;
+        src.set_property("always-copy", true);
 
         // COSMIC/Wayland fix: insert videoconvert between pipewiresrc and appsink.
         // xdg-desktop-portal-cosmic's modifier negotiation fails when the downstream
@@ -283,13 +282,13 @@ impl PipeWireRecorder {
         // "no more output formats" / not-negotiated (-4). videoconvert accepts any
         // system-memory video/x-raw format, widening negotiation so the portal can
         // settle on a format it can deliver via its SHM path.
-        let convert = gst::ElementFactory::make("videoconvert", None)?;
+        let convert = gst::ElementFactory::make("videoconvert").build()?;
 
-        let sink = gst::ElementFactory::make("appsink", None)?;
-        sink.set_property("drop", &true)?;
-        sink.set_property("max-buffers", &1u32)?;
+        let sink = gst::ElementFactory::make("appsink").build()?;
+        sink.set_property("drop", true);
+        sink.set_property("max-buffers", 1u32);
 
-        pipeline.add_many(&[&src, &convert, &sink])?;
+        pipeline.add_many([&src, &convert, &sink])?;
         src.link(&convert)?;
         convert.link(&sink)?;
 
@@ -297,14 +296,16 @@ impl PipeWireRecorder {
             .dynamic_cast::<AppSink>()
             .map_err(|_| GStreamerError("Sink element is expected to be an appsink!".into()))?;
         let mut caps = gst::Caps::new_empty();
-        caps.merge_structure(gst::structure::Structure::new(
-            "video/x-raw",
-            &[("format", &"BGRx")],
-        ));
-        caps.merge_structure(gst::structure::Structure::new(
-            "video/x-raw",
-            &[("format", &"RGBx")],
-        ));
+        caps.merge_structure(
+            gst::Structure::builder("video/x-raw")
+                .field("format", "BGRx")
+                .build(),
+        );
+        caps.merge_structure(
+            gst::Structure::builder("video/x-raw")
+                .field("format", "RGBx")
+                .build(),
+        );
         appsink.set_caps(Some(&caps));
 
         // [Workaround]
@@ -323,7 +324,7 @@ impl PipeWireRecorder {
         if use_screencast_portal() {
             // Wait for the state change to actually complete before proceeding.
             // The 2000ms timeout for pipeline state change was chosen based on empirical testing.
-            let state_change = pipeline.get_state(gst::ClockTime::from_mseconds(2000));
+            let state_change = pipeline.state(gst::ClockTime::from_mseconds(2000));
             match state_change {
                 (Ok(_), gst::State::Playing, _) => {
                     debug!(
@@ -362,25 +363,22 @@ impl Recorder for PipeWireRecorder {
             .try_pull_sample(gst::ClockTime::from_mseconds(timeout_ms))
         {
             let cap = sample
-                .get_caps()
+                .caps()
                 .ok_or("Failed get caps")?
-                .get_structure(0)
+                .structure(0)
                 .ok_or("Failed to get structure")?;
-            let w: i32 = cap.get_value("width")?.get_some()?;
-            let h: i32 = cap.get_value("height")?.get_some()?;
+            let w: i32 = cap.get("width")?;
+            let h: i32 = cap.get("height")?;
             let w = w as usize;
             let h = h as usize;
-            self.pix_fmt = cap
-                .get::<&str>("format")?
-                .ok_or("Failed to get pixel format")?
-                .to_string();
+            self.pix_fmt = cap.get::<&str>("format")?.to_string();
 
             let buf = sample
-                .get_buffer_owned()
+                .buffer_owned()
                 .ok_or_else(|| GStreamerError("Failed to get owned buffer.".into()))?;
             let mut crop = buf
-                .get_meta::<gstreamer_video::VideoCropMeta>()
-                .map(|m| m.get_rect());
+                .meta::<gstreamer_video::VideoCropMeta>()
+                .map(|m| m.rect());
             // only crop if necessary
             if Some((0, 0, w as u32, h as u32)) == crop {
                 crop = None;
@@ -388,10 +386,10 @@ impl Recorder for PipeWireRecorder {
             let buf = buf
                 .into_mapped_buffer_readable()
                 .map_err(|_| GStreamerError("Failed to map buffer.".into()))?;
-            if let Err(..) = crate::capture::would_block_if_equal(&mut self.saved_raw_data, buf.as_slice()) {
+            if crate::capture::would_block_if_equal(&mut self.saved_raw_data, buf.as_slice()).is_err() {
                 return Ok(PixelProvider::NONE);
             }
-            let buf_size = buf.get_size();
+            let buf_size = buf.size();
             // BGRx is 4 bytes per pixel
             if buf_size != (w * h * 4) {
                 // for some reason the width and height of the caps do not guarantee correct buffer
@@ -448,7 +446,7 @@ impl Recorder for PipeWireRecorder {
             "RGBx" => Ok(PixelProvider::RGB0(self.width, self.height, buf)),
             _ => Err(Box::new(GStreamerError(format!(
                 "Unreachable! Unknown pix_fmt, {}",
-                &self.pix_fmt
+                self.pix_fmt
             )))),
         }
     }
@@ -460,7 +458,7 @@ impl Drop for PipeWireRecorder {
             warn!("Failed to stop GStreamer pipeline: {}.", err);
         }
         // Wait for state change to complete to avoid races during PipeWire teardown.
-        let _ = self.pipeline.get_state(gst::ClockTime::from_mseconds(2000));
+        let _ = self.pipeline.state(gst::ClockTime::from_mseconds(2000));
     }
 }
 
@@ -508,7 +506,7 @@ where
     })
 }
 
-pub fn get_portal(conn: &SyncConnection) -> Proxy<&SyncConnection> {
+pub fn get_portal(conn: &SyncConnection) -> Proxy<'_, &SyncConnection> {
     conn.with_proxy(
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
@@ -562,12 +560,11 @@ fn streams_from_response(response: OrgFreedesktopPortalRequestResponse) -> Vec<P
                             )
                         })
                         .next();
-                    if let Some(v) = v {
-                        if v.len() == 2 {
+                    if let Some(v) = v
+                        && v.len() == 2 {
                             info.size.0 = v[0] as _;
                             info.size.1 = v[1] as _;
                         }
-                    }
                     if let Some(pos) = attributes.get("position") {
                         let v = pos
                             .as_iter()?
@@ -579,13 +576,12 @@ fn streams_from_response(response: OrgFreedesktopPortalRequestResponse) -> Vec<P
                                 )
                             })
                             .next();
-                        if let Some(v) = v {
-                            if v.len() == 2 {
+                        if let Some(v) = v
+                            && v.len() == 2 {
                                 info.position.0 = v[0] as _;
                                 info.position.1 = v[1] as _;
                                 HAS_POSITION_ATTR.store(true, Ordering::SeqCst);
                             }
-                        }
                     }
                     Some(info)
                 })
@@ -643,11 +639,10 @@ pub fn request_remote_desktop(
     );
 
     let mut is_support_restore_token = false;
-    if let Ok(version) = screencast_portal::version(&portal) {
-        if version >= 4 {
+    if let Ok(version) = screencast_portal::version(&portal)
+        && version >= 4 {
             is_support_restore_token = true;
         }
-    }
 
     // The following code may be improved.
     // https://flatpak.github.io/xdg-desktop-portal/#:~:text=To%20avoid%20a%20race%20condition
@@ -691,9 +686,9 @@ pub fn request_remote_desktop(
     let streams_res = streams_res.lock().unwrap();
     let session_res = session_res.lock().unwrap();
 
-    if let Some(fd_res) = fd_res.clone() {
-        if let Some(session) = session_res.clone() {
-            if !streams_res.is_empty() {
+    if let Some(fd_res) = fd_res.clone()
+        && let Some(session) = session_res.clone()
+            && !streams_res.is_empty() {
                 return Ok((
                     conn,
                     fd_res,
@@ -702,8 +697,6 @@ pub fn request_remote_desktop(
                     is_support_restore_token,
                 ));
             }
-        }
-    }
     bail!("Failed to obtain screen capture. You may need to upgrade the PipeWire library for better compatibility. Please check https://github.com/rustdesk/rustdesk/issues/8600#issuecomment-2254720954 for more details.")
 }
 
@@ -908,18 +901,15 @@ fn on_start_response(
     move |r: OrgFreedesktopPortalRequestResponse, c, _| {
         let portal = get_portal(c);
         // See `use_screencast_portal()` to understand the following code.
-        if use_screencast_portal() {
-            if is_support_restore_token {
-                if let Some(restore_token) = r.results.get(RESTORE_TOKEN) {
-                    if let Some(restore_token) = restore_token.as_str() {
+        if use_screencast_portal()
+            && is_support_restore_token
+                && let Some(restore_token) = r.results.get(RESTORE_TOKEN)
+                    && let Some(restore_token) = restore_token.as_str() {
                         config::LocalConfig::set_option(
                             RESTORE_TOKEN_CONF_KEY.to_owned(),
                             restore_token.to_owned(),
                         );
                     }
-                }
-            }
-        }
 
         streams
             .clone()
@@ -1304,11 +1294,10 @@ fn mouse_move_to_(
     while start.elapsed() < MOVE_MOUSE_TIMEOUT {
         mouse_move_to(x, y);
         std::thread::sleep(Duration::from_millis(20));
-        if let Some((x1, y1)) = get_cursor_pos() {
-            if x1 == x && y1 == y {
+        if let Some((x1, y1)) = get_cursor_pos()
+            && x1 == x && y1 == y {
                 return;
             }
-        }
     }
     warn!(
         "Failed to move mouse to ({}, {}) within timeout: {:?}.",
@@ -1333,14 +1322,31 @@ fn fill_multi_matched_positions_cursor(
     let mut matched_indices = Vec::new();
     const CAPTURE_TIMEOUT_MS: u64 = 1_000;
     for idx in multi_matched_indices {
-        match (
+        if let (Some(crate::capture::Display::WAYLAND(d)), Some(pw_stream), Some(pw_stream_with_cursor)) = (
             shared_displays.get_mut(idx),
             streams.get_mut(idx),
             streams_with_cursor.get(idx),
         ) {
-            (Some(crate::capture::Display::WAYLAND(d)), Some(pw_stream), Some(pw_stream_with_cursor)) => {
-                // Check if only one display matches the size
-                let mut match_count = 0;
+            // Check if only one display matches the size
+            let mut match_count = 0;
+            for (i, wd) in displays.displays.iter().enumerate() {
+                if matched_indices.contains(&i) {
+                    continue;
+                }
+                if d.0.physical_size.0 == wd.width as usize
+                    && d.0.physical_size.1 == wd.height as usize
+                {
+                    match_count += 1;
+                }
+            }
+            if match_count == 0 {
+                error!(
+                    "No matching display found for capturable with size {:?}.",
+                    d.0.physical_size
+                );
+                continue;
+            }
+            if match_count == 1 {
                 for (i, wd) in displays.displays.iter().enumerate() {
                     if matched_indices.contains(&i) {
                         continue;
@@ -1348,126 +1354,106 @@ fn fill_multi_matched_positions_cursor(
                     if d.0.physical_size.0 == wd.width as usize
                         && d.0.physical_size.1 == wd.height as usize
                     {
-                        match_count += 1;
+                        d.0.position = (wd.x, wd.y);
+                        pw_stream.position = (wd.x, wd.y);
+                        matched_indices.push(i);
+                        debug!(
+                            "Disambiguated position for capturable with size {:?} to ({}, {}).",
+                            d.0.physical_size, wd.x, wd.y
+                        );
+                        break;
                     }
                 }
-                if match_count == 0 {
-                    error!(
-                        "No matching display found for capturable with size {:?}.",
-                        d.0.physical_size
-                    );
-                    continue;
-                }
-                if match_count == 1 {
-                    for (i, wd) in displays.displays.iter().enumerate() {
-                        if matched_indices.contains(&i) {
-                            continue;
-                        }
-                        if d.0.physical_size.0 == wd.width as usize
-                            && d.0.physical_size.1 == wd.height as usize
-                        {
-                            d.0.position = (wd.x, wd.y);
-                            pw_stream.position = (wd.x, wd.y);
-                            matched_indices.push(i);
-                            debug!(
-                                "Disambiguated position for capturable with size {:?} to ({}, {}).",
-                                d.0.physical_size, wd.x, wd.y
-                            );
-                            break;
-                        }
+                continue;
+            }
+
+            // Move the mouse to a neutral position first,
+            // to avoid interference from previous position.
+            mouse_move_to_(&mouse_move_to, get_cursor_pos, 300, 300);
+
+            let mut rec = PipeWireRecorder::new(PipeWireCapturable {
+                dbus_conn: conn.clone(),
+                fd: fd.clone(),
+                path: pw_stream_with_cursor.path,
+                source_type: pw_stream_with_cursor.source_type,
+                primary: false,
+                position: pw_stream_with_cursor.position,
+                logical_size: pw_stream_with_cursor.size,
+                physical_size: (0, 0),
+            })?;
+            // Take first frame and copy owned buffer to avoid borrow across second capture
+            let (is_bgr, w, first_buf): (bool, usize, Vec<u8>) =
+                match rec.capture(CAPTURE_TIMEOUT_MS) {
+                    Ok(PixelProvider::BGR0(w, _, data1)) => (true, w, data1.to_vec()),
+                    Ok(PixelProvider::RGB0(w, _, data1)) => (false, w, data1.to_vec()),
+                    Ok(_) => {
+                        error!("Unexpected pixel format on first capture.");
+                        continue;
                     }
+                    Err(e) => {
+                        error!(
+                            "Failed to capture screen for position disambiguation: {}",
+                            e
+                        );
+                        continue;
+                    }
+                };
+
+            let matched_len = matched_indices.len();
+            for (i, wd) in displays.displays.iter().enumerate() {
+                if matched_indices.contains(&i) {
                     continue;
                 }
 
-                // Move the mouse to a neutral position first,
-                // to avoid interference from previous position.
-                mouse_move_to_(&mouse_move_to, get_cursor_pos, 300, 300);
-
-                let mut rec = PipeWireRecorder::new(PipeWireCapturable {
-                    dbus_conn: conn.clone(),
-                    fd: fd.clone(),
-                    path: pw_stream_with_cursor.path,
-                    source_type: pw_stream_with_cursor.source_type,
-                    primary: false,
-                    position: pw_stream_with_cursor.position,
-                    logical_size: pw_stream_with_cursor.size,
-                    physical_size: (0, 0),
-                })?;
-                // Take first frame and copy owned buffer to avoid borrow across second capture
-                let (is_bgr, w, first_buf): (bool, usize, Vec<u8>) =
+                if wd.width as usize == d.0.physical_size.0
+                    && wd.height as usize == d.0.physical_size.1
+                {
+                    mouse_move_to_(&mouse_move_to, get_cursor_pos, wd.x + 8, wd.y + 8);
+                    rec.saved_raw_data.clear();
                     match rec.capture(CAPTURE_TIMEOUT_MS) {
-                        Ok(PixelProvider::BGR0(w, _, data1)) => (true, w, data1.to_vec()),
-                        Ok(PixelProvider::RGB0(w, _, data1)) => (false, w, data1.to_vec()),
+                        Ok(PixelProvider::BGR0(_, _, data2)) if is_bgr => {
+                            if compare_left_up_corner(w, &first_buf, data2) {
+                                d.0.position = (wd.x, wd.y);
+                                pw_stream.position = (wd.x, wd.y);
+                                matched_indices.push(i);
+                                debug!(
+                                    "Disambiguated position for capturable with size {:?} to ({}, {}).",
+                                    d.0.physical_size, wd.x, wd.y
+                                );
+                                break;
+                            }
+                        }
+                        Ok(PixelProvider::RGB0(_, _, data2)) if !is_bgr => {
+                            if compare_left_up_corner(w, &first_buf, data2) {
+                                d.0.position = (wd.x, wd.y);
+                                pw_stream.position = (wd.x, wd.y);
+                                matched_indices.push(i);
+                                debug!(
+                                    "Disambiguated position for capturable with size {:?} to ({}, {}).",
+                                    d.0.physical_size, wd.x, wd.y
+                                );
+                                break;
+                            }
+                        }
                         Ok(_) => {
-                            error!("Unexpected pixel format on first capture.");
-                            continue;
+                            // unreachable
+                            error!("Pixel format changed between captures, cannot disambiguate position.");
                         }
                         Err(e) => {
                             error!(
                                 "Failed to capture screen for position disambiguation: {}",
                                 e
                             );
-                            continue;
-                        }
-                    };
-
-                let matched_len = matched_indices.len();
-                for (i, wd) in displays.displays.iter().enumerate() {
-                    if matched_indices.contains(&i) {
-                        continue;
-                    }
-
-                    if wd.width as usize == d.0.physical_size.0
-                        && wd.height as usize == d.0.physical_size.1
-                    {
-                        mouse_move_to_(&mouse_move_to, get_cursor_pos, wd.x + 8, wd.y + 8);
-                        rec.saved_raw_data.clear();
-                        match rec.capture(CAPTURE_TIMEOUT_MS) {
-                            Ok(PixelProvider::BGR0(_, _, data2)) if is_bgr => {
-                                if compare_left_up_corner(w, &first_buf, data2) {
-                                    d.0.position = (wd.x, wd.y);
-                                    pw_stream.position = (wd.x, wd.y);
-                                    matched_indices.push(i);
-                                    debug!(
-                                        "Disambiguated position for capturable with size {:?} to ({}, {}).",
-                                        d.0.physical_size, wd.x, wd.y
-                                    );
-                                    break;
-                                }
-                            }
-                            Ok(PixelProvider::RGB0(_, _, data2)) if !is_bgr => {
-                                if compare_left_up_corner(w, &first_buf, data2) {
-                                    d.0.position = (wd.x, wd.y);
-                                    pw_stream.position = (wd.x, wd.y);
-                                    matched_indices.push(i);
-                                    debug!(
-                                        "Disambiguated position for capturable with size {:?} to ({}, {}).",
-                                        d.0.physical_size, wd.x, wd.y
-                                    );
-                                    break;
-                                }
-                            }
-                            Ok(_) => {
-                                // unreachable
-                                error!("Pixel format changed between captures, cannot disambiguate position.");
-                            }
-                            Err(e) => {
-                                error!(
-                                    "Failed to capture screen for position disambiguation: {}",
-                                    e
-                                );
-                            }
                         }
                     }
-                }
-                if matched_len == matched_indices.len() {
-                    error!(
-                        "Failed to disambiguate position for capturable with size {:?}.",
-                        d.0.physical_size
-                    );
                 }
             }
-            _ => {}
+            if matched_len == matched_indices.len() {
+                error!(
+                    "Failed to disambiguate position for capturable with size {:?}.",
+                    d.0.physical_size
+                );
+            }
         }
     }
 

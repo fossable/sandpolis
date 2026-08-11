@@ -3,9 +3,9 @@ use ratatui::{
     buffer::Buffer,
     crossterm::event::{Event, KeyCode, KeyEventKind},
     layout::{Alignment, Constraint, Layout, Rect},
-    style::{Style, Stylize},
+    style::Stylize,
     text::Line,
-    widgets::{Block, Borders, ListItem, Paragraph, Widget, WidgetRef},
+    widgets::{Block, Borders, Paragraph, Widget, WidgetRef},
 };
 use sandpolis_client::tui::{EventHandler, Panel, help::HelpWidget};
 use std::sync::{Arc, RwLock};
@@ -80,8 +80,8 @@ impl EventHandler for AgentListWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
         let mut state = self.state.write().unwrap();
 
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 match state.mode {
                     AgentListWidgetMode::Normal => {
                         state.help_widget.handle_event(event.clone())?;
@@ -107,7 +107,6 @@ impl EventHandler for AgentListWidget {
                     }
                 }
             }
-        }
 
         Some(event)
     }

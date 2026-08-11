@@ -20,7 +20,7 @@ fn map_err<E: ToString>(err: E) -> io::Error {
     if let Some(f) = *MAP_ERR.read().unwrap() {
         f(err.to_string())
     } else {
-        io::Error::new(io::ErrorKind::Other, err.to_string())
+        io::Error::other(err.to_string())
     }
 }
 
@@ -75,7 +75,7 @@ impl Display {
         Ok(pipewire::get_capturables()
             .map_err(map_err)?
             .drain(..)
-            .map(|x| Display(x))
+            .map(Display)
             .collect())
     }
 

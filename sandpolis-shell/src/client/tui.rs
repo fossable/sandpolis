@@ -126,15 +126,14 @@ impl ShellTerminalWidget {
 impl WidgetRef for ShellTerminalWidget {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
         // Drain any output produced by the relayed session into the parser.
-        if let Ok(mut output) = self.output.lock() {
-            if let Some(rx) = output.as_mut() {
+        if let Ok(mut output) = self.output.lock()
+            && let Some(rx) = output.as_mut() {
                 while let Ok(chunk) = rx.try_recv() {
                     let mut parser = self.parser.lock().unwrap();
                     parser.process(&chunk.stdout);
                     parser.process(&chunk.stderr);
                 }
             }
-        }
 
         // Split the area into terminal and status bar
         let chunks = Layout::default()
@@ -295,6 +294,12 @@ pub struct ShellSelectorWidget {
     pub show_selector: bool,
 }
 
+impl Default for ShellSelectorWidget {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ShellSelectorWidget {
     pub fn new() -> Self {
         Self {
@@ -401,8 +406,8 @@ impl EventHandler for ShellSelectorWidget {
             return Some(event);
         }
 
-        if let Event::Key(key) = event {
-            if key.kind == KeyEventKind::Press {
+        if let Event::Key(key) = event
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') => {
                         self.select_previous();
@@ -423,7 +428,6 @@ impl EventHandler for ShellSelectorWidget {
                     _ => {}
                 }
             }
-        }
         Some(event)
     }
 }

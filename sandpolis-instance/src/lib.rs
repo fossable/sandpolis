@@ -28,10 +28,7 @@ pub use inventory;
 #[inline]
 fn format_uuid(src: u128) -> [u8; 36] {
     let src: [u8; 16] = src.to_le_bytes();
-    let lut = [
-        b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e',
-        b'f',
-    ];
+    let lut = *b"0123456789abcdef";
 
     let groups = [(0, 8), (9, 13), (14, 18), (19, 23), (24, 36)];
     let mut dst = [0; 36];
@@ -669,7 +666,7 @@ pub struct LayerVersion {
 impl TryFrom<String> for LayerVersion {
     type Error = anyhow::Error;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
+    fn try_from(_value: String) -> Result<Self, Self::Error> {
         todo!()
     }
 }

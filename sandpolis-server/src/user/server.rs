@@ -2,16 +2,15 @@ use super::{
     ClientAuthToken, CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
     UserData, UserLayer, UserName,
 };
-use crate::login::{LoginPassword, LoginRequest, LoginResponse};
+use crate::login::LoginPassword;
 use anyhow::{Result, anyhow, bail};
 use aws_lc_rs::pbkdf2;
 use axum::extract::{self, FromRequestParts, State, WebSocketUpgrade};
 use axum::http::{StatusCode, request::Parts};
-use axum::routing::{get, post};
-use axum::{Json, RequestPartsExt, Router};
+use axum::{Json, RequestPartsExt};
 use axum_extra::TypedHeader;
 use axum_extra::headers::{Authorization, authorization::Bearer};
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::{Validation, decode};
 use native_db::ToKey;
 use native_model::Model;
 use passwords::PasswordGenerator;
@@ -25,9 +24,8 @@ use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::num::NonZeroU32;
-use std::time::{Duration, SystemTime};
-use totp_rs::{Secret, TOTP};
-use tracing::{debug, error, info};
+use totp_rs::{Builder, Secret};
+use tracing::info;
 use validator::Validate;
 
 const SHA256_OUTPUT_LEN: usize = 32;
@@ -74,11 +72,11 @@ pub async fn create_user(
 
 #[axum_macros::debug_handler]
 pub async fn get_users(
-    state: State<UserLayer>,
-    claims: Claims,
+    _state: State<UserLayer>,
+    _claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
-    if let Some(username) = request.username {
+    if let Some(_username) = request.username {
         // match state.users.get_document(&*username) {
         //     Ok(Some(user)) => return
         // Ok(Json(GetUsersResponse::Ok(vec![user.data]))),     Ok(None)
@@ -132,7 +130,7 @@ pub struct PasswordData {
 impl UserLayer {
     // TODO better users.find
     pub async fn user(&self, username: &UserName) -> Result<UserData> {
-        let user = for user in self.users.iter() {
+        for user in self.users.iter() {
             if user.read().username == *username {
                 return Ok(user.read().clone());
             }
@@ -252,16 +250,16 @@ impl UserLayer {
             salt,
             hash: hash.to_vec(),
             totp_secret: Some(
-                TOTP::new(
-                    totp_rs::Algorithm::SHA1,
-                    6,
-                    1,
-                    30,
-                    Secret::default().to_bytes()?,
-                    Some("Sandpolis".to_string()),
-                    user.to_string(),
-                )?
-                .get_url(),
+                Builder::new()
+                    .with_algorithm(totp_rs::Algorithm::SHA1)
+                    .with_digits(6)
+                    .with_skew(1)
+                    .with_step_duration(30)
+                    .with_secret(Secret::default())
+                    .with_issuer(Some("Sandpolis"))
+                    .with_account_name(user.to_string())
+                    .build()?
+                    .to_url()?,
             ),
             user,
             ..Default::default()
@@ -287,7 +285,7 @@ impl UserLayer {
             // )
             .collect::<Result<Vec<_>, _>>()?;
 
-        if passwords.len() == 0 {
+        if passwords.is_empty() {
             bail!("Password not found");
         } else if passwords.len() > 1 {
             bail!("Too many passwords found");

@@ -93,7 +93,7 @@ impl Capturer {
         }
     }
 
-    pub fn frame<'b>(&'b mut self) -> std::io::Result<&'b [u8]> {
+    pub fn frame(&mut self) -> std::io::Result<&[u8]> {
         self.get_image();
         let result = unsafe { slice::from_raw_parts(self.buffer, self.size) };
         crate::capture::would_block_if_equal(&mut self.saved_raw_data, result)?;

@@ -59,7 +59,7 @@ impl StreamRequester for PingStreamRequester {
         todo!()
     }
 
-    async fn on_message(&self, request: Self::In, tx: Sender<Self::Out>) -> Result<()> {
+    async fn on_message(&self, _request: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
         Ok(())
     }
 }

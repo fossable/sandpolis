@@ -365,7 +365,7 @@ pub async fn auth_middleware(
     if let Some(peer_certificates) = tls_data.peer_certificates {
         // Take first client certificate
         let cert = X509Certificate::from_der(
-            &peer_certificates
+            peer_certificates
                 .first()
                 .ok_or("missing client certificate")?,
         )
@@ -402,13 +402,13 @@ impl Header for RealmName {
     where
         I: Iterator<Item = &'i HeaderValue>,
     {
-        Ok(values
+        values
             .next()
             .ok_or_else(headers::Error::invalid)?
             .to_str()
             .map_err(|_| headers::Error::invalid())?
             .parse()
-            .map_err(|_| headers::Error::invalid())?)
+            .map_err(|_| headers::Error::invalid())
     }
 
     fn encode<E>(&self, values: &mut E)

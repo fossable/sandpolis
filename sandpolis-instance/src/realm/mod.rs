@@ -194,7 +194,7 @@ impl RealmLayer {
                 let mut cluster_certs: Vec<RealmClusterCert> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
-                if cluster_certs.len() == 0 {
+                if cluster_certs.is_empty() {
                     cluster_certs.push(RealmClusterCert::new(
                         instance.cluster_id,
                         realm.read().name.clone(),
@@ -231,7 +231,7 @@ impl RealmLayer {
                 let mut server_certs: Vec<RealmServerCert> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
-                if server_certs.len() == 0 {
+                if server_certs.is_empty() {
                     server_certs.push(cluster_certs[0].server_cert(instance.instance_id)?);
                     rw.insert(server_certs[0].clone())?;
                 }
@@ -256,13 +256,12 @@ impl RealmLayer {
             }
 
             #[cfg(any(feature = "client", feature = "server"))]
-            if !loaded {
-                if let Ok(cert) = RealmClientCert::read(path) {
+            if !loaded
+                && let Ok(cert) = RealmClientCert::read(path) {
                     info!(path = %path.display(), "Loaded client realm certificate");
                     client_certs.push(cert);
                     loaded = true;
                 }
-            }
 
             if !loaded {
                 bail!("Failed to load realm certificate: {}", path.display());

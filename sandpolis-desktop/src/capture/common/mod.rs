@@ -80,7 +80,7 @@ pub enum Frame<'a> {
 }
 
 impl Frame<'_> {
-    pub fn valid<'a>(&'a self) -> bool {
+    pub fn valid(&self) -> bool {
         match self {
             Frame::PixelBuffer(pixelbuffer) => !pixelbuffer.data().is_empty(),
             Frame::Texture((texture, _)) => !texture.is_null(),
@@ -109,7 +109,7 @@ impl Pixfmt {
     }
 
     pub fn bytes_per_pixel(&self) -> usize {
-        (self.bpp() + 7) / 8
+        self.bpp().div_ceil(8)
     }
 }
 

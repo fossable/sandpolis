@@ -102,8 +102,8 @@ impl PackageManager for Pacman {
                     "Architecture" => package_data.architecture = Some(value.to_string()),
                     "Installed Size" => {
                         // Parse size like "1.23 MiB" or "456.78 KiB"
-                        if let Some(size_str) = value.split_whitespace().next() {
-                            if let Ok(size) = size_str.parse::<f64>() {
+                        if let Some(size_str) = value.split_whitespace().next()
+                            && let Ok(size) = size_str.parse::<f64>() {
                                 let unit = value.split_whitespace().nth(1).unwrap_or("");
                                 let bytes = match unit {
                                     "KiB" => (size * 1024.0) as u64,
@@ -113,7 +113,6 @@ impl PackageManager for Pacman {
                                 };
                                 package_data.installed_size = Some(bytes);
                             }
-                        }
                     }
                     "URL" => package_data.upstream_url = Some(value.to_string()),
                     "Licenses" => {

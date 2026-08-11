@@ -4,6 +4,7 @@ use serde::Serialize;
 // TODO convert to CLI args and add configure agents here
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Default)]
 pub struct AgentLayerConfig {
     /// Prohibits the agent from all write operations (including self upgrades).
     ///
@@ -45,12 +46,3 @@ impl PollConfig {
     }
 }
 
-impl Default for AgentLayerConfig {
-    fn default() -> Self {
-        Self {
-            read_only: false,
-            servers: Vec::new(),
-            poll: None,
-        }
-    }
-}

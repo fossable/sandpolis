@@ -1,16 +1,14 @@
 use super::{LoginRequest, LoginResponse};
 use crate::user::UserLayer;
-use crate::user::server::{Claims, PasswordData};
-use anyhow::Result;
+use crate::user::server::Claims;
 use aws_lc_rs::pbkdf2;
 use axum::Json;
 use axum::extract::{self, State};
 use axum_extra::TypedHeader;
-use jsonwebtoken::{Header, encode};
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
 use std::time::{Duration, SystemTime};
-use totp_rs::TOTP;
+use totp_rs::Totp;
 use tracing::{debug, error, info};
 use validator::Validate;
 
@@ -40,11 +38,13 @@ pub async fn post_login(
 
     // Check TOTP token if there is one
     if let Some(totp_url) = password.totp_secret.as_ref() {
-        if request.totp_token.unwrap_or(String::new())
-            != TOTP::from_url(totp_url)
-                .unwrap()
-                .generate_current()
-                .unwrap()
+        let Ok(totp) = Totp::from_url(totp_url) else {
+            error!("Failed to parse stored TOTP secret");
+            return Err(Json(LoginResponse::Invalid));
+        };
+        if totp
+            .check_current(&request.totp_token.unwrap_or_default())
+            .is_none()
         {
             debug!("TOTP check failed");
             return Err(Json(LoginResponse::Denied));

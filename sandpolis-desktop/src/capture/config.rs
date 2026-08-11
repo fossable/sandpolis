@@ -47,10 +47,9 @@ impl LocalConfig {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).ok();
         }
-        if let Ok(json) = serde_json::to_string_pretty(&*map) {
-            if let Err(err) = std::fs::write(&path, json) {
+        if let Ok(json) = serde_json::to_string_pretty(&*map)
+            && let Err(err) = std::fs::write(&path, json) {
                 tracing::warn!(?path, %err, "failed to persist capture state");
             }
-        }
     }
 }
