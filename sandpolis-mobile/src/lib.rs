@@ -1,5 +1,5 @@
 use bevy::prelude::bevy_main;
-use sandpolis::{InstanceState, config::Configuration};
+use sandpolis::{InstanceState, RuntimeOptions};
 use sandpolis_instance::database::DatabaseLayer;
 use std::path::PathBuf;
 
@@ -32,34 +32,43 @@ pub fn main() {
         .unwrap()
         .block_on(async {
             // Set initial configuration with Android app data directory
-            let mut config = Configuration::default();
+            let mut options = RuntimeOptions::embedded();
 
             // Use Android's app-specific data directory for database storage
             match get_android_files_dir() {
                 Ok(files_dir) => {
-                    config.database.storage = Some(files_dir);
+                    options.database.storage = Some(files_dir);
                 }
                 Err(e) => {
                     eprintln!("Failed to get Android files directory: {}", e);
                     // Fallback to ephemeral database
-                    config.database.ephemeral = true;
+                    options.database.ephemeral = true;
                 }
             }
 
             // Load state
+            let database = DatabaseLayer::new(
+                options.database.clone(),
+                &sandpolis::MODELS,
+                sandpolis_instance::database::WriteAuthority::Full,
+            )
+            .unwrap();
+
+            // The app holds no realm certificate until the user logs in, so it
+            // starts with just the default realm its own data lives in.
+            let realms =
+                sandpolis_instance::realm::Realms::for_client(Vec::new(), database.clone())
+                    .unwrap();
+
             let state = InstanceState::new(
-                config.clone(),
-                DatabaseLayer::new(
-                    config.database.clone(),
-                    &sandpolis::MODELS,
-                    sandpolis_instance::database::WriteAuthority::Full,
-                )
-                .unwrap(),
+                &options,
+                database,
+                realms,
                 sandpolis::ServerStratum::Global,
             )
             .await
             .unwrap();
 
-            sandpolis::client::gui::main(config, state).await.unwrap();
+            sandpolis::client::gui::main(options, state).await.unwrap();
         });
 }

@@ -1,8 +1,8 @@
 use anyhow::Result;
-use config::Configuration;
 use native_db::Models;
 use sandpolis_instance::LayerVersion;
 use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::realm::Realms;
 use std::{collections::HashMap, sync::LazyLock};
 
 #[cfg(feature = "agent")]
@@ -21,6 +21,144 @@ pub mod server;
 /// depending on `sandpolis-server` directly.
 pub use sandpolis_server::ServerStratum;
 
+/// Everything this process was told to do on the command line, plus what the
+/// `.server` file it was given contributes.
+///
+/// This is plumbing, not configuration: nothing here is serialized or read from
+/// disk. Realm-scoped settings live in `.realm` files ([`config::RealmConfig`]);
+/// what's here describes *this process*.
+#[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
+#[derive(Clone)]
+pub struct RuntimeOptions {
+    pub database: sandpolis_instance::database::config::DatabaseConfig,
+    pub instance: sandpolis_instance::config::InstanceConfig,
+
+    /// Where this process's server binds.
+    #[cfg(feature = "server")]
+    pub listen: std::net::SocketAddr,
+
+    /// Addresses rejected before authentication runs.
+    #[cfg(feature = "server")]
+    pub blocked_ips: Vec<std::net::IpAddr>,
+
+    /// Frame rate for the GUI and TUI.
+    #[cfg(feature = "client")]
+    pub fps: u32,
+
+    /// Polling connection mode, from the `.server` file.
+    #[cfg(feature = "agent")]
+    pub poll: Option<sandpolis_instance::realm::config::PollConfig>,
+
+    /// Servers the agent maintains connections to: the one named by the
+    /// `.server` file, plus the co-located server's loopback address in an
+    /// all-in-one build.
+    #[cfg(feature = "agent")]
+    pub servers: Vec<sandpolis_server::ServerUrl>,
+
+    /// Realms this server was told to serve, one per `--realm` file.
+    #[cfg(feature = "server")]
+    pub realms: Vec<crate::config::RealmConfig>,
+}
+
+impl Default for RuntimeOptions {
+    fn default() -> Self {
+        Self {
+            database: Default::default(),
+            instance: Default::default(),
+            #[cfg(feature = "server")]
+            listen: std::net::SocketAddr::new(
+                std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
+                sandpolis_server::ServerUrl::default_port(),
+            ),
+            #[cfg(feature = "server")]
+            blocked_ips: Vec::new(),
+            #[cfg(feature = "client")]
+            fps: 30,
+            #[cfg(feature = "agent")]
+            poll: None,
+            #[cfg(feature = "agent")]
+            servers: Vec::new(),
+            #[cfg(feature = "server")]
+            realms: Vec::new(),
+        }
+    }
+}
+
+impl RuntimeOptions {
+    /// Defaults for an instance that only connects out — the mobile app, an
+    /// example — where no command line was parsed.
+    pub fn embedded() -> Self {
+        Self::default()
+    }
+
+    /// The account sections of every loaded realm, merged.
+    ///
+    /// Accounts are still seeded into the default realm, so a multi-realm server
+    /// pools them for now. Per-realm account layering is a larger change than
+    /// this file format.
+    // TODO seed each realm's accounts into that realm's database
+    #[cfg(all(feature = "server", feature = "layer-account"))]
+    pub fn merged_account_config(&self) -> sandpolis_account::config::AccountLayerConfig {
+        let mut merged = sandpolis_account::config::AccountLayerConfig::default();
+        for (index, realm) in self.realms.iter().enumerate() {
+            if index == 0 {
+                merged.scrape = realm.account.scrape.clone();
+            }
+            merged.accounts.extend(realm.account.accounts.iter().cloned());
+        }
+        merged
+    }
+
+    /// The probe sections of every loaded realm, merged. See
+    /// [`merged_account_config`](Self::merged_account_config) for why.
+    #[cfg(all(feature = "server", feature = "layer-probe"))]
+    pub fn merged_probe_config(&self) -> sandpolis_probe::config::ProbeLayerConfig {
+        sandpolis_probe::config::ProbeLayerConfig {
+            devices: self
+                .realms
+                .iter()
+                .flat_map(|realm| realm.probe.devices.iter().cloned())
+                .collect(),
+        }
+    }
+}
+
+/// Load the `.server` file given on the command line, if any.
+///
+/// Returns the certificate it holds — which names exactly one server and realm —
+/// along with any polling settings written alongside it.
+#[cfg(not(target_os = "android"))]
+pub fn load_server_file(
+    args: &cli::CommandLine,
+) -> Result<
+    Option<(
+        sandpolis_instance::realm::config::EndpointCert,
+        Option<sandpolis_instance::realm::config::PollConfig>,
+    )>,
+> {
+    let Some(path) = args.server.as_ref() else {
+        return Ok(None);
+    };
+    Ok(Some(
+        sandpolis_instance::realm::config::ServerCertFile::load(path)?,
+    ))
+}
+
+/// Which stratum this process's server runs in.
+///
+/// A `.server` file means this instance attaches to the server it names, which
+/// puts its own server (if it has one) in the local stratum. Without one, this
+/// is the network's single global stratum server.
+#[cfg(not(target_os = "android"))]
+pub fn stratum(args: &cli::CommandLine) -> Result<ServerStratum> {
+    Ok(match load_server_file(args)? {
+        Some((cert, _)) => ServerStratum::Local {
+            global: cert.url()?,
+        },
+        None => ServerStratum::Global,
+    })
+}
+
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
 #[derive(Clone)]
@@ -34,7 +172,7 @@ pub struct InstanceState {
     pub filesystem: sandpolis_filesystem::FilesystemLayer,
     #[cfg(feature = "layer-health")]
     pub health: sandpolis_health::HealthLayer,
-    pub realm: sandpolis_instance::realm::RealmLayer,
+    pub realms: Realms,
     pub instance: sandpolis_instance::InstanceLayer,
     pub network: sandpolis_instance::network::NetworkLayer,
     #[cfg(feature = "layer-inventory")]
@@ -52,9 +190,13 @@ pub struct InstanceState {
 impl InstanceState {
     /// `stratum` describes the server this process runs (if any). On builds
     /// without the server feature it is inert, since nothing consults it.
+    ///
+    /// `realms` is built by the caller, which is the only place that knows the
+    /// `.realm` and `.server` files this process was given.
     pub async fn new(
-        config: Configuration,
+        options: &RuntimeOptions,
         database: DatabaseLayer,
+        realms: Realms,
         stratum: sandpolis_server::ServerStratum,
     ) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
@@ -62,32 +204,21 @@ impl InstanceState {
         // Only the global stratum server owns the domain; everyone else learns
         // it from the server they connect to.
         let instance = sandpolis_instance::InstanceLayer::new(
-            &config.instance,
+            &options.instance,
             database.clone(),
-            cfg!(feature = "server") && stratum.is_global(),
-        )
-        .await?;
-
-        // Only the global stratum server owns the realm CA; a local stratum
-        // server is issued its certificate by the GS during enrollment.
-        let realm = sandpolis_instance::realm::RealmLayer::new(
-            config.realm,
-            database.clone(),
-            instance.clone(),
             cfg!(feature = "server") && stratum.is_global(),
         )
         .await?;
 
         let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
 
-        let server =
-            sandpolis_server::ServerLayer::new(
-                database.clone(),
-                network.clone(),
-                realm.clone(),
-                stratum,
-            )
-            .await?;
+        let server = sandpolis_server::ServerLayer::new(
+            database.clone(),
+            network.clone(),
+            realms.clone(),
+            stratum,
+        )
+        .await?;
 
         let user = sandpolis_server::user::UserLayer::new(
             instance.clone(),
@@ -125,7 +256,19 @@ impl InstanceState {
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
         #[cfg(feature = "layer-probe")]
-        let probe = sandpolis_probe::ProbeLayer::new(config.probe.clone(), instance.instance_id);
+        let probe = sandpolis_probe::ProbeLayer::new(
+            {
+                #[cfg(feature = "server")]
+                {
+                    options.merged_probe_config()
+                }
+                #[cfg(not(feature = "server"))]
+                {
+                    Default::default()
+                }
+            },
+            instance.instance_id,
+        );
 
         Ok(Self {
             #[cfg(feature = "layer-inventory")]
@@ -148,7 +291,7 @@ impl InstanceState {
             agent,
             server,
             network,
-            realm,
+            realms,
             instance,
         })
     }
@@ -185,8 +328,6 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
 
     // Realm layer
     {
-        m.define::<sandpolis_instance::realm::RealmLayerData>()
-            .unwrap();
         m.define::<sandpolis_instance::realm::RealmData>().unwrap();
         m.define::<sandpolis_instance::realm::RealmClusterCert>()
             .unwrap();

@@ -1,9 +1,8 @@
-use crate::config::Configuration;
+use crate::RuntimeOptions;
 use anyhow::Result;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
-use sandpolis_instance::realm::RealmName;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tracing::info;
@@ -14,78 +13,93 @@ use sandpolis_client::cli::TargetArgs;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
 pub struct CommandLine {
-    /// Configuration file path ($S7S_CONFIG).
+    /// Path to a `.realm` file declaring a realm this server should serve. May
+    /// be given multiple times.
     ///
-    /// Only the global stratum server reads a config file. Every other instance
-    /// — local stratum servers, agents and clients — is configured entirely by
-    /// flags.
-    #[cfg(feature = "server")]
-    #[clap(long, conflicts_with = "global_server")]
-    pub config: Option<PathBuf>,
-
-    /// Run this server in the local stratum, attached to the global stratum
-    /// server at this URL.
+    /// The filename stem is the realm's name. A blank file means "generate a
+    /// realm CA for me", which is then written back into the file — after which
+    /// that file is the durable copy of the realm's trust root.
     ///
-    /// A local stratum server owns the data of the instances that connect
-    /// directly to it (as granted by the global stratum server) and replicates
-    /// estate-wide data down; the global stratum server pulls its owned scopes
-    /// back up.
+    /// Serving realms makes this the network's global stratum server, so it
+    /// can't be combined with `--server`.
     #[cfg(feature = "server")]
-    #[clap(long, value_name = "URL")]
-    pub global_server: Option<sandpolis_server::ServerUrl>,
+    #[clap(long, value_name = "PATH", conflicts_with = "server")]
+    pub realm: Vec<PathBuf>,
 
-    /// Address:port for this server to listen on. Overrides `server.listen` for
-    /// a global stratum server, and is the only way to set it on a local
-    /// stratum server.
+    /// Path to a `.server` file naming the server this instance connects to
+    /// ($S7S_SERVER).
+    ///
+    /// The file carries the realm CA and this instance's own certificate, whose
+    /// common name is the server's address. On a build with the server feature
+    /// it also selects the local stratum, with that server as the upstream.
+    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
+    pub server: Option<PathBuf>,
+
+    /// Address:port for this server to listen on.
+    #[cfg(feature = "server")]
+    #[clap(long, default_value = "0.0.0.0:8768")]
+    pub listen: std::net::SocketAddr,
+
+    /// The domain this instance belongs to.
     #[cfg(feature = "server")]
     #[clap(long)]
-    pub listen: Option<std::net::SocketAddr>,
+    pub domain: Option<String>,
 
-    #[cfg(any(feature = "agent", feature = "client"))]
-    #[clap(flatten)]
-    pub servers: sandpolis_server::cli::ServerCommandLine,
+    /// IP addresses denied access to the server, rejected before authentication
+    /// runs. May be given multiple times.
+    #[cfg(feature = "server")]
+    #[clap(long, value_name = "IP")]
+    pub blocked_ips: Vec<std::net::IpAddr>,
+
+    /// Frame rate for the GUI and TUI.
+    #[cfg(feature = "client")]
+    #[clap(long, default_value_t = 30)]
+    pub fps: u32,
+
+    /// Directory where the admin socket is created.
+    #[clap(long, default_value = "/tmp")]
+    pub socket_dir: PathBuf,
 
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
 
     #[clap(flatten)]
-    pub network: sandpolis_instance::network::cli::NetworkCommandLine,
-
-    #[clap(flatten)]
     pub database: sandpolis_instance::database::cli::DatabaseCommandLine,
-
-    #[clap(flatten)]
-    pub realm: sandpolis_instance::realm::cli::RealmCommandLine,
-
-    #[cfg(feature = "agent")]
-    #[clap(flatten)]
-    pub agent: sandpolis_agent::cli::AgentCommandLine,
-
-    #[cfg(feature = "client")]
-    #[clap(flatten)]
-    pub client: sandpolis_client::cli::ClientCommandLine,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
 
 impl CommandLine {
-    /// Which stratum this process's server runs in.
-    ///
-    /// `--global-server <URL>` selects the local stratum and names the upstream;
-    /// its absence means this is the network's single global stratum server.
-    #[cfg(feature = "server")]
-    pub fn stratum(&self) -> sandpolis_server::ServerStratum {
-        match self.global_server.clone() {
-            Some(global) => sandpolis_server::ServerStratum::Local { global },
-            None => sandpolis_server::ServerStratum::Global,
+    /// The process-wide options these flags describe. What the `.server` file
+    /// contributes is filled in by the caller, which is what loads it.
+    pub fn options(&self) -> RuntimeOptions {
+        RuntimeOptions {
+            database: sandpolis_instance::database::config::DatabaseConfig {
+                storage: self.database.data_dir.clone(),
+                ephemeral: self.database.ephemeral,
+                ..Default::default()
+            },
+            instance: sandpolis_instance::config::InstanceConfig {
+                socket_directory: Some(self.socket_dir.clone()),
+                #[cfg(feature = "server")]
+                domain: self.domain.clone(),
+                #[cfg(not(feature = "server"))]
+                domain: None,
+            },
+            #[cfg(feature = "server")]
+            listen: self.listen,
+            #[cfg(feature = "server")]
+            blocked_ips: self.blocked_ips.clone(),
+            #[cfg(feature = "client")]
+            fps: self.fps,
+            #[cfg(feature = "agent")]
+            poll: None,
+            #[cfg(feature = "agent")]
+            servers: Vec::new(),
+            #[cfg(feature = "server")]
+            realms: Vec::new(),
         }
-    }
-
-    /// Non-server builds never run a server, so the stratum is inert.
-    #[cfg(not(feature = "server"))]
-    pub fn stratum(&self) -> sandpolis_server::ServerStratum {
-        sandpolis_server::ServerStratum::Global
     }
 }
 
@@ -111,30 +125,128 @@ pub enum ServerCommand {
     List,
 }
 
+/// Flags shared by the two certificate-minting subcommands.
+///
+/// These issue from a realm's CA, which lives in its `.realm` file, so no
+/// database is involved.
+#[cfg(feature = "server")]
+#[derive(clap::Args, Debug, Clone)]
+pub struct NewCertArgs {
+    /// Path to the `.realm` file whose CA signs the new certificate.
+    #[clap(long, value_name = "PATH")]
+    pub realm: PathBuf,
+
+    /// Address the holder will use to reach the server, as `host` or
+    /// `host:port`. Defaults to the realm file's own `address`.
+    #[clap(long)]
+    pub address: Option<String>,
+
+    /// Run the agent in polling mode on this cron schedule (e.g. "0 */5 * * * *"
+    /// to check in every five minutes) instead of staying continuously
+    /// connected.
+    #[clap(long)]
+    pub poll: Option<String>,
+
+    /// How long the agent stays connected during each polling check-in, in
+    /// seconds.
+    #[clap(long, default_value_t = sandpolis_instance::realm::config::PollConfig::default_timeout_secs())]
+    pub poll_timeout: u64,
+
+    /// Output file path, or none for STDOUT.
+    #[clap(long)]
+    pub output: Option<PathBuf>,
+}
+
+#[cfg(feature = "server")]
+impl NewCertArgs {
+    /// Load the realm and work out what URL the minted certificate should name.
+    fn resolve(&self) -> Result<(sandpolis_instance::realm::RealmClusterCert, sandpolis_server::ServerUrl)> {
+        use anyhow::{Context, anyhow, bail};
+        use sandpolis_instance::realm::RealmClusterCert;
+
+        let config = crate::config::RealmConfig::load(&self.realm)?;
+
+        let Some(ca) = config.ca.as_ref() else {
+            bail!(
+                "{} declares no realm CA. Start the server once with \
+                 `--realm {}` to generate one.",
+                self.realm.display(),
+                self.realm.display()
+            );
+        };
+        let (cert, key) = ca.load_der(config.base_dir())?;
+        let key = key.ok_or_else(|| {
+            anyhow!(
+                "{} has the realm CA certificate but not its private key, \
+                 so it cannot issue new certificates",
+                self.realm.display()
+            )
+        })?;
+
+        let url = match self.address.as_ref() {
+            Some(address) => {
+                let mut url: sandpolis_server::ServerUrl = address
+                    .parse()
+                    .with_context(|| format!("Parsing address {address:?}"))?;
+                url.realm = config.name.clone();
+                url
+            }
+            None => config.server_url()?.ok_or_else(|| {
+                anyhow!(
+                    "{} declares no address; pass --address to say how the \
+                     holder reaches this server",
+                    self.realm.display()
+                )
+            })?,
+        };
+
+        Ok((
+            RealmClusterCert {
+                name: config.name.clone(),
+                cert,
+                key: Some(key),
+                ..Default::default()
+            },
+            url,
+        ))
+    }
+
+    fn poll(&self) -> Option<sandpolis_instance::realm::config::PollConfig> {
+        self.poll
+            .as_ref()
+            .map(|schedule| sandpolis_instance::realm::config::PollConfig {
+                schedule: schedule.clone(),
+                timeout_secs: self.poll_timeout,
+            })
+    }
+
+    /// Write `file` to `--output`, or to stdout when none was given.
+    fn emit(&self, file: sandpolis_instance::realm::config::ServerCertFile) -> Result<()> {
+        match self.output.as_ref() {
+            Some(path) => {
+                info!(path = %path.display(), "Writing endpoint certificate");
+                file.write(path)?;
+            }
+            None => println!("{}", file.to_ron()?),
+        }
+        Ok(())
+    }
+}
+
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     #[cfg(feature = "server")]
-    /// Generate a new realm certificate for use with a client instance
+    /// Generate a `.server` file for a client instance
     NewClientCert {
-        /// Name of a realm that exists on the server
-        #[clap(long, default_value = "default")]
-        realm: RealmName,
-
-        /// Output file path or none for STDOUT
-        #[clap(long)]
-        output: Option<PathBuf>,
+        #[clap(flatten)]
+        args: NewCertArgs,
     },
 
     #[cfg(feature = "server")]
-    /// Generate a new realm certificate for use with an agent instance
+    /// Generate a `.server` file for an agent instance
     NewAgentCert {
-        /// Name of a realm that exists on the server
-        #[clap(long, default_value = "default")]
-        realm: RealmName,
-
-        /// Output file path or none for STDOUT
-        #[clap(long)]
-        output: Option<PathBuf>,
+        #[clap(flatten)]
+        args: NewCertArgs,
     },
 
     InstallCert {},
@@ -256,48 +368,36 @@ impl Commands {
         }
     }
 
-    #[allow(unused_variables)]
     /// Dispatch a [`standalone`](Self::standalone) command. These run without
     /// starting any instances or opening a client connection. Panics if called
     /// with a client subcommand (those go through `dispatch_client`).
     #[allow(unused_variables)]
-    pub async fn dispatch_standalone(self, config: &Configuration) -> Result<ExitCode> {
+    pub async fn dispatch_standalone(self, options: &RuntimeOptions) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "client")]
             Commands::Lsp => {
                 crate::lsp::run().await;
             }
             #[cfg(feature = "server")]
-            Commands::NewClientCert { realm, output } => {
-                use sandpolis_instance::realm::RealmClusterCert;
+            Commands::NewClientCert { args } => {
+                use sandpolis_instance::realm::config::ServerCertFile;
 
-                let database = sandpolis_instance::database::DatabaseLayer::new(
-                    config.database.clone(),
-                    &crate::MODELS,
-                    sandpolis_instance::database::WriteAuthority::Full,
-                )?;
-
-                let db = database.realm(realm.parse()?)?;
-                let r = db.r_transaction()?;
-
-                let cluster_certs: Vec<RealmClusterCert> =
-                    r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-
-                let Some(cluster_cert) = cluster_certs.first() else {
-                    return Err(anyhow::anyhow!("No cluster cert found"));
-                };
-
-                let client_cert = cluster_cert.client_cert()?;
-
-                if let Some(path) = output {
-                    info!(path = %path.display(), "Writing endpoint certificate");
-                    std::fs::write(path, &serde_json::to_vec(&client_cert)?)?;
-                } else {
-                    todo!()
-                }
+                let (ca, url) = args.resolve()?;
+                args.emit(ServerCertFile::from_client(
+                    &ca.client_cert(&url)?,
+                    args.poll(),
+                ))?;
             }
             #[cfg(feature = "server")]
-            Commands::NewAgentCert { .. } => todo!(),
+            Commands::NewAgentCert { args } => {
+                use sandpolis_instance::realm::config::ServerCertFile;
+
+                let (ca, url) = args.resolve()?;
+                args.emit(ServerCertFile::from_agent(
+                    &ca.agent_cert(&url)?,
+                    args.poll(),
+                ))?;
+            }
             Commands::InstallCert {} => todo!(),
             Commands::About => {
                 for line in fossable::sandpolis_word() {
@@ -322,10 +422,10 @@ impl Commands {
     #[cfg(feature = "client")]
     pub async fn dispatch_client(
         self,
-        config: &Configuration,
+        options: &RuntimeOptions,
         state: &crate::InstanceState,
     ) -> Result<ExitCode> {
-        let fps = config.client.fps as f32;
+        let fps = options.fps as f32;
         match self {
             Commands::Agent { action } => client::agent(action, fps).await,
             Commands::Server { action } => client::server(action, &state.server, fps).await,
@@ -365,48 +465,74 @@ impl Commands {
 #[cfg(all(test, feature = "server"))]
 mod test_stratum_args {
     use super::*;
+    use sandpolis_instance::realm::RealmClusterCert;
     use sandpolis_server::ServerStratum;
 
-    /// Absent `--global-server`, this is the network's single global stratum
-    /// server.
-    #[test]
-    fn no_global_server_means_global_stratum() {
-        let args = CommandLine::try_parse_from(["sandpolis"]).expect("bare invocation parses");
-        assert_eq!(args.stratum(), ServerStratum::Global);
+    /// Write a `.server` file whose certificate names `url`, the way
+    /// `new-client-cert` would.
+    fn client_server_file(dir: &std::path::Path, url: &str) -> Result<PathBuf> {
+        let url: sandpolis_server::ServerUrl = url.parse()?;
+        let ca = RealmClusterCert::new(Default::default(), url.realm.clone())?;
+        let path = dir.join("upstream.server");
+        ca.client_cert(&url)?.write_server_file(&path, None)?;
+        Ok(path)
     }
 
-    /// `--global-server` names the upstream and selects the local stratum.
+    /// Absent `--server`, this is the network's single global stratum server.
     #[test]
-    fn global_server_means_local_stratum() {
-        let args = CommandLine::try_parse_from([
-            "sandpolis",
-            "--global-server",
-            "https://gs.example.com:8768/default",
-        ])
-        .expect("--global-server parses");
+    fn no_server_file_means_global_stratum() -> Result<()> {
+        let args = CommandLine::try_parse_from(["sandpolis"]).expect("bare invocation parses");
+        assert_eq!(crate::stratum(&args)?, ServerStratum::Global);
+        Ok(())
+    }
 
-        let ServerStratum::Local { global } = args.stratum() else {
-            panic!("--global-server must select the local stratum");
+    /// The `.server` file names the upstream and selects the local stratum; the
+    /// address comes out of the certificate rather than a separate flag.
+    #[test]
+    fn server_file_means_local_stratum() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let path = client_server_file(dir.path(), "gs.example.com:8768/default")?;
+
+        let args =
+            CommandLine::try_parse_from(["sandpolis", "--server", path.to_str().unwrap()])
+                .expect("--server parses");
+
+        let ServerStratum::Local { global } = crate::stratum(&args)? else {
+            panic!("--server must select the local stratum");
         };
         assert_eq!(global.host, "gs.example.com");
         assert_eq!(global.port, 8768);
+        Ok(())
     }
 
-    /// Only the global stratum server has a config file, so asking for both is
-    /// a contradiction and must be rejected rather than silently resolved.
+    /// A realm is something the global stratum server serves; an instance that
+    /// attaches to one can't also be it.
     #[test]
-    fn config_conflicts_with_global_server() {
+    fn realm_conflicts_with_server() {
         let result = CommandLine::try_parse_from([
             "sandpolis",
-            "--config",
-            "/etc/sandpolis.ron",
-            "--global-server",
-            "https://gs.example.com",
+            "--realm",
+            "./default.realm",
+            "--server",
+            "./upstream.server",
         ]);
         assert!(
             result.is_err(),
-            "a local stratum server must not accept a config file"
+            "a local stratum server must not serve realms of its own"
         );
+    }
+
+    /// A `.server` file that isn't there is a misconfiguration, not something to
+    /// silently fall back from.
+    #[test]
+    fn missing_server_file_is_an_error() {
+        let args = CommandLine::try_parse_from([
+            "sandpolis",
+            "--server",
+            "/nonexistent/upstream.server",
+        ])
+        .expect("--server parses");
+        assert!(crate::stratum(&args).is_err());
     }
 }
 

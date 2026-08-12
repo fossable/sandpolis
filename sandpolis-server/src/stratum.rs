@@ -167,7 +167,7 @@ pub async fn enroll(server: &ServerLayer, instance: &InstanceLayer) -> Result<()
     server.realms.find_client_cert(realm.clone()).map_err(|e| {
         anyhow!(
             "{e}. A local stratum server authenticates to its global stratum \
-             server with a realm certificate; pass one with --realm-cert."
+             server with a realm certificate; pass one with --server."
         )
     })?;
 
@@ -223,7 +223,7 @@ async fn request_cert(
             .install_enrollment(realm, ca, cert, key, instance.instance_id)
             .map_err(EnrollError::Permanent),
         IssueServerCertResponse::NotGlobalStratum => Err(EnrollError::Permanent(anyhow!(
-            "{global} is itself a local stratum server; --global-server must point at \
+            "{global} is itself a local stratum server; the --server file must name \
              the network's global stratum server"
         ))),
         IssueServerCertResponse::Rejected => Err(EnrollError::Permanent(anyhow!(

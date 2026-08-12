@@ -1,4 +1,4 @@
-use crate::{InstanceState, config::Configuration};
+use crate::{InstanceState, RuntimeOptions};
 use anyhow::Result;
 use axum::{
     Router,
@@ -13,11 +13,14 @@ use tempfile::tempdir;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
+pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
+    #[cfg(feature = "layer-account")]
+    let account_config = options.merged_account_config();
+
     #[cfg(feature = "layer-account")]
     // Before the services start, so the first favicon sweep sees every
     // configured domain.
-    state.account.seed_accounts(&config.account)?;
+    state.account.seed_accounts(&account_config)?;
 
     // Every layer's server-side background work goes on one runner, which owns
     // the schedules and lets a client enable or disable individual services.
@@ -32,7 +35,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     #[cfg(feature = "layer-account")]
     state
         .account
-        .register_services(&config.account, &mut services)?;
+        .register_services(&account_config, &mut services)?;
 
     services.start()?;
 
@@ -109,7 +112,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     // Reject requests from blocked IPs before authentication runs
     let blocklist =
-        sandpolis_server::block::IpBlockList::new(config.server.blocked_ips.iter().copied());
+        sandpolis_server::block::IpBlockList::new(options.blocked_ips.iter().copied());
     let app = app.route_layer(axum::middleware::from_fn_with_state(
         blocklist,
         sandpolis_server::block::block_middleware,
@@ -118,12 +121,12 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     // Tracing support for Axum
     let app = app.layer(TraceLayer::new_for_http());
 
-    info!(listener = ?config.server.listen, "Starting server listener");
-    axum_server::bind(config.server.listen)
+    info!(listener = ?options.listen, "Starting server listener");
+    axum_server::bind(options.listen)
         .acceptor(
             sandpolis_instance::realm::server::RealmAcceptor::new(
                 state.instance.clone(),
-                state.realm.clone(),
+                state.realms.clone(),
             )
             .await?,
         )
@@ -139,6 +142,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 /// Holds randomized parameters for a test server.
 pub struct TestServer {
     pub port: u16,
+    /// A `.server` file a client can be pointed at to reach this server.
     pub endpoint_cert: PathBuf,
     certs: TempDir,
 }
@@ -150,43 +154,69 @@ pub async fn test_server() -> Result<TestServer> {
         .install_default()
         .expect("crypto provider is available");
 
-    let cluster_id = ClusterId::default();
-    let instance_id = InstanceId::new_server();
-
-    let mut config = Configuration::default();
-
-    // Create temporary database
-    let database =
-        sandpolis_instance::database::DatabaseLayer::new(
-            config.database.clone(),
-            &crate::MODELS,
-            sandpolis_instance::database::WriteAuthority::Full,
-        )?;
-
-    // Generate temporary certs
-    let certs = tempdir()?;
-    let ca_cert = RealmClusterCert::new(cluster_id, "test".parse()?)?;
-    let _server_cert = ca_cert.server_cert(instance_id)?;
-    let client_cert = ca_cert.client_cert()?;
-    client_cert.write(certs.path().join("client.cert"))?;
-
     // Temporary listening port
     let port: u16 = rand::rng().random_range(9000..9999);
-    config.server.listen = format!("127.0.0.1:{port}",).parse()?;
+    let url: sandpolis_server::ServerUrl = format!("127.0.0.1:{port}/test").parse()?;
+
+    let mut options = RuntimeOptions::embedded();
+    options.database.ephemeral = true;
+    options.database.storage = None;
+    options.listen = format!("127.0.0.1:{port}").parse()?;
+
+    // Create temporary database
+    let database = sandpolis_instance::database::DatabaseLayer::new(
+        options.database.clone(),
+        &crate::MODELS,
+        sandpolis_instance::database::WriteAuthority::Full,
+    )?;
+
+    // The realm's CA is generated here and handed to the server as a bootstrap,
+    // exactly as a `.realm` file would.
+    let ca_cert = RealmClusterCert::new(ClusterId::default(), url.realm.clone())?;
+
+    // The client's half goes into a `.server` file for the caller to use.
+    let certs = tempdir()?;
+    let endpoint_cert = certs.path().join("test.server");
+    ca_cert.client_cert(&url)?.write_server_file(&endpoint_cert, None)?;
+
+    let instance = sandpolis_instance::InstanceLayer::new(
+        &options.instance,
+        database.clone(),
+        true,
+    )
+    .await?;
+
+    let (realms, _) = sandpolis_instance::realm::Realms::new(
+        vec![sandpolis_instance::realm::config::RealmBootstrap {
+            name: url.realm.clone(),
+            ca: Some((
+                ca_cert.cert.clone(),
+                ca_cert.key.clone().expect("a fresh CA carries its key"),
+            )),
+            address: Some(url),
+        }],
+        Vec::new(),
+        database.clone(),
+        instance,
+        true,
+        port,
+    )
+    .await?;
 
     let state = InstanceState::new(
-        config.clone(),
+        &options,
         database,
+        realms,
         sandpolis_server::ServerStratum::Global,
     )
     .await?;
 
     // Spawn the server
-    tokio::spawn(async move { main(config, state).await });
+    tokio::spawn(async move { main(options, state).await });
 
     Ok(TestServer {
         port,
-        endpoint_cert: certs.path().join("client.cert"),
+        endpoint_cert,
         certs,
     })
 }

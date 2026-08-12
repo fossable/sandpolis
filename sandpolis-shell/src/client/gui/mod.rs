@@ -45,10 +45,14 @@ const TERM_BG: Color = Color::srgb(0.08, 0.08, 0.10);
 #[derive(Resource)]
 struct TerminalFont(Handle<Font>);
 
-/// Active client-side shell sessions, keyed by instance.
+/// Active client-side shell sessions, keyed by the node they belong to.
+///
+/// The key is a [`ControllerTarget`] rather than a bare `InstanceId` because a
+/// probe node borrows its gateway server's id; only the sub-node device id tells
+/// an SSH probe apart from the server it orbits.
 #[derive(Resource, Default)]
 struct ShellStreams {
-    sessions: HashMap<InstanceId, ShellStreamSession>,
+    sessions: HashMap<ControllerTarget, ShellStreamSession>,
 }
 
 /// A live shell session the GUI is rendering.
@@ -56,7 +60,7 @@ struct ShellStreamSession {
     /// Output chunks pushed by the requester (registered on the connection).
     output: UnboundedReceiver<ShellOutput>,
     /// Outbound requests (stdin, resize). A background task forwards these over
-    /// the relayed stream to the agent.
+    /// the stream, translating to the SSH wire type for probe sessions.
     outbound: Sender<ShellSessionStreamRequest>,
     /// Headless terminal emulator fed by `output`.
     term: Term<EventProxy>,
@@ -111,7 +115,7 @@ impl Dimensions for TermDimensions {
 /// Marks the grid container of a terminal controller.
 #[derive(Component)]
 struct TerminalGrid {
-    instance: InstanceId,
+    target: ControllerTarget,
 }
 
 /// Marks a grid that should open a session once its size is known.
@@ -126,6 +130,16 @@ impl NodeController for ShellController {
         "Terminal"
     }
 
+    fn title_for(&self, target: ControllerTarget) -> String {
+        #[cfg(feature = "probe")]
+        if let Some(device) = ssh_probe_device(target) {
+            return device.display_name();
+        }
+        #[cfg(not(feature = "probe"))]
+        let _ = target;
+        self.title().to_string()
+    }
+
     fn build(
         &self,
         commands: &mut Commands,
@@ -133,11 +147,10 @@ impl NodeController for ShellController {
         target: ControllerTarget,
         theme: &Theme,
     ) {
-        let instance = target.instance;
         // Grid container: captures keyboard focus and renders the terminal.
         let grid = commands
             .spawn((
-                TerminalGrid { instance },
+                TerminalGrid { target },
                 WantsKeyboard,
                 TabIndex(0),
                 Interaction::default(),
@@ -168,7 +181,7 @@ impl NodeController for ShellController {
                     move |_: On<Activate>, mut commands: Commands, streams: Res<ShellStreams>| {
                         // Reattachment of an existing session is handled by
                         // `attach_terminal_grids`; only start a fresh one.
-                        if streams.sessions.contains_key(&instance) {
+                        if streams.sessions.contains_key(&target) {
                             return;
                         }
                         commands.entity(grid).insert(TerminalPendingStart);
@@ -195,7 +208,7 @@ fn attach_terminal_grids(
     mut streams: ResMut<ShellStreams>,
 ) {
     for (entity, grid) in grids.iter() {
-        if let Some(session) = streams.sessions.get_mut(&grid.instance) {
+        if let Some(session) = streams.sessions.get_mut(&grid.target) {
             session.grid = Some(entity);
             session.dirty = true;
         }
@@ -216,7 +229,6 @@ fn start_pending_sessions(
         let cols = ((logical.x / CELL_W).floor() as u16).max(2);
         let rows = ((logical.y / CELL_H).floor() as u16).max(2);
 
-        let (requester, output) = ShellSessionStreamRequester::channel();
         let (outbound, outbound_rx) = channel(64);
 
         let dims = TermDimensions {
@@ -229,16 +241,10 @@ fn start_pending_sessions(
             EventProxy(outbound.clone()),
         );
 
-        let initial = ShellSessionStreamRequest::Start {
-            path: PathBuf::from("/bin/sh"),
-            environment: HashMap::new(),
-            rows: rows as u32,
-            cols: cols as u32,
-        };
-        spawn_shell_stream(grid.instance, requester, initial, outbound_rx);
+        let output = open_session_stream(grid.target, rows, cols, outbound_rx);
 
         streams.sessions.insert(
-            grid.instance,
+            grid.target,
             ShellStreamSession {
                 output,
                 outbound,
@@ -252,8 +258,118 @@ fn start_pending_sessions(
             },
         );
         commands.entity(entity).remove::<TerminalPendingStart>();
-        info!("Shell session started for {} ({}x{})", grid.instance, cols, rows);
+        info!(
+            "Shell session started for {} ({}x{})",
+            grid.target.instance, cols, rows
+        );
     }
+}
+
+/// The SSH probe device behind `target`, if there is one.
+///
+/// Reads the probe layer's device registry directly rather than going through
+/// `sandpolis_probe::client::gui`, whose helpers are behind that crate's `client`
+/// feature — depending on them would drag its whole GUI stack in here.
+#[cfg(feature = "probe")]
+fn ssh_probe_device(target: ControllerTarget) -> Option<sandpolis_probe::RegisteredDevice> {
+    let device_id = target.sub?;
+    let device = sandpolis_probe::REGISTERED_DEVICES
+        .read()
+        .ok()?
+        .iter()
+        .find(|device| device.id == device_id)?
+        .clone();
+    device.device.ssh.as_ref()?;
+    Some(device)
+}
+
+/// Open the stream backing a new session and hand back the channel its output
+/// arrives on.
+///
+/// A probe target gets an SSH session run by the device's owning server; anything
+/// else gets a PTY on the agent itself. Both produce [`ShellOutput`], so the
+/// terminal above this doesn't care which it got.
+fn open_session_stream(
+    target: ControllerTarget,
+    rows: u16,
+    cols: u16,
+    outbound_rx: Receiver<ShellSessionStreamRequest>,
+) -> UnboundedReceiver<ShellOutput> {
+    #[cfg(feature = "probe")]
+    if let Some(device) = ssh_probe_device(target) {
+        let (requester, output) = crate::ssh::SshSessionStreamRequester::channel();
+        let initial = crate::ssh::SshSessionStreamRequest::Start {
+            device_id: device.id,
+            rows: rows as u32,
+            cols: cols as u32,
+        };
+        spawn_ssh_stream(&device, requester, initial, outbound_rx);
+        return output;
+    }
+
+    let (requester, output) = ShellSessionStreamRequester::channel();
+    let initial = ShellSessionStreamRequest::Start {
+        path: PathBuf::from("/bin/sh"),
+        environment: HashMap::new(),
+        rows: rows as u32,
+        cols: cols as u32,
+    };
+    spawn_shell_stream(target.instance, requester, initial, outbound_rx);
+    output
+}
+
+/// Open an SSH session to a probe device and forward outbound requests over it
+/// until the channel closes.
+///
+/// Probes are reachable only from servers, so this opens a stream *to the owning
+/// server* (not a relayed one to an agent) and translates the terminal's
+/// agent-shaped requests into the SSH wire type on the way out.
+#[cfg(feature = "probe")]
+fn spawn_ssh_stream(
+    device: &sandpolis_probe::RegisteredDevice,
+    requester: crate::ssh::SshSessionStreamRequester,
+    initial: crate::ssh::SshSessionStreamRequest,
+    mut outbound_rx: Receiver<ShellSessionStreamRequest>,
+) {
+    let conn = device
+        .device
+        .server
+        .as_ref()
+        .and_then(sandpolis_client::sync::connection_for)
+        .or_else(sandpolis_client::sync::connection);
+    let Some(conn) = conn else {
+        warn!("No server connection; cannot start SSH session");
+        return;
+    };
+    sandpolis_client::sync::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream(requester, initial).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "Failed to open SSH session");
+                return;
+            }
+        };
+        while let Some(req) = outbound_rx.recv().await {
+            let req = match req {
+                ShellSessionStreamRequest::Stdin { data } => {
+                    crate::ssh::SshSessionStreamRequest::Stdin { data }
+                }
+                ShellSessionStreamRequest::Resize { rows, cols } => {
+                    crate::ssh::SshSessionStreamRequest::Resize { rows, cols }
+                }
+                // Sent as the stream's initial request, never through here.
+                ShellSessionStreamRequest::Start { .. } => continue,
+            };
+            let payload = match serde_cbor::to_vec(&req) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if msg_tx.send(StreamMessage::local(id, payload)).await.is_err() {
+                break;
+            }
+        }
+        conn.close_stream(id);
+    });
 }
 
 /// Open a relayed shell session to `instance` and forward outbound requests
@@ -325,7 +441,7 @@ fn handle_terminal_resize(
     mut streams: ResMut<ShellStreams>,
 ) {
     for (grid, node) in grids.iter() {
-        let Some(session) = streams.sessions.get_mut(&grid.instance) else {
+        let Some(session) = streams.sessions.get_mut(&grid.target) else {
             continue;
         };
         let logical = node.size() * node.inverse_scale_factor();
@@ -376,7 +492,10 @@ impl Plugin for ShellClientPlugin {
                     "Remote shell access and command execution",
                 )
                 .with_controller(ShellController)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                // SSH probes get a terminal just like agents do. Devices that
+                // expose nothing this layer can drive stay hidden.
+                .showing_probe_nodes_for(&["SSH"]),
             );
     }
 }

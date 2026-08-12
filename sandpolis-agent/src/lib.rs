@@ -6,9 +6,6 @@ use anyhow::Result;
 use sandpolis_instance::database::DatabaseLayer;
 
 pub mod bootagent;
-#[cfg(not(target_os = "android"))]
-pub mod cli;
-pub mod config;
 pub mod uefi;
 pub mod wake;
 

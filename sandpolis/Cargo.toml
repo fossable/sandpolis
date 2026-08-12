@@ -137,7 +137,13 @@ layer-health = ["dep:sandpolis-health"]
 layer-inventory = ["dep:sandpolis-inventory"]
 layer-shell = ["dep:sandpolis-shell"]
 layer-snapshot = ["dep:sandpolis-snapshot"]
-layer-probe = ["dep:sandpolis-probe"]
+# The weak `?` deps give the shell/desktop layers probe support only when those
+# layers are enabled too, which is the closest cargo gets to "both features on".
+layer-probe = [
+  "dep:sandpolis-probe",
+  "sandpolis-shell?/probe",
+  "sandpolis-desktop?/probe",
+]
 layer-tunnel = []
 
 # Enable all layers

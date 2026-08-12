@@ -8,6 +8,9 @@ use sandpolis_macros::data;
 pub mod screenshot;
 pub mod session;
 
+#[cfg(feature = "probe")]
+pub mod vnc;
+
 #[cfg(feature = "client")]
 pub mod client;
 
@@ -100,4 +103,23 @@ impl sandpolis_instance::network::RegisterResponders for DesktopResponderRegistr
 #[cfg(feature = "agent")]
 inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &DesktopResponderRegistration
+));
+
+/// Static handler for registering VNC probe responders.
+///
+/// Separate from [`DesktopResponderRegistration`] because probes are reached
+/// only from servers, whereas the capture responders above only exist on agents.
+#[cfg(all(feature = "server", feature = "probe"))]
+pub struct DesktopProbeResponderRegistration;
+
+#[cfg(all(feature = "server", feature = "probe"))]
+impl sandpolis_instance::network::RegisterResponders for DesktopProbeResponderRegistration {
+    fn register_responders(&self, registry: &sandpolis_instance::network::StreamRegistry) {
+        registry.register_responder(vnc::VncStreamResponder::default);
+    }
+}
+
+#[cfg(all(feature = "server", feature = "probe"))]
+inventory::submit!(sandpolis_instance::network::ResponderRegistration(
+    &DesktopProbeResponderRegistration
 ));

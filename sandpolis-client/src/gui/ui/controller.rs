@@ -77,8 +77,13 @@ pub struct LayerClientInfo {
     pub description: &'static str,
     /// Which instance types are visible while this layer is active.
     pub visible_instance_types: &'static [InstanceType],
-    /// Whether probe nodes are shown while this layer is active (only Probe).
+    /// Whether probe nodes are shown while this layer is active.
     pub show_probe_nodes: bool,
+    /// Which probe protocols are shown while this layer is active, named by
+    /// `ProbeType::display_name()` (e.g. `"SSH"`, `"VNC"`). Empty means every
+    /// protocol. Only meaningful when [`show_probe_nodes`](Self::show_probe_nodes)
+    /// is set. Kept as strings so this crate needn't depend on the probe layer.
+    pub probe_protocols: &'static [&'static str],
     /// Whether this layer's controller opens for plain instance nodes. Layers
     /// whose controller describes a sub-node turn this off, so double-clicking
     /// the instance those sub-nodes hang off does nothing.
@@ -98,6 +103,7 @@ impl LayerClientInfo {
             description,
             visible_instance_types: &[InstanceType::Server, InstanceType::Agent],
             show_probe_nodes: false,
+            probe_protocols: &[],
             controller_on_instance_nodes: true,
             controller: None,
             toolbar_actions: Vec::new(),
@@ -171,9 +177,18 @@ impl LayerClientInfo {
         self
     }
 
-    /// Mark this layer as the one that shows probe nodes.
+    /// Show every probe node while this layer is active. The layer that does
+    /// this also owns probe lifecycle (selection, deletion).
     pub fn showing_probe_nodes(mut self) -> Self {
         self.show_probe_nodes = true;
+        self
+    }
+
+    /// Show only the probe nodes exposing one of `protocols`, named by
+    /// `ProbeType::display_name()`.
+    pub fn showing_probe_nodes_for(mut self, protocols: &'static [&'static str]) -> Self {
+        self.show_probe_nodes = true;
+        self.probe_protocols = protocols;
         self
     }
 
@@ -206,6 +221,12 @@ impl LayerRegistry {
     /// Whether the given layer shows probe nodes.
     pub fn show_probe_nodes(&self, layer: &LayerName) -> bool {
         self.get(layer).map(|i| i.show_probe_nodes).unwrap_or(false)
+    }
+
+    /// Which probe protocols the given layer shows. Empty means every protocol
+    /// (and also covers layers that show no probes at all).
+    pub fn probe_protocols(&self, layer: &LayerName) -> &'static [&'static str] {
+        self.get(layer).map(|i| i.probe_protocols).unwrap_or(&[])
     }
 
     /// The toolbar actions for the given layer (empty when unregistered).

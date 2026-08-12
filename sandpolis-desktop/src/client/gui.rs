@@ -35,11 +35,15 @@ use crate::session::{
     DesktopStreamRequester,
 };
 
-/// Active client-side desktop sessions, keyed by instance.
+/// Active client-side desktop sessions, keyed by the node they belong to.
+///
+/// The key is a [`ControllerTarget`] rather than a bare `InstanceId` because a
+/// probe node borrows its gateway server's id; only the sub-node device id tells
+/// a VNC probe apart from the server it orbits.
 #[derive(Resource, Default)]
 struct DesktopStreams {
-    streams: HashMap<InstanceId, StreamSession>,
-    screenshots: HashMap<InstanceId, ScreenshotSession>,
+    streams: HashMap<ControllerTarget, StreamSession>,
+    screenshots: HashMap<ControllerTarget, ScreenshotSession>,
 }
 
 /// A live stream the GUI is rendering.
@@ -47,8 +51,8 @@ struct StreamSession {
     /// Decoded frames/state pushed by the requester (registered on the
     /// connection; the requester holds the sending half).
     events: UnboundedReceiver<DesktopStreamEvent>,
-    /// Outbound requests (input, Stop). A background task forwards these over the
-    /// relayed stream to the agent.
+    /// Outbound requests (input, Stop). A background task forwards these over
+    /// the stream, translating to the VNC wire type for probe streams.
     outbound: Sender<DesktopStreamRequest>,
     /// The display node showing this stream.
     view: Entity,
@@ -64,16 +68,16 @@ struct ScreenshotSession {
     view: Entity,
 }
 
-/// The display node showing a desktop stream/screenshot for `instance`.
+/// The display node showing a desktop stream/screenshot for `target`.
 #[derive(Component)]
 struct DesktopStreamView {
-    instance: InstanceId,
+    target: ControllerTarget,
 }
 
-/// A status label reflecting the stream state for `instance`.
+/// A status label reflecting the stream state for `target`.
 #[derive(Component)]
 struct DesktopStatusText {
-    instance: InstanceId,
+    target: ControllerTarget,
 }
 
 /// The desktop layer's node controller (remote desktop viewer).
@@ -84,6 +88,16 @@ impl NodeController for DesktopController {
         "Desktop Viewer"
     }
 
+    fn title_for(&self, target: ControllerTarget) -> String {
+        #[cfg(feature = "probe")]
+        if let Some(device) = probe_device(target) {
+            return device.display_name();
+        }
+        #[cfg(not(feature = "probe"))]
+        let _ = target;
+        self.title().to_string()
+    }
+
     fn build(
         &self,
         commands: &mut Commands,
@@ -92,6 +106,23 @@ impl NodeController for DesktopController {
         theme: &Theme,
     ) {
         let instance = target.instance;
+
+        // A probe that only speaks RDP still gets a node (the layer shows them
+        // so the estate looks complete), but there's nothing to drive yet.
+        #[cfg(feature = "probe")]
+        if is_rdp_only(target) {
+            commands.entity(body).with_children(|p| {
+                p.spawn(heading(theme, "Desktop Stream"));
+                p.spawn(text(
+                    theme,
+                    "RDP streaming is not implemented yet.",
+                    theme.metrics.font_sm,
+                    Role::TextMuted,
+                ));
+            });
+            return;
+        }
+
         commands.entity(body).with_children(|p| {
             p.spawn(heading(theme, "Desktop Stream"));
 
@@ -100,7 +131,7 @@ impl NodeController for DesktopController {
             // background. `RelativeCursorPosition` maps the pointer into the
             // remote display's coordinate space for input forwarding.
             p.spawn((
-                DesktopStreamView { instance },
+                DesktopStreamView { target },
                 Node {
                     width: Val::Percent(100.0),
                     height: Val::Px(280.0),
@@ -123,29 +154,20 @@ impl NodeController for DesktopController {
                         move |_: On<Activate>,
                               mut streams: ResMut<DesktopStreams>,
                               views: Query<(Entity, &DesktopStreamView)>| {
-                            if streams.streams.contains_key(&instance) {
+                            if streams.streams.contains_key(&target) {
                                 return;
                             }
                             let Some((view, _)) =
-                                views.iter().find(|(_, v)| v.instance == instance)
+                                views.iter().find(|(_, v)| v.target == target)
                             else {
                                 return;
                             };
 
-                            let (requester, events) = DesktopStreamRequester::channel();
                             let (outbound, outbound_rx) = channel(64);
-
-                            // Open a relayed stream to the agent and forward all
-                            // subsequent outbound requests (input, Stop) over it.
-                            let initial = DesktopStreamRequest::Start {
-                                desktop_uuid: String::new(),
-                                color_mode: DesktopStreamColorMode::Rgb888,
-                                compression_mode: DesktopStreamCompressionMode::Zstd,
-                            };
-                            spawn_stream(instance, requester, initial, outbound_rx);
+                            let events = open_stream(target, outbound_rx);
 
                             streams.streams.insert(
-                                instance,
+                                target,
                                 StreamSession {
                                     events,
                                     outbound,
@@ -162,7 +184,7 @@ impl NodeController for DesktopController {
                     move |_: On<Activate>,
                           mut streams: ResMut<DesktopStreams>,
                           mut nodes: Query<&mut ImageNode>| {
-                        if let Some(session) = streams.streams.remove(&instance) {
+                        if let Some(session) = streams.streams.remove(&target) {
                             let _ = session.outbound.try_send(DesktopStreamRequest::Stop);
                             if let Ok(mut node) = nodes.get_mut(session.view) {
                                 node.color = Color::NONE;
@@ -172,54 +194,173 @@ impl NodeController for DesktopController {
                     },
                 );
 
-                controls.spawn(button(theme, "Screenshot")).observe(
-                    move |_: On<Activate>,
-                          mut streams: ResMut<DesktopStreams>,
-                          views: Query<(Entity, &DesktopStreamView)>| {
-                        let Some((view, _)) = views.iter().find(|(_, v)| v.instance == instance)
-                        else {
-                            return;
-                        };
-                        let (requester, result) = DesktopScreenshotRequester::channel();
-                        // One-shot: open a relayed stream to the agent with the
-                        // screenshot request; the response returns via `result`.
-                        spawn_screenshot(
-                            instance,
-                            requester,
-                            DesktopScreenshotRequest {
-                                desktop_uuid: String::new(),
-                            },
-                        );
-                        streams.screenshots.insert(
-                            instance,
-                            ScreenshotSession { result, view },
-                        );
-                        info!("Screenshot requested for {}", instance);
-                    },
-                );
+                // Screenshots are a one-shot agent responder; a probe has no
+                // equivalent, so the button only exists for agents.
+                if target.sub.is_none() {
+                    controls.spawn(button(theme, "Screenshot")).observe(
+                        move |_: On<Activate>,
+                              mut streams: ResMut<DesktopStreams>,
+                              views: Query<(Entity, &DesktopStreamView)>| {
+                            let Some((view, _)) = views.iter().find(|(_, v)| v.target == target)
+                            else {
+                                return;
+                            };
+                            let (requester, result) = DesktopScreenshotRequester::channel();
+                            // One-shot: open a relayed stream to the agent with
+                            // the screenshot request; the response returns via
+                            // `result`.
+                            spawn_screenshot(
+                                instance,
+                                requester,
+                                DesktopScreenshotRequest {
+                                    desktop_uuid: String::new(),
+                                },
+                            );
+                            streams.screenshots.insert(
+                                target,
+                                ScreenshotSession { result, view },
+                            );
+                            info!("Screenshot requested for {}", instance);
+                        },
+                    );
+                }
             });
 
             // Stream status line.
             p.spawn((
-                DesktopStatusText { instance },
+                DesktopStatusText { target },
                 text(theme, "Stream inactive", theme.metrics.font_sm, Role::TextMuted),
             ));
 
-            // Desktop information.
+            // Node information. A probe isn't an instance, so it has no instance
+            // metadata to report — its registration is all there is to say.
             p.spawn((
                 text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
-                    match sandpolis_client::gui::queries::query_instance_metadata(instance) {
-                        Ok(m) => {
-                            let host = m.hostname.unwrap_or_else(|| "unknown".into());
-                            format!("{} — OS: {}", host, m.os_type)
-                        }
-                        Err(_) => "OS: unknown".into(),
-                    }
-                }),
+                bind_text(move || describe_target(target)),
             ));
         });
     }
+}
+
+/// One line describing what the controller is pointed at.
+fn describe_target(target: ControllerTarget) -> String {
+    #[cfg(feature = "probe")]
+    if let Some(device) = probe_device(target) {
+        return format!("{} — {}", device.display_name(), device.device.ip);
+    }
+    match sandpolis_client::gui::queries::query_instance_metadata(target.instance) {
+        Ok(m) => {
+            let host = m.hostname.unwrap_or_else(|| "unknown".into());
+            format!("{} — OS: {}", host, m.os_type)
+        }
+        Err(_) => "OS: unknown".into(),
+    }
+}
+
+/// The probe device behind `target`, if there is one.
+///
+/// Reads the probe layer's device registry directly rather than going through
+/// `sandpolis_probe::client::gui`, whose helpers are behind that crate's `client`
+/// feature — depending on them would drag its whole GUI stack in here.
+#[cfg(feature = "probe")]
+fn probe_device(target: ControllerTarget) -> Option<sandpolis_probe::RegisteredDevice> {
+    let device_id = target.sub?;
+    let device = sandpolis_probe::REGISTERED_DEVICES
+        .read()
+        .ok()?
+        .iter()
+        .find(|device| device.id == device_id)?
+        .clone();
+    Some(device)
+}
+
+/// Whether `target` is a probe this layer shows but can't stream yet.
+#[cfg(feature = "probe")]
+fn is_rdp_only(target: ControllerTarget) -> bool {
+    probe_device(target)
+        .is_some_and(|device| device.device.rdp.is_some() && device.device.vnc.is_none())
+}
+
+/// Open the stream backing a new session and hand back the channel its events
+/// arrive on.
+///
+/// A probe target gets a VNC session run by the device's owning server; anything
+/// else gets a capture stream relayed to the agent. Both produce
+/// [`DesktopStreamEvent`], so the viewer above this doesn't care which it got.
+fn open_stream(
+    target: ControllerTarget,
+    outbound_rx: Receiver<DesktopStreamRequest>,
+) -> UnboundedReceiver<DesktopStreamEvent> {
+    #[cfg(feature = "probe")]
+    if let Some(device) = probe_device(target)
+        && device.device.vnc.is_some()
+    {
+        let (requester, events) = crate::vnc::VncStreamRequester::channel();
+        let initial = crate::vnc::VncStreamRequest::Start {
+            device_id: device.id,
+        };
+        spawn_vnc_stream(&device, requester, initial, outbound_rx);
+        return events;
+    }
+
+    let (requester, events) = DesktopStreamRequester::channel();
+    let initial = DesktopStreamRequest::Start {
+        desktop_uuid: String::new(),
+        color_mode: DesktopStreamColorMode::Rgb888,
+        compression_mode: DesktopStreamCompressionMode::Zstd,
+    };
+    spawn_stream(target.instance, requester, initial, outbound_rx);
+    events
+}
+
+/// Open a VNC stream against a probe device and forward outbound requests over
+/// it until the channel closes.
+///
+/// Probes are reachable only from servers, so this opens a stream *to the owning
+/// server* (not a relayed one to an agent) and translates the viewer's
+/// agent-shaped requests into the VNC wire type on the way out.
+#[cfg(feature = "probe")]
+fn spawn_vnc_stream(
+    device: &sandpolis_probe::RegisteredDevice,
+    requester: crate::vnc::VncStreamRequester,
+    initial: crate::vnc::VncStreamRequest,
+    mut outbound_rx: Receiver<DesktopStreamRequest>,
+) {
+    let conn = device
+        .device
+        .server
+        .as_ref()
+        .and_then(sandpolis_client::sync::connection_for)
+        .or_else(sandpolis_client::sync::connection);
+    let Some(conn) = conn else {
+        warn!("No server connection; cannot start VNC stream");
+        return;
+    };
+    sandpolis_client::sync::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream(requester, initial).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "Failed to open VNC stream");
+                return;
+            }
+        };
+        while let Some(req) = outbound_rx.recv().await {
+            let req = match req {
+                DesktopStreamRequest::Input(event) => crate::vnc::VncStreamRequest::Input(event),
+                DesktopStreamRequest::Stop => crate::vnc::VncStreamRequest::Stop,
+                // Sent as the stream's initial request, never through here.
+                DesktopStreamRequest::Start { .. } => continue,
+            };
+            let payload = match serde_cbor::to_vec(&req) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if msg_tx.send(StreamMessage::local(id, payload)).await.is_err() {
+                break;
+            }
+        }
+        conn.close_stream(id);
+    });
 }
 
 /// Open a relayed desktop stream to `instance` and forward outbound requests
@@ -332,7 +473,8 @@ fn drive_desktop_screenshots(
     mut nodes: Query<&mut ImageNode>,
 ) {
     let mut finished = Vec::new();
-    for (instance, session) in streams.screenshots.iter_mut() {
+    for (target, session) in streams.screenshots.iter_mut() {
+        let instance = target.instance;
         while let Ok(result) = session.result.try_recv() {
             match result {
                 DesktopScreenshotResult::Ok(png) => match crate::screenshot::decode_png(&png) {
@@ -352,11 +494,11 @@ fn drive_desktop_screenshots(
                     warn!("Screenshot failed for {}", instance);
                 }
             }
-            finished.push(*instance);
+            finished.push(*target);
         }
     }
-    for instance in finished {
-        streams.screenshots.remove(&instance);
+    for target in finished {
+        streams.screenshots.remove(&target);
     }
 }
 
@@ -366,7 +508,7 @@ fn update_desktop_status(
     mut labels: Query<(&DesktopStatusText, &mut Text)>,
 ) {
     for (status, mut label) in &mut labels {
-        let value = match streams.streams.get(&status.instance) {
+        let value = match streams.streams.get(&status.target) {
             Some(session) => match session.size {
                 Some((w, h)) => format!("Streaming {}×{}", w, h),
                 None => "Connecting…".to_string(),
@@ -439,7 +581,7 @@ fn forward_desktop_input(
         .collect();
 
     for (view, rel) in &views {
-        let Some(session) = streams.streams.get_mut(&view.instance) else {
+        let Some(session) = streams.streams.get_mut(&view.target) else {
             continue;
         };
         let Some((w, h)) = session.size else {
@@ -507,7 +649,10 @@ impl Plugin for DesktopClientPlugin {
                     "Remote desktop viewing and control",
                 )
                 .with_controller(DesktopController)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                // VNC probes stream just like agents do; RDP ones are shown but
+                // open a placeholder until there's a backend for them.
+                .showing_probe_nodes_for(&["VNC", "RDP"]),
             );
     }
 }

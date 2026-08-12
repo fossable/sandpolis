@@ -21,6 +21,8 @@ pub mod cli;
 pub mod execute;
 pub mod session;
 pub mod shell;
+#[cfg(feature = "probe")]
+pub mod ssh;
 
 #[derive(Clone)]
 pub struct ShellLayer {
@@ -54,6 +56,25 @@ impl RegisterResponders for ShellResponderRegistration {
 #[cfg(feature = "agent")]
 inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &ShellResponderRegistration
+));
+
+/// Static handler for registering SSH probe responders.
+///
+/// Separate from [`ShellResponderRegistration`] because probes are reached only
+/// from servers, whereas the PTY responder above only exists on agents.
+#[cfg(all(feature = "server", feature = "probe"))]
+pub struct ShellProbeResponderRegistration;
+
+#[cfg(all(feature = "server", feature = "probe"))]
+impl RegisterResponders for ShellProbeResponderRegistration {
+    fn register_responders(&self, registry: &StreamRegistry) {
+        registry.register_responder(ssh::SshSessionStreamResponder::default);
+    }
+}
+
+#[cfg(all(feature = "server", feature = "probe"))]
+inventory::submit!(sandpolis_instance::network::ResponderRegistration(
+    &ShellProbeResponderRegistration
 ));
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug, Default)]

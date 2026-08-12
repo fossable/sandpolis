@@ -4,10 +4,12 @@
 /// address (printed below) and log in.
 use anyhow::Result;
 use sandpolis::{
-    InstanceState, MODELS, client::tui::server_list::ServerListWidget, config::Configuration,
+    InstanceState, MODELS, RuntimeOptions, client::tui::server_list::ServerListWidget,
     server::test_server,
 };
 use sandpolis_instance::database::{DatabaseLayer, WriteAuthority};
+use sandpolis_instance::realm::Realms;
+use sandpolis_instance::realm::config::ServerCertFile;
 use sandpolis_server::ServerStratum;
 
 #[tokio::main]
@@ -16,12 +18,17 @@ async fn main() -> Result<()> {
     println!("Test server listening on 127.0.0.1:{}", test_server.port);
 
     // Client-side state, kept entirely in memory
-    let mut config = Configuration::default();
-    config.database.ephemeral = true;
-    config.realm.realm_certs = vec![test_server.endpoint_cert.clone()];
+    let mut options = RuntimeOptions::embedded();
+    options.database.ephemeral = true;
+    options.database.storage = None;
 
-    let database = DatabaseLayer::new(config.database.clone(), &MODELS, WriteAuthority::Full)?;
-    let state = InstanceState::new(config, database, ServerStratum::Global).await?;
+    // The test server hands out a `.server` file, which is the whole trust
+    // bootstrap a client needs.
+    let (cert, _) = ServerCertFile::load(&test_server.endpoint_cert)?;
+
+    let database = DatabaseLayer::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
+    let realms = Realms::for_client(vec![cert], database.clone())?;
+    let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     let widget = ServerListWidget::new(state.server.clone())?;
     sandpolis_client::tui::test_widget(widget).await.unwrap();

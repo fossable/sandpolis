@@ -1,4 +1,4 @@
-use crate::{InstanceState, config::Configuration};
+use crate::{InstanceState, RuntimeOptions};
 use anyhow::Result;
 use bevy::{
     app::PluginGroup,
@@ -89,7 +89,7 @@ pub use sandpolis_client::gui::controller;
 pub use sandpolis_client::gui::preview;
 
 /// Initialize and start rendering the UI.
-pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
+pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     crate::client::spawn_client_sync(state.clone());
 
     // Surface the local instance's domain to the terrain renderer.
@@ -175,7 +175,7 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
     .insert_resource(state.instance.clone())
     .insert_resource(state.network.clone())
     .insert_resource(state.server.clone())
-    .insert_resource(config)
+    .insert_resource(options)
     .insert_resource(MousePressed(false))
     .insert_resource(PanningState::default())
     .insert_resource(PreviewsVisible::default())

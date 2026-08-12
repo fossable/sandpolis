@@ -33,7 +33,7 @@ There are two types to simplify this:
 
 #### `Data` ownership
 
-## `sandpolis-realm`
+## Realms
 
 Sandpolis networks are partitioned into _realms_ which provide strong data
 separation. Server and client instances can participate in multiple realms
@@ -41,6 +41,10 @@ simultaneously while agent instances belong to one realm at a time.
 
 As an example, you can have _work_ and _home_ realms that are completely
 isolated (other than running on the same server).
+
+A realm exists because a `.realm` file declares it — the filename stem is the
+realm's name — and the global stratum server is given one `--realm` flag per
+realm it serves. Nothing creates a realm at runtime.
 
 ### Realm membership
 
@@ -54,7 +58,10 @@ cannot be removed.
 ### Realm authentication
 
 All connections to a server instance must be authenticated with a TLS
-certificate for a particular realm.
+certificate for a particular realm. A client or agent certificate encodes the
+server's address in its common name (`host:port/realm`), so the certificate
+names exactly one server and realm. It is distributed in a `.server` file
+alongside the realm CA that verifies the server.
 
 There are four types of certificate:
 

@@ -6,8 +6,9 @@
 /// - Layer switching (F/P/D keys)
 /// - Force-directed graph layout
 use anyhow::Result;
-use sandpolis::{InstanceState, MODELS, config::Configuration};
+use sandpolis::{InstanceState, MODELS, RuntimeOptions};
 use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
+use sandpolis_instance::realm::Realms;
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::{InstanceId, InstanceType};
@@ -16,7 +17,7 @@ use sandpolis_server::ServerStratum;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Create minimal configuration for testing
-    let config = Configuration::default();
+    let options = RuntimeOptions::embedded();
 
     // Create in-memory database for testing
     let db_config = DatabaseConfig {
@@ -28,7 +29,9 @@ async fn main() -> Result<()> {
 
     // Create instance state
     // The local instance will be spawned automatically
-    let state = InstanceState::new(config.clone(), database.clone(), ServerStratum::Global).await?;
+    let realms = Realms::for_client(Vec::new(), database.clone())?;
+    let state =
+        InstanceState::new(&options, database.clone(), realms, ServerStratum::Global).await?;
 
     // Populate the database with test nodes to demonstrate the GUI
     // This creates several agent and server connections that will appear in the world view
@@ -69,5 +72,5 @@ async fn main() -> Result<()> {
     // - 1 local instance (automatically created)
     // - 5 agent instances
     // - 2 server instances
-    sandpolis::client::gui::main(config, state).await
+    sandpolis::client::gui::main(options, state).await
 }

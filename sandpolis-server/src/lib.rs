@@ -11,31 +11,32 @@ use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_instance::database::Resident;
 use sandpolis_instance::database::ResidentVec;
 use sandpolis_instance::network::{
-    ConnectionData, InstanceConnection, NetworkLayer, RetryWait, collected_responders,
+    ConnectionData, InstanceConnection, NetworkLayer, collected_responders,
 };
-use sandpolis_instance::realm::RealmLayer;
 use sandpolis_instance::realm::RealmName;
+use sandpolis_instance::realm::Realms;
+
+/// Server URLs are parsed out of certificate common names, so the type lives in
+/// `sandpolis-instance` alongside the realm certificates. Re-exported here
+/// because this is where callers expect to find it.
+pub use sandpolis_instance::realm::url::ServerUrl;
 use sandpolis_instance::{ClusterId, InstanceId};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::Display;
-use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
+use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info};
-use url::Url;
 use validator::Validate;
 
 pub mod banner;
 #[cfg(feature = "server")]
 pub mod block;
-#[cfg(not(target_os = "android"))]
-pub mod cli;
 #[cfg(feature = "client")]
 pub mod client;
-pub mod config;
 pub mod location;
 pub mod login;
 #[cfg(feature = "server")]
@@ -59,7 +60,7 @@ pub struct ServerLayer {
     pub stratum: ServerStratum,
 
     pub network: NetworkLayer,
-    pub realms: RealmLayer,
+    pub realms: Realms,
     pub database: DatabaseLayer,
     #[cfg(feature = "client")]
     pub servers: ResidentVec<client::SavedServerData>,
@@ -77,7 +78,7 @@ impl ServerLayer {
     pub async fn new(
         database: DatabaseLayer,
         network: NetworkLayer,
-        realms: RealmLayer,
+        realms: Realms,
         stratum: ServerStratum,
     ) -> Result<Self> {
         // Purge stale ConnectionData rows left over from previous runs
@@ -143,7 +144,7 @@ impl ServerLayer {
 
         // Locate the realm certificate. A local stratum server dialing its
         // global stratum server authenticates with a client cert supplied via
-        // `--realm-cert`; there is no separate server-to-server cert type.
+        // a `.server` file; there is no separate server-to-server cert type.
         #[cfg(all(feature = "client", not(feature = "agent")))]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
 
@@ -510,9 +511,10 @@ impl ServerConnectStrategy {
 /// A network has **exactly one** global stratum (GS) server and **any number**
 /// of local stratum (LS) servers. The distinction decides three things:
 ///
-/// - **Configuration.** Only the GS reads a `sandpolis.ron`. Every other
-///   instance — LS servers, agents, clients — is configured entirely by CLI
-///   flags.
+/// - **Configuration.** Only the GS reads `.realm` files, which declare the
+///   realms it serves. Every other instance — LS servers, agents, clients — is
+///   configured by CLI flags plus the `.server` file naming the server it
+///   trusts.
 /// - **Writability.** The GS holds full write authority over the estate. An LS
 ///   holds scoped authority ([`WriteAuthority::Scoped`]): it owns the data of
 ///   the instances directly connected to it — as granted by the GS — and
@@ -576,286 +578,6 @@ impl Display for ServerStratum {
             Self::Global => write!(f, "global stratum"),
             Self::Local { global } => write!(f, "local stratum (via {global})"),
         }
-    }
-}
-
-/// Locates a server instance over the network. These have a format like:
-///
-/// ```text
-/// https://example.com:8768/default
-/// ```
-///
-/// With default information omitted, the URL can be as simple as:
-///
-/// ```text
-/// https://example.com
-/// ```
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct ServerUrl {
-    pub host: String,
-    pub port: u16,
-    pub realm: RealmName,
-    pub retry: RetryWait,
-}
-
-impl ServerUrl {
-    /// Resolve the URL into IP addresses.
-    pub fn resolve(&self) -> Result<Vec<SocketAddr>> {
-        Ok(format!("{}:{}", self.host, self.port)
-            .to_socket_addrs()?
-            .collect())
-    }
-
-    /// Official server port: <https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=8768>
-    pub const fn default_port() -> u16 {
-        8768
-    }
-
-    /// Whether the URL points to localhost.
-    pub fn is_localhost(&self) -> bool {
-        if self.host == "localhost" {
-            return true;
-        }
-
-        if let Ok(ip) = self.host.parse::<IpAddr>() {
-            return ip.is_loopback();
-        }
-
-        false
-    }
-}
-
-impl FromStr for ServerUrl {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let url = Url::parse(&if s.starts_with("https://") {
-            s.to_string()
-        } else {
-            format!("https://{s}")
-        })?;
-
-        // TODO
-        url.query_pairs();
-
-        let host = url
-            .host_str()
-            .ok_or_else(|| anyhow!("Invalid host in URL"))?;
-        let host = host
-            .strip_prefix('[')
-            .and_then(|h| h.strip_suffix(']'))
-            .unwrap_or(host)
-            .to_string();
-
-        Ok(Self {
-            host,
-            port: url.port().unwrap_or(ServerUrl::default_port()),
-            realm: if url.path().len() > 1 {
-                url.path().trim_start_matches('/').parse()?
-            } else {
-                RealmName::default()
-            },
-            // TODO
-            retry: RetryWait::default(),
-        })
-    }
-}
-
-impl Display for ServerUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("https://")?;
-        f.write_str(&self.host)?;
-
-        if self.port != ServerUrl::default_port() {
-            f.write_str(":")?;
-            f.write_str(&format!("{}", self.port))?;
-        }
-
-        if self.realm != RealmName::default() {
-            f.write_str("/")?;
-            f.write_str(&self.realm.to_string())?;
-        }
-
-        if self.retry != RetryWait::default() {
-            match self.retry {
-                RetryWait::Exponential {
-                    initial,
-                    constant,
-                    limit,
-                    iteration: _,
-                } => {
-                    f.write_str(&format!(
-                        "?type=exponential&initial={}&constant={}",
-                        initial.as_millis(),
-                        constant,
-                    ))?;
-                    if let Some(l) = limit {
-                        f.write_str(&format!("&limit={}", l.as_millis(),))?;
-                    }
-                }
-                RetryWait::Constant {
-                    initial,
-                    iteration: _,
-                } => f.write_str(&format!("?type=constant&initial={}", initial.as_millis()))?,
-            }
-        }
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_server_url_from_str_basic() {
-        let url: ServerUrl = "example.com".parse().unwrap();
-        assert_eq!(url.host, "example.com");
-        assert_eq!(url.port, 8768);
-        assert_eq!(url.realm, RealmName::default());
-    }
-
-    #[test]
-    fn test_server_url_from_str_with_port() {
-        let url: ServerUrl = "example.com:9000".parse().unwrap();
-        assert_eq!(url.host, "example.com");
-        assert_eq!(url.port, 9000);
-        assert_eq!(url.realm, RealmName::default());
-    }
-
-    #[test]
-    fn test_server_url_from_str_with_https() {
-        let url: ServerUrl = "https://example.com".parse().unwrap();
-        assert_eq!(url.host, "example.com");
-        assert_eq!(url.port, 8768);
-        assert_eq!(url.realm, RealmName::default());
-    }
-
-    #[test]
-    fn test_server_url_from_str_with_realm() {
-        let url: ServerUrl = "example.com/myrealm".parse().unwrap();
-        assert_eq!(url.host, "example.com");
-        assert_eq!(url.port, 8768);
-        assert_eq!(url.realm, "myrealm".parse().unwrap());
-    }
-
-    #[test]
-    fn test_server_url_from_str_full() {
-        let url: ServerUrl = "https://example.com:9000/myrealm".parse().unwrap();
-        assert_eq!(url.host, "example.com");
-        assert_eq!(url.port, 9000);
-        assert_eq!(url.realm, "myrealm".parse().unwrap());
-    }
-
-    #[test]
-    fn test_server_url_from_str_ip_address() {
-        let url: ServerUrl = "192.168.1.1:8080".parse().unwrap();
-        assert_eq!(url.host, "192.168.1.1");
-        assert_eq!(url.port, 8080);
-        assert_eq!(url.realm, RealmName::default());
-    }
-
-    #[test]
-    fn test_server_url_display_default() {
-        let url = ServerUrl {
-            host: "example.com".to_string(),
-            port: 8768,
-            realm: RealmName::default(),
-            retry: RetryWait::default(),
-        };
-        assert_eq!(url.to_string(), "https://example.com");
-    }
-
-    #[test]
-    fn test_server_url_display_with_port() {
-        let url = ServerUrl {
-            host: "example.com".to_string(),
-            port: 9000,
-            realm: RealmName::default(),
-            retry: RetryWait::default(),
-        };
-        assert_eq!(url.to_string(), "https://example.com:9000");
-    }
-
-    #[test]
-    fn test_server_url_display_with_realm() {
-        let url = ServerUrl {
-            host: "example.com".to_string(),
-            port: 8768,
-            realm: "myrealm".parse().unwrap(),
-            retry: RetryWait::default(),
-        };
-        assert_eq!(url.to_string(), "https://example.com/myrealm");
-    }
-
-    #[test]
-    fn test_server_url_display_full() {
-        let url = ServerUrl {
-            host: "example.com".to_string(),
-            port: 9000,
-            realm: "myrealm".parse().unwrap(),
-            retry: RetryWait::default(),
-        };
-        assert_eq!(url.to_string(), "https://example.com:9000/myrealm");
-    }
-
-    #[test]
-    fn test_server_url_is_localhost() {
-        let url = ServerUrl {
-            host: "localhost".to_string(),
-            port: 8768,
-            realm: RealmName::default(),
-            retry: RetryWait::default(),
-        };
-        assert!(url.is_localhost());
-
-        let url = ServerUrl {
-            host: "127.0.0.1".to_string(),
-            port: 8768,
-            realm: RealmName::default(),
-            retry: RetryWait::default(),
-        };
-        assert!(url.is_localhost());
-
-        let url = ServerUrl {
-            host: "example.com".to_string(),
-            port: 8768,
-            realm: RealmName::default(),
-            retry: RetryWait::default(),
-        };
-        assert!(!url.is_localhost());
-    }
-
-    #[test]
-    fn test_server_url_default_port() {
-        assert_eq!(ServerUrl::default_port(), 8768);
-    }
-
-    #[test]
-    fn test_server_url_roundtrip() {
-        let original = "https://example.com:9000/myrealm";
-        let url: ServerUrl = original.parse().unwrap();
-        assert_eq!(url.to_string(), original);
-    }
-
-    #[test]
-    fn test_server_url_invalid_scheme() {
-        let result: Result<ServerUrl, _> = "http://example.com".parse();
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_server_url_invalid_host() {
-        let result: Result<ServerUrl, _> = "https://".parse();
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_server_url_ipv6() {
-        let url: ServerUrl = "[::1]:8080".parse().unwrap();
-        assert_eq!(url.host, "::1");
-        assert_eq!(url.port, 8080);
-        assert!(url.is_localhost());
     }
 }
 

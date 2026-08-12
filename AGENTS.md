@@ -40,9 +40,11 @@ connects to exactly one GS, and never to another LS.
 
 The distinction decides five things:
 
-- **Configuration.** Only the GS reads `sandpolis.ron`. Every other instance —
-  LS servers, agents, clients — is configured entirely by CLI flags and learns
-  its domain from the server it connects to.
+- **Configuration.** Only the GS reads `.realm` files, one per realm it serves;
+  a realm exists only because a file declares it, and can never be created at
+  runtime. Every other instance — LS servers, agents, clients — is configured by
+  CLI flags plus the `.server` file naming the server it trusts, and learns its
+  domain from that server.
 - **Trust.** The GS holds the realm CA and is the network's single trust root.
   An LS never generates a CA; on first start it enrolls with the GS, which
   issues it a server certificate. The CA's private key never leaves the GS, so
@@ -70,20 +72,29 @@ The distinction decides five things:
   GS, and points its own default route at the GS for everything else.
 
 ```sh
-# The global stratum server — the only instance with a config file
-sandpolis --config /etc/sandpolis.ron
+# The global stratum server. A blank realm file means "generate a CA for me",
+# which is written back into the file on first start.
+touch default.realm
+sandpolis --realm ./default.realm --domain example
 
-# A local stratum server; --config and --global-server conflict.
-# --realm-cert is how it authenticates to the GS in order to enroll, so
-# an LS in an all-in-one build also needs one for its co-located client.
-sandpolis --global-server https://gs.example.com:8768/default \
-          --realm-cert /etc/sandpolis/client.pem \
-          --listen 0.0.0.0:8769
+# Mint a .server file for another instance. The certificate's common name is
+# the address given here, so it names exactly one server and realm.
+sandpolis new-client-cert --realm ./default.realm \
+          --address gs.example.com:8768 --output ops.server
+sandpolis new-agent-cert --realm ./default.realm \
+          --address gs.example.com:8768 --output fleet.server
 
-# An agent, attached to either stratum
-sandpolis --server https://ls.example.com:8769/default \
-          --realm-cert /etc/sandpolis/agent.pem
+# A local stratum server. The .server file is how it authenticates to the GS in
+# order to enroll, so --realm and --server conflict.
+sandpolis --server ./ops.server --listen 0.0.0.0:8769
+
+# An agent or client, attached to either stratum
+sandpolis --server ./fleet.server
 ```
+
+A `.server` file carries the realm CA, this instance's own certificate, and —
+for an agent — its polling schedule, so one file is the whole connection
+policy. `$S7S_SERVER` is the environment alias for `--server`.
 
 Replication always follows ownership, and it is always pull-based: the owner
 serves, the replica subscribes. An agent attached to an LS has its records
@@ -110,8 +121,9 @@ _world view_. The graph is made of:
 
 When a server feature is compiled alongside the client and/or agent and the
 binary is run with no subcommand, all instance types start in the same process
-and connect to each other automatically over loopback — no `--realm-cert` or
-server configuration is needed. This is meant for convenient local testing:
+and connect to each other automatically over loopback — no `.server` file or
+other configuration is needed. With no `--realm` flag the server serves an
+implicit `default` realm whose CA lives only in the database. This is meant for convenient local testing:
 targeting the local instance (e.g. starting a desktop stream) "just works".
 
 ## Mobile App
@@ -146,7 +158,7 @@ cd android && ./gradlew assembleDebug
 - In GUI, implement 'node effects'
   - "selected" - we currently have this
   - "multi-selected" - we currently have this
-  - "disabled"
+  - "disabled" / "offline"
 
 ## `sandpolis-tunnel`
 
@@ -199,17 +211,21 @@ types.
   - Control virtual machines
 - ONVIF probe (`onvif.rs`)
   - View the video stream
-- RDP probe (`rdp.rs`)
+- RDP probe — routed to the desktop layer, but no backend yet (needs IronRDP)
 - RTSP probe (`rtsp/`)
   - View the video stream
-- SSH probe (`ssh.rs`)
-- VNC probe (`vnc.rs`)
-  - Use the `vnc` crate. We have an example of usage at @../goldboot
+- SSH probe — done, in `sandpolis-shell/src/ssh.rs`
+- VNC probe — done, in `sandpolis-desktop/src/vnc.rs`
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
 - SNMP probe — partial, needs MIB-driven discovery
 - ARP probe (`arp/`) — verify completeness
 
-Figure out how SSh probes are interacted with: maybe from the shell layer?
+Probes whose protocol belongs to another layer are driven from that layer rather
+than from a tab here. The shell and desktop crates take an optional `probe`
+feature (turned on by the root's `layer-probe`), read the device registry
+directly, and declare which protocols they show with
+`LayerClientInfo::showing_probe_nodes_for`. The server holds the connection, so
+credentials never reach clients.
 
 ## `sandpolis-filesystem`
 
@@ -219,14 +235,22 @@ Figure out how SSh probes are interacted with: maybe from the shell layer?
 ## `sandpolis-desktop`
 
 - Desktop streaming controls: start/stop stream, request screenshot
+- VNC probes stream here like agents (`vnc.rs`, `probe` feature). RDP probes get
+  a node and a placeholder controller; they need an IronRDP backend.
+- `DesktopStreamInputEvent` only carries `Option<char>`, so
+  Enter/Backspace/arrows reach neither agents nor VNC probes
 
 ## `sandpolis-instance`
 
-- GUI: view the data of an instance for debugging
+- Improve the GUI for viewing instance databases
 
 ## `sandpolis-shell`
 
 - GUI: fully featured shell depending on `alacritty_terminal`
+- SSH probes open a terminal here like agents (`ssh.rs`, `probe` feature).
+  Telnet probes aren't modelled yet.
+- The CLI/TUI (`sandpolis shell --instance`) can't target a probe; it would need
+  a device flag on `TargetArgs`
 
 ## `sandpolis-inventory`
 
@@ -277,7 +301,7 @@ sandpolis shell
 sandpolis shell --instance UUID
 ```
 
-- Configure IP blocking middleware in `sandpolis.ron`
+- Configure IP blocking middleware with `--blocked-ips`
   - Add/remove from the GUI in the server layer
 - Encrypted storage enclave for secrets
 - Support direct connections between clients/agents if hole punching works

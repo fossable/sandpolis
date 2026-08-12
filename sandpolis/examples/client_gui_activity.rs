@@ -4,14 +4,15 @@
 /// - Different speeds and colors for different activity types
 /// - Automatic spawning and despawning based on database events
 use anyhow::Result;
-use sandpolis::{InstanceState, MODELS, config::Configuration};
+use sandpolis::{InstanceState, MODELS, RuntimeOptions};
 use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
+use sandpolis_instance::realm::Realms;
 use sandpolis_server::ServerStratum;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Create minimal configuration for testing
-    let config = Configuration::default();
+    let options = RuntimeOptions::embedded();
 
     // Create in-memory database for testing
     let db_config = DatabaseConfig {
@@ -22,7 +23,8 @@ async fn main() -> Result<()> {
     let database = DatabaseLayer::new(db_config, &*MODELS, WriteAuthority::Full)?;
 
     // Create instance state
-    let state = InstanceState::new(config.clone(), database, ServerStratum::Global).await?;
+    let realms = Realms::for_client(Vec::new(), database.clone())?;
+    let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     // TODO: Populate test data with:
     // - Multiple instances connected in a network
@@ -33,5 +35,5 @@ async fn main() -> Result<()> {
     // Run the GUI
     // Switch to Filesystem layer (F key) to see file transfer activity lines
     // Switch to Network layer to see network traffic activity lines
-    sandpolis::client::gui::main(config, state).await
+    sandpolis::client::gui::main(options, state).await
 }

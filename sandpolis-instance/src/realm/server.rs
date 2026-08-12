@@ -1,10 +1,11 @@
 use super::RealmAgentCert;
 use super::RealmClientCert;
 use super::RealmClusterCert;
-use super::RealmLayer;
 use super::RealmName;
 use super::RealmServerCert;
 use super::RealmServerCertKey;
+use super::Realms;
+use super::url::ServerUrl;
 use crate::ClusterId;
 use crate::InstanceId;
 use crate::InstanceLayer;
@@ -78,7 +79,11 @@ impl super::RealmClusterCert {
     }
 
     /// Generate a new realm certificate for agent instances.
-    pub fn agent_cert(&self) -> Result<RealmAgentCert> {
+    ///
+    /// `url` names the server the holder will connect to; it becomes the
+    /// certificate's common name, so one certificate authenticates against
+    /// exactly one server and realm.
+    pub fn agent_cert(&self, url: &ServerUrl) -> Result<RealmAgentCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -99,7 +104,7 @@ impl super::RealmClusterCert {
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params
             .distinguished_name
-            .push(DnType::CommonName, &*self.name);
+            .push(DnType::CommonName, url.canonical());
 
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?)?;
@@ -114,7 +119,11 @@ impl super::RealmClusterCert {
     }
 
     /// Generate a new realm certificate for client instances.
-    pub fn client_cert(&self) -> Result<RealmClientCert> {
+    ///
+    /// `url` names the server the holder will connect to; it becomes the
+    /// certificate's common name, so one certificate authenticates against
+    /// exactly one server and realm.
+    pub fn client_cert(&self, url: &ServerUrl) -> Result<RealmClientCert> {
         // Generate key
         let keypair = KeyPair::generate()?;
 
@@ -135,7 +144,7 @@ impl super::RealmClusterCert {
         cert_params.not_after = OffsetDateTime::now_utc().saturating_add(Duration::days(365));
         cert_params
             .distinguished_name
-            .push(DnType::CommonName, &*self.name);
+            .push(DnType::CommonName, url.canonical());
 
         // Generate the certificate signed by the CA
         let cert = cert_params.signed_by(&keypair, &self.ca()?)?;
@@ -205,7 +214,7 @@ mod test_realm_ca {
     #[test]
     fn test_generate_and_authenticate() -> Result<()> {
         let ca = RealmClusterCert::new(ClusterId::default(), "default".parse()?)?;
-        let client = ca.client_cert()?;
+        let client = ca.client_cert(&"127.0.0.1:9999/default".parse()?)?;
         let server = ca.server_cert(InstanceId::new_server())?;
 
         // Write CA cert to temp file
@@ -264,15 +273,14 @@ pub struct TlsData {
 pub struct RealmAcceptor(RustlsAcceptor);
 
 impl RealmAcceptor {
-    pub async fn new(instance_layer: InstanceLayer, realm_layer: RealmLayer) -> Result<Self> {
+    pub async fn new(instance_layer: InstanceLayer, realms: Realms) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
         let config = ServerConfig::builder();
 
-        for realm in realm_layer.realms.iter() {
-            let realm = realm.read();
-            let db = realm_layer.realm(realm.name.clone())?;
+        for realm in realms.iter() {
+            let db = &realm.database;
             trace!(name = *realm.name, "Registering realm with server acceptor");
 
             // Add cluster cert as a CA cert to the root store
@@ -381,10 +389,14 @@ pub async fn auth_middleware(
             .as_str()
             .map_err(|_| "invalid common name in client certificate")?;
 
+        // The common name is the server URL the certificate was minted for, so
+        // the realm comes from its path component.
+        let url = cn
+            .parse::<ServerUrl>()
+            .map_err(|_| "invalid common name in client certificate")?;
+
         // Pass authentication to routes
-        request
-            .extensions_mut()
-            .insert(cn.parse::<RealmName>().map_err(|_| "Invalid realm name")?);
+        request.extensions_mut().insert(url.realm);
     } else {
         return Err("missing client certificate");
     }

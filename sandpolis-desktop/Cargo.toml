@@ -13,6 +13,8 @@ clap = { workspace = true, optional = true }
 tracing = { workspace = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
+sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
+vnc = { version = "0.4", optional = true }
 native_db = { workspace = true }
 native_model = { workspace = true }
 
@@ -134,6 +136,11 @@ client = [
   "sandpolis-client/client",
 ]
 server = []
+# VNC probes: the desktop layer can stream a device registered with the probe
+# layer instead of an agent. The codec deps are shared with the agent/client
+# encoders, and are listed again so a `server,probe` build (which has no capture
+# backend) stands on its own.
+probe = ["dep:sandpolis-probe", "dep:vnc", "dep:zstd", "dep:tokio", "dep:inventory"]
 
 [dev-dependencies]
 serde_cbor = { workspace = true }

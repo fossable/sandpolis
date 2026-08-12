@@ -27,7 +27,7 @@ pub(super) fn terminal_keyboard_input(
         return;
     };
     let streams = streams.into_inner();
-    let Some(session) = streams.sessions.get(&grid.instance) else {
+    let Some(session) = streams.sessions.get(&grid.target) else {
         events.clear();
         return;
     };

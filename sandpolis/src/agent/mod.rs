@@ -1,34 +1,17 @@
-use crate::{InstanceState, config::Configuration};
+use crate::{InstanceState, RuntimeOptions};
 use anyhow::Result;
 use chrono::Utc;
 use sandpolis_instance::network::RetryWait;
-use sandpolis_server::{ServerConnectStrategy, ServerUrl};
-use std::str::FromStr;
+use sandpolis_server::ServerConnectStrategy;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info, warn};
 
-pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
-    // Server URLs come from `--server` (or, in an all-in-one build, the
-    // co-located server's loopback address), plus an optional comma-separated
-    // override in $S7S_SERVER. Agents read no config file.
-    let mut raw: Vec<String> = config.agent.servers.clone();
-    if let Ok(env) = std::env::var("S7S_SERVER") {
-        raw.extend(env.split(',').map(|s| s.trim().to_string()));
-    }
-
-    let urls: Vec<ServerUrl> = raw
-        .iter()
-        .filter(|s| !s.is_empty())
-        .filter_map(|s| match ServerUrl::from_str(s) {
-            Ok(url) => Some(url),
-            Err(e) => {
-                warn!(url = %s, error = %e, "Ignoring unparseable server URL");
-                None
-            }
-        })
-        .collect();
+pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
+    // The agent's servers come from the `.server` file it was given ($S7S_SERVER)
+    // and, in an all-in-one build, the co-located server's loopback address.
+    let urls = options.servers.clone();
 
     if urls.is_empty() {
         warn!("Agent has no configured servers; idling");
@@ -55,10 +38,10 @@ pub async fn main(config: Configuration, state: InstanceState) -> Result<()> {
 
     services.start()?;
 
-    // Pick the connection strategy from config: a `poll` schedule selects
-    // polling mode (periodic check-ins), otherwise the agent stays continuously
-    // connected.
-    let strategy = match &config.agent.poll {
+    // Pick the connection strategy from the `.server` file: a `poll` schedule
+    // selects polling mode (periodic check-ins), otherwise the agent stays
+    // continuously connected.
+    let strategy = match &options.poll {
         Some(poll) => {
             match ServerConnectStrategy::polling(
                 &poll.schedule,

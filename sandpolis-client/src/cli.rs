@@ -1,18 +1,8 @@
 use clap::Args;
-use clap::Parser;
 use sandpolis_instance::InstanceId;
 
 fn parse_instance_id(s: &str) -> Result<InstanceId, String> {
     s.parse().map_err(|e| format!("{e}"))
-}
-
-/// Client settings. Clients never read a config file — only the global stratum
-/// server does — so anything tunable arrives here.
-#[derive(Parser, Debug, Clone, Default)]
-pub struct ClientCommandLine {
-    /// Frame rate for the GUI and TUI.
-    #[clap(long)]
-    pub fps: Option<u32>,
 }
 
 /// Flags shared by client subcommands that act on a specific instance. With

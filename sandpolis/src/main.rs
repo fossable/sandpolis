@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::Parser;
 use sandpolis::InstanceState;
 use sandpolis::cli::CommandLine;
-use sandpolis::config::Configuration;
 use sandpolis_instance::database::{DatabaseLayer, ScopeTable, WriteAuthority};
+use sandpolis_instance::realm::Realms;
 use std::process::ExitCode;
 use tokio::task::JoinSet;
 use tracing::{error, info};
@@ -60,106 +60,53 @@ async fn main() -> Result<ExitCode> {
         .install_default()
         .expect("crypto provider is available");
 
-    let stratum = args.stratum();
-
-    // Only the global stratum server reads a config file — it owns the
-    // authoritative database, so it owns the authoritative settings. Local
-    // stratum servers, agents and clients are configured entirely by flags.
     #[allow(unused_mut)]
-    let mut config = if stratum.is_global() {
-        #[cfg(feature = "server")]
-        {
-            Configuration::load_global(args.config.clone())?
-        }
-        #[cfg(not(feature = "server"))]
-        {
-            Configuration::default()
-        }
-    } else {
-        Configuration::default()
+    let mut options = args.options();
+
+    // The `.server` file is the whole trust bootstrap for an instance that
+    // attaches to a server: it names the server, carries the realm CA, and
+    // holds this instance's own certificate.
+    #[allow(unused_variables)]
+    let endpoint = sandpolis::load_server_file(&args)?;
+
+    let stratum = match endpoint.as_ref() {
+        Some((cert, _)) => sandpolis::ServerStratum::Local {
+            global: cert.url()?,
+        },
+        None => sandpolis::ServerStratum::Global,
     };
 
-    // Realm certs come from the command line only; they're loaded fresh on
-    // every run and never persisted to the config or database.
-    config.realm.realm_certs = args.realm.realm_cert.clone();
-
-    // The database location comes from the command line, not the config file.
-    config.database.storage = args.database.data_dir.clone();
-    if args.database.ephemeral {
-        config.database.ephemeral = true;
+    #[cfg(feature = "agent")]
+    if let Some((cert, poll)) = endpoint.as_ref() {
+        options.poll = poll.clone();
+        options.servers.push(cert.url()?);
     }
+
+    // Every realm this server serves comes from a `--realm` file. A zero-flag
+    // run gets an implicit default realm so the all-in-one development loop
+    // works without any setup; its CA lives only in the database.
+    #[cfg(feature = "server")]
+    let implicit_default_realm = stratum.is_global() && args.realm.is_empty();
 
     #[cfg(feature = "server")]
-    if let Some(listen) = args.listen {
-        config.server.listen = listen;
-    }
-
-    #[cfg(feature = "client")]
-    if let Some(fps) = args.client.fps {
-        config.client.fps = fps;
-    }
-
-    // Servers to connect to. A local stratum server dials its global stratum
-    // server (handled by `sandpolis::server`); agents and clients take theirs
-    // from `--server`.
-    #[cfg(feature = "agent")]
-    if let Some(servers) = args.servers.server.as_ref() {
-        config.agent.servers = servers.iter().map(|url| url.to_string()).collect();
-    }
-
-    // A `--poll` flag selects polling mode for the agent, overriding config.
-    #[cfg(feature = "agent")]
-    if let Some(schedule) = args.agent.poll.clone() {
-        config.agent.poll = Some(sandpolis_agent::config::PollConfig {
-            schedule,
-            timeout_secs: args.agent.poll_timeout.unwrap_or(30),
-        });
-    } else if let Some(timeout) = args.agent.poll_timeout
-        && let Some(poll) = config.agent.poll.as_mut() {
-            poll.timeout_secs = timeout;
+    if stratum.is_global() {
+        for path in &args.realm {
+            options.realms.push(sandpolis::config::RealmConfig::load(path)?);
         }
+        if implicit_default_realm {
+            info!(
+                "Serving an implicit \"default\" realm. Pass `--realm default.realm` \
+                 to keep its CA in a file that survives the database."
+            );
+        }
+    }
 
     // Standalone subcommands (cert generation, version info, LSP) run without
     // starting any instances or opening a connection.
     if let Some(command) = args.command.as_ref()
-        && command.standalone() {
-            return args.command.unwrap().dispatch_standalone(&config).await;
-        }
-
-    // TODO do this somewhere else
-    //
-    // Config lives on the global stratum server only, so it is also the only
-    // instance that writes changes back to it.
-    #[cfg(all(feature = "server", feature = "layer-account"))]
-    if stratum.is_global() {
-        let base = config.clone();
-        sandpolis_account::set_account_persist(move |accounts| {
-            let mut cfg = base.clone();
-            let accounts = accounts.to_vec();
-            // Only the account list is replaced; `account.scrape` and every
-            // other section keep whatever is on disk.
-            cfg.modify(|c| {
-                c.account.accounts = accounts.clone();
-                Ok(())
-            })
-        });
-    }
-
-    // TODO do this somewhere else
-    //
-    // Only the global stratum server keeps the authoritative probe config; local
-    // stratum servers don't persist a probe list of their own.
-    #[cfg(all(feature = "server", feature = "layer-probe"))]
-    if stratum.is_global() {
-        let base = config.clone();
-        sandpolis_probe::set_device_persist(move |devices| {
-            let mut cfg = base.clone();
-            let probe = sandpolis_probe::devices_to_config(devices);
-            cfg.modify(|c| {
-                c.probe = probe.clone();
-                Ok(())
-            })
-        });
+        && command.standalone()
+    {
+        return args.command.unwrap().dispatch_standalone(&options).await;
     }
 
     // A local stratum server holds per-instance write authority: it owns the
@@ -178,18 +125,144 @@ async fn main() -> Result<ExitCode> {
     // the co-located agent shares this process's InstanceId, and a server
     // always holds write authority for its own scope.
     #[cfg(all(feature = "server", feature = "agent"))]
-    config.agent.servers.push(format!(
-        "https://127.0.0.1:{}/default",
-        config.server.listen.port()
-    ));
+    options
+        .servers
+        .push(format!("https://127.0.0.1:{}/default", options.listen.port()).parse()?);
 
-    // Load state
-    let state = InstanceState::new(
-        config.clone(),
-        DatabaseLayer::new(config.database.clone(), &sandpolis::MODELS, authority)?,
-        stratum.clone(),
+    let database = DatabaseLayer::new(options.database.clone(), &sandpolis::MODELS, authority)?;
+
+    // Realms are only ever created from files, so this is where the set is
+    // fixed for the life of the process.
+    #[allow(unused_mut)]
+    let mut bootstraps = Vec::new();
+    #[cfg(feature = "server")]
+    if stratum.is_global() {
+        if implicit_default_realm {
+            bootstraps.push(sandpolis_instance::realm::config::RealmBootstrap::default());
+        } else {
+            for realm in &options.realms {
+                bootstraps.push(realm.bootstrap()?);
+            }
+        }
+    }
+
+    let instance = sandpolis_instance::InstanceLayer::new(
+        &options.instance,
+        database.clone(),
+        cfg!(feature = "server") && stratum.is_global(),
     )
     .await?;
+
+    #[allow(unused_mut)]
+    let mut endpoint_certs = Vec::new();
+    if let Some((cert, _)) = endpoint {
+        endpoint_certs.push(cert);
+    }
+
+    let (realms, minted) = Realms::new(
+        bootstraps,
+        endpoint_certs,
+        database.clone(),
+        instance,
+        cfg!(feature = "server") && stratum.is_global(),
+        #[cfg(feature = "server")]
+        options.listen.port(),
+        #[cfg(not(feature = "server"))]
+        0,
+    )
+    .await?;
+
+    // A realm CA the server had to generate goes back into the file it came
+    // from, which is the durable copy. The implicit default realm has no file,
+    // so its CA stays in the database as before.
+    #[cfg(feature = "server")]
+    for ca in &minted {
+        if let Some(realm) = options.realms.iter_mut().find(|r| r.name == ca.name) {
+            realm.store_ca(ca.cert_pem.clone(), ca.key_pem.clone())?;
+            info!(realm = %ca.name, path = ?realm.path(), "Wrote the realm CA back to its file");
+        }
+    }
+    #[cfg(not(feature = "server"))]
+    let _ = minted;
+
+    // TODO do this somewhere else
+    //
+    // Realm files live on the global stratum server only, so it is also the only
+    // instance that writes changes back to them.
+    #[cfg(all(feature = "server", feature = "layer-account"))]
+    if stratum.is_global() {
+        let realms_config = options.realms.clone();
+        sandpolis_account::set_account_persist(move |accounts| {
+            // Accounts aren't per-realm yet, so they go back to the single
+            // loaded realm. With several realms there's no way to tell which one
+            // owns an account, so leave every file alone rather than guess.
+            let mut realms_config = realms_config.clone();
+            let accounts = accounts.to_vec();
+            match realms_config.len() {
+                1 => realms_config[0].modify(|c| {
+                    // Only the account list is replaced; `account.scrape` and
+                    // every other section keep whatever is on disk.
+                    c.account.accounts = accounts.clone();
+                    Ok(())
+                }),
+                0 => Ok(()),
+                _ => {
+                    tracing::warn!(
+                        "Not persisting accounts: several realm files are loaded and \
+                         accounts are not yet realm-scoped"
+                    );
+                    Ok(())
+                }
+            }
+        });
+    }
+
+    // TODO do this somewhere else
+    //
+    // Only the global stratum server keeps the authoritative probe config; local
+    // stratum servers don't persist a probe list of their own.
+    #[cfg(all(feature = "server", feature = "layer-probe"))]
+    if stratum.is_global() {
+        let realms_config = options.realms.clone();
+        sandpolis_probe::set_device_persist(move |devices| {
+            let mut realms_config = realms_config.clone();
+            let probe = sandpolis_probe::devices_to_config(devices);
+
+            // A device records the server that reaches it, so route each one to
+            // that server's realm. A device with no server can only be placed
+            // when there's exactly one realm to place it in.
+            let only_realm = realms_config.len() == 1;
+            for realm in realms_config.iter_mut() {
+                let name = realm.name.clone();
+                let devices: Vec<_> = probe
+                    .devices
+                    .iter()
+                    .filter(|device| match device.server.as_ref() {
+                        Some(server) => server.realm == name,
+                        None => only_realm,
+                    })
+                    .cloned()
+                    .collect();
+                realm.modify(|c| {
+                    c.probe.devices = devices.clone();
+                    Ok(())
+                })?;
+            }
+
+            if !only_realm
+                && probe.devices.iter().any(|device| device.server.is_none())
+            {
+                tracing::warn!(
+                    "Some probe devices name no server and several realm files are \
+                     loaded, so they were not persisted to any of them"
+                );
+            }
+            Ok(())
+        });
+    }
+
+    // Load state
+    let state = InstanceState::new(&options, database, realms, stratum.clone()).await?;
 
     info!(%stratum, "Starting Sandpolis");
 
@@ -199,11 +272,11 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "server")]
     {
         let s = state.clone();
-        let c = config.clone();
+        let o = options.clone();
         // On client builds nothing joins this set (the client owns the main
         // thread), so a server failure would otherwise be silent.
         tasks.spawn(async move {
-            let result = sandpolis::server::main(c, s).await;
+            let result = sandpolis::server::main(o, s).await;
             if let Err(e) = &result {
                 error!(error = %e, "Server task failed");
             }
@@ -214,19 +287,19 @@ async fn main() -> Result<ExitCode> {
     // Auto-open a loopback connection from the co-located client to the local
     // server so it targets the local instance without configuration.
     #[cfg(all(feature = "server", feature = "client"))]
-    sandpolis::client::spawn_local_server_connection(state.clone(), config.server.listen.port());
+    sandpolis::client::spawn_local_server_connection(state.clone(), options.listen.port());
 
-    // A standalone client is pointed at its server(s) with `--server`.
+    // A standalone client is pointed at its server with `--server`.
     #[cfg(feature = "client")]
-    if let Some(servers) = args.servers.server.as_ref() {
-        sandpolis::client::spawn_configured_server_connections(state.clone(), servers);
+    if let Some((cert, _)) = sandpolis::load_server_file(&args)? {
+        sandpolis::client::spawn_configured_server_connections(state.clone(), &[cert.url()?]);
     }
 
     #[cfg(feature = "agent")]
     {
         let s = state.clone();
-        let c = config.clone();
-        tasks.spawn(async move { sandpolis::agent::main(c, s).await });
+        let o = options.clone();
+        tasks.spawn(async move { sandpolis::agent::main(o, s).await });
     }
 
     // The client runs on the main thread: bare invocation launches the GUI, a
@@ -238,14 +311,18 @@ async fn main() -> Result<ExitCode> {
             // Establish the sync websocket (the GUI does this itself).
             if args.command.is_some() {
                 sandpolis::client::spawn_client_sync(state.clone());
-                return args.command.unwrap().dispatch_client(&config, &state).await;
+                return args
+                    .command
+                    .unwrap()
+                    .dispatch_client(&options, &state)
+                    .await;
             }
-            sandpolis::client::gui::main(config, state).await.unwrap();
+            sandpolis::client::gui::main(options, state).await.unwrap();
             return Ok(ExitCode::SUCCESS);
         }
         #[cfg(target_os = "android")]
         {
-            sandpolis::client::gui::main(config, state).await.unwrap();
+            sandpolis::client::gui::main(options, state).await.unwrap();
             return Ok(ExitCode::SUCCESS);
         }
     }

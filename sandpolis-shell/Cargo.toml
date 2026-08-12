@@ -18,6 +18,8 @@ sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = t
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
+russh = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_cbor = { workspace = true, optional = true }
 tokio = { workspace = true }
@@ -41,6 +43,11 @@ pty-process = { workspace = true, optional = true }
 [features]
 agent = ["dep:futures", "dep:sandpolis-agent", "dep:inventory", "dep:pty-process", "dep:tokio-util"]
 server = []
+# SSH probes: the shell layer can drive a device registered with the probe layer
+# instead of an agent. Nothing here needs a `sandpolis-probe` feature — only its
+# unconditional device registry and config types — so this stays a plain dep and
+# the server/client halves are split with `cfg(all(...))` in the source.
+probe = ["dep:sandpolis-probe", "dep:russh", "dep:inventory", "dep:tokio-util"]
 client = [
   "dep:alacritty_terminal",
   "dep:serde_cbor",

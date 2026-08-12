@@ -32,6 +32,7 @@ rcgen = { version = "0.14.8", optional = true, features = [
   "x509-parser",
 ] }
 reqwest = { workspace = true, optional = true }
+ron = { workspace = true }
 reqwest-websocket = { workspace = true, optional = true }
 rustls-pki-types = { version = "1.10.1", optional = true }
 rustls = { workspace = true }

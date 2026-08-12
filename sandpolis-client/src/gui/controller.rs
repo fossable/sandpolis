@@ -23,7 +23,7 @@ use sandpolis_instance::InstanceId;
 /// [`SubNode`] stand in for something finer-grained that borrows the instance's
 /// id — a probe node and its gateway server share an `InstanceId`, and only the
 /// sub key separates them.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ControllerTarget {
     pub instance: InstanceId,
     /// The clicked [`SubNode`]'s id, when the node wasn't an instance itself.

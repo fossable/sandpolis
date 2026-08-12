@@ -44,7 +44,6 @@ totp-rs = { version = "6.0.0", optional = true, features = [
   "zeroize",
 ] }
 tracing = { workspace = true }
-url = { workspace = true }
 validator = { workspace = true }
 
 [features]

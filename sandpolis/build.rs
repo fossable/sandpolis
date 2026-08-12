@@ -17,7 +17,7 @@ fn main() {
         workspace_root.join("Cargo.toml").display()
     );
 
-    let mut analyzer = roniker::RustAnalyzer::with_root_type("crate::config::Configuration");
+    let mut analyzer = roniker::RustAnalyzer::with_root_type("crate::config::RealmConfig");
 
     for member_dir in workspace_member_dirs(&workspace_root) {
         let src_dir = member_dir.join("src");

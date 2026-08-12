@@ -220,8 +220,6 @@ pub fn update_probe_nodes(
     existing_probes: Query<(Entity, &ProbeNode)>,
     parent_nodes: Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
 ) {
-    let show_probes = registry.show_probe_nodes(&current_layer);
-
     let gateway_positions: HashMap<InstanceId, Vec3> = parent_nodes
         .iter()
         .map(|(transform, node)| (node.instance_id, transform.translation))
@@ -240,7 +238,8 @@ pub fn update_probe_nodes(
     for device in &all_devices {
         if !existing_ids.contains(&device.id)
             && let Some(&parent_pos) = gateway_positions.get(&device.gateway) {
-                spawn_probe_node(&asset_server, &mut commands, device, parent_pos, show_probes);
+                let visible = device_visible(&registry, &current_layer, &device.device);
+                spawn_probe_node(&asset_server, &mut commands, device, parent_pos, visible);
             }
     }
 
@@ -282,19 +281,38 @@ pub fn apply_probe_spring_forces(
 pub fn update_probe_node_visibility(
     current_layer: Res<sandpolis_client::gui::input::CurrentLayer>,
     registry: Res<LayerRegistry>,
-    mut probe_query: Query<&mut Visibility, With<ProbeNode>>,
+    mut probe_query: Query<(&ProbeNode, &mut Visibility)>,
 ) {
     if !current_layer.is_changed() {
         return;
     }
-    let show_probes = registry.show_probe_nodes(&current_layer);
-    for mut visibility in probe_query.iter_mut() {
-        *visibility = if show_probes {
+    for (probe, mut visibility) in probe_query.iter_mut() {
+        let visible = device_by_id(probe.device_id)
+            .is_some_and(|device| device_visible(&registry, &current_layer, &device.device));
+        *visibility = if visible {
             Visibility::Inherited
         } else {
             Visibility::Hidden
         };
     }
+}
+
+/// Whether `device`'s node should be visible while `layer` is active.
+///
+/// Layers other than Probe show a filtered subset: the Shell layer only wants
+/// devices it can open a terminal to, the Desktop layer only ones it can stream.
+/// The allowlist is matched against [`ProbeType::display_name`] because
+/// `sandpolis-client`, where it's declared, can't reference [`ProbeType`].
+fn device_visible(registry: &LayerRegistry, layer: &LayerName, device: &DeviceConfig) -> bool {
+    if !registry.show_probe_nodes(layer) {
+        return false;
+    }
+    let allowed = registry.probe_protocols(layer);
+    allowed.is_empty()
+        || device
+            .protocols()
+            .iter()
+            .any(|proto| allowed.contains(&proto.display_name()))
 }
 
 /// Query registered devices for a gateway.
@@ -1050,7 +1068,11 @@ fn handle_device_selection(
     probe_query: Query<(Entity, &Transform, &ProbeNode)>,
     mut selection: ResMut<DeviceSelectionSet>,
 ) {
-    if !registry.show_probe_nodes(&current_layer) {
+    // Only the layer showing *every* probe owns their lifecycle. Shell and
+    // Desktop show a filtered subset to work with, not to select or delete.
+    if !registry.show_probe_nodes(&current_layer)
+        || !registry.probe_protocols(&current_layer).is_empty()
+    {
         return;
     }
     if ui_pointer.over_ui_blocking || !mouse_button.just_pressed(MouseButton::Left) {
