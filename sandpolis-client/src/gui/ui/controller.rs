@@ -34,13 +34,7 @@ pub trait NodeController: Send + Sync + 'static {
     }
 
     /// Build the controller body as children of `body`.
-    fn build(
-        &self,
-        commands: &mut Commands,
-        body: Entity,
-        target: ControllerTarget,
-        theme: &Theme,
-    );
+    fn build(&self, commands: &mut Commands, body: Entity, target: ControllerTarget, theme: &Theme);
 }
 
 /// Callback run when a layer toolbar button is clicked. It receives `Commands`
@@ -164,9 +158,7 @@ impl LayerClientInfo {
             on_click: Arc::new(move |commands: &mut Commands| {
                 super::super::services_panel::open(open_layer.clone(), commands)
             }),
-            enabled: Arc::new(move |_| {
-                super::super::services_panel::has_services(&gate_layer)
-            }),
+            enabled: Arc::new(move |_| super::super::services_panel::has_services(&gate_layer)),
         });
         self
     }
@@ -231,7 +223,9 @@ impl LayerRegistry {
 
     /// The toolbar actions for the given layer (empty when unregistered).
     pub fn toolbar_actions(&self, layer: &LayerName) -> &[ToolbarAction] {
-        self.get(layer).map(|i| i.toolbar_actions.as_slice()).unwrap_or(&[])
+        self.get(layer)
+            .map(|i| i.toolbar_actions.as_slice())
+            .unwrap_or(&[])
     }
 }
 

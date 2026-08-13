@@ -8,9 +8,9 @@
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, RuntimeOptions};
 use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
-use sandpolis_instance::realm::Realms;
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
+use sandpolis_instance::realm::Realms;
 use sandpolis_instance::{InstanceId, InstanceType};
 use sandpolis_server::ServerStratum;
 
@@ -37,7 +37,9 @@ async fn main() -> Result<()> {
     // This creates several agent and server connections that will appear in the world view
     {
         let db = database.realm(RealmName::default())?;
-        let rw = db.write(sandpolis_instance::database::DataScope::Instance(state.instance.instance_id))?;
+        let rw = db.write(sandpolis_instance::database::DataScope::Instance(
+            state.instance.instance_id,
+        ))?;
 
         // Create several test agent connections
         for i in 1..=5 {

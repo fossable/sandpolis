@@ -127,8 +127,7 @@ pub trait Service: Send + Sync + 'static {
     /// Returning `Err` marks the whole pass failed; a pass that merely couldn't
     /// reach some of its targets should report those in [`ServiceReport::failed`]
     /// and return `Ok`.
-    fn run(&self, cancel: CancellationToken)
-    -> impl Future<Output = Result<ServiceReport>> + Send;
+    fn run(&self, cancel: CancellationToken) -> impl Future<Output = Result<ServiceReport>> + Send;
 }
 
 /// The key identifying a service across the estate.

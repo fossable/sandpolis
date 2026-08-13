@@ -91,7 +91,9 @@ async fn main() -> Result<ExitCode> {
     #[cfg(feature = "server")]
     if stratum.is_global() {
         for path in &args.realm {
-            options.realms.push(sandpolis::config::RealmConfig::load(path)?);
+            options
+                .realms
+                .push(sandpolis::config::RealmConfig::load(path)?);
         }
         if implicit_default_realm {
             info!(
@@ -146,12 +148,7 @@ async fn main() -> Result<ExitCode> {
         }
     }
 
-    let instance = sandpolis_instance::InstanceLayer::new(
-        &options.instance,
-        database.clone(),
-        cfg!(feature = "server") && stratum.is_global(),
-    )
-    .await?;
+    let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
     #[allow(unused_mut)]
     let mut endpoint_certs = Vec::new();
@@ -249,9 +246,7 @@ async fn main() -> Result<ExitCode> {
                 })?;
             }
 
-            if !only_realm
-                && probe.devices.iter().any(|device| device.server.is_none())
-            {
+            if !only_realm && probe.devices.iter().any(|device| device.server.is_none()) {
                 tracing::warn!(
                     "Some probe devices name no server and several realm files are \
                      loaded, so they were not persisted to any of them"

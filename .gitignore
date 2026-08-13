@@ -3,5 +3,5 @@
 .gradle
 build
 target
-sandpolis.ron
+default.realm
 vendor

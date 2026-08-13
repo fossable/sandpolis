@@ -1062,11 +1062,12 @@ mod test_scoped {
         let resident: Resident<GlobalScopeData> = realm.resident(())?;
 
         assert!(
-            resident.update(|d| {
-                d.a = "estate data".into();
-                Ok(())
-            })
-            .is_err(),
+            resident
+                .update(|d| {
+                    d.a = "estate data".into();
+                    Ok(())
+                })
+                .is_err(),
             "estate data must not be written without authority"
         );
 
@@ -1098,7 +1099,6 @@ mod test_scoped {
         );
         Ok(())
     }
-
 }
 
 #[cfg(test)]

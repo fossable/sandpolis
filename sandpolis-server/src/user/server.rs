@@ -134,7 +134,7 @@ impl UserLayer {
             if user.read().username == *username {
                 return Ok(user.read().clone());
             }
-        };
+        }
 
         bail!("User not found");
     }
@@ -387,7 +387,6 @@ pub async fn connect(
     let network = state.network.clone();
     let cluster_id = state.instance.cluster_id;
     let local_instance = state.instance.instance_id;
-    let local_domain = state.instance.domain();
     let stratum = state.stratum.clone();
     let ownership = state.ownership.clone();
     let remote_instance = headers
@@ -454,8 +453,7 @@ pub async fn connect(
             sandpolis_instance::network::collected_responders().collect();
         handlers.push(&sync_reg);
 
-        let connection =
-            InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
+        let connection = InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
 
         // Let this connection relay streams to other connections (client -> agent).
         connection
@@ -486,8 +484,8 @@ pub async fn connect(
         // forms a feedback loop that floods the transport. Skip server peers
         // too (an all-in-one local stratum server carries the agent bit): their
         // data arrives through the ownership machinery instead.
-        if let Some(id) = remote_instance
-            .filter(|id| id.is_agent() && !id.is_server() && *id != local_instance)
+        if let Some(id) =
+            remote_instance.filter(|id| id.is_agent() && !id.is_server() && *id != local_instance)
         {
             if stratum.is_local() {
                 // Ownership decides: the reconciler (`ownership::maintain_agent_sync`)
@@ -511,13 +509,6 @@ pub async fn connect(
     // freshly-generated default, which would surface as a phantom graph node.
     if let Ok(value) = axum::http::HeaderValue::from_str(&local_instance.to_string()) {
         response.headers_mut().insert("x-instance-id", value);
-    }
-
-    // Report the network's domain too. Only the global stratum server has a
-    // config file, so this is how agents and clients learn which domain they
-    // belong to without being told on the command line.
-    if let Ok(value) = axum::http::HeaderValue::from_str(&local_domain) {
-        response.headers_mut().insert("x-domain", value);
     }
 
     response

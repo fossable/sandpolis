@@ -117,9 +117,11 @@ pub fn manage_theme_picker(
 ) {
     let exists = !root.is_empty();
     if picker_state.show && !exists {
-        commands
-            .spawn_scene(theme_picker_scene(&theme))
-            .insert((ThemePickerRoot, BlocksWorldInput, ModalRoot));
+        commands.spawn_scene(theme_picker_scene(&theme)).insert((
+            ThemePickerRoot,
+            BlocksWorldInput,
+            ModalRoot,
+        ));
     } else if !picker_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

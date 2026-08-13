@@ -279,7 +279,10 @@ mod test {
         let mut time = Time::<()>::default();
         time.advance_by(std::time::Duration::from_secs_f32(1.0 / 60.0));
         app.insert_resource(time);
-        app.add_systems(Update, (relax_terrain_overlap, apply_terrain_cohesion).chain());
+        app.add_systems(
+            Update,
+            (relax_terrain_overlap, apply_terrain_cohesion).chain(),
+        );
         app
     }
 
@@ -292,7 +295,10 @@ mod test {
         app.world_mut()
             .spawn((
                 TerrainMember {
-                    segments: keys.iter().map(|k| (k.to_string(), k.to_string())).collect(),
+                    segments: keys
+                        .iter()
+                        .map(|k| (k.to_string(), k.to_string()))
+                        .collect(),
                 },
                 Transform::from_xyz(position.x, position.y, 0.0),
             ))

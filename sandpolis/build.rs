@@ -10,14 +10,16 @@ fn main() {
     // `config.rs` file across the workspace under its real crate-qualified
     // module path so that field-type lookups (e.g.
     // `sandpolis_instance::database::config::DatabaseConfig`) resolve
-    // correctly at LSP serve time.
+    // correctly at LSP serve time. Which of those types is the document root
+    // depends on the file format being edited, so `sandpolis lsp` sets it from
+    // its own flags rather than it being baked in here.
     let workspace_root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("..");
     println!(
         "cargo:rerun-if-changed={}",
         workspace_root.join("Cargo.toml").display()
     );
 
-    let mut analyzer = roniker::RustAnalyzer::with_root_type("crate::config::RealmConfig");
+    let mut analyzer = roniker::RustAnalyzer::new();
 
     for member_dir in workspace_member_dirs(&workspace_root) {
         let src_dir = member_dir.join("src");

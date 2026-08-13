@@ -44,7 +44,8 @@ pub fn panel(theme: &Theme) -> impl Bundle {
         BackgroundColor(theme.color(Role::Panel)),
         super::theme::ThemedBg(Role::Panel),
         BorderColor::all(theme.color(Role::Border)),
-        ThemedBorder(Role::Border),    )
+        ThemedBorder(Role::Border),
+    )
 }
 
 /// A horizontal flex row with centered items and the given column gap.
@@ -87,7 +88,8 @@ pub fn button(theme: &Theme, label: impl Into<String>) -> impl Bundle {
         },
         BackgroundColor(theme.color(Role::Surface)),
         BorderColor::all(theme.color(Role::Border)),
-        ThemedBorder(Role::Border),        children![text(theme, label, theme.metrics.font_md, Role::Text)],
+        ThemedBorder(Role::Border),
+        children![text(theme, label, theme.metrics.font_md, Role::Text)],
     )
 }
 

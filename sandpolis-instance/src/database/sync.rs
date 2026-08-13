@@ -82,8 +82,7 @@ impl SyncFilter {
 }
 
 type ApplyFn = Box<dyn Fn(&RealmDatabase, SyncOp, &[u8]) -> Result<()> + Send + Sync>;
-type SnapshotFn =
-    Box<dyn Fn(&RealmDatabase, FilterScope) -> Result<Vec<SyncRecord>> + Send + Sync>;
+type SnapshotFn = Box<dyn Fn(&RealmDatabase, FilterScope) -> Result<Vec<SyncRecord>> + Send + Sync>;
 type WatchFn = Box<
     dyn Fn(&RealmDatabase, FilterScope, Sender<SyncRecord>, CancellationToken) -> Result<()>
         + Send
@@ -141,9 +140,10 @@ impl SyncRegistry {
                     // totally ordered per row: a replayed or reordered older
                     // record must never clobber a newer one.
                     if let Some(existing) = rw.get().primary::<T>(item.id())?
-                        && existing.revision() >= item.revision() {
-                            return Ok(());
-                        }
+                        && existing.revision() >= item.revision()
+                    {
+                        return Ok(());
+                    }
                     rw.upsert(item)?;
                 }
                 SyncOp::Delete => {
@@ -411,7 +411,10 @@ mod tests {
         let db: DatabaseLayer = test_db!(SyncTestData, GlobalTestData);
         let realm = db.realm(RealmName::default())?;
 
-        reg.apply(&realm, &record(SyncOp::Upsert, InstanceId::default(), "x", 1))?;
+        reg.apply(
+            &realm,
+            &record(SyncOp::Upsert, InstanceId::default(), "x", 1),
+        )?;
         let global_item = GlobalTestData {
             name: "g".into(),
             ..Default::default()
@@ -517,7 +520,10 @@ mod tests {
 
         // Let the watch register before mutating.
         tokio::time::sleep(Duration::from_millis(50)).await;
-        reg.apply(&realm, &record(SyncOp::Upsert, InstanceId::default(), "z", 9))?;
+        reg.apply(
+            &realm,
+            &record(SyncOp::Upsert, InstanceId::default(), "z", 9),
+        )?;
 
         let got = tokio::time::timeout(Duration::from_secs(2), rx.recv())
             .await?

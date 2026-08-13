@@ -53,7 +53,10 @@ impl PanelState {
             let services = service::query_layer_services(layer).unwrap_or_default();
             self.cache = Some((Instant::now(), services));
         }
-        self.cache.as_ref().map(|(_, s)| s.as_slice()).unwrap_or(&[])
+        self.cache
+            .as_ref()
+            .map(|(_, s)| s.as_slice())
+            .unwrap_or(&[])
     }
 
     /// The selected service's current row, if it still exists.
@@ -200,9 +203,7 @@ fn build_body(commands: &mut Commands, body: Entity, theme: &Theme, layer: Layer
                             })
                             .with_child((
                                 text(theme, "", theme.metrics.font_sm, Role::Text),
-                                bind_text(move || {
-                                    selection_label(&label_state, &label_layer.0)
-                                }),
+                                bind_text(move || selection_label(&label_state, &label_layer.0)),
                             ));
                     });
 
@@ -242,9 +243,7 @@ fn build_body(commands: &mut Commands, body: Entity, theme: &Theme, layer: Layer
                         let run_state = state.clone();
                         let run_layer = layer.clone();
                         r.spawn(crate::gui::ui::widgets::button(theme, "Run now"))
-                            .observe(move |_: On<Activate>| {
-                                run_selected(&run_state, &run_layer.0)
-                            });
+                            .observe(move |_: On<Activate>| run_selected(&run_state, &run_layer.0));
                     });
 
                     let detail_state = state.clone();

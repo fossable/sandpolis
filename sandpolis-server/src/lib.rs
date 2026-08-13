@@ -153,11 +153,7 @@ impl ServerLayer {
         #[cfg(feature = "agent")]
         let cert = self.realms.find_agent_cert(url.realm.clone())?;
 
-        #[cfg(all(
-            feature = "server",
-            not(feature = "client"),
-            not(feature = "agent")
-        ))]
+        #[cfg(all(feature = "server", not(feature = "client"), not(feature = "agent")))]
         let cert = self.realms.find_client_cert(url.realm.clone())?;
 
         let client_builder = || -> Result<reqwest::Client> {
@@ -338,14 +334,6 @@ impl ServerConnection {
             .and_then(|v| v.to_str().ok())
             .and_then(|s| s.parse::<InstanceId>().ok());
 
-        // Only the global stratum server has a config file, so the domain is
-        // reported here rather than configured locally.
-        if let Some(domain) = response.headers().get("x-domain").and_then(|v| v.to_str().ok())
-            && let Err(e) = instance.set_domain(domain)
-        {
-            debug!(error = %e, "Failed to record domain reported by server");
-        }
-
         let socket = response.into_websocket().await?;
 
         let mut cd = ConnectionData::default();
@@ -354,7 +342,10 @@ impl ServerConnection {
         }
         cd.established = chrono::Utc::now();
         // Live connection bookkeeping is local state, allowed on a replica.
-        let data = network.connections.push_local(cd).map_err(|e| anyhow!("{e}"))?;
+        let data = network
+            .connections
+            .push_local(cd)
+            .map_err(|e| anyhow!("{e}"))?;
 
         // Serve our local realm database to the peer's sync subscriptions
         // (an agent answering the server's all-filter requester).
@@ -524,8 +515,7 @@ impl ServerConnectStrategy {
 ///   replica of the estate-wide data, not the whole estate.
 ///
 /// [`WriteAuthority::Scoped`]: sandpolis_instance::database::WriteAuthority
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub enum ServerStratum {
     /// The single trust root, holding the whole estate and full write authority
     /// over everything not owned by a local stratum server. Owns the config
@@ -543,7 +533,6 @@ pub enum ServerStratum {
         global: ServerUrl,
     },
 }
-
 
 impl ServerStratum {
     pub fn is_global(&self) -> bool {

@@ -5,11 +5,11 @@ use crate::gui::node::WorldView;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::text_input;
-use bevy::text::EditableText;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
+use bevy::text::EditableText;
 use bevy_ui_widgets::{Activate, Button};
 use sandpolis_instance::InstanceId;
 
@@ -40,10 +40,7 @@ pub struct NodeRow {
 }
 
 /// Collect nodes matching the query, sorted by instance id for stable ordering.
-fn collect_nodes(
-    nodes: &Query<(Entity, &InstanceId)>,
-    query: &str,
-) -> Vec<(Entity, InstanceId)> {
+fn collect_nodes(nodes: &Query<(Entity, &InstanceId)>, query: &str) -> Vec<(Entity, InstanceId)> {
     let query = query.to_lowercase();
     let mut all: Vec<(Entity, InstanceId)> = nodes
         .iter()
@@ -192,14 +189,12 @@ pub fn rebuild_node_rows(
             } else {
                 Role::Surface
             };
-            let label = format!(
-                "{} {}",
-                if id.is_server() { "Server" } else { "Agent" },
-                id
-            );
+            let label = format!("{} {}", if id.is_server() { "Server" } else { "Agent" }, id);
             parent
                 .spawn((
-                    NodeRow { node_entity: entity },
+                    NodeRow {
+                        node_entity: entity,
+                    },
                     Button,
                     Interaction::default(),
                     Node {

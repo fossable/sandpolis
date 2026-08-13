@@ -54,9 +54,10 @@ impl HelpWidget {
 
     fn is_key_highlighted(&self, key: &KeyCode) -> bool {
         if let Some((highlighted_key, timestamp)) = &self.highlighted_key
-            && highlighted_key == key {
-                return timestamp.elapsed() < self.highlight_duration;
-            }
+            && highlighted_key == key
+        {
+            return timestamp.elapsed() < self.highlight_duration;
+        }
         false
     }
 
@@ -210,15 +211,16 @@ impl WidgetRef for HelpWidget {
 impl EventHandler for HelpWidget {
     fn handle_event(&mut self, event: Event) -> Option<Event> {
         if let Event::Key(key) = &event
-            && key.kind == KeyEventKind::Press {
-                // Check if this key is in our keybindings and highlight it (only if enabled)
-                for (keybinding, _, enabled) in &self.keybindings {
-                    if keybinding == &key.code && *enabled {
-                        self.highlight_key(key.code);
-                        break;
-                    }
+            && key.kind == KeyEventKind::Press
+        {
+            // Check if this key is in our keybindings and highlight it (only if enabled)
+            for (keybinding, _, enabled) in &self.keybindings {
+                if keybinding == &key.code && *enabled {
+                    self.highlight_key(key.code);
+                    break;
                 }
             }
+        }
         // Never consume events - always pass them through
         Some(event)
     }

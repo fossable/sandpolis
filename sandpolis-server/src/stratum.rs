@@ -375,9 +375,7 @@ async fn run_link(
     let notify = Arc::new(Notify::new());
     {
         let notify = notify.clone();
-        network
-            .connections
-            .listen(move |_| notify.notify_one());
+        network.connections.listen(move |_| notify.notify_one());
     }
 
     let link = link.clone();
@@ -409,9 +407,7 @@ async fn run_link(
                 // Claim ownership of the instances attached to us.
                 match serde_cbor::to_vec(&OwnershipRequest::Claim { instances: list }) {
                     Ok(payload) => {
-                        if let Err(e) = claim_tx
-                            .send(StreamMessage::local(claim_id, payload))
-                            .await
+                        if let Err(e) = claim_tx.send(StreamMessage::local(claim_id, payload)).await
                         {
                             warn!(error = %e, "Failed to send ownership claim");
                         }

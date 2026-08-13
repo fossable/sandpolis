@@ -67,7 +67,10 @@ impl StreamRequester for ReachabilityRequester {
     }
 
     async fn on_message(&self, ack: Self::In, _: Sender<Self::Out>) -> Result<()> {
-        tracing::debug!(accepted = ack.accepted, "Reachability advertisement accepted");
+        tracing::debug!(
+            accepted = ack.accepted,
+            "Reachability advertisement accepted"
+        );
         Ok(())
     }
 }
@@ -146,10 +149,12 @@ pub fn accept_advertisements(connection: &Arc<InstanceConnection>, relay: Arc<Re
     {
         let relay = relay.clone();
         let via = via.clone();
-        connection.streams.register_responder(move || ReachabilityResponder {
-            relay: relay.clone(),
-            via: via.clone(),
-        });
+        connection
+            .streams
+            .register_responder(move || ReachabilityResponder {
+                relay: relay.clone(),
+                via: via.clone(),
+            });
     }
 
     // Routes through a dead peer are worse than no route: `next_hop` would pick

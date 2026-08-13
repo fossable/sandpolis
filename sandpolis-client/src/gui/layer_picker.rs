@@ -7,11 +7,11 @@ use crate::gui::ui::controller::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::text_input;
-use bevy::text::EditableText;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::widgets::{heading, muted, text};
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
+use bevy::text::EditableText;
 use bevy_ui_widgets::{Activate, Button};
 use sandpolis_instance::LayerName;
 
@@ -250,8 +250,17 @@ pub fn rebuild_layer_rows(
                     },
                     BackgroundColor(theme.color(role)),
                     children![
-                        text(&theme, layer.name().to_string(), theme.metrics.font_md, Role::Text),
-                        muted(&theme, get_layer_description(&registry, &layer), theme.metrics.font_sm),
+                        text(
+                            &theme,
+                            layer.name().to_string(),
+                            theme.metrics.font_md,
+                            Role::Text
+                        ),
+                        muted(
+                            &theme,
+                            get_layer_description(&registry, &layer),
+                            theme.metrics.font_sm
+                        ),
                     ],
                 ))
                 .observe(on_row_click);

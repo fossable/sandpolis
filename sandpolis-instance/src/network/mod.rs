@@ -171,8 +171,7 @@ impl InstanceConnection {
     {
         let (id, tx) = self.streams.register(handler);
         let payload = serde_cbor::to_vec(&initial)?;
-        tx.send(StreamMessage::local(id, payload))
-        .await?;
+        tx.send(StreamMessage::local(id, payload)).await?;
         Ok((id, tx))
     }
 
@@ -189,8 +188,7 @@ impl InstanceConnection {
     {
         let (id, tx) = self.streams.register_to(handler, Some(target));
         let payload = serde_cbor::to_vec(&initial)?;
-        tx.send(StreamMessage::to(id, payload, target))
-        .await?;
+        tx.send(StreamMessage::to(id, payload, target)).await?;
         Ok((id, tx))
     }
 }

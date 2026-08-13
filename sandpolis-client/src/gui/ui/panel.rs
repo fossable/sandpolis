@@ -105,7 +105,10 @@ pub fn spawn_floating_panel(
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::SpaceBetween,
                 width: Val::Percent(100.0),
-                padding: UiRect::axes(Val::Px(theme.metrics.space_md), Val::Px(theme.metrics.space_sm)),
+                padding: UiRect::axes(
+                    Val::Px(theme.metrics.space_md),
+                    Val::Px(theme.metrics.space_sm),
+                ),
                 ..default()
             },
             BackgroundColor(theme.color(Role::Surface)),
@@ -115,23 +118,21 @@ pub fn spawn_floating_panel(
         .observe(on_titlebar_drag)
         .id();
 
-    commands
-        .entity(titlebar)
-        .with_children(|bar| {
-            bar.spawn(text(theme, title, theme.metrics.font_md, Role::Text));
-            bar.spawn((
-                Button,
-                Interaction::default(),
-                Node {
-                    padding: UiRect::axes(Val::Px(theme.metrics.space_sm), Val::Px(0.0)),
-                    ..default()
-                },
-                children![text(theme, "✕", theme.metrics.font_md, Role::TextMuted)],
-            ))
-            .observe(move |_: On<Activate>, mut commands: Commands| {
-                commands.trigger(PanelClosed { entity: root });
-            });
+    commands.entity(titlebar).with_children(|bar| {
+        bar.spawn(text(theme, title, theme.metrics.font_md, Role::Text));
+        bar.spawn((
+            Button,
+            Interaction::default(),
+            Node {
+                padding: UiRect::axes(Val::Px(theme.metrics.space_sm), Val::Px(0.0)),
+                ..default()
+            },
+            children![text(theme, "✕", theme.metrics.font_md, Role::TextMuted)],
+        ))
+        .observe(move |_: On<Activate>, mut commands: Commands| {
+            commands.trigger(PanelClosed { entity: root });
         });
+    });
 
     let body = commands
         .spawn((

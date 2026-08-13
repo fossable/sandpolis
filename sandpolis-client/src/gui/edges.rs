@@ -120,4 +120,3 @@ pub fn update_edge_visibility(
         };
     }
 }
-

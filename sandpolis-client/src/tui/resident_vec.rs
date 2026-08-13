@@ -179,19 +179,20 @@ where
         let event_handler = self.event_handler.unwrap_or_else(|| {
             Box::new(|event, list| {
                 if let Event::Key(key) = event
-                    && key.kind == KeyEventKind::Press {
-                        match key.code {
-                            KeyCode::Char('j') | KeyCode::Down => {
-                                list.select_next();
-                                return None;
-                            }
-                            KeyCode::Char('k') | KeyCode::Up => {
-                                list.select_previous();
-                                return None;
-                            }
-                            _ => {}
+                    && key.kind == KeyEventKind::Press
+                {
+                    match key.code {
+                        KeyCode::Char('j') | KeyCode::Down => {
+                            list.select_next();
+                            return None;
                         }
+                        KeyCode::Char('k') | KeyCode::Up => {
+                            list.select_previous();
+                            return None;
+                        }
+                        _ => {}
                     }
+                }
                 Some(event)
             })
         });
@@ -354,8 +355,8 @@ mod tests {
     use native_model::Model;
     use ratatui::text::Text;
     use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision};
-    use sandpolis_instance::test_db;
     use sandpolis_instance::realm::RealmName;
+    use sandpolis_instance::test_db;
     use sandpolis_macros::data;
 
     #[data]

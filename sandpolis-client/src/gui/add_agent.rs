@@ -146,9 +146,11 @@ pub fn manage_add_agent(
 ) {
     let exists = !root.is_empty();
     if state.show && !exists {
-        commands
-            .spawn_scene(add_agent_scene(&theme))
-            .insert((AddAgentRoot, BlocksWorldInput, ModalRoot));
+        commands.spawn_scene(add_agent_scene(&theme)).insert((
+            AddAgentRoot,
+            BlocksWorldInput,
+            ModalRoot,
+        ));
     } else if !state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

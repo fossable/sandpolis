@@ -21,6 +21,7 @@ use axum::{
 use axum_server::tls_rustls::RustlsConfig;
 use axum_server::{accept::Accept, tls_rustls::RustlsAcceptor};
 use futures_util::future::BoxFuture;
+use headers::{Header, HeaderName, HeaderValue};
 use rcgen::BasicConstraints;
 use rcgen::CertificateParams;
 use rcgen::DnType;
@@ -44,7 +45,6 @@ use tower::Layer;
 use tracing::debug;
 use tracing::trace;
 use x509_parser::prelude::{FromDer, X509Certificate};
-use headers::{Header, HeaderName, HeaderValue};
 
 impl super::RealmClusterCert {
     /// Generate a new realm CA certificate.

@@ -1,17 +1,17 @@
 use std::ffi::c_void;
 
 cfg_if::cfg_if! {
-    if #[cfg(quartz)] {
+    if #[cfg(target_os = "macos")] {
         mod quartz;
         pub use self::quartz::*;
-    } else if #[cfg(x11)] {
+    } else if #[cfg(target_os = "linux")] {
         mod linux;
         mod wayland;
         mod x11;
         pub use self::linux::*;
         pub use self::wayland::set_map_err;
         pub use self::x11::PixelBuffer;
-    } else if #[cfg(dxgi)] {
+    } else if #[cfg(windows)] {
         mod dxgi;
         pub use self::dxgi::*;
     } else if #[cfg(target_os = "android")] {
@@ -113,7 +113,7 @@ impl Pixfmt {
     }
 }
 
-#[cfg(x11)]
+#[cfg(target_os = "linux")]
 #[inline]
 pub fn is_x11() -> bool {
     crate::platform::linux::is_x11_or_headless()

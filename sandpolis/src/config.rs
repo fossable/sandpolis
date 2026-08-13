@@ -77,8 +77,8 @@ impl RealmConfig {
                 )
             })?;
 
-        let contents = std::fs::read_to_string(path)
-            .with_context(|| format!("Reading {}", path.display()))?;
+        let contents =
+            std::fs::read_to_string(path).with_context(|| format!("Reading {}", path.display()))?;
 
         let mut config: Self = if contents.trim().is_empty() {
             Self::default()

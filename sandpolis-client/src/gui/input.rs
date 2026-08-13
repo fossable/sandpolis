@@ -1,3 +1,6 @@
+use crate::gui::ui::gating::{BlocksWorldInput, ModalRoot, UiPointerState};
+use crate::gui::ui::scene::help_modal_scene;
+use crate::gui::ui::theme::Theme;
 #[cfg(target_os = "android")]
 use bevy::input::touch::TouchPhase;
 use bevy::{
@@ -5,9 +8,6 @@ use bevy::{
     input::mouse::{MouseButtonInput, MouseMotion, MouseWheel},
     prelude::*,
 };
-use crate::gui::ui::gating::{BlocksWorldInput, ModalRoot, UiPointerState};
-use crate::gui::ui::scene::help_modal_scene;
-use crate::gui::ui::theme::Theme;
 use bevy_ui_widgets::Activate;
 use sandpolis_instance::LayerName;
 use std::ops::Range;

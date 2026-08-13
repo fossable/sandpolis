@@ -341,7 +341,10 @@ pub fn update_selection_ui(
             position_type: PositionType::Absolute,
             top: Val::Px(10.0),
             right: Val::Px(10.0),
-            padding: UiRect::axes(Val::Px(theme.metrics.space_md), Val::Px(theme.metrics.space_sm)),
+            padding: UiRect::axes(
+                Val::Px(theme.metrics.space_md),
+                Val::Px(theme.metrics.space_sm),
+            ),
             border: UiRect::all(Val::Px(1.0)),
             ..default()
         },

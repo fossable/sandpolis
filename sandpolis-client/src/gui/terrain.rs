@@ -24,7 +24,7 @@ use crate::gui::queries::{InstanceMetadata, query_instance_metadata};
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use sandpolis_instance::InstanceId;
+use sandpolis_instance::{InstanceId, InstanceLayer};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
@@ -66,8 +66,8 @@ const LABEL_Z: f32 = -1.0;
 
 /// A groupable instance attribute. Each variant maps an instance to an optional
 /// `(key, display)` pair; the key defines terrain identity and the display names
-/// the terrain. Adding a new attribute (e.g. the future `domain`) is a variant
-/// plus one match arm — rendering is unaffected.
+/// the terrain. Adding a new attribute is a variant plus one match arm —
+/// rendering is unaffected.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum TerrainAttribute {
     /// Group by instance role (Server / Agent / Client).
@@ -81,7 +81,12 @@ pub enum TerrainAttribute {
 impl TerrainAttribute {
     /// Resolve this attribute for an instance into a `(key, display)` pair, or
     /// `None` if the instance has no value for it.
-    pub fn resolve(&self, id: InstanceId, meta: &InstanceMetadata) -> Option<(String, String)> {
+    pub fn resolve(
+        &self,
+        id: InstanceId,
+        meta: &InstanceMetadata,
+        instance: &InstanceLayer,
+    ) -> Option<(String, String)> {
         match self {
             TerrainAttribute::InstanceType => {
                 let label = if id.is_server() {
@@ -100,23 +105,21 @@ impl TerrainAttribute {
                 Some((os.clone(), os))
             }
             TerrainAttribute::Domain => {
-                // Empty until the domain has been configured/synced; contributes
-                // no terrain rather than an unnamed one.
-                if meta.domain.is_empty() {
-                    None
-                } else {
-                    // Key on the normalized domain so an instance's "Example.com"
-                    // and an account's "example.com" land in one region.
-                    Some((meta.domain.to_lowercase(), meta.domain.clone()))
-                }
+                // An instance belongs to a domain only once it's been assigned
+                // to one, so most contribute no terrain rather than an unnamed
+                // one. Key on the normalized domain so an instance's
+                // "Example.com" and an account's "example.com" land in one
+                // region.
+                let domain = instance.domain_of(id)?;
+                Some((domain.to_lowercase(), domain))
             }
         }
     }
 }
 
 /// Ordered list of attributes that define the terrain hierarchy. This is the
-/// configuration surface a future UI picker (or the `domain` attribute) plugs
-/// into; changing it rebuilds all terrains.
+/// configuration surface a future UI picker plugs into; changing it rebuilds all
+/// terrains.
 #[derive(Resource, Clone)]
 pub struct TerrainConfig {
     pub levels: Vec<TerrainAttribute>,
@@ -149,23 +152,33 @@ impl TerrainMember {
     }
 }
 
+/// Set when the domains an instance could belong to have changed, so membership
+/// is resolved again. Domains replicate in after login — well after the nodes
+/// themselves are spawned — so without this an assignment would never appear.
+#[derive(Resource, Default)]
+pub struct TerrainMembersDirty(pub bool);
+
 /// Derive [`TerrainMember`] for instance nodes from [`TerrainConfig`].
 ///
-/// Only newly added nodes are resolved unless the config changed. Resolving is
-/// not free — it goes through `query_instance_metadata`, which calls
-/// `os_info::get()` — so this must not become a per-frame scan.
+/// Only newly added nodes are resolved unless the config or the domain set
+/// changed. Resolving is not free — it goes through `query_instance_metadata`,
+/// which calls `os_info::get()` — so this must not become a per-frame scan.
 pub fn sync_instance_terrain_members(
     mut commands: Commands,
     config: Res<TerrainConfig>,
+    instance: Res<InstanceLayer>,
+    mut dirty: ResMut<TerrainMembersDirty>,
     nodes: Query<(Entity, Ref<NodeEntity>)>,
 ) {
-    let config_changed = config.is_changed();
+    let resolve_all = config.is_changed() || dirty.0;
+    dirty.0 = false;
+
     for (entity, node) in nodes.iter() {
-        if !config_changed && !node.is_added() {
+        if !resolve_all && !node.is_added() {
             continue;
         }
         commands.entity(entity).insert(TerrainMember {
-            segments: node_segments(node.instance_id, &config),
+            segments: node_segments(node.instance_id, &config, &instance),
         });
     }
 }
@@ -234,13 +247,17 @@ pub struct TerrainLabel {
 
 /// Full ordered `(key, display)` segments for a node under the current config.
 /// Stops at the first attribute that yields `None`.
-fn node_segments(id: InstanceId, cfg: &TerrainConfig) -> Vec<(String, String)> {
+fn node_segments(
+    id: InstanceId,
+    cfg: &TerrainConfig,
+    instance: &InstanceLayer,
+) -> Vec<(String, String)> {
     let Ok(meta) = query_instance_metadata(id) else {
         return Vec::new();
     };
     let mut segments = Vec::new();
     for attr in &cfg.levels {
-        match attr.resolve(id, &meta) {
+        match attr.resolve(id, &meta, instance) {
             Some(seg) => segments.push(seg),
             None => break,
         }
@@ -253,7 +270,10 @@ fn rim_bucket(direction: Vec2) -> usize {
     if direction.length() < 1e-3 {
         return 0;
     }
-    let angle = direction.y.atan2(direction.x).rem_euclid(std::f32::consts::TAU);
+    let angle = direction
+        .y
+        .atan2(direction.x)
+        .rem_euclid(std::f32::consts::TAU);
     (angle / std::f32::consts::TAU * RIM as f32).floor() as usize % RIM
 }
 

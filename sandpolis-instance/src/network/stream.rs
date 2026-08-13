@@ -222,22 +222,25 @@ impl StreamRegistry {
 
     /// Account `bytes` sent for `stream_id`.
     pub fn record_tx(&self, stream_id: StreamId, bytes: u64) {
-        self.counters(stream_id).tx.fetch_add(bytes, Ordering::Relaxed);
+        self.counters(stream_id)
+            .tx
+            .fetch_add(bytes, Ordering::Relaxed);
     }
 
     /// Account `bytes` received for `stream_id`.
     pub fn record_rx(&self, stream_id: StreamId, bytes: u64) {
-        self.counters(stream_id).rx.fetch_add(bytes, Ordering::Relaxed);
+        self.counters(stream_id)
+            .rx
+            .fetch_add(bytes, Ordering::Relaxed);
     }
 
     /// Cumulative `(received, sent)` bytes for a stream, if any have been seen.
     pub fn traffic(&self, stream_id: StreamId) -> Option<(u64, u64)> {
-        self.traffic.read().unwrap().get(&stream_id).map(|c| {
-            (
-                c.rx.load(Ordering::Relaxed),
-                c.tx.load(Ordering::Relaxed),
-            )
-        })
+        self.traffic
+            .read()
+            .unwrap()
+            .get(&stream_id)
+            .map(|c| (c.rx.load(Ordering::Relaxed), c.tx.load(Ordering::Relaxed)))
     }
 
     fn counters(&self, stream_id: StreamId) -> Arc<StreamCounters> {
@@ -309,9 +312,10 @@ impl StreamRegistry {
         // No local handler. On a server, try to relay to another connection.
         let relay = self.relay.read().unwrap().clone();
         if let Some(relay) = relay.and_then(|r| r.upgrade())
-            && relay.route(&message, &self.tx).await {
-                return;
-            }
+            && relay.route(&message, &self.tx).await
+        {
+            return;
+        }
 
         // Otherwise create a responder from a registered factory.
         let type_tag = message.stream_id.tag();
@@ -586,7 +590,10 @@ impl Relay {
         let origin = self.routes.lock().unwrap().get(&message.stream_id).cloned();
         if let Some(origin) = origin {
             let _ = origin
-                .send(StreamMessage::local(message.stream_id, message.payload.clone()))
+                .send(StreamMessage::local(
+                    message.stream_id,
+                    message.payload.clone(),
+                ))
                 .await;
             return true;
         }
@@ -631,9 +638,10 @@ where
         tokio::spawn(async move {
             while let Some(typed_msg) = typed_rx.recv().await {
                 if let Ok(bytes) = serde_cbor::to_vec(&typed_msg)
-                    && raw_sender.send(bytes).await.is_err() {
-                        break;
-                    }
+                    && raw_sender.send(bytes).await.is_err()
+                {
+                    break;
+                }
             }
         });
 
@@ -681,9 +689,10 @@ where
         tokio::spawn(async move {
             while let Some(typed_msg) = typed_rx.recv().await {
                 if let Ok(bytes) = serde_cbor::to_vec(&typed_msg)
-                    && raw_sender.send(bytes).await.is_err() {
-                        break;
-                    }
+                    && raw_sender.send(bytes).await.is_err()
+                {
+                    break;
+                }
             }
         });
 
@@ -806,7 +815,10 @@ mod relay_tests {
     /// Wire a client and an agent to a relaying server and run one echo
     /// round-trip. The ids may be equal (as in an all-in-one build, where the
     /// co-located client and agent share one `InstanceId`).
-    async fn relay_echo_roundtrip(agent_id: InstanceId, client_id: InstanceId) -> anyhow::Result<()> {
+    async fn relay_echo_roundtrip(
+        agent_id: InstanceId,
+        client_id: InstanceId,
+    ) -> anyhow::Result<()> {
         let db = test_db!(ConnectionData);
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
@@ -856,11 +868,13 @@ mod relay_tests {
 
         // Client opens a stream addressed to the agent.
         let (result_tx, mut result_rx) = mpsc::channel(8);
-        let (id, tx) = client_reg.register_to(
-            RelayEchoRequester { result: result_tx },
-            Some(agent_id),
-        );
-        tx.send(StreamMessage::to(id, serde_cbor::to_vec(&RelayPing(21))?, agent_id))
+        let (id, tx) =
+            client_reg.register_to(RelayEchoRequester { result: result_tx }, Some(agent_id));
+        tx.send(StreamMessage::to(
+            id,
+            serde_cbor::to_vec(&RelayPing(21))?,
+            agent_id,
+        ))
         .await?;
 
         let got = timeout(Duration::from_secs(2), result_rx.recv())
@@ -1002,7 +1016,11 @@ mod relay_tests {
         let upstream_reg = Arc::new(StreamRegistry::new(upstream_out));
 
         let peer_conn = conn(&conns, &peer_reg, InstanceId::new(&[InstanceType::Agent]))?;
-        let upstream_conn = conn(&conns, &upstream_reg, InstanceId::new(&[InstanceType::Server]))?;
+        let upstream_conn = conn(
+            &conns,
+            &upstream_reg,
+            InstanceId::new(&[InstanceType::Server]),
+        )?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![peer_conn]))));
         relay.set_upstream(Arc::downgrade(&upstream_conn));
@@ -1146,8 +1164,7 @@ mod relay_tests {
         let origin_reg = Arc::new(StreamRegistry::new(origin_out));
         origin_reg.set_relay(Arc::downgrade(&relay));
 
-        let mut message =
-            StreamMessage::to(RelayEchoRequester::generate_id(), vec![1], target);
+        let mut message = StreamMessage::to(RelayEchoRequester::generate_id(), vec![1], target);
         message.hops = MAX_HOPS;
         origin_reg.dispatch(message).await;
 

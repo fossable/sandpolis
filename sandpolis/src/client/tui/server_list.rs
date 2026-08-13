@@ -6,17 +6,13 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Style, Stylize},
     text::{Line, Text},
-    widgets::{
-        Block, Borders, ListItem, Paragraph, StatefulWidget, Widget, WidgetRef,
-    },
+    widgets::{Block, Borders, ListItem, Paragraph, StatefulWidget, Widget, WidgetRef},
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 use sandpolis_client::tui::{
     EventHandler, Panel, help::HelpWidget, loading::LoadingWidget, resident_vec::ResidentVecWidget,
 };
-use sandpolis_instance::database::{
-    Data, DataCreation, DataIdentifier,
-};
+use sandpolis_instance::database::{Data, DataCreation, DataIdentifier};
 use sandpolis_server::ServerUrl;
 use sandpolis_server::login::{LoginPassword, LoginRequest, LoginResponse};
 use sandpolis_server::user::UserName;
@@ -72,19 +68,20 @@ impl ServerListWidget {
             })
             .event_handler(|event, list| {
                 if let Event::Key(key) = event
-                    && key.kind == KeyEventKind::Press {
-                        match key.code {
-                            KeyCode::Char('j') | KeyCode::Down => {
-                                list.select_next();
-                                return None;
-                            }
-                            KeyCode::Char('k') | KeyCode::Up => {
-                                list.select_previous();
-                                return None;
-                            }
-                            _ => {}
+                    && key.kind == KeyEventKind::Press
+                {
+                    match key.code {
+                        KeyCode::Char('j') | KeyCode::Down => {
+                            list.select_next();
+                            return None;
                         }
+                        KeyCode::Char('k') | KeyCode::Up => {
+                            list.select_previous();
+                            return None;
+                        }
+                        _ => {}
                     }
+                }
                 Some(event)
             })
             .build()?;
@@ -282,131 +279,131 @@ impl EventHandler for ServerListWidget {
         let mut state = self.state.write().unwrap();
 
         if let Event::Key(key) = event
-            && key.kind == KeyEventKind::Press {
-                match state.mode {
-                    ServerListWidgetMode::Normal => {
-                        state.help_widget.handle_event(event.clone())?;
+            && key.kind == KeyEventKind::Press
+        {
+            match state.mode {
+                ServerListWidgetMode::Normal => {
+                    state.help_widget.handle_event(event.clone())?;
 
-                        match key.code {
-                            KeyCode::Char('a') => {
-                                state.mode = ServerListWidgetMode::Adding;
-                                debug!("Entering add server mode");
-                                return None;
-                            }
-                            KeyCode::Char('X') => {
-                                // Remove the currently selected server
-                                drop(state);
-                                let server_list_widget = self.server_list_widget.read().unwrap();
-                                if let Some(selected_server) = server_list_widget.selected() {
-                                    let server_id = selected_server.read().id();
-                                    drop(server_list_widget);
+                    match key.code {
+                        KeyCode::Char('a') => {
+                            state.mode = ServerListWidgetMode::Adding;
+                            debug!("Entering add server mode");
+                            return None;
+                        }
+                        KeyCode::Char('X') => {
+                            // Remove the currently selected server
+                            drop(state);
+                            let server_list_widget = self.server_list_widget.read().unwrap();
+                            if let Some(selected_server) = server_list_widget.selected() {
+                                let server_id = selected_server.read().id();
+                                drop(server_list_widget);
 
-                                    debug!(server_id = ?server_id, "Removing server");
-                                    if let Err(e) = self.server_layer.remove_server(server_id) {
-                                        debug!(error = %e, "Failed to remove server");
-                                    }
+                                debug!(server_id = ?server_id, "Removing server");
+                                if let Err(e) = self.server_layer.remove_server(server_id) {
+                                    debug!(error = %e, "Failed to remove server");
                                 }
-                                return None;
                             }
-                            KeyCode::Right => {
-                                // Login to the currently selected server
-                                let server_list_widget = self.server_list_widget.read().unwrap();
-                                if let Some(selected_server) = server_list_widget.selected() {
-                                    let server_data = selected_server.read().clone();
-                                    drop(server_list_widget);
-                                    state.mode = ServerListWidgetMode::TryingLogin;
-                                    drop(state);
+                            return None;
+                        }
+                        KeyCode::Right => {
+                            // Login to the currently selected server
+                            let server_list_widget = self.server_list_widget.read().unwrap();
+                            if let Some(selected_server) = server_list_widget.selected() {
+                                let server_data = selected_server.read().clone();
+                                drop(server_list_widget);
+                                state.mode = ServerListWidgetMode::TryingLogin;
+                                drop(state);
 
-                                    let server_layer = self.server_layer.clone();
-                                    let state_clone = self.state.clone();
+                                let server_layer = self.server_layer.clone();
+                                let state_clone = self.state.clone();
 
-                                    debug!(address = %server_data.address, "Connecting to server");
+                                debug!(address = %server_data.address, "Connecting to server");
 
-                                    tokio::spawn(async move {
-                                        match server_layer
-                                            .connect(server_data.address.clone())
-                                            .await
-                                        {
-                                            Ok(_connection) => {
-                                                debug!(
-                                                    "Connected successfully, attempting authentication with saved token"
-                                                );
-                                                // TODO: Use the saved token to authenticate
-                                                // For now, just transition to Connected state
-                                                state_clone.write().unwrap().mode =
-                                                    ServerListWidgetMode::Connected;
-                                            }
-                                            Err(e) => {
-                                                debug!(error = %e, "Failed to connect to server");
-                                                state_clone.write().unwrap().mode =
-                                                    ServerListWidgetMode::Normal;
-                                            }
+                                tokio::spawn(async move {
+                                    match server_layer.connect(server_data.address.clone()).await {
+                                        Ok(_connection) => {
+                                            debug!(
+                                                "Connected successfully, attempting authentication with saved token"
+                                            );
+                                            // TODO: Use the saved token to authenticate
+                                            // For now, just transition to Connected state
+                                            state_clone.write().unwrap().mode =
+                                                ServerListWidgetMode::Connected;
                                         }
-                                    });
-                                }
-                                return None;
+                                        Err(e) => {
+                                            debug!(error = %e, "Failed to connect to server");
+                                            state_clone.write().unwrap().mode =
+                                                ServerListWidgetMode::Normal;
+                                        }
+                                    }
+                                });
                             }
-                            _ => {
-                                // Delegate navigation events to the ResidentVecWidget
-                                drop(state);
-                                if let Some(unhandled_event) =
-                                    self.server_list_widget.write().unwrap().handle_event(event)
-                                {
-                                    return Some(unhandled_event);
-                                }
-                                return None;
+                            return None;
+                        }
+                        _ => {
+                            // Delegate navigation events to the ResidentVecWidget
+                            drop(state);
+                            if let Some(unhandled_event) =
+                                self.server_list_widget.write().unwrap().handle_event(event)
+                            {
+                                return Some(unhandled_event);
                             }
+                            return None;
                         }
                     }
-                    ServerListWidgetMode::TryingLogin => if key.code == KeyCode::Esc {
+                }
+                ServerListWidgetMode::TryingLogin => {
+                    if key.code == KeyCode::Esc {
                         state.mode = ServerListWidgetMode::Normal;
                         state.add_server_widget = AddServerWidget::default(); // Reset form
                         debug!("Exiting add server mode");
                         return None;
-                    },
-                    ServerListWidgetMode::Adding => match key.code {
-                        KeyCode::Esc => {
-                            state.mode = ServerListWidgetMode::Normal;
-                            state.add_server_widget = AddServerWidget::default(); // Reset form
-                            debug!("Exiting add server mode");
-                            return None;
-                        }
-                        KeyCode::Tab => {
-                            state.add_server_widget.next_field();
-                            return None;
-                        }
-                        KeyCode::BackTab => {
-                            state.add_server_widget.prev_field();
-                            return None;
-                        }
-                        KeyCode::Enter => {
-                            if let Ok(form_data) = state.add_server_widget.get_form_data() {
-                                state.mode = ServerListWidgetMode::TryingLogin;
+                    }
+                }
+                ServerListWidgetMode::Adding => match key.code {
+                    KeyCode::Esc => {
+                        state.mode = ServerListWidgetMode::Normal;
+                        state.add_server_widget = AddServerWidget::default(); // Reset form
+                        debug!("Exiting add server mode");
+                        return None;
+                    }
+                    KeyCode::Tab => {
+                        state.add_server_widget.next_field();
+                        return None;
+                    }
+                    KeyCode::BackTab => {
+                        state.add_server_widget.prev_field();
+                        return None;
+                    }
+                    KeyCode::Enter => {
+                        if let Ok(form_data) = state.add_server_widget.get_form_data() {
+                            state.mode = ServerListWidgetMode::TryingLogin;
 
-                                let server_layer = self.server_layer.clone();
-                                let state = self.state.clone();
+                            let server_layer = self.server_layer.clone();
+                            let state = self.state.clone();
 
-                                tokio::spawn(async move {
-                                    state.write().unwrap().add_server_widget =
-                                        AddServerWidget::default(); // Reset login form
+                            tokio::spawn(async move {
+                                state.write().unwrap().add_server_widget =
+                                    AddServerWidget::default(); // Reset login form
 
-                                    match server_layer.connect(form_data.server_url.clone()).await {
-                                        Ok(connection) => {
-                                            match connection
-                                                .login(LoginRequest {
-                                                    username: form_data.username.clone(),
-                                                    password: LoginPassword::new(
-                                                        connection.cluster_id,
-                                                        &form_data.password,
-                                                    ),
-                                                    totp_token: form_data.totp,
-                                                    lifetime: Some(Duration::new(1, 0)),
-                                                })
-                                                .await
-                                            {
-                                                Ok(LoginResponse::Ok(client_auth_token)) => {
-                                                    debug!("Login successful, saving server");
-                                                    match server_layer.save_server(SavedServerData {
+                                match server_layer.connect(form_data.server_url.clone()).await {
+                                    Ok(connection) => {
+                                        match connection
+                                            .login(LoginRequest {
+                                                username: form_data.username.clone(),
+                                                password: LoginPassword::new(
+                                                    connection.cluster_id,
+                                                    &form_data.password,
+                                                ),
+                                                totp_token: form_data.totp,
+                                                lifetime: Some(Duration::new(1, 0)),
+                                            })
+                                            .await
+                                        {
+                                            Ok(LoginResponse::Ok(client_auth_token)) => {
+                                                debug!("Login successful, saving server");
+                                                match server_layer.save_server(SavedServerData {
                                                         address: form_data.server_url,
                                                         token: client_auth_token,
                                                         user: form_data.username,
@@ -433,51 +430,50 @@ impl EventHandler for ServerListWidget {
                                                                 ServerListWidgetMode::Normal;
                                                         }
                                                     }
-                                                }
-                                                _ => {
-                                                    debug!("Login failed");
-                                                    // TODO show login failed dialog
-                                                    state.write().unwrap().mode =
-                                                        ServerListWidgetMode::Normal;
-                                                }
+                                            }
+                                            _ => {
+                                                debug!("Login failed");
+                                                // TODO show login failed dialog
+                                                state.write().unwrap().mode =
+                                                    ServerListWidgetMode::Normal;
                                             }
                                         }
-                                        Err(e) => {
-                                            debug!(error = %e, "Connection failed");
-                                            // TODO show connection failed dialog
-                                            state.write().unwrap().mode =
-                                                ServerListWidgetMode::Normal;
-                                        }
                                     }
-                                });
-                            }
-                            return None;
+                                    Err(e) => {
+                                        debug!(error = %e, "Connection failed");
+                                        // TODO show connection failed dialog
+                                        state.write().unwrap().mode = ServerListWidgetMode::Normal;
+                                    }
+                                }
+                            });
                         }
-                        KeyCode::Backspace => {
-                            state.add_server_widget.handle_backspace();
-                            return None;
-                        }
-                        KeyCode::Delete => {
-                            state.add_server_widget.handle_delete();
-                            return None;
-                        }
-                        KeyCode::Left => {
-                            state.add_server_widget.move_cursor_left();
-                            return None;
-                        }
-                        KeyCode::Right => {
-                            state.add_server_widget.move_cursor_right();
-                            return None;
-                        }
-                        KeyCode::Char(ch) => {
-                            state.add_server_widget.handle_char_input(ch);
-                            return None;
-                        }
-                        _ => {}
-                    },
-                    _ => todo!(),
-                }
+                        return None;
+                    }
+                    KeyCode::Backspace => {
+                        state.add_server_widget.handle_backspace();
+                        return None;
+                    }
+                    KeyCode::Delete => {
+                        state.add_server_widget.handle_delete();
+                        return None;
+                    }
+                    KeyCode::Left => {
+                        state.add_server_widget.move_cursor_left();
+                        return None;
+                    }
+                    KeyCode::Right => {
+                        state.add_server_widget.move_cursor_right();
+                        return None;
+                    }
+                    KeyCode::Char(ch) => {
+                        state.add_server_widget.handle_char_input(ch);
+                        return None;
+                    }
+                    _ => {}
+                },
+                _ => todo!(),
             }
+        }
         Some(event)
     }
 }

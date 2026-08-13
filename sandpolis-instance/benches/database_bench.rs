@@ -2,11 +2,10 @@ use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, 
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_instance::database::{
-    Data, DataCondition, DataCreation, DatabaseLayer, Resident,
-    ResidentVec, config,
+    Data, DataCondition, DataCreation, DatabaseLayer, Resident, ResidentVec, config,
 };
-use sandpolis_macros::data;
 use sandpolis_instance::realm::RealmName;
+use sandpolis_macros::data;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -235,7 +234,9 @@ fn bench_query_operations(c: &mut Criterion) {
 
                     // Setup: insert test data
                     {
-                        let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
+                        let rw = db
+                            .write(sandpolis_instance::database::DataScope::Global)
+                            .unwrap();
                         for i in 0..size {
                             rw.insert(BenchData {
                                 name: format!("item_{}", i % 10),
@@ -269,7 +270,9 @@ fn bench_query_operations(c: &mut Criterion) {
 
                     // Setup: insert test data
                     {
-                        let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
+                        let rw = db
+                            .write(sandpolis_instance::database::DataScope::Global)
+                            .unwrap();
                         for i in 0..size {
                             rw.insert(BenchData {
                                 name: format!("item_{:04}", i),
@@ -422,7 +425,9 @@ fn bench_transaction_throughput(c: &mut Criterion) {
                     let database = create_test_db();
                     let db = database.realm(RealmName::default()).unwrap();
 
-                    let rw = db.write(sandpolis_instance::database::DataScope::Global).unwrap();
+                    let rw = db
+                        .write(sandpolis_instance::database::DataScope::Global)
+                        .unwrap();
                     for i in 0..size {
                         rw.insert(BenchData {
                             name: format!("item_{}", i),

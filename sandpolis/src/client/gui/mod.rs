@@ -15,11 +15,11 @@ use bevy::{
     },
     window::{AppLifecycle, WindowMode},
 };
-use sandpolis_client::gui::assets::EmbeddedDirReader;
 use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use sandpolis_instance::{InstanceType, LayerName};
+use sandpolis_client::gui::assets::EmbeddedDirReader;
 use sandpolis_client::gui::instance_layer::{InstanceController, open_database_browser};
 use sandpolis_client::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_instance::{InstanceType, LayerName};
 
 // Import GUI types from sandpolis-client submodules
 use sandpolis_client::gui::about::{
@@ -30,22 +30,21 @@ use sandpolis_client::gui::activity::{
     animate_activity_lines, cleanup_layer_activity_lines, despawn_completed_activity_lines,
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
 };
+use sandpolis_client::gui::add_agent::CoreLayerToolbarPlugin;
 use sandpolis_client::gui::controller::ControllerHostPlugin;
 use sandpolis_client::gui::drag::{
-    DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection,
-    start_node_drag, stop_node_drag, update_node_drag, update_selection_ui,
-    update_selection_visuals,
+    DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection, start_node_drag,
+    stop_node_drag, update_node_drag, update_selection_ui, update_selection_visuals,
 };
 use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_edges_for_layer};
-use sandpolis_client::gui::add_agent::CoreLayerToolbarPlugin;
 use sandpolis_client::gui::input::{
     CurrentLayer, HelpScreenState, LayerChangeTimer, LoginDialogState, MousePressed, PanningState,
     ZoomLevel, handle_camera, handle_zoom, manage_help_panel, toggle_diagnostics_overlay,
     toggle_help,
 };
 use sandpolis_client::gui::layer_picker::{
-    LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker, rebuild_layer_rows,
-    sync_layer_search,
+    LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker,
+    rebuild_layer_rows, sync_layer_search,
 };
 use sandpolis_client::gui::layer_toolbar::{rebuild_layer_toolbar, update_toolbar_button_enabled};
 use sandpolis_client::gui::layer_ui::{
@@ -77,7 +76,8 @@ use sandpolis_client::gui::preview::{
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::terrain::{
-    TerrainConfig, rebuild_terrains, sync_instance_terrain_members, update_terrain_bounds,
+    TerrainConfig, TerrainMembersDirty, rebuild_terrains, sync_instance_terrain_members,
+    update_terrain_bounds,
 };
 use sandpolis_client::gui::terrain_layout::{apply_terrain_cohesion, relax_terrain_overlap};
 use sandpolis_client::gui::theme::{
@@ -92,17 +92,15 @@ pub use sandpolis_client::gui::preview;
 pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     crate::client::spawn_client_sync(state.clone());
 
-    // Surface the local instance's domain to the terrain renderer.
-    sandpolis_client::gui::queries::set_local_domain(state.instance.domain());
-
     // Create channel for database updates from resident listeners
     let (db_update_tx, db_update_rx) = tokio::sync::mpsc::unbounded_channel();
 
     // Spawn background task for database listeners
     let network = state.network.clone();
+    let instance = state.instance.clone();
     let db_update_tx_clone = db_update_tx.clone();
     tokio::spawn(async move {
-        setup_all_listeners(network, db_update_tx_clone).await;
+        setup_all_listeners(network, instance, db_update_tx_clone).await;
     });
 
     let mut app = App::new();
@@ -172,6 +170,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .insert_resource(SelectionSet::default())
     .insert_resource(AboutScreenState::default())
     .insert_resource(ThemePickerState::default())
+    .insert_resource(TerrainMembersDirty::default())
     .insert_resource(state.instance.clone())
     .insert_resource(state.network.clone())
     .insert_resource(state.server.clone())
@@ -410,6 +409,7 @@ fn process_database_updates(
     mut update_channel: ResMut<DatabaseUpdateChannel>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    mut terrain_members_dirty: ResMut<TerrainMembersDirty>,
     node_query: Query<(Entity, &NodeEntity)>,
 ) {
     // Nodes spawned via `commands` in this pass aren't visible to `node_query`
@@ -454,6 +454,11 @@ fn process_database_updates(
             }
             DatabaseUpdate::NetworkTopologyChanged => {
                 // Edges will be rebuilt by update_edges_for_layer system
+            }
+            DatabaseUpdate::DomainsChanged => {
+                // Every node's membership is re-resolved by
+                // sync_instance_terrain_members on the next pass.
+                terrain_members_dirty.0 = true;
             }
             _ => {
                 // Other updates will be handled in later phases

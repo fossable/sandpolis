@@ -99,9 +99,7 @@ fn send_request(target: InstanceId, request: ServiceControlRequest) {
                 return;
             }
         };
-        let _ = tx
-            .send(StreamMessage::routed(id, payload, relay))
-            .await;
+        let _ = tx.send(StreamMessage::routed(id, payload, relay)).await;
         conn.close_stream(id);
     });
 }

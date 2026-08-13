@@ -17,7 +17,9 @@
 //!   server's owned scopes, and a local stratum server pulls estate-wide data
 //!   (and hydration snapshots) from the global stratum server.
 
-use super::stream::{Stream, StreamId, StreamMessage, StreamRegistry, StreamRequester, StreamResponder};
+use super::stream::{
+    Stream, StreamId, StreamMessage, StreamRegistry, StreamRequester, StreamResponder,
+};
 use super::{InstanceConnection, RegisterResponders};
 use crate::database::RealmDatabase;
 use crate::database::sync::{SYNC, SyncFilter, SyncRecord};
@@ -92,9 +94,10 @@ impl StreamRequester for SyncRequester {
             }
         }
         if update.snapshot_complete
-            && let Some(notify) = &self.snapshot_complete {
-                notify.notify_one();
-            }
+            && let Some(notify) = &self.snapshot_complete
+        {
+            notify.notify_one();
+        }
         Ok(())
     }
 }
@@ -217,8 +220,7 @@ impl InstanceConnection {
     ) -> Result<(StreamId, Sender<StreamMessage>)> {
         let (id, tx) = self.streams.register(SyncRequester::new(db));
         let payload = serde_cbor::to_vec(&SyncRequest::Subscribe { filters })?;
-        tx.send(StreamMessage::local(id, payload))
-        .await?;
+        tx.send(StreamMessage::local(id, payload)).await?;
         Ok((id, tx))
     }
 
@@ -242,9 +244,7 @@ impl InstanceConnection {
     /// Close a previously opened sync stream.
     pub async fn close_sync(&self, id: StreamId, tx: &Sender<StreamMessage>) -> Result<()> {
         let payload = serde_cbor::to_vec(&SyncRequest::Close)?;
-        let _ = tx
-            .send(StreamMessage::local(id, payload))
-            .await;
+        let _ = tx.send(StreamMessage::local(id, payload)).await;
         self.close_stream(id);
         Ok(())
     }

@@ -104,7 +104,9 @@ impl RuntimeOptions {
             if index == 0 {
                 merged.scrape = realm.account.scrape.clone();
             }
-            merged.accounts.extend(realm.account.accounts.iter().cloned());
+            merged
+                .accounts
+                .extend(realm.account.accounts.iter().cloned());
         }
         merged
     }
@@ -201,14 +203,7 @@ impl InstanceState {
     ) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
 
-        // Only the global stratum server owns the domain; everyone else learns
-        // it from the server they connect to.
-        let instance = sandpolis_instance::InstanceLayer::new(
-            &options.instance,
-            database.clone(),
-            cfg!(feature = "server") && stratum.is_global(),
-        )
-        .await?;
+        let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
         let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
 
@@ -342,6 +337,8 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     // Instance layer
     {
         m.define::<sandpolis_instance::InstanceLayerData>().unwrap();
+        m.define::<sandpolis_instance::domain::DomainData>()
+            .unwrap();
         m.define::<sandpolis_instance::service::ServiceData>()
             .unwrap();
     }

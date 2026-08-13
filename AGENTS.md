@@ -43,8 +43,7 @@ The distinction decides five things:
 - **Configuration.** Only the GS reads `.realm` files, one per realm it serves;
   a realm exists only because a file declares it, and can never be created at
   runtime. Every other instance — LS servers, agents, clients — is configured by
-  CLI flags plus the `.server` file naming the server it trusts, and learns its
-  domain from that server.
+  CLI flags plus the `.server` file naming the server it trusts.
 - **Trust.** The GS holds the realm CA and is the network's single trust root.
   An LS never generates a CA; on first start it enrolls with the GS, which
   issues it a server certificate. The CA's private key never leaves the GS, so
@@ -75,7 +74,7 @@ The distinction decides five things:
 # The global stratum server. A blank realm file means "generate a CA for me",
 # which is written back into the file on first start.
 touch default.realm
-sandpolis --realm ./default.realm --domain example
+sandpolis --realm ./default.realm
 
 # Mint a .server file for another instance. The certificate's common name is
 # the address given here, so it names exactly one server and realm.
@@ -93,8 +92,8 @@ sandpolis --server ./fleet.server
 ```
 
 A `.server` file carries the realm CA, this instance's own certificate, and —
-for an agent — its polling schedule, so one file is the whole connection
-policy. `$S7S_SERVER` is the environment alias for `--server`.
+for an agent — its polling schedule, so one file is the whole connection policy.
+`$S7S_SERVER` is the environment alias for `--server`.
 
 Replication always follows ownership, and it is always pull-based: the owner
 serves, the replica subscribes. An agent attached to an LS has its records
@@ -117,14 +116,28 @@ _world view_. The graph is made of:
 - Terrains
   - A _terrain_ is a grouping of nodes
 
+#### Domains
+
+A _domain_ groups nodes under a shared name, which is drawn as a terrain. The
+name is a service domain like `github.com`, so an instance and the accounts on
+that service land in one region.
+
+An account always belongs to one — its domain is part of its identity. An
+instance does not: membership is an assignment stored in `DomainData`, owned by
+the GS and replicated from there, and an instance no domain names belongs to none
+and draws no terrain. Servers are never members, because domains group the estate
+a server manages rather than the servers managing it — unless the process is also
+an agent or client, whose shared `InstanceId` carries those bits (CoLo).
+
 ## CoLo mode
 
 When a server feature is compiled alongside the client and/or agent and the
 binary is run with no subcommand, all instance types start in the same process
 and connect to each other automatically over loopback — no `.server` file or
 other configuration is needed. With no `--realm` flag the server serves an
-implicit `default` realm whose CA lives only in the database. This is meant for convenient local testing:
-targeting the local instance (e.g. starting a desktop stream) "just works".
+implicit `default` realm whose CA lives only in the database. This is meant for
+convenient local testing: targeting the local instance (e.g. starting a desktop
+stream) "just works".
 
 ## Mobile App
 
@@ -301,7 +314,7 @@ sandpolis shell
 sandpolis shell --instance UUID
 ```
 
-- Configure IP blocking middleware with `--blocked-ips`
+- Remove `--blocked-ips` and just store IP block list in realm database
   - Add/remove from the GUI in the server layer
 - Encrypted storage enclave for secrets
 - Support direct connections between clients/agents if hole punching works
@@ -315,3 +328,7 @@ sandpolis shell --instance UUID
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following layers are supported by bootagents: shell, snapshot
+
+- Assign an instance's domain from the GUI/CLI
+  - Rejecting ids that fail `InstanceId::is_domain_member`, since a server is
+    never a member unless it's also a CoLo client/agent

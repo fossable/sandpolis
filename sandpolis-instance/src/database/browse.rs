@@ -19,9 +19,8 @@ use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
 use std::sync::LazyLock;
 
-type RowsFn = Box<
-    dyn Fn(&RealmDatabase, Option<InstanceId>) -> Result<Vec<serde_json::Value>> + Send + Sync,
->;
+type RowsFn =
+    Box<dyn Fn(&RealmDatabase, Option<InstanceId>) -> Result<Vec<serde_json::Value>> + Send + Sync>;
 type InstancesFn = Box<dyn Fn(&RealmDatabase) -> Result<Vec<InstanceId>> + Send + Sync>;
 
 struct BrowseType {

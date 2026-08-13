@@ -6,22 +6,22 @@
 
 pub use common::*;
 
-#[cfg(quartz)]
+#[cfg(target_os = "macos")]
 pub mod quartz;
 
-#[cfg(x11)]
+#[cfg(target_os = "linux")]
 pub mod x11;
 
-#[cfg(x11)]
+#[cfg(target_os = "linux")]
 pub mod wayland;
 
-#[cfg(dxgi)]
+#[cfg(windows)]
 pub mod dxgi;
 
 #[cfg(target_os = "android")]
 pub mod android;
 
-#[cfg(x11)]
+#[cfg(target_os = "linux")]
 pub(crate) mod config;
 
 mod common;

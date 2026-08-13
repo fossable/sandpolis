@@ -1,6 +1,7 @@
-use crate::database::{DatabaseLayer, Resident};
+use crate::database::{DatabaseLayer, Resident, ResidentVec};
+use crate::domain::DomainData;
 use crate::realm::RealmName;
-use anyhow::{Result, bail};
+use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
@@ -9,13 +10,14 @@ use std::cmp::Ordering;
 use std::fmt::{Display, Write};
 use std::str::FromStr;
 use strum::{EnumIter, IntoEnumIterator};
-use tracing::{info, trace, warn};
+use tracing::trace;
 use uuid::Uuid;
 
 #[cfg(not(target_os = "android"))]
 pub mod cli;
 pub mod config;
 pub mod database;
+pub mod domain;
 pub mod network;
 pub mod realm;
 pub mod service;
@@ -177,6 +179,13 @@ impl InstanceId {
         self.is_type(InstanceType::Agent)
     }
 
+    /// Whether an instance of this type can belong to a domain. Domains group
+    /// the estate, not the servers running it — but a CoLo process is also an
+    /// agent or client, and its shared id carries those bits.
+    pub fn is_domain_member(&self) -> bool {
+        self.is_agent() || self.is_client()
+    }
+
     /// Return the instance types encoded in this UUID.
     pub fn types(&self) -> Vec<InstanceType> {
         InstanceType::iter().filter(|t| self.is_type(*t)).collect()
@@ -295,6 +304,28 @@ mod test_instance_id {
         assert!(!client_id.is_agent());
         assert!(!client_id.is_server());
         assert!(client_id.is_client());
+    }
+
+    #[test]
+    fn test_domain_membership() {
+        // Domains group the estate, not the servers running it.
+        assert!(!InstanceId::new(&[InstanceType::Server]).is_domain_member());
+
+        assert!(InstanceId::new(&[InstanceType::Agent]).is_domain_member());
+        assert!(InstanceId::new(&[InstanceType::Client]).is_domain_member());
+
+        // ...unless the server is CoLo, where one id covers every type running
+        // in the process.
+        assert!(InstanceId::new(&[InstanceType::Server, InstanceType::Agent]).is_domain_member());
+        assert!(InstanceId::new(&[InstanceType::Server, InstanceType::Client]).is_domain_member());
+        assert!(
+            InstanceId::new(&[
+                InstanceType::Server,
+                InstanceType::Client,
+                InstanceType::Agent
+            ])
+            .is_domain_member()
+        );
     }
 
     #[test]
@@ -505,13 +536,6 @@ pub struct InstanceLayerData {
     #[secondary_key]
     pub _instance_id: InstanceId,
     pub os_info: os_info::Info,
-    /// The domain this instance belongs to.
-    ///
-    /// Configured via `instance.domain` on the global stratum server, which is
-    /// the only instance with a config file. Everyone else learns it from the
-    /// server they connect to and persists it here, so it survives restarts even
-    /// while the server is unreachable. Empty until that first connection.
-    pub domain: String,
 }
 
 // Scoped by the instance the record describes, so a local stratum server can
@@ -532,7 +556,9 @@ pub fn instance_layer_model_id() -> u32 {
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 pub struct InstanceLayer {
-    data: Resident<InstanceLayerData>,
+    /// Every domain in the estate. Assigned by the global stratum server and
+    /// replicated from there, so this is a read-only view everywhere else.
+    domains: ResidentVec<DomainData>,
     /// The default realm, so callers that need one (the service runner, say)
     /// don't have to be handed the whole [`DatabaseLayer`].
     realm: crate::database::RealmDatabase,
@@ -541,26 +567,7 @@ pub struct InstanceLayer {
 }
 
 impl InstanceLayer {
-    /// `authoritative` is true only on the global stratum server, which owns the
-    /// config file and therefore the domain. Everywhere else the domain is
-    /// learned from the server on first connect (see [`set_domain`](Self::set_domain)).
-    pub async fn new(
-        config: &crate::config::InstanceConfig,
-        database: DatabaseLayer,
-        authoritative: bool,
-    ) -> Result<Self> {
-        let configured = config
-            .domain
-            .as_deref()
-            .map(str::trim)
-            .filter(|domain| !domain.is_empty());
-
-        // The global stratum server is the origin of truth for the domain, so it
-        // has to be told; nobody else can supply it.
-        if authoritative && configured.is_none() {
-            bail!("instance.domain must be configured in the global stratum server's config");
-        }
-
+    pub async fn new(database: DatabaseLayer) -> Result<Self> {
         let realm = database.realm(RealmName::default())?;
 
         // The identity row is generated on first start and reused forever after.
@@ -586,16 +593,6 @@ impl InstanceLayer {
 
         let data: Resident<InstanceLayerData> = realm.resident(())?;
 
-        // Persist the configured domain if it changed since the last start. A
-        // non-authoritative instance keeps whatever it learned previously until
-        // a server tells it otherwise.
-        if let Some(domain) = configured {
-            data.update_local(|d| {
-                d.domain = domain.to_string();
-                Ok(())
-            })?;
-        }
-
         let instance_id = data.read()._instance_id;
 
         // With scoped authority, the self scope becomes writable from here on.
@@ -606,45 +603,33 @@ impl InstanceLayer {
         Ok(Self {
             instance_id,
             cluster_id: { data.read().cluster_id },
+            domains: realm.resident_vec(())?,
             realm,
-            data,
         })
     }
 
-    /// The domain this instance belongs to, or empty if it hasn't learned one
-    /// yet.
-    pub fn domain(&self) -> String {
-        self.data.read().domain.clone()
-    }
-
-    /// Record the domain reported by a server we just connected to.
+    /// The domain the given instance belongs to, if any.
     ///
-    /// A no-op once a domain is known: the first server to answer sets it, and a
-    /// later disagreement is logged rather than silently applied.
-    pub fn set_domain(&self, domain: &str) -> Result<()> {
-        let domain = domain.trim();
-        if domain.is_empty() {
-            return Ok(());
+    /// Servers are never members, so the rule is applied here too: a server that
+    /// somehow appears in a domain's member list still resolves to nothing.
+    pub fn domain_of(&self, id: InstanceId) -> Option<String> {
+        if !id.is_domain_member() {
+            return None;
         }
 
-        let current = self.domain();
-        if current == domain {
-            return Ok(());
-        }
-        if !current.is_empty() {
-            warn!(
-                current = %current,
-                reported = %domain,
-                "Server reported a different domain; keeping the one we have"
-            );
-            return Ok(());
-        }
-
-        info!(domain = %domain, "Learned domain from server");
-        self.data.update_local(|d| {
-            d.domain = domain.to_string();
-            Ok(())
+        self.domains.iter().find_map(|domain| {
+            let domain = domain.read();
+            domain
+                .members
+                .contains(&id)
+                .then(|| domain.name.trim().to_string())
+                .filter(|name| !name.is_empty())
         })
+    }
+
+    /// Every domain in the estate.
+    pub fn domains(&self) -> &ResidentVec<DomainData> {
+        &self.domains
     }
 
     /// This instance's default realm.
@@ -696,4 +681,3 @@ impl Ord for LayerVersion {
         }
     }
 }
-

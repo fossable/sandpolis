@@ -89,8 +89,13 @@ pub fn spawn_about_logo(
         if logo_query.is_empty() {
             // Load the logo mesh from the glTF primitive; we apply our own
             // material below, so only the mesh is needed.
-            let mesh_handle: Handle<Mesh> = asset_server
-                .load(GltfAssetLabel::Primitive { mesh: 0, primitive: 0 }.from_asset("mesh/v7.glb"));
+            let mesh_handle: Handle<Mesh> = asset_server.load(
+                GltfAssetLabel::Primitive {
+                    mesh: 0,
+                    primitive: 0,
+                }
+                .from_asset("mesh/v7.glb"),
+            );
 
             // Spawn the 3D logo
             commands.spawn((
@@ -231,13 +236,11 @@ pub fn manage_about_panel(
 ) {
     let exists = !root.is_empty();
     if about_state.show && !exists {
-        commands
-            .spawn_scene(about_scene(&theme))
-            .insert((
-                AboutRoot,
-                crate::gui::ui::gating::BlocksWorldInput,
-                crate::gui::ui::gating::ModalRoot,
-            ));
+        commands.spawn_scene(about_scene(&theme)).insert((
+            AboutRoot,
+            crate::gui::ui::gating::BlocksWorldInput,
+            crate::gui::ui::gating::ModalRoot,
+        ));
     } else if !about_state.show && exists {
         for entity in &root {
             commands.entity(entity).despawn();

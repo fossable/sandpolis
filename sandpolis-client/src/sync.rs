@@ -24,8 +24,7 @@ static DATABASE: OnceLock<DatabaseLayer> = OnceLock::new();
 /// associated with (e.g. a probe stream to its owning server). The first entry
 /// is the primary (global-stratum) connection that also backs [`connection`] and
 /// the DB-sync subscriptions.
-static CONNECTIONS: LazyLock<RwLock<Vec<ServerConnectionEntry>>> =
-    LazyLock::new(Default::default);
+static CONNECTIONS: LazyLock<RwLock<Vec<ServerConnectionEntry>>> = LazyLock::new(Default::default);
 
 struct ServerConnectionEntry {
     url: ServerUrl,
@@ -131,9 +130,7 @@ pub fn connection() -> Option<Arc<InstanceConnection>> {
 /// Wait until the server connection is established (or `timeout` elapses),
 /// returning it. One-shot noninteractive commands use this since the connection
 /// is brought up asynchronously after startup.
-pub async fn wait_for_connection(
-    timeout: std::time::Duration,
-) -> Option<Arc<InstanceConnection>> {
+pub async fn wait_for_connection(timeout: std::time::Duration) -> Option<Arc<InstanceConnection>> {
     let deadline = tokio::time::Instant::now() + timeout;
     loop {
         if let Some(c) = connection() {

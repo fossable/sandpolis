@@ -99,7 +99,6 @@ impl ToKey for RealmName {
     }
 }
 
-
 #[cfg(test)]
 mod test_realm_name {
     use super::*;
@@ -356,10 +355,12 @@ impl Realms {
                 // Write certs in development mode to make testing easier
                 #[cfg(debug_assertions)]
                 {
-                    ca.client_cert(&url)?.write_server_file("/tmp/client.server", None)?;
+                    ca.client_cert(&url)?
+                        .write_server_file("/tmp/client.server", None)?;
                     info!("Wrote client certificate to: /tmp/client.server");
 
-                    ca.agent_cert(&url)?.write_server_file("/tmp/agent.server", None)?;
+                    ca.agent_cert(&url)?
+                        .write_server_file("/tmp/agent.server", None)?;
                     info!("Wrote agent certificate to: /tmp/agent.server");
                 }
 

@@ -81,32 +81,33 @@ impl EventHandler for AgentListWidget {
         let mut state = self.state.write().unwrap();
 
         if let Event::Key(key) = event
-            && key.kind == KeyEventKind::Press {
-                match state.mode {
-                    AgentListWidgetMode::Normal => {
-                        state.help_widget.handle_event(event.clone())?;
+            && key.kind == KeyEventKind::Press
+        {
+            match state.mode {
+                AgentListWidgetMode::Normal => {
+                    state.help_widget.handle_event(event.clone())?;
 
-                        match key.code {
-                            KeyCode::Char('j') | KeyCode::Down => {
-                                // TODO: Navigate down when agents exist
-                                return None;
-                            }
-                            KeyCode::Char('k') | KeyCode::Up => {
-                                // TODO: Navigate up when agents exist
-                                return None;
-                            }
-                            KeyCode::Right => {
-                                // TODO: Connect to selected agent
-                                return None;
-                            }
-                            _ => {}
+                    match key.code {
+                        KeyCode::Char('j') | KeyCode::Down => {
+                            // TODO: Navigate down when agents exist
+                            return None;
                         }
-                    }
-                    AgentListWidgetMode::Selecting => {
-                        // TODO: Handle selection mode
+                        KeyCode::Char('k') | KeyCode::Up => {
+                            // TODO: Navigate up when agents exist
+                            return None;
+                        }
+                        KeyCode::Right => {
+                            // TODO: Connect to selected agent
+                            return None;
+                        }
+                        _ => {}
                     }
                 }
+                AgentListWidgetMode::Selecting => {
+                    // TODO: Handle selection mode
+                }
             }
+        }
 
         Some(event)
     }

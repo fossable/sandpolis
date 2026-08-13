@@ -245,9 +245,11 @@ fn rows_text(state: &Shared) -> String {
     };
     let key = (model_id, s.instance);
     if let Some((at, cached_key, cached)) = &s.rows_cache
-        && *cached_key == key && at.elapsed() < REFRESH {
-            return cached.clone();
-        }
+        && *cached_key == key
+        && at.elapsed() < REFRESH
+    {
+        return cached.clone();
+    }
     let rendered = match realm_db() {
         None => "Database not initialized.".into(),
         Some(db) => match BROWSE.rows(&db, model_id, s.instance) {

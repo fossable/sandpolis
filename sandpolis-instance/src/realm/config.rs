@@ -230,8 +230,8 @@ impl ServerCertFile {
         P: AsRef<Path>,
     {
         let path = path.as_ref();
-        let contents = std::fs::read_to_string(path)
-            .with_context(|| format!("Reading {}", path.display()))?;
+        let contents =
+            std::fs::read_to_string(path).with_context(|| format!("Reading {}", path.display()))?;
         let file: Self = ron_options()
             .from_str(&contents)
             .with_context(|| format!("Parsing {}", path.display()))?;

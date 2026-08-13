@@ -40,11 +40,6 @@ pub struct CommandLine {
     #[clap(long, default_value = "0.0.0.0:8768")]
     pub listen: std::net::SocketAddr,
 
-    /// The domain this instance belongs to.
-    #[cfg(feature = "server")]
-    #[clap(long)]
-    pub domain: Option<String>,
-
     /// IP addresses denied access to the server, rejected before authentication
     /// runs. May be given multiple times.
     #[cfg(feature = "server")]
@@ -82,10 +77,6 @@ impl CommandLine {
             },
             instance: sandpolis_instance::config::InstanceConfig {
                 socket_directory: Some(self.socket_dir.clone()),
-                #[cfg(feature = "server")]
-                domain: self.domain.clone(),
-                #[cfg(not(feature = "server"))]
-                domain: None,
             },
             #[cfg(feature = "server")]
             listen: self.listen,
@@ -160,7 +151,12 @@ pub struct NewCertArgs {
 #[cfg(feature = "server")]
 impl NewCertArgs {
     /// Load the realm and work out what URL the minted certificate should name.
-    fn resolve(&self) -> Result<(sandpolis_instance::realm::RealmClusterCert, sandpolis_server::ServerUrl)> {
+    fn resolve(
+        &self,
+    ) -> Result<(
+        sandpolis_instance::realm::RealmClusterCert,
+        sandpolis_server::ServerUrl,
+    )> {
         use anyhow::{Context, anyhow, bail};
         use sandpolis_instance::realm::RealmClusterCert;
 
@@ -256,7 +252,10 @@ pub enum Commands {
 
     /// Run the configuration LSP
     #[cfg(feature = "client")]
-    Lsp,
+    Lsp {
+        #[clap(flatten)]
+        args: crate::lsp::LspArgs,
+    },
 
     /// Manage agent instances
     #[cfg(feature = "client")]
@@ -362,7 +361,7 @@ impl Commands {
             Commands::NewClientCert { .. } | Commands::NewAgentCert { .. } => true,
             Commands::InstallCert {} | Commands::About => true,
             #[cfg(feature = "client")]
-            Commands::Lsp => true,
+            Commands::Lsp { .. } => true,
             #[allow(unreachable_patterns)]
             _ => false,
         }
@@ -375,8 +374,8 @@ impl Commands {
     pub async fn dispatch_standalone(self, options: &RuntimeOptions) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "client")]
-            Commands::Lsp => {
-                crate::lsp::run().await;
+            Commands::Lsp { args } => {
+                crate::lsp::run(args).await?;
             }
             #[cfg(feature = "server")]
             Commands::NewClientCert { args } => {
@@ -493,9 +492,8 @@ mod test_stratum_args {
         let dir = tempfile::tempdir()?;
         let path = client_server_file(dir.path(), "gs.example.com:8768/default")?;
 
-        let args =
-            CommandLine::try_parse_from(["sandpolis", "--server", path.to_str().unwrap()])
-                .expect("--server parses");
+        let args = CommandLine::try_parse_from(["sandpolis", "--server", path.to_str().unwrap()])
+            .expect("--server parses");
 
         let ServerStratum::Local { global } = crate::stratum(&args)? else {
             panic!("--server must select the local stratum");
@@ -526,13 +524,49 @@ mod test_stratum_args {
     /// silently fall back from.
     #[test]
     fn missing_server_file_is_an_error() {
-        let args = CommandLine::try_parse_from([
-            "sandpolis",
-            "--server",
-            "/nonexistent/upstream.server",
-        ])
-        .expect("--server parses");
+        let args =
+            CommandLine::try_parse_from(["sandpolis", "--server", "/nonexistent/upstream.server"])
+                .expect("--server parses");
         assert!(crate::stratum(&args).is_err());
+    }
+}
+
+#[cfg(all(test, feature = "client"))]
+mod test_lsp_args {
+    use super::*;
+
+    fn lsp_args(argv: &[&str]) -> Result<crate::lsp::LspArgs, clap::Error> {
+        match CommandLine::try_parse_from(argv)?.command {
+            Some(Commands::Lsp { args }) => Ok(args),
+            other => panic!("expected the lsp subcommand, got {other:?}"),
+        }
+    }
+
+    /// Neither flag leaves the root type undecided, which would serve
+    /// completions for whichever format happened to be the default.
+    #[test]
+    fn a_root_type_is_required() {
+        assert!(lsp_args(&["sandpolis", "lsp"]).is_err());
+    }
+
+    /// A document has one root type, so the two flags can't both be given.
+    #[test]
+    fn root_types_are_exclusive() {
+        assert!(lsp_args(&["sandpolis", "lsp", "--realm", "--server"]).is_err());
+    }
+
+    /// Each flag selects the format it names.
+    #[test]
+    fn each_flag_selects_its_format() -> Result<()> {
+        assert_eq!(
+            lsp_args(&["sandpolis", "lsp", "--realm"])?.root_type(),
+            "crate::config::RealmConfig"
+        );
+        assert_eq!(
+            lsp_args(&["sandpolis", "lsp", "--server"])?.root_type(),
+            "sandpolis_instance::realm::config::ServerCertFile"
+        );
+        Ok(())
     }
 }
 
@@ -587,9 +621,8 @@ mod client {
     ) -> Result<ExitCode> {
         match action {
             None => {
-                let widget = crate::client::tui::server_list::ServerListWidget::new(
-                    server_layer.clone(),
-                )?;
+                let widget =
+                    crate::client::tui::server_list::ServerListWidget::new(server_layer.clone())?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
@@ -654,7 +687,6 @@ mod client {
                     "instance_id": i._instance_id.to_string(),
                     "cluster_id": i.cluster_id.to_string(),
                     "os": i.os_info.to_string(),
-                    "domain": i.domain,
                 })
             })
             .collect();

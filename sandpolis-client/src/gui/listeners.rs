@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use sandpolis_instance::InstanceId;
+use sandpolis_instance::InstanceLayer;
 use sandpolis_instance::database::ResidentVecEvent;
 use sandpolis_instance::network::NetworkLayer;
 use tokio::sync::mpsc;
@@ -9,6 +10,8 @@ use tokio::sync::mpsc;
 pub enum DatabaseUpdate {
     InstanceAdded(InstanceId),
     InstanceRemoved(InstanceId),
+    /// A domain was created, deleted, or had its members changed.
+    DomainsChanged,
     FilesystemChanged(InstanceId, std::path::PathBuf),
     NetworkTopologyChanged,
     InventoryUpdated(InstanceId),
@@ -34,7 +37,11 @@ pub struct DatabaseUpdateSender {
 
 /// Set up all resident listeners to forward database updates to Bevy
 /// This runs in a background tokio task and sends updates through the channel
-pub async fn setup_all_listeners(network: NetworkLayer, tx: mpsc::UnboundedSender<DatabaseUpdate>) {
+pub async fn setup_all_listeners(
+    network: NetworkLayer,
+    instance: InstanceLayer,
+    tx: mpsc::UnboundedSender<DatabaseUpdate>,
+) {
     // Listen for connection changes in the network layer
     // Each connection represents an instance in the network
     let tx_connections = tx.clone();
@@ -56,6 +63,13 @@ pub async fn setup_all_listeners(network: NetworkLayer, tx: mpsc::UnboundedSende
                 let _ = tx_connections.send(DatabaseUpdate::NetworkTopologyChanged);
             }
         }
+    });
+
+    // Domains arrive by replication after login, so terrain membership has to be
+    // resolved again whenever the set changes.
+    let tx_domains = tx.clone();
+    instance.domains().listen(move |_event| {
+        let _ = tx_domains.send(DatabaseUpdate::DomainsChanged);
     });
 
     // TODO: Add listeners for other layer-specific updates

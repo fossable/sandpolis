@@ -32,7 +32,9 @@ use sandpolis_instance::database::sync::SyncFilter;
 use sandpolis_instance::database::{
     Data, DataScope, RealmDatabase, ResidentVec, ScopeState, ScopeTable,
 };
-use sandpolis_instance::network::stream::{StreamId, StreamMessage, StreamRequester, StreamResponder};
+use sandpolis_instance::network::stream::{
+    StreamId, StreamMessage, StreamRequester, StreamResponder,
+};
 use sandpolis_instance::network::{InstanceConnection, NetworkLayer};
 use sandpolis_macros::{Stream, data};
 use serde::{Deserialize, Serialize};
@@ -504,7 +506,9 @@ impl OwnershipResponder {
 
                         match connection.open_sync(realm.clone(), filters).await {
                             Ok(handle) => pull = Some(handle),
-                            Err(e) => warn!(error = %e, %peer, "Failed to open pull toward the owner"),
+                            Err(e) => {
+                                warn!(error = %e, %peer, "Failed to open pull toward the owner")
+                            }
                         }
                     }
 
@@ -540,13 +544,15 @@ pub fn accept_claims(
     let peer = connection.data.read().remote_instance;
     let via = Arc::downgrade(connection);
 
-    connection.streams.register_responder(move || OwnershipResponder {
-        ownership: ownership.clone(),
-        realm: realm.clone(),
-        peer,
-        via: via.clone(),
-        watching: Mutex::new(false),
-    });
+    connection
+        .streams
+        .register_responder(move || OwnershipResponder {
+            ownership: ownership.clone(),
+            realm: realm.clone(),
+            peer,
+            via: via.clone(),
+            watching: Mutex::new(false),
+        });
 }
 
 /// LS side of the claim stream: applies granted/revoked scopes to the local

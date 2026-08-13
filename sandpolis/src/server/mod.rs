@@ -62,8 +62,8 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
         let network = state.network.clone();
         let instance = state.instance.clone();
         tokio::spawn(async move {
-            if let Err(e) = sandpolis_server::stratum::maintain_upstream(server, network, instance)
-                .await
+            if let Err(e) =
+                sandpolis_server::stratum::maintain_upstream(server, network, instance).await
             {
                 tracing::error!(error = %e, "Upstream stratum link stopped");
             }
@@ -111,8 +111,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     ));
 
     // Reject requests from blocked IPs before authentication runs
-    let blocklist =
-        sandpolis_server::block::IpBlockList::new(options.blocked_ips.iter().copied());
+    let blocklist = sandpolis_server::block::IpBlockList::new(options.blocked_ips.iter().copied());
     let app = app.route_layer(axum::middleware::from_fn_with_state(
         blocklist,
         sandpolis_server::block::block_middleware,
@@ -177,14 +176,11 @@ pub async fn test_server() -> Result<TestServer> {
     // The client's half goes into a `.server` file for the caller to use.
     let certs = tempdir()?;
     let endpoint_cert = certs.path().join("test.server");
-    ca_cert.client_cert(&url)?.write_server_file(&endpoint_cert, None)?;
+    ca_cert
+        .client_cert(&url)?
+        .write_server_file(&endpoint_cert, None)?;
 
-    let instance = sandpolis_instance::InstanceLayer::new(
-        &options.instance,
-        database.clone(),
-        true,
-    )
-    .await?;
+    let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
 
     let (realms, _) = sandpolis_instance::realm::Realms::new(
         vec![sandpolis_instance::realm::config::RealmBootstrap {

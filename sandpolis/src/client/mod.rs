@@ -39,6 +39,15 @@ pub fn spawn_client_sync(state: InstanceState) {
                             ic.clone(),
                         );
                         sandpolis_client::sync::init(ic, database.clone());
+
+                        // Domains group nodes in the world view, so they're
+                        // needed for as long as the GUI runs. Subscribing is a
+                        // no-op before `init`, hence here rather than at
+                        // startup.
+                        sandpolis_client::sync::subscribe(
+                            sandpolis_instance::domain::domain_model_id(),
+                            None,
+                        );
                     }
                     Err(e) => {
                         tracing::info!(error = %e, "Failed to open sync websocket");

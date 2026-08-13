@@ -118,9 +118,10 @@ pub fn update_toolbar_button_enabled(world: &mut World) {
             .unwrap_or_default();
         for child in children {
             if let Some(mut img) = world.get_mut::<ImageNode>(child)
-                && img.color != color {
-                    img.color = color;
-                }
+                && img.color != color
+            {
+                img.color = color;
+            }
         }
     }
 }

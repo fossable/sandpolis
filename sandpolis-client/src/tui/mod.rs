@@ -64,7 +64,9 @@ impl PlaceholderPanel {
 
 impl WidgetRef for PlaceholderPanel {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
-        let block = Block::default().title(self.title.clone()).borders(Borders::ALL);
+        let block = Block::default()
+            .title(self.title.clone())
+            .borders(Borders::ALL);
         let inner = block.inner(area);
         block.render(area, buf);
         Paragraph::new("Not yet implemented.\n\nPress q to quit.")
