@@ -27,7 +27,13 @@ something with agents", not that it "implements what an agent does".
 #### Instances
 
 An _instance_ is a Sandpolis process running as an **agent**, **server**, or
-**client** (or all three in CoLo mode).
+**client**. One process is exactly one of them, named by its subcommand:
+
+```sh
+sandpolis server   # server daemon
+sandpolis agent    # agent daemon
+sandpolis client   # client, in the foreground
+```
 
 #### Strata
 
@@ -75,7 +81,7 @@ The distinction decides five things:
 # The global stratum server. It serves every .realm file in its data directory,
 # creating ./data/default.realm if it finds none. A blank realm file means
 # "generate a CA for me", which is written back into the file on first start.
-sandpolis --data ./data
+sandpolis server --data ./data
 
 # Mint a .server file for another instance. The certificate's common name is
 # the address given here, so it names exactly one server and realm.
@@ -88,11 +94,15 @@ sandpolis new-agent-cert --realm ./data/default.realm \
 # order to enroll, and having one is what puts this server in the local stratum,
 # so it serves no realms of its own — realm files in its data directory are
 # ignored.
-sandpolis --server ./ops.server --data ./ls-data --listen 0.0.0.0:8769
+sandpolis server --server ./ops.server --data ./ls-data --listen 0.0.0.0:8769
 
 # An agent, attached to either stratum. Without --data it keeps nothing across
 # restarts; clients have no --data flag and are always ephemeral.
-sandpolis --server ./fleet.server --data ./agent-data
+sandpolis agent --server ./fleet.server --data ./agent-data
+
+# A client, attached to either stratum. Without --server it starts with the
+# login dialog instead.
+sandpolis client --server ./ops.server
 ```
 
 A `.server` file carries the realm CA, this instance's own certificate, and —
@@ -150,18 +160,21 @@ An account always belongs to one — its domain is part of its identity. An
 instance does not: membership is an assignment stored in `DomainData`, owned by
 the GS and replicated from there, and an instance no domain names belongs to
 none and draws no terrain. Servers are never members, because domains group the
-estate a server manages rather than the servers managing it — unless the process
-is also an agent or client, whose shared `InstanceId` carries those bits (CoLo).
+estate a server manages rather than the servers managing it.
 
-## CoLo mode
+## Development loop
 
-When a server feature is compiled alongside the client and/or agent and the
-binary is run with no subcommand, all instance types start in the same process
-and connect to each other automatically over loopback — no `.server` file or
-other configuration is needed. With no `--data` flag there is no directory to
-scan, so the server serves an implicit `default` realm whose CA lives only in
-the in-memory database. This is meant for convenient local testing: targeting
-the local instance (e.g. starting a desktop stream) "just works".
+A server started with no `--data` has no directory to scan, so it serves an
+implicit `default` realm whose CA lives only in its in-memory database. In debug
+builds it mints an agent and a client certificate from that CA and writes them
+to `/tmp`, which is the whole setup for running the three instances against each
+other on one host:
+
+```sh
+sandpolis server                              # terminal 1
+sandpolis agent  --server /tmp/agent.server   # terminal 2
+sandpolis client --server /tmp/client.server  # terminal 3
+```
 
 ## Mobile App
 
@@ -179,18 +192,6 @@ cd android && ./gradlew assembleDebug
 > This project has been in development for a long time and we need to rapidly
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
-
-- Remove the CoLo mode special cases. The program can still build all three
-  instances, but we want them to be called separately like this:
-
-```sh
-sandpolis agent # Start agent daemon
-sandpolis server # Start server daemon
-sandpolis client # Start client foreground
-```
-
-This should also simplify `InstanceId` which no longer carries multiple instance
-support.
 
 - `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should be "Managers"
   - crates are "subsystems" while layer specifically refers to the UI concept
@@ -326,13 +327,6 @@ support.
     example:
 
 ```sh
-# Run client (with `client` feature only)
-# Run server (with `server` feature only)
-# Run server + agent CoLo (with `server` + `agent` features)
-# Run client + agent CoLo (with `client` + `agent` features)
-# Run client + server + agent CoLo (with `server` + `agent` + `client` features)
-sandpolis
-
 # Open interactive TUI with agent list. Choose one to restart.
 sandpolis agent restart
 
@@ -340,7 +334,7 @@ sandpolis agent restart
 sandpolis agent restart --json --instance UUID
 
 # Open interactive TUI with server list
-sandpolis server
+sandpolis server list
 
 # Open interactive TUI
 sandpolis probe

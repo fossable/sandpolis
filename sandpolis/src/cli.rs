@@ -1,5 +1,7 @@
 use crate::RuntimeOptions;
 use anyhow::Result;
+#[cfg(feature = "client")]
+use anyhow::bail;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
@@ -13,8 +15,20 @@ use sandpolis_client::cli::TargetArgs;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
 pub struct CommandLine {
-    /// Directory holding this instance's database and, on a global stratum
-    /// server, the `.realm` files it serves.
+    #[clap(flatten)]
+    pub instance: sandpolis_instance::cli::InstanceCommandLine,
+
+    /// A process is exactly one instance, so which one it is has to be said.
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+/// Flags for the server daemon (`sandpolis server`).
+#[cfg(feature = "server")]
+#[derive(clap::Args, Debug, Clone)]
+pub struct ServerArgs {
+    /// Directory holding this server's database and the `.realm` files it
+    /// serves.
     ///
     /// Every `*.realm` file in the directory declares one realm, named after
     /// the filename stem. A blank file means "generate a realm CA for me",
@@ -22,109 +36,154 @@ pub struct CommandLine {
     /// durable copy of the realm's trust root. A global stratum server that
     /// finds no realm file creates `default.realm`.
     ///
-    /// Without this flag the instance is ephemeral: its databases are kept in
+    /// Without this flag the server is ephemeral: its databases are kept in
     /// memory and nothing survives the process.
-    #[cfg(any(feature = "server", feature = "agent"))]
     #[clap(long, value_name = "DIR")]
     pub data: Option<PathBuf>,
 
-    /// Path to a `.server` file naming the server this instance connects to
-    /// ($S7S_SERVER).
+    /// Path to a `.server` file naming this server's upstream ($S7S_SERVER).
     ///
-    /// The file carries the realm CA and this instance's own certificate, whose
-    /// common name is the server's address. On a build with the server feature
-    /// it also selects the local stratum, with that server as the upstream.
+    /// Having one is what puts this server in the local stratum: it carries the
+    /// realm CA and this server's own certificate, whose common name is the
+    /// upstream's address. A local stratum server serves no realms of its own.
     #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
     pub server: Option<PathBuf>,
 
     /// Address:port for this server to listen on.
-    #[cfg(feature = "server")]
     #[clap(long, default_value = "0.0.0.0:8768")]
     pub listen: std::net::SocketAddr,
 
     /// IP addresses denied access to the server, rejected before authentication
     /// runs. May be given multiple times.
-    #[cfg(feature = "server")]
     #[clap(long, value_name = "IP")]
     pub blocked_ips: Vec<std::net::IpAddr>,
-
-    /// Frame rate for the GUI and TUI.
-    #[cfg(feature = "client")]
-    #[clap(long, default_value_t = 30)]
-    pub fps: u32,
-
-    /// Directory where the admin socket is created.
-    #[clap(long, default_value = "/tmp")]
-    pub socket_dir: PathBuf,
-
-    #[clap(flatten)]
-    pub instance: sandpolis_instance::cli::InstanceCommandLine,
-
-    #[command(subcommand)]
-    pub command: Option<Commands>,
 }
 
-impl CommandLine {
-    /// Where this instance stores its data, or `None` when it's ephemeral.
-    /// Clients have no `--data` flag, so a client-only build is always
-    /// ephemeral.
-    #[cfg(any(feature = "server", feature = "agent"))]
-    pub fn storage(&self) -> Option<PathBuf> {
-        self.data.clone()
-    }
+/// Flags for the agent daemon (`sandpolis agent`).
+#[cfg(feature = "agent")]
+#[derive(clap::Args, Debug, Clone, Default)]
+pub struct AgentArgs {
+    /// Directory holding this agent's database.
+    ///
+    /// Without this flag the agent is ephemeral: its database is kept in memory
+    /// and nothing survives the process.
+    #[clap(long, value_name = "DIR")]
+    pub data: Option<PathBuf>,
 
-    #[cfg(not(any(feature = "server", feature = "agent")))]
-    pub fn storage(&self) -> Option<PathBuf> {
-        None
-    }
+    /// Path to the `.server` file naming the server this agent attaches to
+    /// ($S7S_SERVER).
+    ///
+    /// The file carries the realm CA, this agent's own certificate — whose
+    /// common name is the server's address — and its polling schedule, so one
+    /// file is the whole connection policy.
+    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
+    pub server: Option<PathBuf>,
+}
 
+/// Flags for the client, which every client subcommand shares.
+///
+/// A client keeps no database on disk, so it has no `--data`.
+#[cfg(feature = "client")]
+#[derive(clap::Args, Debug, Clone, Default)]
+pub struct ClientArgs {
+    /// Path to a `.server` file naming the server this client connects to
+    /// ($S7S_SERVER).
+    ///
+    /// The file carries the realm CA and this client's own certificate, whose
+    /// common name is the server's address. Without it the GUI asks for a
+    /// server to log into.
+    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
+    pub server: Option<PathBuf>,
+
+    /// Frame rate for the GUI and TUI ($S7S_FPS).
+    #[clap(long, default_value_t = 30, env = "S7S_FPS")]
+    pub fps: u32,
+}
+
+#[cfg(feature = "server")]
+impl ServerArgs {
+    /// The process-wide options these flags describe. The realms and stratum
+    /// are filled in by the caller, which is what reads the `--data` directory
+    /// and the `.server` file.
+    pub fn options(&self) -> RuntimeOptions {
+        RuntimeOptions {
+            database: sandpolis_instance::database::config::DatabaseConfig {
+                storage: self.data.clone(),
+                ..Default::default()
+            },
+            instance_type: sandpolis_instance::InstanceType::Server,
+            listen: self.listen,
+            blocked_ips: self.blocked_ips.clone(),
+            ..Default::default()
+        }
+    }
+}
+
+#[cfg(feature = "agent")]
+impl AgentArgs {
     /// The process-wide options these flags describe. What the `.server` file
     /// contributes is filled in by the caller, which is what loads it.
     pub fn options(&self) -> RuntimeOptions {
         RuntimeOptions {
             database: sandpolis_instance::database::config::DatabaseConfig {
-                storage: self.storage(),
+                storage: self.data.clone(),
                 ..Default::default()
             },
-            instance: sandpolis_instance::config::InstanceConfig {
-                socket_directory: Some(self.socket_dir.clone()),
-            },
-            #[cfg(feature = "server")]
-            listen: self.listen,
-            #[cfg(feature = "server")]
-            blocked_ips: self.blocked_ips.clone(),
-            #[cfg(feature = "client")]
-            fps: self.fps,
-            #[cfg(feature = "agent")]
-            poll: None,
-            #[cfg(feature = "agent")]
-            servers: Vec::new(),
-            #[cfg(feature = "server")]
-            realms: Vec::new(),
+            instance_type: sandpolis_instance::InstanceType::Agent,
+            ..Default::default()
         }
     }
 }
 
-/// Subcommands for `sandpolis agent`.
+#[cfg(feature = "client")]
+impl ClientArgs {
+    /// The process-wide options these flags describe.
+    pub fn options(&self) -> RuntimeOptions {
+        RuntimeOptions {
+            instance_type: sandpolis_instance::InstanceType::Client,
+            fps: self.fps,
+            ..Default::default()
+        }
+    }
+}
+
+/// Subcommands for `sandpolis agent`. Without one, the agent daemon runs.
 #[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
 pub enum AgentCommand {
-    /// List all connected agents as JSON
-    List,
+    /// List all connected agents
+    List {
+        /// Emit machine-readable JSON instead of opening a TUI
+        #[clap(long)]
+        json: bool,
+
+        #[clap(flatten)]
+        client: ClientArgs,
+    },
     /// Restart (reboot) the target agent's device
     Restart {
         /// Target instance
         #[clap(long)]
         instance: sandpolis_instance::InstanceId,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 }
 
-/// Subcommands for `sandpolis server`.
+/// Subcommands for `sandpolis server`. Without one, the server daemon runs.
 #[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
 pub enum ServerCommand {
-    /// List all configured servers as JSON
-    List,
+    /// List all configured servers
+    List {
+        /// Emit machine-readable JSON instead of opening a TUI
+        #[clap(long)]
+        json: bool,
+
+        #[clap(flatten)]
+        client: ClientArgs,
+    },
 }
 
 /// Flags shared by the two certificate-minting subcommands.
@@ -271,18 +330,35 @@ pub enum Commands {
         args: crate::lsp::LspArgs,
     },
 
-    /// Manage agent instances
-    #[cfg(feature = "client")]
+    /// Run the agent daemon, or manage agent instances
+    #[cfg(any(feature = "agent", feature = "client"))]
     Agent {
+        #[cfg(feature = "agent")]
+        #[clap(flatten)]
+        args: AgentArgs,
+
+        #[cfg(feature = "client")]
         #[command(subcommand)]
         action: Option<AgentCommand>,
     },
 
-    /// Manage server instances
-    #[cfg(feature = "client")]
+    /// Run the server daemon, or manage server instances
+    #[cfg(any(feature = "server", feature = "client"))]
     Server {
+        #[cfg(feature = "server")]
+        #[clap(flatten)]
+        args: ServerArgs,
+
+        #[cfg(feature = "client")]
         #[command(subcommand)]
         action: Option<ServerCommand>,
+    },
+
+    /// Run the client in the foreground
+    #[cfg(feature = "client")]
+    Client {
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Manage probes
@@ -290,6 +366,9 @@ pub enum Commands {
     Probe {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Connect to remote desktop sessions
@@ -300,6 +379,9 @@ pub enum Commands {
 
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Connect to remote shell sessions
@@ -307,6 +389,9 @@ pub enum Commands {
     Shell {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Inspect agent health
@@ -314,6 +399,9 @@ pub enum Commands {
     Health {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Inspect agent inventory
@@ -321,6 +409,9 @@ pub enum Commands {
     Inventory {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Browse agent filesystems
@@ -328,6 +419,9 @@ pub enum Commands {
     Filesystem {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Manage accounts
@@ -335,6 +429,9 @@ pub enum Commands {
     Account {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Manage cold snapshots
@@ -342,6 +439,9 @@ pub enum Commands {
     Snapshot {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Wake / power control (interactive TUI)
@@ -349,6 +449,9 @@ pub enum Commands {
     Wake {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Inspect audit events (interactive TUI)
@@ -356,6 +459,9 @@ pub enum Commands {
     Audit {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 
     /// Manage tunnels
@@ -363,6 +469,9 @@ pub enum Commands {
     Tunnel {
         #[clap(flatten)]
         target: TargetArgs,
+
+        #[clap(flatten)]
+        client: ClientArgs,
     },
 }
 
@@ -381,11 +490,96 @@ impl Commands {
         }
     }
 
+    /// The flags for the server daemon, when that's what this command is:
+    /// `sandpolis server` with no action beneath it.
+    #[cfg(feature = "server")]
+    pub fn server_daemon(&self) -> Option<&ServerArgs> {
+        match self {
+            Commands::Server {
+                args,
+                #[cfg(feature = "client")]
+                    action: None,
+                ..
+            } => Some(args),
+            #[allow(unreachable_patterns)]
+            _ => None,
+        }
+    }
+
+    /// The flags for the agent daemon, when that's what this command is:
+    /// `sandpolis agent` with no action beneath it.
+    #[cfg(feature = "agent")]
+    pub fn agent_daemon(&self) -> Option<&AgentArgs> {
+        match self {
+            Commands::Agent {
+                args,
+                #[cfg(feature = "client")]
+                    action: None,
+                ..
+            } => Some(args),
+            #[allow(unreachable_patterns)]
+            _ => None,
+        }
+    }
+
+    /// The client flags this command carries, which is also how a command says
+    /// it runs as a client at all. Daemons and standalone commands have none.
+    #[cfg(feature = "client")]
+    pub fn client_args(&self) -> Option<&ClientArgs> {
+        match self {
+            Commands::Client { client } => Some(client),
+            Commands::Agent { action, .. } => match action.as_ref()? {
+                AgentCommand::List { client, .. } => Some(client),
+                AgentCommand::Restart { client, .. } => Some(client),
+            },
+            Commands::Server { action, .. } => match action.as_ref()? {
+                ServerCommand::List { client, .. } => Some(client),
+            },
+            #[cfg(feature = "probe")]
+            Commands::Probe { client, .. } => Some(client),
+            #[cfg(feature = "desktop")]
+            Commands::Desktop { client, .. } => Some(client),
+            #[cfg(feature = "shell")]
+            Commands::Shell { client, .. } => Some(client),
+            #[cfg(feature = "health")]
+            Commands::Health { client, .. } => Some(client),
+            #[cfg(feature = "inventory")]
+            Commands::Inventory { client, .. } => Some(client),
+            #[cfg(feature = "filesystem")]
+            Commands::Filesystem { client, .. } => Some(client),
+            #[cfg(feature = "account")]
+            Commands::Account { client, .. } => Some(client),
+            #[cfg(feature = "snapshot")]
+            Commands::Snapshot { client, .. } => Some(client),
+            Commands::Wake { client, .. } => Some(client),
+            #[cfg(feature = "audit")]
+            Commands::Audit { client, .. } => Some(client),
+            #[cfg(feature = "tunnel")]
+            Commands::Tunnel { client, .. } => Some(client),
+            #[allow(unreachable_patterns)]
+            _ => None,
+        }
+    }
+
+    /// Whether this command draws in the terminal it was started from, which is
+    /// every client subcommand except the GUI. Those get a log file instead of
+    /// stderr so the logs don't corrupt the view.
+    pub fn owns_terminal(&self) -> bool {
+        #[cfg(feature = "client")]
+        {
+            !matches!(self, Commands::Client { .. }) && self.client_args().is_some()
+        }
+        #[cfg(not(feature = "client"))]
+        {
+            false
+        }
+    }
+
     /// Dispatch a [`standalone`](Self::standalone) command. These run without
     /// starting any instances or opening a client connection. Panics if called
     /// with a client subcommand (those go through `dispatch_client`).
     #[allow(unused_variables)]
-    pub async fn dispatch_standalone(self, options: &RuntimeOptions) -> Result<ExitCode> {
+    pub async fn dispatch_standalone(self) -> Result<ExitCode> {
         match self {
             #[cfg(feature = "client")]
             Commands::Lsp { args } => {
@@ -440,35 +634,49 @@ impl Commands {
     ) -> Result<ExitCode> {
         let fps = options.fps as f32;
         match self {
-            Commands::Agent { action } => client::agent(action, fps).await,
-            Commands::Server { action } => client::server(action, &state.server, fps).await,
+            Commands::Agent { action, .. } => match action {
+                Some(action) => client::agent(action, fps).await,
+                // Only reachable on a build without the agent; otherwise this
+                // is the daemon and never gets here.
+                None => bail!(
+                    "This build has no agent. Rebuild with `--features agent` to run one, \
+                     or name a subcommand (see `sandpolis agent --help`)."
+                ),
+            },
+            Commands::Server { action, .. } => match action {
+                Some(action) => client::server(action, &state.server, fps).await,
+                None => bail!(
+                    "This build has no server. Rebuild with `--features server` to run one, \
+                     or name a subcommand (see `sandpolis server --help`)."
+                ),
+            },
             #[cfg(feature = "probe")]
-            Commands::Probe { target } => {
+            Commands::Probe { target, .. } => {
                 sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
             }
             #[cfg(feature = "desktop")]
-            Commands::Desktop { action, target } => {
+            Commands::Desktop { action, target, .. } => {
                 sandpolis_desktop::cli::dispatch(action, target, &state.desktop, fps).await
             }
             #[cfg(feature = "shell")]
-            Commands::Shell { target } => {
+            Commands::Shell { target, .. } => {
                 sandpolis_shell::cli::dispatch(target, state.shell.clone(), fps).await
             }
             #[cfg(feature = "health")]
-            Commands::Health { target } => client::stub("health", target, fps).await,
+            Commands::Health { target, .. } => client::stub("health", target, fps).await,
             #[cfg(feature = "inventory")]
-            Commands::Inventory { target } => client::stub("inventory", target, fps).await,
+            Commands::Inventory { target, .. } => client::stub("inventory", target, fps).await,
             #[cfg(feature = "filesystem")]
-            Commands::Filesystem { target } => client::stub("filesystem", target, fps).await,
+            Commands::Filesystem { target, .. } => client::stub("filesystem", target, fps).await,
             #[cfg(feature = "account")]
-            Commands::Account { target } => client::stub("account", target, fps).await,
+            Commands::Account { target, .. } => client::stub("account", target, fps).await,
             #[cfg(feature = "snapshot")]
-            Commands::Snapshot { target } => client::stub("snapshot", target, fps).await,
-            Commands::Wake { target } => client::stub("wake", target, fps).await,
+            Commands::Snapshot { target, .. } => client::stub("snapshot", target, fps).await,
+            Commands::Wake { target, .. } => client::stub("wake", target, fps).await,
             #[cfg(feature = "audit")]
-            Commands::Audit { target } => client::stub("audit", target, fps).await,
+            Commands::Audit { target, .. } => client::stub("audit", target, fps).await,
             #[cfg(feature = "tunnel")]
-            Commands::Tunnel { target } => client::stub("tunnel", target, fps).await,
+            Commands::Tunnel { target, .. } => client::stub("tunnel", target, fps).await,
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),
         }
@@ -491,11 +699,25 @@ mod test_stratum_args {
         Ok(path)
     }
 
+    /// The flags `sandpolis server` was given.
+    fn server_args(argv: &[&str]) -> Result<ServerArgs, clap::Error> {
+        match CommandLine::try_parse_from(argv)?.command {
+            Commands::Server { args, .. } => Ok(args),
+            other => panic!("expected the server subcommand, got {other:?}"),
+        }
+    }
+
+    /// A process is one instance, so it has to say which one.
+    #[test]
+    fn an_instance_is_required() {
+        assert!(CommandLine::try_parse_from(["sandpolis"]).is_err());
+    }
+
     /// Absent `--server`, this is the network's single global stratum server.
     #[test]
     fn no_server_file_means_global_stratum() -> Result<()> {
-        let args = CommandLine::try_parse_from(["sandpolis"]).expect("bare invocation parses");
-        assert_eq!(crate::stratum(&args)?, ServerStratum::Global);
+        let args = server_args(&["sandpolis", "server"]).expect("`server` parses");
+        assert_eq!(crate::stratum(args.server.as_deref())?, ServerStratum::Global);
         Ok(())
     }
 
@@ -506,10 +728,10 @@ mod test_stratum_args {
         let dir = tempfile::tempdir()?;
         let path = client_server_file(dir.path(), "gs.example.com:8768/default")?;
 
-        let args = CommandLine::try_parse_from(["sandpolis", "--server", path.to_str().unwrap()])
+        let args = server_args(&["sandpolis", "server", "--server", path.to_str().unwrap()])
             .expect("--server parses");
 
-        let ServerStratum::Local { global } = crate::stratum(&args)? else {
+        let ServerStratum::Local { global } = crate::stratum(args.server.as_deref())? else {
             panic!("--server must select the local stratum");
         };
         assert_eq!(global.host, "gs.example.com");
@@ -521,8 +743,9 @@ mod test_stratum_args {
     /// describe different things and go together.
     #[test]
     fn data_and_server_go_together() -> Result<()> {
-        let args = CommandLine::try_parse_from([
+        let args = server_args(&[
             "sandpolis",
+            "server",
             "--data",
             "/var/lib/sandpolis",
             "--server",
@@ -530,7 +753,10 @@ mod test_stratum_args {
         ])
         .expect("--data and --server parse together");
 
-        assert_eq!(args.data.as_deref(), Some(std::path::Path::new("/var/lib/sandpolis")));
+        assert_eq!(
+            args.data.as_deref(),
+            Some(std::path::Path::new("/var/lib/sandpolis"))
+        );
         Ok(())
     }
 
@@ -538,10 +764,46 @@ mod test_stratum_args {
     /// silently fall back from.
     #[test]
     fn missing_server_file_is_an_error() {
-        let args =
-            CommandLine::try_parse_from(["sandpolis", "--server", "/nonexistent/upstream.server"])
-                .expect("--server parses");
-        assert!(crate::stratum(&args).is_err());
+        let args = server_args(&[
+            "sandpolis",
+            "server",
+            "--server",
+            "/nonexistent/upstream.server",
+        ])
+        .expect("--server parses");
+        assert!(crate::stratum(args.server.as_deref()).is_err());
+    }
+}
+
+#[cfg(all(test, feature = "agent"))]
+mod test_agent_args {
+    use super::*;
+
+    /// The agent daemon's flags belong to the agent daemon, not to the process.
+    #[test]
+    fn agent_takes_its_own_flags() {
+        let command = CommandLine::try_parse_from([
+            "sandpolis",
+            "agent",
+            "--server",
+            "./fleet.server",
+            "--data",
+            "/var/lib/sandpolis",
+        ])
+        .expect("`agent --server --data` parses")
+        .command;
+
+        let Commands::Agent { args, .. } = command else {
+            panic!("expected the agent subcommand, got {command:?}");
+        };
+        assert_eq!(
+            args.server.as_deref(),
+            Some(std::path::Path::new("./fleet.server"))
+        );
+        assert_eq!(
+            args.data.as_deref(),
+            Some(std::path::Path::new("/var/lib/sandpolis"))
+        );
     }
 }
 
@@ -551,7 +813,7 @@ mod test_lsp_args {
 
     fn lsp_args(argv: &[&str]) -> Result<crate::lsp::LspArgs, clap::Error> {
         match CommandLine::try_parse_from(argv)?.command {
-            Some(Commands::Lsp { args }) => Ok(args),
+            Commands::Lsp { args } => Ok(args),
             other => panic!("expected the lsp subcommand, got {other:?}"),
         }
     }
@@ -604,15 +866,17 @@ mod client {
         Ok(ExitCode::SUCCESS)
     }
 
-    pub(super) async fn agent(action: Option<AgentCommand>, fps: f32) -> Result<ExitCode> {
+    pub(super) async fn agent(action: AgentCommand, fps: f32) -> Result<ExitCode> {
         match action {
-            None => {
+            AgentCommand::List { json, .. } => {
+                if json {
+                    return list_agents_json().await;
+                }
                 let widget = crate::client::tui::agent_list::AgentListWidget::new()?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
-            Some(AgentCommand::List) => list_agents_json().await,
-            Some(AgentCommand::Restart { instance }) => {
+            AgentCommand::Restart { instance, .. } => {
                 // The agent reboot stream is not yet wired end-to-end; report
                 // honestly rather than pretend success.
                 println!(
@@ -629,18 +893,20 @@ mod client {
     }
 
     pub(super) async fn server(
-        action: Option<ServerCommand>,
+        action: ServerCommand,
         server_layer: &sandpolis_server::ServerLayer,
         fps: f32,
     ) -> Result<ExitCode> {
         match action {
-            None => {
+            ServerCommand::List { json, .. } => {
+                if json {
+                    return list_servers_json(server_layer);
+                }
                 let widget =
                     crate::client::tui::server_list::ServerListWidget::new(server_layer.clone())?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
-            Some(ServerCommand::List) => list_servers_json(server_layer),
         }
     }
 
@@ -662,8 +928,9 @@ mod client {
     }
 
     /// Print every known agent instance as JSON. Waits for the sync websocket
-    /// to be established (CoLo mode starts the server asynchronously), then
-    /// subscribes to the instance model and reads from the client database.
+    /// to be established (the connection to the server comes up
+    /// asynchronously), then subscribes to the instance model and reads from
+    /// the client database.
     async fn list_agents_json() -> Result<ExitCode> {
         use sandpolis_instance::InstanceLayerData;
         use sandpolis_instance::realm::RealmName;

@@ -6,12 +6,193 @@ use axum::{
 };
 use rand::RngExt;
 use sandpolis_instance::realm::RealmClusterCert;
-use sandpolis_instance::{ClusterId, InstanceId};
+use sandpolis_instance::ClusterId;
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
 use tower_http::trace::TraceLayer;
 use tracing::info;
+
+/// Bring up everything a server needs and run it: the realms it serves, the
+/// database that holds them, and the layers over both.
+pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCode> {
+    use sandpolis_instance::database::{DatabaseLayer, ScopeTable, WriteAuthority};
+    use sandpolis_instance::realm::Realms;
+    use sandpolis_instance::realm::config::RealmBootstrap;
+
+    let mut options = args.options();
+
+    // The `.server` file is the whole trust bootstrap for a server that attaches
+    // to another one: it names the upstream, carries the realm CA, and holds
+    // this server's own certificate.
+    let endpoint = crate::load_server_file(args.server.as_deref())?;
+    let stratum = match endpoint.as_ref() {
+        Some((cert, _)) => crate::ServerStratum::Local {
+            global: cert.url()?,
+        },
+        None => crate::ServerStratum::Global,
+    };
+
+    // Every realm this server serves comes from a `.realm` file in the data
+    // directory. An ephemeral server has no such directory, so it gets an
+    // implicit default realm whose CA lives only in the in-memory database —
+    // which is what makes a development server work with no setup at all.
+    if stratum.is_global()
+        && let Some(dir) = options.database.storage.clone()
+    {
+        options.realms = crate::config::RealmConfig::load_dir(dir)?;
+    }
+
+    let implicit_default_realm = stratum.is_global() && options.realms.is_empty();
+    if implicit_default_realm {
+        info!(
+            "Serving an implicit \"default\" realm. Pass `--data <dir>` to keep \
+             its CA in a file that survives the database."
+        );
+    }
+
+    // A local stratum server holds per-instance write authority: it owns the
+    // data of the instances directly connected to it (as granted by the global
+    // stratum server) and replicates everything else. The global stratum server
+    // owns its database outright.
+    let authority = if stratum.is_local() {
+        WriteAuthority::Scoped(std::sync::Arc::new(ScopeTable::default()))
+    } else {
+        WriteAuthority::Full
+    };
+
+    let database = DatabaseLayer::new(options.database.clone(), &crate::MODELS, authority)?;
+
+    // Realms are only ever created from files, so this is where the set is
+    // fixed for the life of the process.
+    let mut bootstraps = Vec::new();
+    if stratum.is_global() {
+        if implicit_default_realm {
+            bootstraps.push(RealmBootstrap::default());
+        } else {
+            for realm in &options.realms {
+                bootstraps.push(realm.bootstrap()?);
+            }
+        }
+    }
+
+    let instance = sandpolis_instance::InstanceLayer::new(
+        database.clone(),
+        sandpolis_instance::InstanceType::Server,
+    )
+    .await?;
+
+    let mut endpoint_certs = Vec::new();
+    if let Some((cert, _)) = endpoint {
+        endpoint_certs.push(cert);
+    }
+
+    let (realms, minted) = Realms::new(
+        bootstraps,
+        endpoint_certs,
+        database.clone(),
+        instance,
+        stratum.is_global(),
+        options.listen.port(),
+    )
+    .await?;
+
+    // A realm CA the server had to generate goes back into the file it came
+    // from, which is the durable copy. The implicit default realm has no file,
+    // so its CA stays in the database as before.
+    for ca in &minted {
+        if let Some(realm) = options.realms.iter_mut().find(|r| r.name == ca.name) {
+            realm.store_ca(ca.cert_pem.clone(), ca.key_pem.clone())?;
+            info!(realm = %ca.name, path = ?realm.path(), "Wrote the realm CA back to its file");
+        }
+    }
+
+    install_persist_callbacks(&options, &stratum);
+
+    let state = InstanceState::new(&options, database, realms, stratum.clone()).await?;
+
+    info!(%stratum, "Starting Sandpolis server");
+    main(options, state).await?;
+    Ok(std::process::ExitCode::SUCCESS)
+}
+
+/// Realm files live on the global stratum server only, so it is also the only
+/// instance that writes changes back to them.
+// TODO do this somewhere else
+#[allow(unused_variables)]
+fn install_persist_callbacks(options: &RuntimeOptions, stratum: &crate::ServerStratum) {
+    if !stratum.is_global() {
+        return;
+    }
+
+    #[cfg(feature = "account")]
+    {
+        let realms_config = options.realms.clone();
+        sandpolis_account::set_account_persist(move |accounts| {
+            // Accounts aren't per-realm yet, so they go back to the single
+            // loaded realm. With several realms there's no way to tell which one
+            // owns an account, so leave every file alone rather than guess.
+            let mut realms_config = realms_config.clone();
+            let accounts = accounts.to_vec();
+            match realms_config.len() {
+                1 => realms_config[0].modify(|c| {
+                    // Only the account list is replaced; `account.scrape` and
+                    // every other section keep whatever is on disk.
+                    c.account.accounts = accounts.clone();
+                    Ok(())
+                }),
+                0 => Ok(()),
+                _ => {
+                    tracing::warn!(
+                        "Not persisting accounts: several realm files are loaded and \
+                         accounts are not yet realm-scoped"
+                    );
+                    Ok(())
+                }
+            }
+        });
+    }
+
+    // Only the global stratum server keeps the authoritative probe config; local
+    // stratum servers don't persist a probe list of their own.
+    #[cfg(feature = "probe")]
+    {
+        let realms_config = options.realms.clone();
+        sandpolis_probe::set_device_persist(move |devices| {
+            let mut realms_config = realms_config.clone();
+            let probe = sandpolis_probe::devices_to_config(devices);
+
+            // A device records the server that reaches it, so route each one to
+            // that server's realm. A device with no server can only be placed
+            // when there's exactly one realm to place it in.
+            let only_realm = realms_config.len() == 1;
+            for realm in realms_config.iter_mut() {
+                let name = realm.name.clone();
+                let devices: Vec<_> = probe
+                    .devices
+                    .iter()
+                    .filter(|device| match device.server.as_ref() {
+                        Some(server) => server.realm == name,
+                        None => only_realm,
+                    })
+                    .cloned()
+                    .collect();
+                realm.modify(|c| {
+                    c.probe.devices = devices.clone();
+                    Ok(())
+                })?;
+            }
+
+            if !only_realm && probe.devices.iter().any(|device| device.server.is_none()) {
+                tracing::warn!(
+                    "Some probe devices name no server and several realm files are \
+                     loaded, so they were not persisted to any of them"
+                );
+            }
+            Ok(())
+        });
+    }
+}
 
 pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     #[cfg(feature = "account")]
@@ -78,7 +259,6 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                 state.instance.realm().clone(),
                 table.clone(),
                 state.server.ownership.clone(),
-                state.instance.instance_id,
             ));
         }
     }
@@ -158,6 +338,7 @@ pub async fn test_server() -> Result<TestServer> {
     let url: sandpolis_server::ServerUrl = format!("127.0.0.1:{port}/test").parse()?;
 
     let mut options = RuntimeOptions::embedded();
+    options.instance_type = sandpolis_instance::InstanceType::Server;
     options.database.storage = None;
     options.listen = format!("127.0.0.1:{port}").parse()?;
 
@@ -179,7 +360,11 @@ pub async fn test_server() -> Result<TestServer> {
         .client_cert(&url)?
         .write_server_file(&endpoint_cert, None)?;
 
-    let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
+    let instance = sandpolis_instance::InstanceLayer::new(
+        database.clone(),
+        sandpolis_instance::InstanceType::Server,
+    )
+    .await?;
 
     let (realms, _) = sandpolis_instance::realm::Realms::new(
         vec![sandpolis_instance::realm::config::RealmBootstrap {

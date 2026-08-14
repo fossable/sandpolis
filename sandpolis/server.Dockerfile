@@ -8,3 +8,4 @@ RUN cd sandpolis && cargo +nightly build --release --features server
 FROM alpine:3.21
 COPY --from=builder /build/target/release/sandpolis /bin/sandpolis
 ENTRYPOINT [ "/bin/sandpolis" ]
+CMD [ "server" ]

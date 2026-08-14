@@ -24,7 +24,7 @@ use crate::gui::queries::{InstanceMetadata, query_instance_metadata};
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use sandpolis_instance::{InstanceId, InstanceLayer};
+use sandpolis_instance::{InstanceId, InstanceLayer, InstanceType};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
@@ -89,14 +89,10 @@ impl TerrainAttribute {
     ) -> Option<(String, String)> {
         match self {
             TerrainAttribute::InstanceType => {
-                let label = if id.is_server() {
-                    "Servers"
-                } else if id.is_agent() {
-                    "Agents"
-                } else if id.is_client() {
-                    "Clients"
-                } else {
-                    return None;
+                let label = match id.instance_type()? {
+                    InstanceType::Server => "Servers",
+                    InstanceType::Agent => "Agents",
+                    InstanceType::Client => "Clients",
                 };
                 Some((label.to_string(), label.to_string()))
             }

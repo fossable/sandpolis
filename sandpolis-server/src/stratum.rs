@@ -301,7 +301,7 @@ async fn attempt_link(
     info!(url = %global, "Connected to global stratum server");
 
     let established = tokio::time::Instant::now();
-    if let Err(e) = run_link(server, &link, network, instance.instance_id).await {
+    if let Err(e) = run_link(server, &link, network).await {
         warn!(error = %e, "Upstream link setup failed");
     }
 
@@ -333,7 +333,6 @@ async fn run_link(
     server: &ServerLayer,
     link: &Arc<InstanceConnection>,
     network: &NetworkLayer,
-    local_instance: InstanceId,
 ) -> Result<()> {
     // Anything this server can't resolve locally goes up to the global stratum
     // server, which knows the whole estate. Attaching the relay lets messages
@@ -384,7 +383,7 @@ async fn run_link(
         let mut previous: Option<BTreeSet<InstanceId>> = None;
 
         loop {
-            let peers = attached_instances(&network, local_instance);
+            let peers = attached_instances(&network);
 
             if previous.as_ref() != Some(&peers) {
                 debug!(count = peers.len(), "Attached instance set changed");

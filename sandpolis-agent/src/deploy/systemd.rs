@@ -21,7 +21,7 @@ pub fn unit_file() -> String {
          Wants=network-online.target\n\
          \n\
          [Service]\n\
-         ExecStart={INSTALL_PATH} --server {SERVER_FILE} --data {DATA_PATH}\n\
+         ExecStart={INSTALL_PATH} agent --server {SERVER_FILE} --data {DATA_PATH}\n\
          Restart=always\n\
          RestartSec=5\n\
          \n\
@@ -40,7 +40,9 @@ mod test {
     #[test]
     fn unit_names_the_installed_binary() {
         let unit = unit_file();
-        assert!(unit.contains(&format!("ExecStart={INSTALL_PATH}")));
+        // The subcommand is what makes this an agent; a bare invocation prints
+        // help and exits.
+        assert!(unit.contains(&format!("ExecStart={INSTALL_PATH} agent ")));
         assert!(unit.contains(SERVER_FILE));
         assert!(!unit.contains("{}"));
     }

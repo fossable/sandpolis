@@ -18,8 +18,8 @@ use tracing::{debug, info, warn};
 ///
 /// Held in a static so the control-stream responder can stay a unit struct and
 /// register through the stateless `inventory` path. It accumulates rather than
-/// being claimed by whoever starts first, because a process can host more than
-/// one runner: the all-in-one build runs a server and an agent side by side.
+/// being claimed by whoever starts first, so a process that builds more than one
+/// runner (a test harness, say) still reports every service.
 static RUNNING: LazyLock<ServiceHandle> = LazyLock::new(ServiceHandle::default);
 
 /// The services running in this process.
@@ -522,8 +522,8 @@ mod tests {
     fn rows_are_per_instance() -> Result<()> {
         let realm = realm()?;
         let key = "Health/systemd";
-        let a = InstanceId::new(&[crate::InstanceType::Agent]);
-        let b = InstanceId::new(&[crate::InstanceType::Agent]);
+        let a = InstanceId::new(crate::InstanceType::Agent);
+        let b = InstanceId::new(crate::InstanceType::Agent);
 
         update(&realm, a, key, |row, _| row.runs = 5)?;
         update(&realm, b, key, |row, _| row.runs = 9)?;

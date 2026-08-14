@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         for i in 1..=5 {
             rw.insert(ConnectionData {
                 _instance_id: state.instance.instance_id,
-                remote_instance: InstanceId::new(&[InstanceType::Agent]),
+                remote_instance: InstanceId::new(InstanceType::Agent),
                 read_bytes: (i * 1024) as u64,
                 write_bytes: (i * 512) as u64,
                 read_throughput: (i * 100) as u64,
@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
         for i in 1..=2 {
             rw.insert(ConnectionData {
                 _instance_id: state.instance.instance_id,
-                remote_instance: InstanceId::new(&[InstanceType::Server]),
+                remote_instance: InstanceId::new(InstanceType::Server),
                 read_bytes: (i * 2048) as u64,
                 write_bytes: (i * 1024) as u64,
                 read_throughput: (i * 200) as u64,

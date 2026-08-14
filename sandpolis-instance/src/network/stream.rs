@@ -204,8 +204,7 @@ pub struct StreamRegistry {
     /// `Weak` to avoid a reference cycle (relay -> connections -> registry).
     relay: RwLock<Option<std::sync::Weak<Relay>>>,
     /// Per-stream byte counts. Deliberately scoped to this registry rather than
-    /// kept globally: in an all-in-one build the dialing and accepting sides
-    /// live in one process and would otherwise both count the same stream id.
+    /// kept globally, since a stream id is only unique within one connection.
     traffic: RwLock<HashMap<StreamId, Arc<StreamCounters>>>,
 }
 
@@ -505,9 +504,9 @@ impl Relay {
     /// Pick the connection to forward a message for `target` through, skipping
     /// the origin connection.
     ///
-    /// In an all-in-one build the local client and agent share one `InstanceId`,
-    /// so both inbound connections match `target`; excluding the origin (the
-    /// sender) routes to the *other* one, never back to the sender.
+    /// An instance can hold more than one connection here (a reconnect that
+    /// overlaps the old socket), so several may match `target`; excluding the
+    /// origin (the sender) routes to another one, never back to the sender.
     fn next_hop(
         &self,
         target: InstanceId,
@@ -813,8 +812,8 @@ mod relay_tests {
     }
 
     /// Wire a client and an agent to a relaying server and run one echo
-    /// round-trip. The ids may be equal (as in an all-in-one build, where the
-    /// co-located client and agent share one `InstanceId`).
+    /// round-trip. The ids may be equal, which is what two connections to the
+    /// same instance look like.
     async fn relay_echo_roundtrip(
         agent_id: InstanceId,
         client_id: InstanceId,
@@ -890,18 +889,19 @@ mod relay_tests {
     #[tokio::test]
     async fn relays_client_to_agent_and_back() -> anyhow::Result<()> {
         relay_echo_roundtrip(
-            InstanceId::new(&[InstanceType::Agent]),
-            InstanceId::new(&[InstanceType::Client]),
+            InstanceId::new(InstanceType::Agent),
+            InstanceId::new(InstanceType::Client),
         )
         .await
     }
 
-    /// Same round-trip when the client and agent share one `InstanceId`, as in
-    /// an all-in-one build. The relay must exclude the origin connection and
+    /// Same round-trip when both connections carry the same peer id, which
+    /// happens whenever an instance holds two sockets at once (a reconnect that
+    /// overlaps the old one). The relay must exclude the origin connection and
     /// route to the other one.
     #[tokio::test]
-    async fn relays_with_shared_instance_id() -> anyhow::Result<()> {
-        let shared = InstanceId::new(&[InstanceType::Client, InstanceType::Agent]);
+    async fn relays_with_duplicate_instance_id() -> anyhow::Result<()> {
+        let shared = InstanceId::new(InstanceType::Agent);
         relay_echo_roundtrip(shared, shared).await
     }
 
@@ -933,9 +933,9 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let client_id = InstanceId::new(&[InstanceType::Client]);
-        let ls_id = InstanceId::new(&[InstanceType::Server]);
-        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        let client_id = InstanceId::new(InstanceType::Client);
+        let ls_id = InstanceId::new(InstanceType::Server);
+        let agent_id = InstanceId::new(InstanceType::Agent);
 
         let (client_out, client_out_rx) = mpsc::channel(32);
         let (gs_to_client, gs_to_client_rx) = mpsc::channel(32);
@@ -1015,11 +1015,11 @@ mod relay_tests {
         let peer_reg = Arc::new(StreamRegistry::new(peer_out));
         let upstream_reg = Arc::new(StreamRegistry::new(upstream_out));
 
-        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(&[InstanceType::Agent]))?;
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(InstanceType::Agent))?;
         let upstream_conn = conn(
             &conns,
             &upstream_reg,
-            InstanceId::new(&[InstanceType::Server]),
+            InstanceId::new(InstanceType::Server),
         )?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![peer_conn]))));
@@ -1030,7 +1030,7 @@ mod relay_tests {
         let origin_reg = Arc::new(StreamRegistry::new(origin_out));
         origin_reg.set_relay(Arc::downgrade(&relay));
 
-        let stranger = InstanceId::new(&[InstanceType::Agent]);
+        let stranger = InstanceId::new(InstanceType::Agent);
         origin_reg
             .dispatch(StreamMessage::to(
                 RelayEchoRequester::generate_id(),
@@ -1056,7 +1056,7 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let agent_id = InstanceId::new(&[InstanceType::Agent]);
+        let agent_id = InstanceId::new(InstanceType::Agent);
 
         let (direct_out, mut direct_rx) = mpsc::channel(32);
         let (advertised_out, mut advertised_rx) = mpsc::channel(32);
@@ -1067,7 +1067,7 @@ mod relay_tests {
         let peer_conn = conn(
             &conns,
             &advertised_reg,
-            InstanceId::new(&[InstanceType::Server]),
+            InstanceId::new(InstanceType::Server),
         )?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![direct_conn]))));
@@ -1104,12 +1104,12 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let departed = InstanceId::new(&[InstanceType::Agent]);
-        let stayed = InstanceId::new(&[InstanceType::Agent]);
+        let departed = InstanceId::new(InstanceType::Agent);
+        let stayed = InstanceId::new(InstanceType::Agent);
 
         let (peer_out, mut peer_rx) = mpsc::channel(32);
         let peer_reg = Arc::new(StreamRegistry::new(peer_out));
-        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(&[InstanceType::Server]))?;
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(InstanceType::Server))?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![]))));
         relay.advertise(&peer_conn, &[departed, stayed]);
@@ -1154,7 +1154,7 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let target = InstanceId::new(&[InstanceType::Agent]);
+        let target = InstanceId::new(InstanceType::Agent);
         let (next_out, mut next_rx) = mpsc::channel(32);
         let next_reg = Arc::new(StreamRegistry::new(next_out));
         let next_conn = conn(&conns, &next_reg, target)?;

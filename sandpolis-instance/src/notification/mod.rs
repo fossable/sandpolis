@@ -227,8 +227,8 @@ impl Notifier {
     }
 }
 
-/// Install the process notifier. Idempotent — `InstanceLayer` is built more than
-/// once in an all-in-one process, and only the first one takes effect.
+/// Install the process notifier. Idempotent — startup builds an `InstanceLayer`
+/// more than once, and only the first one takes effect.
 pub fn install(realm: &RealmDatabase, instance_id: InstanceId) {
     if NOTIFIER.get().is_some() {
         return;
@@ -273,11 +273,10 @@ mod tests {
     use crate::realm::RealmName;
     use crate::test_db;
 
-    /// `InstanceId::default()` derives its type bits from the enabled instance
-    /// features, and panics when none are — which is how the lib's own tests
-    /// build. Name a type explicitly instead.
+    /// `InstanceId::default()` names no instance at all, so tests that need a
+    /// real one name its type explicitly.
     fn some_instance() -> InstanceId {
-        InstanceId::new(&[InstanceType::Agent])
+        InstanceId::new(InstanceType::Agent)
     }
 
     /// A notifier over a throwaway in-memory database, built directly rather

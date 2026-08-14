@@ -20,11 +20,10 @@ use sandpolis_instance::realm::Realms;
 /// `sandpolis-instance` alongside the realm certificates. Re-exported here
 /// because this is where callers expect to find it.
 pub use sandpolis_instance::realm::url::ServerUrl;
-use sandpolis_instance::{ClusterId, InstanceId};
+use sandpolis_instance::{ClusterId, InstanceId, InstanceType};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fmt::Display;
-use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -62,6 +61,11 @@ pub struct ServerLayer {
     pub network: NetworkLayer,
     pub realms: Realms,
     pub database: DatabaseLayer,
+
+    /// What this process is, which decides the certificate it presents when it
+    /// dials a server.
+    pub instance_type: InstanceType,
+
     #[cfg(feature = "client")]
     pub servers: ResidentVec<client::SavedServerData>,
 
@@ -80,6 +84,7 @@ impl ServerLayer {
         network: NetworkLayer,
         realms: Realms,
         stratum: ServerStratum,
+        instance_type: InstanceType,
     ) -> Result<Self> {
         // Purge stale ConnectionData rows left over from previous runs
         {
@@ -120,6 +125,7 @@ impl ServerLayer {
             stratum,
             network,
             realms,
+            instance_type,
             database: database.clone(),
             #[cfg(feature = "client")]
             servers: database.realm(RealmName::default())?.resident_vec(())?,
@@ -128,10 +134,13 @@ impl ServerLayer {
     }
 
     /// Get all server connections.
+    ///
+    /// There's nothing to filter: every entry in `outbound` was dialed by this
+    /// instance, and the only thing an instance dials is a server. The peer's id
+    /// isn't even known until its websocket upgrade reports it, which is after a
+    /// client needs the entry.
     pub fn server_connections(&self) -> Vec<Arc<ServerConnection>> {
-        let mut connections = self.outbound.read().unwrap().clone();
-        connections.retain(|connection| connection.data.read().remote_instance.is_server());
-        connections
+        self.outbound.read().unwrap().clone()
     }
 
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
@@ -142,19 +151,13 @@ impl ServerLayer {
     ) -> Result<ServerConnection> {
         debug!(url = %url, ?strategy, "Configuring server connection");
 
-        // Locate the realm certificate. A local stratum server dialing its
-        // global stratum server authenticates with a client cert supplied via
-        // a `.server` file; there is no separate server-to-server cert type.
-        #[cfg(all(feature = "client", not(feature = "agent")))]
-        let cert = self.realms.find_client_cert(url.realm.clone())?;
-
-        // An all-in-one build dials as the agent, matching the previous
-        // behavior where this arm shadowed the client one.
-        #[cfg(feature = "agent")]
-        let cert = self.realms.find_agent_cert(url.realm.clone())?;
-
-        #[cfg(all(feature = "server", not(feature = "client"), not(feature = "agent")))]
-        let cert = self.realms.find_client_cert(url.realm.clone())?;
+        // Locate the realm certificate for whatever this process is. A local
+        // stratum server dialing its global stratum server authenticates with a
+        // client cert supplied via a `.server` file; there is no separate
+        // server-to-server cert type.
+        let cert = self
+            .realms
+            .find_endpoint_cert(url.realm.clone(), self.instance_type)?;
 
         let client_builder = || -> Result<reqwest::Client> {
             Ok(ClientBuilder::new()
@@ -172,14 +175,13 @@ impl ServerLayer {
             inner: Arc::new(RwLock::new(None)),
             strategy,
             client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
-            data: self.database.realm(url.realm.clone())?.resident(())?,
             cancel: CancellationToken::new(),
             banner: ServerBanner::default(),
             realm: cert.name()?,
             cluster_id: cert.cluster_id()?,
             url,
             #[cfg(feature = "server")]
-            stratum: self.stratum.clone(),
+            stratum: (self.instance_type == InstanceType::Server).then(|| self.stratum.clone()),
         })
     }
 
@@ -262,7 +264,6 @@ impl Validate for ServerBanner {
 pub struct ServerConnection {
     client: Arc<tokio::sync::RwLock<Option<reqwest::Client>>>,
     pub strategy: ServerConnectStrategy,
-    pub data: Resident<ConnectionData>,
     pub cancel: CancellationToken,
     pub banner: ServerBanner,
     /// Active websocket connection used for streams / sync, once established.
@@ -275,8 +276,11 @@ pub struct ServerConnection {
 
     /// The stratum of the server making this connection, announced to the peer
     /// so it can enforce that a network has exactly one global stratum server.
+    /// `None` unless this process is actually running a server: a client or
+    /// agent built with the `server` feature still has a (inert) stratum, and
+    /// announcing it would make the peer mistake it for a second server.
     #[cfg(feature = "server")]
-    pub stratum: ServerStratum,
+    pub stratum: Option<ServerStratum>,
 }
 
 impl Drop for ServerConnection {
@@ -286,17 +290,20 @@ impl Drop for ServerConnection {
 }
 
 impl ServerConnection {
-    /// Get the remote address of this connection.
-    pub fn address(&self) -> Option<SocketAddr> {
-        self.data.read().remote_socket
+    /// The peer's instance id, known once the websocket upgrade has reported it.
+    pub fn remote_instance(&self) -> Option<InstanceId> {
+        self.inner
+            .read()
+            .unwrap()
+            .as_ref()
+            .map(|connection| connection.data.read().remote_instance)
     }
 
     /// Establish the websocket connection used for streams and DB sync, retaining
     /// it on this `ServerConnection`. The connection is deliberately *not* added
-    /// to `network.inbound`: that list backs the server-side stream relay, and in
-    /// an all-in-one build a dialer-side connection there (whose peer is the
-    /// local server itself) would be picked up as a relay target, bouncing
-    /// messages back to the server instead of reaching the agent.
+    /// to `network.inbound`: that list backs the server-side stream relay, which
+    /// forwards to instances attached to *this* server. A connection this
+    /// instance dialed points the other way.
     #[cfg(any(feature = "client", feature = "agent", feature = "server"))]
     pub async fn open_websocket(
         &self,
@@ -321,7 +328,10 @@ impl ServerConnection {
             // Servers announce their stratum so the peer can enforce the
             // network's shape; agents and clients send nothing here.
             #[cfg(feature = "server")]
-            let request = request.header("x-stratum", self.stratum.header_value());
+            let request = match self.stratum.as_ref() {
+                Some(stratum) => request.header("x-stratum", stratum.header_value()),
+                None => request,
+            };
 
             request.upgrade().send().await?
         };

@@ -42,6 +42,8 @@ inventory::submit! {
 mod server {
     use super::*;
     use crate::AccountData;
+    #[cfg(test)]
+    use crate::config::FaviconConfig;
     use crate::config::ScrapeConfig;
     use crate::scrape::{Fetched, HttpFetcher};
     use anyhow::{Result, bail};

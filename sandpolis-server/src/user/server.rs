@@ -404,14 +404,9 @@ pub async fn connect(
     let peer_is_server =
         !peer_stratum.is_empty() || remote_instance.is_some_and(|id| id.is_server());
 
-    // A co-located agent or client dialing its own process over loopback shares
-    // this server's InstanceId (and, in a server build, sends its `x-stratum`).
-    // It is not a peer server, so the topology checks below don't apply to it.
-    let self_connection = remote_instance.is_some_and(|id| id == local_instance);
-
     // A network has exactly one global stratum server, so another one announcing
     // itself is a misconfiguration rather than a topology to accommodate.
-    if peer_stratum == "global" && !self_connection {
+    if peer_stratum == "global" {
         tracing::warn!(
             "Rejecting connection from another global stratum server; a network has exactly one"
         );
@@ -424,7 +419,7 @@ pub async fn connect(
 
     // Local stratum servers connect upward only, never to each other, so an
     // inbound server connection here means someone is pointed at the wrong host.
-    if stratum.is_local() && peer_is_server && !self_connection {
+    if stratum.is_local() && peer_is_server {
         tracing::warn!(
             "Rejecting inbound server connection: local stratum servers connect upward only"
         );
@@ -463,9 +458,8 @@ pub async fn connect(
         // Likewise server-only: advertising lets a peer claim to carry traffic
         // for other instances, and an ownership claim carries the right to
         // write an instance's data into the estate — an agent or client must
-        // never be able to do either. A co-located peer shares this process's
-        // database, so there is nothing to advertise or claim.
-        if peer_is_server && !self_connection {
+        // never be able to do either.
+        if peer_is_server {
             sandpolis_instance::network::reachability::accept_advertisements(
                 &connection,
                 network.relay.clone(),
@@ -475,18 +469,9 @@ pub async fn connect(
 
         // Pull everything an attached agent owns (the long-lived sync). The
         // filter is scoped to the agent's own instance, so a peer can never
-        // smuggle in records belonging to someone else.
-        //
-        // Skip co-located peers (`remote_instance == local_instance`): in an
-        // all-in-one build the server, agent, and client share one InstanceId
-        // *and* one database, so pulling from the local agent (or the client,
-        // which also carries the agent bit of the shared id) is redundant and
-        // forms a feedback loop that floods the transport. Skip server peers
-        // too (an all-in-one local stratum server carries the agent bit): their
-        // data arrives through the ownership machinery instead.
-        if let Some(id) =
-            remote_instance.filter(|id| id.is_agent() && !id.is_server() && *id != local_instance)
-        {
+        // smuggle in records belonging to someone else. A server peer's data
+        // arrives through the ownership machinery instead.
+        if let Some(id) = remote_instance.filter(|id| id.is_agent()) {
             if stratum.is_local() {
                 // Ownership decides: the reconciler (`ownership::maintain_agent_sync`)
                 // opens this pull once the scope is granted and hydrated.

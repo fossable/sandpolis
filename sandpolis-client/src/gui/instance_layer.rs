@@ -3,7 +3,7 @@
 //! A diagnostic layer that shows every instance/node regardless of type (no
 //! per-type visibility filtering), so duplicate or phantom nodes are all
 //! visible at once. Its node panel shows metadata about the node only: the
-//! instance id, its decoded types, whether it is the local instance, the cluster
+//! instance id, its type, whether it is the local instance, the cluster
 //! id, OS info, and every `ConnectionData` row that references it (the
 //! connection ids, sockets, timestamps and byte counters).
 //!
@@ -59,7 +59,7 @@ impl NodePanel for InstancePanel {
         };
         let is_local = instance == self.instance.instance_id;
         let cluster = self.instance.cluster_id;
-        let types = instance.types();
+        let instance_type = instance.instance_type();
         let os = queries::query_instance_metadata(instance)
             .ok()
             .map(|m| m.os_type);
@@ -78,7 +78,7 @@ impl NodePanel for InstancePanel {
             ));
             p.spawn(text(
                 theme,
-                format!("Types: {types:?}"),
+                format!("Type: {instance_type:?}"),
                 theme.metrics.font_md,
                 Role::Text,
             ));

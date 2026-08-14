@@ -33,8 +33,8 @@ pub struct RealmConfig {
     /// `host:port`. Certificates minted for the realm name it in their common
     /// name, so it must be how the server is actually reachable from outside.
     ///
-    /// Absent means loopback, which is enough for an all-in-one development
-    /// run but not for anything else.
+    /// Absent means loopback, which is enough for instances started on the same
+    /// host but not for anything else.
     pub address: Option<String>,
 
     /// The realm's root certificate authority.

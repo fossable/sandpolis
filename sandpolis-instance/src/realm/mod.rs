@@ -197,13 +197,11 @@ pub struct Realms {
     /// knows what other realms exist.
     pub realms: ResidentVec<RealmData>,
 
-    /// Agent realm certs loaded from `.server` files, plus the co-located
-    /// agent's cert in an all-in-one build. Kept in memory only.
+    /// Agent realm certs loaded from `.server` files. Kept in memory only.
     #[cfg(feature = "agent")]
     agent_certs: Vec<RealmAgentCert>,
 
-    /// Client realm certs loaded from `.server` files, plus the co-located
-    /// client's cert in an all-in-one build. Kept in memory only.
+    /// Client realm certs loaded from `.server` files. Kept in memory only.
     ///
     /// Also used by a local stratum server to authenticate to its global stratum
     /// server — there is no separate server-to-server certificate type.
@@ -225,8 +223,8 @@ impl Realms {
     /// files the bootstraps came from.
     ///
     /// `listen_port` is where this process's server binds, used to name
-    /// certificates for a co-located client or agent when a realm declares no
-    /// address of its own.
+    /// certificates when a realm declares no address of its own — which is how
+    /// a local development server reaches itself.
     #[allow(unused_variables)]
     pub async fn new(
         bootstraps: Vec<RealmBootstrap>,
@@ -330,29 +328,18 @@ impl Realms {
                 rw.commit()?;
 
                 // Certificates minted here name the address this realm is
-                // reachable at, falling back to the loopback address a
-                // co-located client or agent would use.
+                // reachable at, falling back to loopback for a realm that
+                // declares none — a development server other instances reach on
+                // the same host.
                 let mut url: ServerUrl = match bootstrap.address.clone() {
                     Some(url) => url,
                     None => format!("127.0.0.1:{listen_port}").parse()?,
                 };
                 url.realm = name.clone();
 
-                // When the client and/or agent are compiled into the same
-                // binary (the "all-in-one" build), derive their realm certs from
-                // the local cluster CA and keep them in memory. This lets a
-                // co-located client/agent connect to the local server over
-                // loopback without an out-of-band `.server` file.
-                //
-                // Only possible here, where the CA is: an all-in-one local
-                // stratum server needs a `.server` file for its co-located
-                // client.
-                #[cfg(feature = "client")]
-                client_certs.push(ca.client_cert(&url)?);
-                #[cfg(feature = "agent")]
-                agent_certs.push(ca.agent_cert(&url)?);
-
-                // Write certs in development mode to make testing easier
+                // Write certs in development mode to make testing easier: an
+                // agent and a client started from these files attach to this
+                // server without any certificate being minted by hand.
                 #[cfg(debug_assertions)]
                 {
                     ca.client_cert(&url)?
@@ -564,6 +551,28 @@ impl Realms {
         Ok(())
     }
 
+    /// The certificate this process presents when it dials a server, which is
+    /// decided by what this process is: agents hold agent certificates, while
+    /// clients — and local stratum servers, which have no server-to-server
+    /// certificate type — hold client ones.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    pub fn find_endpoint_cert(
+        &self,
+        realm: RealmName,
+        instance_type: crate::InstanceType,
+    ) -> Result<EndpointCert> {
+        Ok(match instance_type {
+            #[cfg(feature = "agent")]
+            crate::InstanceType::Agent => EndpointCert::Agent(self.find_agent_cert(realm)?),
+            #[cfg(any(feature = "client", feature = "server"))]
+            crate::InstanceType::Client | crate::InstanceType::Server => {
+                EndpointCert::Client(self.find_client_cert(realm)?)
+            }
+            #[allow(unreachable_patterns)]
+            _ => bail!("This build cannot dial a server as a {instance_type:?}"),
+        })
+    }
+
     #[cfg(any(feature = "client", feature = "server"))]
     pub fn find_client_cert(&self, realm: RealmName) -> Result<RealmClientCert> {
         for cert in &self.client_certs {
@@ -736,12 +745,12 @@ impl RealmClientCert {
         ServerCertFile::from_client(self, poll).write(path)
     }
 
-    #[cfg(any(feature = "client", feature = "server"))]
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
-    #[cfg(any(feature = "client", feature = "server"))]
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();
@@ -829,7 +838,7 @@ mod test_enrollment {
     #[tokio::test]
     async fn replica_starts_without_certificates() -> Result<()> {
         let realms = layer(replica()?);
-        let id = InstanceId::new(&[InstanceType::Server]);
+        let id = InstanceId::new(InstanceType::Server);
         assert!(!realms.has_server_cert(RealmName::default(), id));
         Ok(())
     }
@@ -841,7 +850,7 @@ mod test_enrollment {
     async fn enrollment_installs_ca_without_its_key() -> Result<()> {
         let cluster_id = crate::ClusterId::default();
         let ca = RealmClusterCert::new(cluster_id, RealmName::default())?;
-        let id = InstanceId::new(&[InstanceType::Server]);
+        let id = InstanceId::new(InstanceType::Server);
         let issued = ca.server_cert(id)?;
 
         let realms = layer(replica()?);
@@ -877,7 +886,7 @@ mod test_enrollment {
     /// them, so `resident()` (which expects a singleton CA) keeps working.
     #[tokio::test]
     async fn re_enrolling_replaces_credentials() -> Result<()> {
-        let id = InstanceId::new(&[InstanceType::Server]);
+        let id = InstanceId::new(InstanceType::Server);
         let realms = layer(replica()?);
 
         for _ in 0..2 {
@@ -909,7 +918,7 @@ mod test_enrollment {
     async fn server_cert_requires_a_server_id() -> Result<()> {
         let ca = RealmClusterCert::new(crate::ClusterId::default(), RealmName::default())?;
         assert!(
-            ca.server_cert(InstanceId::new(&[InstanceType::Agent]))
+            ca.server_cert(InstanceId::new(InstanceType::Agent))
                 .is_err()
         );
         Ok(())
@@ -1118,12 +1127,12 @@ impl RealmAgentCert {
         ServerCertFile::from_agent(self, poll).write(path)
     }
 
-    #[cfg(feature = "agent")]
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn ca(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
-    #[cfg(feature = "agent")]
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
         let mut bundle = Vec::new();

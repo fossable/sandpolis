@@ -356,8 +356,8 @@ mod tests {
 
         let db: DatabaseLayer = test_db!(SyncTestData);
         let realm = db.realm(RealmName::default())?;
-        let a = InstanceId::default();
-        let b = InstanceId::default();
+        let a = InstanceId::new(crate::InstanceType::Agent);
+        let b = InstanceId::new(crate::InstanceType::Agent);
 
         reg.apply(&realm, &record(SyncOp::Upsert, a, "x", 1))?;
         reg.apply(&realm, &record(SyncOp::Upsert, b, "y", 2))?;
@@ -411,10 +411,8 @@ mod tests {
         let db: DatabaseLayer = test_db!(SyncTestData, GlobalTestData);
         let realm = db.realm(RealmName::default())?;
 
-        reg.apply(
-            &realm,
-            &record(SyncOp::Upsert, InstanceId::default(), "x", 1),
-        )?;
+        let instance = InstanceId::new(crate::InstanceType::Agent);
+        reg.apply(&realm, &record(SyncOp::Upsert, instance, "x", 1))?;
         let global_item = GlobalTestData {
             name: "g".into(),
             ..Default::default()
@@ -435,9 +433,14 @@ mod tests {
             <GlobalTestData as Model>::native_model_id()
         );
 
-        // The unscoped model never matches an instance filter.
-        let by_instance = reg.snapshot(&realm, &SyncFilter::instance(InstanceId::default()))?;
-        assert_eq!(by_instance.len(), 0);
+        // The unscoped model never matches an instance filter, not even the one
+        // whose scoped records are sitting right there.
+        let by_instance = reg.snapshot(&realm, &SyncFilter::instance(instance))?;
+        assert_eq!(by_instance.len(), 1);
+        assert_eq!(
+            by_instance[0].model_id,
+            <SyncTestData as Model>::native_model_id()
+        );
 
         assert_eq!(reg.snapshot(&realm, &SyncFilter::all())?.len(), 2);
         Ok(())

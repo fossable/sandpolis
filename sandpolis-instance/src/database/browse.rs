@@ -205,8 +205,8 @@ mod tests {
 
         let db: DatabaseLayer = test_db!(BrowseTestData);
         let realm = db.realm(RealmName::default())?;
-        let a = InstanceId::default();
-        let b = InstanceId::default();
+        let a = InstanceId::new(crate::InstanceType::Agent);
+        let b = InstanceId::new(crate::InstanceType::Agent);
 
         let rw = realm.write(DataScope::Instance(a))?;
         rw.insert(BrowseTestData {

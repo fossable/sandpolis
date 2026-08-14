@@ -1010,8 +1010,8 @@ mod test_scoped {
         let db = test_scoped_db!(table, InstanceScopeData);
         let realm = db.realm(RealmName::default())?;
 
-        let self_id = InstanceId::new(&[crate::InstanceType::Server]);
-        let agent = InstanceId::new(&[crate::InstanceType::Agent]);
+        let self_id = InstanceId::new(crate::InstanceType::Server);
+        let agent = InstanceId::new(crate::InstanceType::Agent);
 
         // Nothing owned yet: not even the self scope.
         assert!(realm.write(DataScope::Instance(self_id)).is_err());

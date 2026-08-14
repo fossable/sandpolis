@@ -68,7 +68,7 @@
           ip link set lo up
 
           # Launch the agent
-          exec /sbin/sandpolis
+          exec /sbin/sandpolis agent
         '';
 
         # Create initramfs with makeInitrd

@@ -427,9 +427,9 @@ fn process_database_updates(
     while let Ok(update) = update_channel.receiver.try_recv() {
         match update {
             DatabaseUpdate::InstanceAdded(instance_id) => {
-                // A single instance (e.g. a co-located server+client+agent that
-                // shares one InstanceId) can produce several connections, each
-                // firing InstanceAdded. Only spawn one node per InstanceId.
+                // One instance can produce several connections (a reconnect
+                // that overlaps the old socket), each firing InstanceAdded.
+                // Only spawn one node per InstanceId.
                 let already_spawned = spawned_this_pass.contains(&instance_id)
                     || node_query
                         .iter()

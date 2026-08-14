@@ -38,7 +38,7 @@ async fn surfaces_new_notifications_but_not_replayed_history() -> Result<()> {
         WriteAuthority::Full,
     )?;
     let realm = database.realm(RealmName::default())?;
-    let instance_id = InstanceId::new(&[InstanceType::Agent]);
+    let instance_id = InstanceId::new(InstanceType::Agent);
 
     install(&realm, instance_id);
 

@@ -6,6 +6,63 @@ pub mod gui;
 #[cfg(all(feature = "client", not(target_os = "android")))]
 pub mod tui;
 
+/// Bring up everything a client needs and run `command`: the GUI in the
+/// foreground, or a subcommand's focused TUI.
+///
+/// A client keeps nothing across runs — its database is in memory and it owns it
+/// outright — so all it needs from the command line is the server to attach to.
+#[cfg(not(target_os = "android"))]
+pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process::ExitCode> {
+    use sandpolis_instance::database::{DatabaseLayer, WriteAuthority};
+    use sandpolis_instance::realm::Realms;
+
+    let args = command.client_args().cloned().unwrap_or_default();
+    let options = args.options();
+
+    // Clients read no config file, so the `.server` file is the only way to
+    // point one at a server without going through the GUI login dialog.
+    let endpoint = crate::load_server_file(args.server.as_deref())?;
+    let endpoint_certs = endpoint
+        .as_ref()
+        .map(|(cert, _)| cert.clone())
+        .into_iter()
+        .collect();
+
+    let database = DatabaseLayer::new(
+        options.database.clone(),
+        &crate::MODELS,
+        WriteAuthority::Full,
+    )?;
+
+    // The client knows the realm its certificate names, plus the default realm
+    // its own local data lives in.
+    let realms = Realms::for_client(endpoint_certs, database.clone())?;
+
+    let state = InstanceState::new(
+        &options,
+        database,
+        realms,
+        // A client runs no server of its own, so this is inert.
+        crate::ServerStratum::Global,
+    )
+    .await?;
+
+    if let Some((cert, _)) = endpoint {
+        spawn_configured_server_connections(state.clone(), &[cert.url()?]);
+    }
+
+    // The GUI establishes the sync websocket itself; a subcommand needs it
+    // before its view can show anything.
+    if let crate::cli::Commands::Client { .. } = command {
+        tracing::info!("Starting Sandpolis client");
+        gui::main(options, state).await?;
+        return Ok(std::process::ExitCode::SUCCESS);
+    }
+
+    spawn_client_sync(state.clone());
+    command.dispatch_client(&options, &state).await
+}
+
 /// Establish the websocket to the first available server and install it for DB
 /// sync. Runs in the background until a server connection exists (the user logs
 /// in), then opens the websocket once and hands it to `sandpolis_client::sync`.
@@ -85,27 +142,6 @@ pub fn spawn_configured_server_connections(
     for url in urls {
         spawn_server_connection(state.clone(), url.clone());
     }
-}
-
-/// In an "all-in-one" build (a server is compiled and running in this same
-/// process), automatically open a loopback connection to the local server so the
-/// client targets it without any manual configuration. Retries until the
-/// in-process server is listening, then registers the connection so
-/// [`spawn_client_sync`] establishes the sync websocket.
-#[cfg(feature = "server")]
-pub fn spawn_local_server_connection(state: InstanceState, port: u16) {
-    use sandpolis_server::ServerUrl;
-    use std::str::FromStr;
-
-    let url = match ServerUrl::from_str(&format!("https://127.0.0.1:{port}/default")) {
-        Ok(url) => url,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to build local server URL");
-            return;
-        }
-    };
-
-    spawn_server_connection(state, url);
 }
 
 /// Open (and retain) a connection to `url`, retrying until it succeeds.

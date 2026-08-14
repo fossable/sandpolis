@@ -171,6 +171,42 @@ impl EndpointCert {
     pub fn realm(&self) -> Result<RealmName> {
         Ok(self.url()?.realm)
     }
+
+    /// The realm this certificate authenticates against, named the way the
+    /// underlying certificates name it.
+    pub fn name(&self) -> Result<RealmName> {
+        match self {
+            Self::Client(cert) => cert.name(),
+            Self::Agent(cert) => cert.name(),
+        }
+    }
+
+    /// The cluster this certificate's realm belongs to.
+    pub fn cluster_id(&self) -> Result<super::ClusterId> {
+        match self {
+            Self::Client(cert) => cert.cluster_id(),
+            Self::Agent(cert) => cert.cluster_id(),
+        }
+    }
+
+    /// The realm CA, for verifying the server this certificate names.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    pub fn ca(&self) -> Result<reqwest::Certificate> {
+        match self {
+            Self::Client(cert) => cert.ca(),
+            Self::Agent(cert) => cert.ca(),
+        }
+    }
+
+    /// This instance's own certificate and key, for authenticating to the
+    /// server.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    pub fn identity(&self) -> Result<reqwest::Identity> {
+        match self {
+            Self::Client(cert) => cert.identity(),
+            Self::Agent(cert) => cert.identity(),
+        }
+    }
 }
 
 /// RON parsing options for the file formats: allow optional fields without an

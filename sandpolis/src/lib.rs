@@ -31,7 +31,10 @@ pub use sandpolis_server::ServerStratum;
 #[derive(Clone)]
 pub struct RuntimeOptions {
     pub database: sandpolis_instance::database::config::DatabaseConfig,
-    pub instance: sandpolis_instance::config::InstanceConfig,
+
+    /// What this process was started as, which is what decides the type of its
+    /// [`sandpolis_instance::InstanceId`]. One process is exactly one instance.
+    pub instance_type: sandpolis_instance::InstanceType,
 
     /// Where this process's server binds.
     #[cfg(feature = "server")]
@@ -49,11 +52,9 @@ pub struct RuntimeOptions {
     #[cfg(feature = "agent")]
     pub poll: Option<sandpolis_instance::realm::config::PollConfig>,
 
-    /// Servers the agent maintains connections to: the one named by the
-    /// `.server` file, plus the co-located server's loopback address in an
-    /// all-in-one build.
+    /// The server this agent attaches to, named by its `.server` file.
     #[cfg(feature = "agent")]
-    pub servers: Vec<sandpolis_server::ServerUrl>,
+    pub server: Option<sandpolis_server::ServerUrl>,
 
     /// Realms this server was told to serve, one per `--realm` file.
     #[cfg(feature = "server")]
@@ -64,7 +65,7 @@ impl Default for RuntimeOptions {
     fn default() -> Self {
         Self {
             database: Default::default(),
-            instance: Default::default(),
+            instance_type: sandpolis_instance::InstanceType::Client,
             #[cfg(feature = "server")]
             listen: std::net::SocketAddr::new(
                 std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
@@ -77,7 +78,7 @@ impl Default for RuntimeOptions {
             #[cfg(feature = "agent")]
             poll: None,
             #[cfg(feature = "agent")]
-            servers: Vec::new(),
+            server: None,
             #[cfg(feature = "server")]
             realms: Vec::new(),
         }
@@ -85,7 +86,7 @@ impl Default for RuntimeOptions {
 }
 
 impl RuntimeOptions {
-    /// Defaults for an instance that only connects out — the mobile app, an
+    /// Defaults for a client that only connects out — the mobile app, an
     /// example — where no command line was parsed.
     pub fn embedded() -> Self {
         Self::default()
@@ -131,14 +132,14 @@ impl RuntimeOptions {
 /// along with any polling settings written alongside it.
 #[cfg(not(target_os = "android"))]
 pub fn load_server_file(
-    args: &cli::CommandLine,
+    path: Option<&std::path::Path>,
 ) -> Result<
     Option<(
         sandpolis_instance::realm::config::EndpointCert,
         Option<sandpolis_instance::realm::config::PollConfig>,
     )>,
 > {
-    let Some(path) = args.server.as_ref() else {
+    let Some(path) = path else {
         return Ok(None);
     };
     Ok(Some(
@@ -146,14 +147,14 @@ pub fn load_server_file(
     ))
 }
 
-/// Which stratum this process's server runs in.
+/// Which stratum a server runs in.
 ///
-/// A `.server` file means this instance attaches to the server it names, which
-/// puts its own server (if it has one) in the local stratum. Without one, this
-/// is the network's single global stratum server.
+/// A `.server` file means this server attaches to the one it names, which puts
+/// it in the local stratum. Without one, this is the network's single global
+/// stratum server.
 #[cfg(not(target_os = "android"))]
-pub fn stratum(args: &cli::CommandLine) -> Result<ServerStratum> {
-    Ok(match load_server_file(args)? {
+pub fn stratum(server_file: Option<&std::path::Path>) -> Result<ServerStratum> {
+    Ok(match load_server_file(server_file)? {
         Some((cert, _)) => ServerStratum::Local {
             global: cert.url()?,
         },
@@ -203,7 +204,8 @@ impl InstanceState {
     ) -> Result<Self> {
         // Create all the configured layers, starting with the most foundational
 
-        let instance = sandpolis_instance::InstanceLayer::new(database.clone()).await?;
+        let instance =
+            sandpolis_instance::InstanceLayer::new(database.clone(), options.instance_type).await?;
 
         let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
 
@@ -212,6 +214,7 @@ impl InstanceState {
             network.clone(),
             realms.clone(),
             stratum,
+            options.instance_type,
         )
         .await?;
 

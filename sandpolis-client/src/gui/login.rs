@@ -1,5 +1,4 @@
 use crate::gui::input::{LoginDialogState, LoginPhase};
-use crate::gui::listeners::{DatabaseUpdate, DatabaseUpdateSender};
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::text_input;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
@@ -28,7 +27,7 @@ pub struct LoginPhase1Handle {
 }
 
 pub struct LoginPhase2Handle {
-    pub task: bevy::tasks::Task<Result<(LoginResponse, sandpolis_instance::InstanceId), String>>,
+    pub task: bevy::tasks::Task<Result<LoginResponse, String>>,
     pub server_url: ServerUrl,
     pub username: sandpolis_server::user::UserName,
 }
@@ -100,7 +99,6 @@ pub fn handle_login_phase2(
     mut login_state: ResMut<LoginDialogState>,
     mut login_operation: ResMut<LoginOperation>,
     server_layer: Res<sandpolis_server::ServerLayer>,
-    db_update_sender: Res<DatabaseUpdateSender>,
 ) {
     // Check if we need to start phase 2
     if matches!(login_state.phase, LoginPhase::Credentials { .. })
@@ -150,9 +148,6 @@ pub fn handle_login_phase2(
                 .await
                 .map_err(|e| format!("Connection failed: {}", e))?;
 
-            // Get the server's instance ID from the connection
-            let server_instance_id = connection.data.read().remote_instance;
-
             // Create login request with hashed password
             let login_request = LoginRequest {
                 username: username_clone.clone(),
@@ -167,7 +162,7 @@ pub fn handle_login_phase2(
                 .await
                 .map_err(|e| format!("Login request failed: {}", e))?;
 
-            Ok((response, server_instance_id))
+            Ok(response)
         });
 
         login_operation.phase2_handle = Some(LoginPhase2Handle {
@@ -181,7 +176,7 @@ pub fn handle_login_phase2(
     if let Some(mut handle) = login_operation.phase2_handle.take() {
         if let Some(result) = bevy::tasks::block_on(bevy::tasks::poll_once(&mut handle.task)) {
             match result {
-                Ok((LoginResponse::Ok(client_auth_token), server_instance_id)) => {
+                Ok(LoginResponse::Ok(client_auth_token)) => {
                     info!("Phase 2 complete: login successful");
 
                     // Save the server for future use
@@ -196,14 +191,6 @@ pub fn handle_login_phase2(
                         error!(error = %e, "Failed to save server");
                     }
 
-                    // Notify the UI to spawn a new server node
-                    if let Err(e) = db_update_sender
-                        .sender
-                        .send(DatabaseUpdate::InstanceAdded(server_instance_id))
-                    {
-                        error!(error = %e, "Failed to send InstanceAdded event");
-                    }
-
                     // Close dialog and reset state
                     login_state.show = false;
                     login_state.phase = LoginPhase::ServerAddress;
@@ -214,18 +201,18 @@ pub fn handle_login_phase2(
                     login_state.error_message = None;
                     login_state.loading = false;
                 }
-                Ok((LoginResponse::Denied, _)) => {
+                Ok(LoginResponse::Denied) => {
                     error!("Phase 2 failed: login denied");
                     login_state.error_message =
                         Some("Invalid username, password, or OTP".to_string());
                     login_state.loading = false;
                 }
-                Ok((LoginResponse::Expired, _)) => {
+                Ok(LoginResponse::Expired) => {
                     error!("Phase 2 failed: account expired");
                     login_state.error_message = Some("Account has expired".to_string());
                     login_state.loading = false;
                 }
-                Ok((LoginResponse::Invalid, _)) => {
+                Ok(LoginResponse::Invalid) => {
                     error!("Phase 2 failed: invalid request");
                     login_state.error_message = Some("Invalid login request".to_string());
                     login_state.loading = false;

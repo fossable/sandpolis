@@ -241,12 +241,9 @@ impl Ownership {
     }
 }
 
-/// The instances directly attached to this server, excluding ourselves and any
-/// server peer (a server owns its own scope and is never owned).
-pub(crate) fn attached_instances(
-    network: &NetworkLayer,
-    local_instance: InstanceId,
-) -> BTreeSet<InstanceId> {
+/// The instances directly attached to this server, excluding any server peer (a
+/// server owns its own scope and is never owned).
+pub(crate) fn attached_instances(network: &NetworkLayer) -> BTreeSet<InstanceId> {
     network
         .inbound
         .read()
@@ -254,7 +251,7 @@ pub(crate) fn attached_instances(
         .iter()
         .filter(|c| !c.cancel.is_cancelled())
         .map(|c| c.data.read().remote_instance)
-        .filter(|id| *id != local_instance && !id.is_server())
+        .filter(|id| !id.is_server())
         .collect()
 }
 
@@ -277,7 +274,7 @@ pub async fn maintain_local_claims(
 
     let mut previous: Option<BTreeSet<InstanceId>> = None;
     loop {
-        let attached = attached_instances(&network, local_instance);
+        let attached = attached_instances(&network);
         if previous.as_ref() != Some(&attached) {
             let list: Vec<InstanceId> = attached.iter().copied().collect();
             if let Err(e) = ownership.claim(local_instance, &list) {
@@ -302,11 +299,11 @@ mod test_grants {
     use sandpolis_instance::{test_db, test_scoped_db};
 
     fn server() -> InstanceId {
-        InstanceId::new(&[InstanceType::Server])
+        InstanceId::new(InstanceType::Server)
     }
 
     fn agent() -> InstanceId {
-        InstanceId::new(&[InstanceType::Agent])
+        InstanceId::new(InstanceType::Agent)
     }
 
     /// A claim grants what is newly attached and bumps the epoch only when
@@ -682,7 +679,6 @@ pub async fn maintain_agent_sync(
     realm: RealmDatabase,
     table: Arc<ScopeTable>,
     ownership: Arc<Ownership>,
-    local_instance: InstanceId,
 ) {
     let notify = ownership.changed.clone();
     {
@@ -706,7 +702,7 @@ pub async fn maintain_agent_sync(
             .iter()
             .filter(|c| !c.cancel.is_cancelled())
             .map(|c| (c.data.read().remote_instance, c.clone()))
-            .filter(|(id, _)| *id != local_instance && !id.is_server())
+            .filter(|(id, _)| !id.is_server())
             .collect();
 
         // Drop pulls whose agent left, whose scope we lost, or whose connection
