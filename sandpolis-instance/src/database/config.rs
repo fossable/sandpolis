@@ -3,64 +3,35 @@ use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use validator::Validate;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct DatabaseConfig {
-    /// Storage directory, set via the `--data-dir` flag. Not part of the on-disk
+    /// Storage directory, set via the `--data` flag. Not part of the on-disk
     /// config.
+    ///
+    /// Absent means the instance is ephemeral: every realm's database is kept
+    /// in memory and nothing survives the process.
     #[serde(skip)]
     pub storage: Option<PathBuf>,
-
-    /// Don't persist any data
-    pub ephemeral: bool,
 
     /// Key that encrypts the entire database
     pub key: DatabaseKey,
 }
 
-impl Validate for DatabaseConfig {
-    fn validate(&self) -> std::result::Result<(), validator::ValidationErrors> {
-        if self.ephemeral && self.storage.is_some() {
-            // TODO don't allow
-        }
-
-        Ok(())
-    }
-}
-
-impl Default for DatabaseConfig {
-    fn default() -> Self {
-        Self {
-            // TODO platform specific
-            storage: Some("/tmp".into()),
-            ephemeral: false,
-            key: DatabaseKey::default(),
-        }
-    }
-}
-
 impl DatabaseConfig {
-    /// Create the storage directory if needed.
+    /// The storage directory, created if it doesn't exist yet. `None` when this
+    /// instance is ephemeral.
     pub fn get_storage_dir(&self) -> Result<Option<PathBuf>> {
-        if let Some(path) = self.storage.clone() {
-            if !std::fs::exists(&path)? {
-                std::fs::create_dir_all(&path)?;
-            } else if !std::fs::metadata(&path)?.is_dir() {
-                bail!("Storage directory must be a directory");
-            }
-            Ok(Some(path))
-        } else if self.ephemeral {
-            Ok(None)
-        } else {
-            let path = Self::default().storage.unwrap();
-            if !std::fs::exists(&path)? {
-                std::fs::create_dir_all(&path)?;
-            } else if !std::fs::metadata(&path)?.is_dir() {
-                bail!("Storage directory must be a directory");
-            }
-            Ok(Some(path))
+        let Some(path) = self.storage.clone() else {
+            return Ok(None);
+        };
+
+        if !std::fs::exists(&path)? {
+            std::fs::create_dir_all(&path)?;
+        } else if !std::fs::metadata(&path)?.is_dir() {
+            bail!("Storage directory must be a directory");
         }
+        Ok(Some(path))
     }
 }
 

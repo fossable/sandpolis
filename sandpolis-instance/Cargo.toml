@@ -54,6 +54,16 @@ uuid = { workspace = true }
 validator = { workspace = true }
 x509-parser = { version = "0.18.1" }
 
+# Native notification backends. Optional and per-target, all switched on
+# together by the `client` feature — only a client shows notifications to a
+# person. Same arrangement as `sandpolis-desktop`'s capture/input backends.
+[target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
+notify-rust = { version = "4.18", optional = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { version = "0.22.4", optional = true }
+ndk-context = { version = "0.1", optional = true }
+
 [dev-dependencies]
 test-log = { version = "0.2.18", features = ["trace"] }
 criterion = { version = "0.8.2", features = ["html_reports", "async_tokio"] }
@@ -68,7 +78,15 @@ harness = false
 
 [features]
 agent = ["dep:reqwest", "dep:reqwest-websocket"]
-client = ["dep:reqwest", "dep:reqwest-websocket", "dep:bevy"]
+client = [
+  "dep:reqwest",
+  "dep:reqwest-websocket",
+  "dep:bevy",
+  # Native notification backends; each is a no-op off its own platform.
+  "dep:notify-rust",
+  "dep:jni",
+  "dep:ndk-context",
+]
 server = [
   "dep:reqwest",
   "dep:reqwest-websocket",

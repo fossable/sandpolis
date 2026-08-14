@@ -109,10 +109,6 @@ login from that user (anywhere in the network) will fire an urgent alert.
 
 Provides access to remote desktop capabilities.
 
-### Deploy
-
-Support for deploying agents via SSH.
-
 ### Filesystem
 
 Provides read/write access to agent filesystems. The Sandpolis client can also

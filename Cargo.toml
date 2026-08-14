@@ -9,7 +9,6 @@ members = [
   "sandpolis-agent",
   "sandpolis-audit",
   "sandpolis-client",
-  "sandpolis-deploy",
   "sandpolis-desktop",
   "sandpolis-filesystem",
   "sandpolis-health",

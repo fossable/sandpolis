@@ -2,6 +2,9 @@
 pub mod cli;
 
 #[cfg(feature = "client")]
+pub mod notification;
+
+#[cfg(feature = "client")]
 pub mod service;
 
 #[cfg(feature = "client")]

@@ -72,6 +72,20 @@ pub fn primary_server_url() -> Option<ServerUrl> {
     CONNECTIONS.read().unwrap().first().map(|c| c.url.clone())
 }
 
+/// The instances the client currently has a live connection to.
+///
+/// Entries are never removed from [`CONNECTIONS`], so a dropped connection is
+/// still listed — its cancellation token is what says it's gone.
+pub fn connected_instances() -> Vec<InstanceId> {
+    CONNECTIONS
+        .read()
+        .unwrap()
+        .iter()
+        .filter(|c| !c.connection.cancel.is_cancelled())
+        .map(|c| c.instance_id)
+        .collect()
+}
+
 /// All known server connections as `(url, instance_id)`, for grouping in the UI.
 pub fn servers() -> Vec<(ServerUrl, InstanceId)> {
     CONNECTIONS

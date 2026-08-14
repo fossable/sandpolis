@@ -19,7 +19,6 @@ async fn main() -> Result<()> {
 
     // Client-side state, kept entirely in memory
     let mut options = RuntimeOptions::embedded();
-    options.database.ephemeral = true;
     options.database.storage = None;
 
     // The test server hands out a `.server` file, which is the whole trust

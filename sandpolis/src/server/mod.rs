@@ -158,7 +158,6 @@ pub async fn test_server() -> Result<TestServer> {
     let url: sandpolis_server::ServerUrl = format!("127.0.0.1:{port}/test").parse()?;
 
     let mut options = RuntimeOptions::embedded();
-    options.database.ephemeral = true;
     options.database.storage = None;
     options.listen = format!("127.0.0.1:{port}").parse()?;
 

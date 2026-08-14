@@ -5,7 +5,7 @@
 
 pub mod about;
 pub mod activity;
-pub mod add_agent;
+pub mod core_toolbar;
 pub mod assets;
 pub mod controller;
 pub mod database_browser;
@@ -22,6 +22,7 @@ pub mod listeners;
 pub mod login;
 pub mod minimap;
 pub mod node;
+pub mod node_effects;
 pub mod node_picker;
 pub mod preview;
 pub mod queries;
@@ -30,4 +31,5 @@ pub mod services_panel;
 pub mod terrain;
 pub mod terrain_layout;
 pub mod theme;
+pub mod toast;
 pub mod ui;

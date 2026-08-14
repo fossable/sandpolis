@@ -3,6 +3,7 @@ use anyhow::Result;
 use sandpolis_agent::Collector;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::database::{RealmDatabase, ResidentVec};
+use sandpolis_instance::notification::{Notification, notify};
 use std::str::FromStr;
 use tracing::trace;
 use zbus::Connection;
@@ -54,6 +55,23 @@ impl SystemdCollector {
         self.data.iter().map(|r| r.read().clone()).collect()
     }
 
+    /// Tell the user a unit has failed.
+    ///
+    /// The notification is raised against this agent, so it replicates up to
+    /// whichever server owns it and on to any connected client.
+    fn notify_failed(&self, unit: &UnitListEntry) {
+        let mut notification =
+            Notification::error("Health", format!("{} failed", unit.name)).about(self.instance_id);
+
+        // The description reads better than the unit name on its own, but
+        // systemd leaves it empty often enough to be worth checking.
+        if !unit.description.is_empty() {
+            notification = notification.body(unit.description.clone());
+        }
+
+        notify(notification);
+    }
+
     /// Connect to the system bus on first use and reuse the connection after.
     async fn connection(&mut self) -> Result<&Connection> {
         if self.connection.is_none() {
@@ -72,19 +90,39 @@ impl Collector for SystemdCollector {
 
         // Update or add any units reported by systemd
         'next_unit: for unit in &units {
+            let reported = ActiveState::from_str(&unit.active_state)
+                .unwrap_or(ActiveState::Unknown(unit.active_state.clone()));
+
             for resident in self.data.iter() {
                 if resident.read().name == unit.name {
+                    // Read the old state before the update rather than from
+                    // inside it: `Resident::update` takes an `Fn`, so the
+                    // closure can't hand anything back.
+                    let was_failed = resident.read().active_state == ActiveState::Failed;
+
                     resident.update(|u| {
                         u.description = Some(unit.description.clone());
                         u.load_state = Some(unit.load_state.clone());
-                        u.active_state = ActiveState::from_str(&unit.active_state)
-                            .unwrap_or(ActiveState::Unknown(unit.active_state.clone()));
+                        u.active_state = reported.clone();
                         u.sub_state = Some(unit.sub_state.clone());
                         Ok(())
                     });
+
+                    // Only on the edge into `failed`. A unit that stays failed
+                    // would otherwise re-notify on every poll.
+                    if !was_failed && reported == ActiveState::Failed {
+                        self.notify_failed(unit);
+                    }
                     continue 'next_unit;
                 }
             }
+
+            // A unit already failed the first time we see it is worth saying
+            // once — the agent may have started after it broke.
+            if reported == ActiveState::Failed {
+                self.notify_failed(unit);
+            }
+
             let mut data: SystemdUnitData = unit.into();
             data._instance_id = self.instance_id;
             self.data.push(data)?;

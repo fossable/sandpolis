@@ -20,6 +20,10 @@ pub struct NodeEntity {
 #[derive(Component)]
 pub struct Selected;
 
+/// Marker component for nodes the client currently can't reach.
+#[derive(Component)]
+pub struct Offline;
+
 /// Marker for nodes that the generic node-selection handler must ignore (e.g.
 /// probe/device nodes, which have their own per-device selection). These nodes
 /// share their gateway's `InstanceId`, so the selection set can't tell them

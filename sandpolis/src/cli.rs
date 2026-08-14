@@ -13,18 +13,20 @@ use sandpolis_client::cli::TargetArgs;
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version, about = "Test")]
 pub struct CommandLine {
-    /// Path to a `.realm` file declaring a realm this server should serve. May
-    /// be given multiple times.
+    /// Directory holding this instance's database and, on a global stratum
+    /// server, the `.realm` files it serves.
     ///
-    /// The filename stem is the realm's name. A blank file means "generate a
-    /// realm CA for me", which is then written back into the file — after which
-    /// that file is the durable copy of the realm's trust root.
+    /// Every `*.realm` file in the directory declares one realm, named after
+    /// the filename stem. A blank file means "generate a realm CA for me",
+    /// which is then written back into the file — after which that file is the
+    /// durable copy of the realm's trust root. A global stratum server that
+    /// finds no realm file creates `default.realm`.
     ///
-    /// Serving realms makes this the network's global stratum server, so it
-    /// can't be combined with `--server`.
-    #[cfg(feature = "server")]
-    #[clap(long, value_name = "PATH", conflicts_with = "server")]
-    pub realm: Vec<PathBuf>,
+    /// Without this flag the instance is ephemeral: its databases are kept in
+    /// memory and nothing survives the process.
+    #[cfg(any(feature = "server", feature = "agent"))]
+    #[clap(long, value_name = "DIR")]
+    pub data: Option<PathBuf>,
 
     /// Path to a `.server` file naming the server this instance connects to
     /// ($S7S_SERVER).
@@ -58,21 +60,30 @@ pub struct CommandLine {
     #[clap(flatten)]
     pub instance: sandpolis_instance::cli::InstanceCommandLine,
 
-    #[clap(flatten)]
-    pub database: sandpolis_instance::database::cli::DatabaseCommandLine,
-
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
 
 impl CommandLine {
+    /// Where this instance stores its data, or `None` when it's ephemeral.
+    /// Clients have no `--data` flag, so a client-only build is always
+    /// ephemeral.
+    #[cfg(any(feature = "server", feature = "agent"))]
+    pub fn storage(&self) -> Option<PathBuf> {
+        self.data.clone()
+    }
+
+    #[cfg(not(any(feature = "server", feature = "agent")))]
+    pub fn storage(&self) -> Option<PathBuf> {
+        None
+    }
+
     /// The process-wide options these flags describe. What the `.server` file
     /// contributes is filled in by the caller, which is what loads it.
     pub fn options(&self) -> RuntimeOptions {
         RuntimeOptions {
             database: sandpolis_instance::database::config::DatabaseConfig {
-                storage: self.database.data_dir.clone(),
-                ephemeral: self.database.ephemeral,
+                storage: self.storage(),
                 ..Default::default()
             },
             instance: sandpolis_instance::config::InstanceConfig {
@@ -165,9 +176,12 @@ impl NewCertArgs {
         let Some(ca) = config.ca.as_ref() else {
             bail!(
                 "{} declares no realm CA. Start the server once with \
-                 `--realm {}` to generate one.",
+                 `--data {}` to generate one.",
                 self.realm.display(),
-                self.realm.display()
+                self.realm
+                    .parent()
+                    .unwrap_or_else(|| std::path::Path::new("."))
+                    .display()
             );
         };
         let (cert, key) = ca.load_der(config.base_dir())?;
@@ -503,21 +517,21 @@ mod test_stratum_args {
         Ok(())
     }
 
-    /// A realm is something the global stratum server serves; an instance that
-    /// attaches to one can't also be it.
+    /// A local stratum server keeps a database of its own, so the two flags
+    /// describe different things and go together.
     #[test]
-    fn realm_conflicts_with_server() {
-        let result = CommandLine::try_parse_from([
+    fn data_and_server_go_together() -> Result<()> {
+        let args = CommandLine::try_parse_from([
             "sandpolis",
-            "--realm",
-            "./default.realm",
+            "--data",
+            "/var/lib/sandpolis",
             "--server",
             "./upstream.server",
-        ]);
-        assert!(
-            result.is_err(),
-            "a local stratum server must not serve realms of its own"
-        );
+        ])
+        .expect("--data and --server parse together");
+
+        assert_eq!(args.data.as_deref(), Some(std::path::Path::new("/var/lib/sandpolis")));
+        Ok(())
     }
 
     /// A `.server` file that isn't there is a misconfiguration, not something to

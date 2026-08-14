@@ -42,7 +42,7 @@ pub fn main() {
                 Err(e) => {
                     eprintln!("Failed to get Android files directory: {}", e);
                     // Fallback to ephemeral database
-                    options.database.ephemeral = true;
+                    options.database.storage = None;
                 }
             }
 

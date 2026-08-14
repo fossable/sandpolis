@@ -93,6 +93,44 @@ impl RealmConfig {
         Ok(config)
     }
 
+    /// Every realm declared in `dir`, one per `*.realm` file.
+    ///
+    /// This is how the global stratum server finds the realms it serves: the
+    /// directory holding its database is also where its realm files live, so
+    /// nothing outside has to enumerate them. An empty directory gets a blank
+    /// `default.realm`, since a server that serves nothing is never what was
+    /// wanted; its CA is minted on this same start and written back.
+    pub fn load_dir<P>(dir: P) -> Result<Vec<Self>>
+    where
+        P: AsRef<Path>,
+    {
+        let dir = dir.as_ref();
+        std::fs::create_dir_all(dir)
+            .with_context(|| format!("Creating {}", dir.display()))?;
+
+        let mut paths: Vec<PathBuf> = std::fs::read_dir(dir)
+            .with_context(|| format!("Reading {}", dir.display()))?
+            .map(|entry| entry.map(|entry| entry.path()))
+            .collect::<std::io::Result<Vec<_>>>()?
+            .into_iter()
+            .filter(|path| path.extension().is_some_and(|ext| ext == "realm"))
+            .collect();
+
+        // Sorted so the set doesn't depend on directory iteration order, which
+        // decides which realm's `account.scrape` section wins.
+        paths.sort();
+
+        if paths.is_empty() {
+            let path = dir.join("default.realm");
+            debug!(path = %path.display(), "Creating the initial realm file");
+            std::fs::write(&path, "")
+                .with_context(|| format!("Creating {}", path.display()))?;
+            paths.push(path);
+        }
+
+        paths.into_iter().map(Self::load).collect()
+    }
+
     /// The directory this was loaded from, which relative certificate paths
     /// resolve against.
     pub fn base_dir(&self) -> Option<&Path> {
@@ -300,6 +338,40 @@ mod test_realm_config {
         let ca = reloaded.ca.expect("the generated CA is written back");
         assert!(matches!(ca.cert, CertSource::Inline(_)));
         assert!(ca.key.is_some());
+        Ok(())
+    }
+
+    /// A data directory with no realm file gets one, so a fresh install comes
+    /// up serving something.
+    #[test]
+    fn empty_dir_gets_a_default_realm() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+
+        let realms = RealmConfig::load_dir(dir.path())?;
+        assert_eq!(realms.len(), 1);
+        assert_eq!(realms[0].name, "default".parse()?);
+        assert!(dir.path().join("default.realm").exists());
+
+        // A second start finds the file rather than making another one.
+        let realms = RealmConfig::load_dir(dir.path())?;
+        assert_eq!(realms.len(), 1);
+        assert_eq!(realms[0].path(), Some(dir.path().join("default.realm")).as_deref());
+        Ok(())
+    }
+
+    /// Every realm file is loaded, in a fixed order, and nothing else in the
+    /// directory is mistaken for one — the database lives here too.
+    #[test]
+    fn every_realm_file_is_loaded_in_order() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        std::fs::write(dir.path().join("prod.realm"), "")?;
+        std::fs::write(dir.path().join("dev.realm"), "")?;
+        std::fs::write(dir.path().join("default.db"), "")?;
+        std::fs::write(dir.path().join("notes.txt"), "")?;
+
+        let realms = RealmConfig::load_dir(dir.path())?;
+        let names: Vec<_> = realms.iter().map(|realm| realm.name.to_string()).collect();
+        assert_eq!(names, vec!["dev", "prod"]);
         Ok(())
     }
 

@@ -250,57 +250,6 @@ pub fn disable_forces_while_dragging(mut nodes: Query<&mut ExternalForce, With<D
     }
 }
 
-/// Visual component for selection ring
-#[derive(Component)]
-pub struct SelectionRing {
-    pub node_entity: Entity,
-}
-
-/// Spawn/update selection rings for selected nodes
-pub fn update_selection_visuals(
-    mut commands: Commands,
-    selected_nodes: Query<(Entity, &NodeHitbox), With<Selected>>,
-    selection_rings: Query<(Entity, &SelectionRing)>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    /// How far the ring sits outside the node's hitbox.
-    const RING_MARGIN: f32 = 5.0;
-
-    // Remove rings for nodes that are no longer selected
-    for (ring_entity, selection_ring) in selection_rings.iter() {
-        if !selected_nodes.contains(selection_ring.node_entity) {
-            commands.entity(ring_entity).despawn();
-        }
-    }
-
-    // Add rings for newly selected nodes
-    for (node_entity, hitbox) in selected_nodes.iter() {
-        // Check if this node already has a selection ring
-        let has_ring = selection_rings
-            .iter()
-            .any(|(_, ring)| ring.node_entity == node_entity);
-
-        if !has_ring {
-            // Sized from the node's own hitbox, so a 64-unit account node doesn't
-            // get the ring drawn for a 100-unit instance node.
-            let ring = Mesh::from(Circle::new(hitbox.radius + RING_MARGIN));
-
-            // Spawn selection ring as a child of the node
-            commands.entity(node_entity).with_children(|parent| {
-                parent.spawn((
-                    Mesh2d(meshes.add(ring)),
-                    MeshMaterial2d(
-                        materials.add(ColorMaterial::from(Color::srgba(0.3, 0.8, 1.0, 0.6))),
-                    ),
-                    Transform::from_xyz(0.0, 0.0, -0.1), // Behind the node
-                    SelectionRing { node_entity },
-                ));
-            });
-        }
-    }
-}
-
 /// Marker for the native selection-count badge (top-right corner).
 #[derive(Component)]
 pub struct SelectionBadge;

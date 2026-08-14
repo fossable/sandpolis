@@ -65,7 +65,6 @@ pub fn layer_icon_path(layer: &LayerName) -> &'static str {
     match layer.name() {
         "Account" => "layer/Account.svg",
         "Audit" => "layer/Audit.svg",
-        "Deploy" => "layer/Deploy.svg",
         "Desktop" => "layer/Desktop.svg",
         "Filesystem" => "layer/Filesystem.svg",
         "Health" => "layer/Health.svg",

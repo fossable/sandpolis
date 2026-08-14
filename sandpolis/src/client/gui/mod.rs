@@ -30,11 +30,14 @@ use sandpolis_client::gui::activity::{
     animate_activity_lines, cleanup_layer_activity_lines, despawn_completed_activity_lines,
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
 };
-use sandpolis_client::gui::add_agent::CoreLayerToolbarPlugin;
+use sandpolis_client::gui::core_toolbar::CoreLayerToolbarPlugin;
 use sandpolis_client::gui::controller::ControllerHostPlugin;
 use sandpolis_client::gui::drag::{
     DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection, start_node_drag,
-    stop_node_drag, update_node_drag, update_selection_ui, update_selection_visuals,
+    stop_node_drag, update_node_drag, update_selection_ui,
+};
+use sandpolis_client::gui::node_effects::{
+    spin_selection_rings, update_offline_markers, update_offline_visuals, update_selection_visuals,
 };
 use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_edges_for_layer};
 use sandpolis_client::gui::input::{
@@ -148,6 +151,10 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .add_plugins(sandpolis_client::gui::ui::UiPlugin)
     .add_plugins(ControllerHostPlugin)
     .add_plugins(CoreLayerToolbarPlugin)
+    // Notification toasts. Adding this is also what tells the notification
+    // watcher a GUI exists, so notifications raised while the window has focus
+    // land here instead of going to the OS.
+    .add_plugins(sandpolis_client::gui::toast::ToastPlugin)
     .insert_resource(CurrentLayer(LayerName::from("Desktop")))
     .insert_resource(ZoomLevel(1.0))
     .insert_resource(LayerChangeTimer(Timer::from_seconds(3.0, TimerMode::Once)))
@@ -253,6 +260,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             // Selection systems (must run before drag)
             handle_node_selection,
             update_selection_visuals,
+            spin_selection_rings,
+            // Offline node effect. The scrim follows the marker in the same frame.
+            (update_offline_markers, update_offline_visuals).chain(),
             // Drag systems
             start_node_drag,
             update_node_drag,
@@ -317,6 +327,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     // Per-layer client plugins (controllers, node visibility, probe systems).
     // These replace the old `inventory`-collected `LayerGuiExtension`s.
+    // The agent layer has no `layer-` feature: it ships with every build, and
+    // this is what registers its deploy dialog.
+    app.add_plugins(sandpolis_agent::client::gui::AgentClientPlugin);
     #[cfg(feature = "layer-inventory")]
     app.add_plugins(sandpolis_inventory::client::gui::InventoryClientPlugin);
     #[cfg(feature = "layer-desktop")]

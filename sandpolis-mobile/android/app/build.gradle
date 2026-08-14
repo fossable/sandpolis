@@ -54,6 +54,9 @@ android {
 dependencies {
 
     implementation libs.appcompat
+    // NotificationCompat, used by Notifications.java. Pulled in transitively by
+    // appcompat, but named here because this is what actually depends on it.
+    implementation libs.core
     implementation libs.material
     implementation libs.games.activity
     testImplementation libs.junit

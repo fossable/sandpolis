@@ -15,6 +15,14 @@ pub fn spawn_client_sync(state: InstanceState) {
     let database = state.network.database.clone();
     let instance = state.instance.clone();
 
+    // Start surfacing notifications before any of them can arrive. This is the
+    // one path both the GUI and the subcommand TUIs take, so it covers every
+    // way the client runs; without a GUI to toast into, delivery falls through
+    // to the operating system.
+    if let Err(e) = sandpolis_client::notification::watch(&database) {
+        tracing::warn!(error = %e, "Notifications will not be surfaced");
+    }
+
     tokio::spawn(async move {
         loop {
             let conns = server.server_connections();
@@ -48,6 +56,12 @@ pub fn spawn_client_sync(state: InstanceState) {
                             sandpolis_instance::domain::domain_model_id(),
                             None,
                         );
+
+                        // Notifications are wanted for as long as the client
+                        // runs, not only while some view is open, so this
+                        // subscription is standing rather than opened by a
+                        // panel.
+                        sandpolis_client::notification::subscribe();
                     }
                     Err(e) => {
                         tracing::info!(error = %e, "Failed to open sync websocket");

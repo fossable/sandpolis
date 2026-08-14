@@ -30,7 +30,6 @@ sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1" }
 sandpolis-account = { path = "../sandpolis-account", version = "0.0.1", optional = true }
 sandpolis-audit = { path = "../sandpolis-audit", version = "0.0.1", optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1" }
-sandpolis-deploy = { path = "../sandpolis-deploy", version = "0.0.1", optional = true }
 sandpolis-desktop = { path = "../sandpolis-desktop", version = "0.0.1", optional = true }
 sandpolis-filesystem = { path = "../sandpolis-filesystem", version = "0.0.1", optional = true }
 sandpolis-health = { path = "../sandpolis-health", version = "0.0.1", optional = true }
@@ -130,7 +129,6 @@ client = [
 # Layers
 layer-account = ["dep:sandpolis-account"]
 layer-audit = ["dep:sandpolis-audit"]
-layer-deploy = ["dep:sandpolis-deploy"]
 layer-desktop = ["dep:sandpolis-desktop"]
 layer-filesystem = ["dep:sandpolis-filesystem"]
 layer-health = ["dep:sandpolis-health"]
@@ -150,7 +148,6 @@ layer-tunnel = []
 default = [
   "layer-account",
   "layer-audit",
-  "layer-deploy",
   "layer-desktop",
   "layer-filesystem",
   "layer-health",
@@ -185,4 +182,8 @@ required-features = ["client"]
 
 [[example]]
 name = "client_gui_controllers"
+required-features = ["client"]
+
+[[example]]
+name = "client_gui_notification"
 required-features = ["client"]

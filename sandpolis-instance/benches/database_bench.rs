@@ -43,7 +43,6 @@ fn create_test_db() -> DatabaseLayer {
     DatabaseLayer::new(
         config::DatabaseConfig {
             storage: None,
-            ephemeral: true,
             key: Default::default(),
         },
         models,

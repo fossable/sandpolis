@@ -19,6 +19,7 @@ pub mod config;
 pub mod database;
 pub mod domain;
 pub mod network;
+pub mod notification;
 pub mod realm;
 pub mod service;
 
@@ -599,6 +600,12 @@ impl InstanceLayer {
         if let Some(table) = database.authority().scope_table() {
             table.set_self(instance_id);
         }
+
+        // Every layer raises notifications through a process-wide handle, so it
+        // is installed here — the first point that knows both the database and
+        // this instance's id. Idempotent, since an all-in-one process builds an
+        // `InstanceLayer` more than once.
+        crate::notification::install(&realm, instance_id);
 
         Ok(Self {
             instance_id,

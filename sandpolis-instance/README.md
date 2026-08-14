@@ -43,8 +43,8 @@ As an example, you can have _work_ and _home_ realms that are completely
 isolated (other than running on the same server).
 
 A realm exists because a `.realm` file declares it — the filename stem is the
-realm's name — and the global stratum server is given one `--realm` flag per
-realm it serves. Nothing creates a realm at runtime.
+realm's name — and the global stratum server serves every such file in its
+`--data` directory. Nothing creates a realm at runtime.
 
 ### Realm membership
 

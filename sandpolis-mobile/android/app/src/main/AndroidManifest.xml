@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- Required from API 33 to post notifications; also requested at runtime
+         in MainActivity, since declaring it is not enough on its own. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Sandpolis"
         android:theme="@style/Theme.AppCompat.NoActionBar"

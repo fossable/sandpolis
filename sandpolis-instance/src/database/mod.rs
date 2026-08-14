@@ -20,8 +20,6 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
 
 pub mod browse;
-#[cfg(not(target_os = "android"))]
-pub mod cli;
 pub mod config;
 pub mod sync;
 
@@ -278,7 +276,6 @@ macro_rules! test_db {
         $crate::database::DatabaseLayer::new(
             $crate::database::config::DatabaseConfig {
                 storage: None,
-                ephemeral: true,
                 key: Default::default(),
             },
             models,
@@ -301,7 +298,6 @@ macro_rules! test_scoped_db {
         $crate::database::DatabaseLayer::new(
             $crate::database::config::DatabaseConfig {
                 storage: None,
-                ephemeral: true,
                 key: Default::default(),
             },
             models,
@@ -772,6 +768,16 @@ impl ToKey for DataExpiration {
 pub struct DataCreation(DateTime<Utc>);
 
 impl DataCreation {
+    /// A creation time of `timestamp` rather than "now".
+    pub fn at(timestamp: DateTime<Utc>) -> Self {
+        Self(timestamp)
+    }
+
+    /// When the record was created.
+    pub fn timestamp(&self) -> DateTime<Utc> {
+        self.0
+    }
+
     pub fn all() -> impl RangeBounds<Self> {
         trace!("{:?}", Self(DateTime::<Utc>::MIN_UTC).to_key());
         trace!("{:?}", Self(DateTime::<Utc>::MAX_UTC).to_key());

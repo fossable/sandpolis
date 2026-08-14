@@ -811,7 +811,6 @@ mod test_enrollment {
         Ok(DatabaseLayer::new(
             crate::database::config::DatabaseConfig {
                 storage: None,
-                ephemeral: true,
                 key: Default::default(),
             },
             models(),

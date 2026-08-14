@@ -44,6 +44,10 @@ pub mod z {
     pub const MODAL: i32 = 400;
     /// Transient popups (dropdowns, tooltips).
     pub const POPUP: i32 = 500;
+    /// Notification toasts. Above everything, since a notification is worth
+    /// seeing even while a modal is open — and it never takes input, so it
+    /// can't get in the way of one.
+    pub const TOAST: i32 = 600;
 }
 
 /// Installs the native UI foundation: the `bevy_ui_widgets` headless widget

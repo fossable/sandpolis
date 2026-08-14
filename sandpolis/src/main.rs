@@ -82,25 +82,26 @@ async fn main() -> Result<ExitCode> {
         options.servers.push(cert.url()?);
     }
 
-    // Every realm this server serves comes from a `--realm` file. A zero-flag
-    // run gets an implicit default realm so the all-in-one development loop
-    // works without any setup; its CA lives only in the database.
+    // Every realm this server serves comes from a `.realm` file in the data
+    // directory. An ephemeral run has no such directory, so it gets an implicit
+    // default realm — that's the all-in-one development loop, where the CA lives
+    // only in the in-memory database.
     #[cfg(feature = "server")]
-    let implicit_default_realm = stratum.is_global() && args.realm.is_empty();
+    if stratum.is_global()
+        && let Some(dir) = options.database.storage.clone()
+    {
+        options.realms = sandpolis::config::RealmConfig::load_dir(dir)?;
+    }
 
     #[cfg(feature = "server")]
-    if stratum.is_global() {
-        for path in &args.realm {
-            options
-                .realms
-                .push(sandpolis::config::RealmConfig::load(path)?);
-        }
-        if implicit_default_realm {
-            info!(
-                "Serving an implicit \"default\" realm. Pass `--realm default.realm` \
-                 to keep its CA in a file that survives the database."
-            );
-        }
+    let implicit_default_realm = stratum.is_global() && options.realms.is_empty();
+
+    #[cfg(feature = "server")]
+    if implicit_default_realm {
+        info!(
+            "Serving an implicit \"default\" realm. Pass `--data <dir>` to keep \
+             its CA in a file that survives the database."
+        );
     }
 
     // Standalone subcommands (cert generation, version info, LSP) run without

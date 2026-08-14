@@ -228,6 +228,13 @@ impl InstanceState {
 
         let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
 
+        // Deployment mints an agent certificate for whichever realm the new
+        // agent will connect to. Its responder is built by the stateless
+        // `inventory` factory and holds no state of its own, so this is how the
+        // realm handles reach it.
+        #[cfg(feature = "server")]
+        sandpolis_agent::deploy::server::install_realms(realms.clone());
+
         #[cfg(feature = "layer-inventory")]
         let inventory =
             sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
@@ -340,6 +347,13 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_instance::domain::DomainData>()
             .unwrap();
         m.define::<sandpolis_instance::service::ServiceData>()
+            .unwrap();
+        m.define::<sandpolis_instance::notification::NotificationData>()
+            .unwrap();
+        // How far this client has surfaced notifications. Client-local, so it
+        // is neither defined nor replicated anywhere else.
+        #[cfg(feature = "client")]
+        m.define::<sandpolis_client::notification::NotificationWatermarkData>()
             .unwrap();
     }
 

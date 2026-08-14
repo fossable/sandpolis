@@ -40,10 +40,11 @@ connects to exactly one GS, and never to another LS.
 
 The distinction decides five things:
 
-- **Configuration.** Only the GS reads `.realm` files, one per realm it serves;
-  a realm exists only because a file declares it, and can never be created at
-  runtime. Every other instance — LS servers, agents, clients — is configured by
-  CLI flags plus the `.server` file naming the server it trusts.
+- **Configuration.** Only the GS reads `.realm` files, one per realm it serves,
+  which it finds by scanning its `--data` directory; a realm exists only because
+  a file declares it, and can never be created at runtime. Every other instance
+  — LS servers, agents, clients — is configured by CLI flags plus the `.server`
+  file naming the server it trusts.
 - **Trust.** The GS holds the realm CA and is the network's single trust root.
   An LS never generates a CA; on first start it enrolls with the GS, which
   issues it a server certificate. The CA's private key never leaves the GS, so
@@ -71,24 +72,27 @@ The distinction decides five things:
   GS, and points its own default route at the GS for everything else.
 
 ```sh
-# The global stratum server. A blank realm file means "generate a CA for me",
-# which is written back into the file on first start.
-touch default.realm
-sandpolis --realm ./default.realm
+# The global stratum server. It serves every .realm file in its data directory,
+# creating ./data/default.realm if it finds none. A blank realm file means
+# "generate a CA for me", which is written back into the file on first start.
+sandpolis --data ./data
 
 # Mint a .server file for another instance. The certificate's common name is
 # the address given here, so it names exactly one server and realm.
-sandpolis new-client-cert --realm ./default.realm \
+sandpolis new-client-cert --realm ./data/default.realm \
           --address gs.example.com:8768 --output ops.server
-sandpolis new-agent-cert --realm ./default.realm \
+sandpolis new-agent-cert --realm ./data/default.realm \
           --address gs.example.com:8768 --output fleet.server
 
 # A local stratum server. The .server file is how it authenticates to the GS in
-# order to enroll, so --realm and --server conflict.
-sandpolis --server ./ops.server --listen 0.0.0.0:8769
+# order to enroll, and having one is what puts this server in the local stratum,
+# so it serves no realms of its own — realm files in its data directory are
+# ignored.
+sandpolis --server ./ops.server --data ./ls-data --listen 0.0.0.0:8769
 
-# An agent or client, attached to either stratum
-sandpolis --server ./fleet.server
+# An agent, attached to either stratum. Without --data it keeps nothing across
+# restarts; clients have no --data flag and are always ephemeral.
+sandpolis --server ./fleet.server --data ./agent-data
 ```
 
 A `.server` file carries the realm CA, this instance's own certificate, and —
@@ -103,6 +107,25 @@ scopes plus its own. Estate-wide data flows the other way, down a standing
 global-scope subscription. Because the GS only ever pulls an instance's records
 from that instance's current owner, a stale owner's writes can never enter the
 estate — the pull subscription is the fence.
+
+#### Notifications
+
+Any layer, on any instance, can tell the user something happened:
+
+```rust
+notification::notify(
+    Notification::error("Health", format!("{name} failed")).about(instance_id),
+);
+```
+
+That writes a `NotificationData` row owned by the raising instance, so delivery
+is just the replication above — agent to its owning server, up to the GS, out to
+any client with the standing subscription. There is no notification protocol.
+
+The client decides how the user finds out: an in-app toast while the window has
+focus, the operating system's own notification interface when it doesn't (or
+when there's no GUI at all, as in a TUI subcommand). A persisted watermark keeps
+a subscription's opening snapshot from announcing history on every start.
 
 #### World View
 
@@ -124,20 +147,20 @@ that service land in one region.
 
 An account always belongs to one — its domain is part of its identity. An
 instance does not: membership is an assignment stored in `DomainData`, owned by
-the GS and replicated from there, and an instance no domain names belongs to none
-and draws no terrain. Servers are never members, because domains group the estate
-a server manages rather than the servers managing it — unless the process is also
-an agent or client, whose shared `InstanceId` carries those bits (CoLo).
+the GS and replicated from there, and an instance no domain names belongs to
+none and draws no terrain. Servers are never members, because domains group the
+estate a server manages rather than the servers managing it — unless the process
+is also an agent or client, whose shared `InstanceId` carries those bits (CoLo).
 
 ## CoLo mode
 
 When a server feature is compiled alongside the client and/or agent and the
 binary is run with no subcommand, all instance types start in the same process
 and connect to each other automatically over loopback — no `.server` file or
-other configuration is needed. With no `--realm` flag the server serves an
-implicit `default` realm whose CA lives only in the database. This is meant for
-convenient local testing: targeting the local instance (e.g. starting a desktop
-stream) "just works".
+other configuration is needed. With no `--data` flag there is no directory to
+scan, so the server serves an implicit `default` realm whose CA lives only in
+the in-memory database. This is meant for convenient local testing: targeting
+the local instance (e.g. starting a desktop stream) "just works".
 
 ## Mobile App
 
@@ -156,13 +179,7 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
-- "Away" mode where monitoring becomes more strict
-  - For example, a SSH login when away is highly suspicious and must be notified
-    immediately
-- Zooming in on a node enters another level of depth where all other nodes
-  disappear. Now shows more detailed operations.
-- `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should not be layers anymore?
-  Layers vs subsystems? Layers are just UI?
+- `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should be "Managers"
 - On desktop, probe, and shell layers: servers are present in the graph (so we
   have links), but they are not interactable. When the server layer is active,
   only servers are shown and they become interactable. Clients are only present
@@ -172,6 +189,42 @@ cd android && ./gradlew assembleDebug
   - "selected" - we currently have this
   - "multi-selected" - we currently have this
   - "disabled" / "offline"
+- Let's redesign the node controller windows for all layers in the GUI. We want
+  a solid framework that layers can easily build upon.
+  - First, let's rename the window below each node in the world view from "node
+    controller" to "node panel".
+  - The panel shows a piece of `Data` identifying the node at the top. For
+    instances, this is always the hostname. For account nodes, it's the
+    username.
+  - When a node is not selected, show simplified information on the panel (don't
+    show buttons like "Open" or anything else). When a single node is selected,
+    expand the node panel to it's full detail (this completely replaces the
+    modal dialog we currently have). When a node panel is opened, it should
+    immediately begin any relevant streams such as SSH sessions, RTSP streams,
+    VNC sessions, etc. When multiple nodes are selected, show the simplified
+    node panel instead.
+  - When a node panel is expanded, there should always be a button somewhere to
+    "pin" it open so it doesn't close when the node is deselected. On mobile,
+    the expansion of a node panel should lock the screen to the panel until it's
+    closed.
+  - The unexpanded node panel should also have three levels of "verbosity",
+    corresponding to how zoomed in the world view is. The higher the zoom, the
+    more verbose the details, the lower the zoom, the panel shrinks.
+  - The node panel framework should provide reusable controls like buttons and
+    gauges (progress bars) that layers can use. The inventory layer should
+    render storage, memory, and CPU stats using these.
+- Notifications currently only reach the user as a toast or an OS notification.
+  Add a notification center in the GUI (history, per-layer muting). When the
+  client is running in the foreground, show in-app toasts and no OS-native
+  notification. If the client is not running in the foreground, only show
+  OS-native notifcations.
+  - Notification on errors
+  - Notification when a new instance joins for the first time
+- Ensure the following constraints:
+  - GS servers must serve every .realm file in their --data directory
+  - LS server must accept a single --server arg
+  - Agents must accept a single --server arg
+  - Clients must accept a single --server arg
 
 ## `sandpolis-tunnel`
 
@@ -181,16 +234,10 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-agent`
 
-- Merge `sandpolis-deploy` crate into `sandpolis-agent`
-  - The idea is you can install the agent via SSH or via a local executable
-  - Drop outdated code that's no longer useful like the Java/protobuf stuff
-  - Drop the embedded config - we're moving towards all configuration happening
-    via CLI flags
-  - Gate appropriately - systemd features are only needed by the agent, UI
-    features are only needed by the client, and SSH features are only needed by
-    the server.
-  - Scope: just build out the framework, we'll provide the actual prebuilt agent
-    binaries for install later
+- Provide prebuilt agent binaries for SSH deployment to install. The deploy
+  framework resolves them through `deploy::binary::AgentBinarySource`, which
+  currently has no source installed, so a fresh install stops with "no prebuilt
+  agent binary available".
 
 ## `sandpolis-account`
 
@@ -207,15 +254,21 @@ cd android && ./gradlew assembleDebug
 - Store snapshots on server
 - Not compatible with regular agents
 
+## `sandpolis-health`
+
+- Run DNS/TCP/HTTP tests
+
 ## `sandpolis-audit`
 
 - auditd ingestion on agent, detection rules
+- Button on toolbar that sets "Away" mode where monitoring becomes more strict
+  - For example, a sucessful SSH login when away is highly suspicious and must
+    be notified immediately
+- Configurable notifications
+  - failed login attempts
+  - all login attempts
 
 ## `sandpolis-probe`
-
-In the UI, the probes should have a node controller window below them with tabs
-for each of the following probe "integrations". A probe may support multiple
-types.
 
 - Docker probe (`docker.rs`)
   - Control the docker daemon by starting/stopping containers, etc
@@ -224,21 +277,18 @@ types.
   - Control virtual machines
 - ONVIF probe (`onvif.rs`)
   - View the video stream
-- RDP probe — routed to the desktop layer, but no backend yet (needs IronRDP)
+- RDP probe via desktop layer
+  - Implement on top of the IronRDP crates
+  - Button on expanded node panel to maximize the RDP session
 - RTSP probe (`rtsp/`)
-  - View the video stream
-- SSH probe — done, in `sandpolis-shell/src/ssh.rs`
-- VNC probe — done, in `sandpolis-desktop/src/vnc.rs`
+  - Button on expanded node panel to maximize the video stream
+- SSH probe via shell layer
+  - Button on expanded node panel to maximize the terminal
+- VNC probe
+  - Button on expanded node panel to maximize the VNC session
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
 - SNMP probe — partial, needs MIB-driven discovery
 - ARP probe (`arp/`) — verify completeness
-
-Probes whose protocol belongs to another layer are driven from that layer rather
-than from a tab here. The shell and desktop crates take an optional `probe`
-feature (turned on by the root's `layer-probe`), read the device registry
-directly, and declare which protocols they show with
-`LayerClientInfo::showing_probe_nodes_for`. The server holds the connection, so
-credentials never reach clients.
 
 ## `sandpolis-filesystem`
 
@@ -256,6 +306,7 @@ credentials never reach clients.
 ## `sandpolis-instance`
 
 - Improve the GUI for viewing instance databases
+- Assign an instance's domain from the GUI
 
 ## `sandpolis-shell`
 
@@ -275,8 +326,6 @@ credentials never reach clients.
 - Banner image display in login input dialog
   - Fetched once a valid server URL is entered
 - TUI interface redesign
-  - Collapse the `client-tui` and `client-gui` features into just `client`
-  - Don't compile the TUI/CLI code on android (via conditional compilation)
   - Instead of a unified TUI, we need a CLI that optionally opens a TUI for
     specific features. The CLI is also usable noninteractively in scripts. For
     example:
@@ -328,7 +377,3 @@ sandpolis shell --instance UUID
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following layers are supported by bootagents: shell, snapshot
-
-- Assign an instance's domain from the GUI/CLI
-  - Rejecting ids that fail `InstanceId::is_domain_member`, since a server is
-    never a member unless it's also a CoLo client/agent

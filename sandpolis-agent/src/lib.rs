@@ -6,6 +6,9 @@ use anyhow::Result;
 use sandpolis_instance::database::DatabaseLayer;
 
 pub mod bootagent;
+#[cfg(feature = "client")]
+pub mod client;
+pub mod deploy;
 pub mod uefi;
 pub mod wake;
 
