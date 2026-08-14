@@ -59,7 +59,33 @@ pub fn cursor_world_position(
     camera.viewport_to_world_2d(camera_transform, cursor).ok()
 }
 
-/// Handle node selection on click (single-click to select, Ctrl-click to multi-select)
+/// How far the pointer may travel between press and release and still count as a
+/// click rather than a drag, in logical pixels.
+const CLICK_SLOP: f32 = 4.0;
+
+/// A press that hasn't come up yet, and what was under it.
+pub struct PendingPress {
+    /// Screen position of the press, to measure travel against.
+    origin: Vec2,
+    /// The node under the press, if any.
+    node: Option<Entity>,
+}
+
+/// Whether the pointer travelled far enough between `origin` and `cursor` to
+/// count as a drag rather than a click.
+fn is_drag(origin: Vec2, cursor: Vec2) -> bool {
+    cursor.distance(origin) > CLICK_SLOP
+}
+
+/// Handle node selection on click (single-click to select, Ctrl-click to
+/// multi-select).
+///
+/// Selection is decided on *release*, and only when the pointer stayed within
+/// [`CLICK_SLOP`] of where it went down. Deciding on press would mean grabbing a
+/// node to move it also selected it — which now expands its panel and opens
+/// whatever stream that panel shows, so dragging a node would start a shell
+/// session. Releasing after a drag leaves the selection exactly as it was, which
+/// also stops a camera pan from clearing it.
 pub fn handle_node_selection(
     ui_pointer: Res<UiPointerState>,
     mouse_button: Res<ButtonInput<MouseButton>>,
@@ -72,32 +98,51 @@ pub fn handle_node_selection(
         Without<ExcludeFromSelection>,
     >,
     mut selection_set: ResMut<SelectionSet>,
+    mut pending: Local<Option<PendingPress>>,
 ) {
-    // Don't handle selection if the pointer is over blocking UI
-    if ui_pointer.over_ui_blocking {
-        return;
+    let cursor = windows.single().ok().and_then(|window| window.cursor_position());
+
+    if mouse_button.just_pressed(MouseButton::Left) {
+        // A press that starts over blocking UI belongs to that UI, so nothing is
+        // recorded and the release below finds nothing to do.
+        *pending = match (ui_pointer.over_ui_blocking, cursor) {
+            (false, Some(origin)) => Some(PendingPress {
+                origin,
+                // Hit-tested now rather than on release: if this turns out to be
+                // a drag, the node will have moved out from under the pointer.
+                node: cursor_world_position(&windows, &camera_query).and_then(|world_position| {
+                    node_at(
+                        world_position,
+                        node_query.iter().map(|(entity, transform, hitbox, vis)| {
+                            (
+                                entity,
+                                transform.translation.truncate(),
+                                hitbox.radius,
+                                is_visible(vis),
+                            )
+                        }),
+                    )
+                }),
+            }),
+            _ => None,
+        };
     }
 
-    // Only handle on left mouse button press
-    if !mouse_button.just_pressed(MouseButton::Left) {
+    if !mouse_button.just_released(MouseButton::Left) {
         return;
     }
-
-    let Some(world_position) = cursor_world_position(&windows, &camera_query) else {
+    let Some(press) = pending.take() else {
         return;
     };
-
-    let clicked_node = node_at(
-        world_position,
-        node_query.iter().map(|(entity, transform, hitbox, vis)| {
-            (
-                entity,
-                transform.translation.truncate(),
-                hitbox.radius,
-                is_visible(vis),
-            )
-        }),
-    );
+    // No cursor to compare against (it left the window): treat it as a drag and
+    // leave the selection alone rather than guessing.
+    let Some(cursor) = cursor else {
+        return;
+    };
+    if is_drag(press.origin, cursor) {
+        return;
+    }
+    let clicked_node = press.node;
 
     // Check if Ctrl/Command is pressed for multi-selection
     let ctrl_pressed = keyboard.pressed(KeyCode::ControlLeft)
@@ -247,6 +292,29 @@ pub fn disable_forces_while_dragging(mut nodes: Query<&mut ExternalForce, With<D
     for mut force in nodes.iter_mut() {
         force.force = Vec2::ZERO;
         force.torque = 0.0;
+    }
+}
+
+#[cfg(test)]
+mod test_drag {
+    use super::*;
+
+    #[test]
+    fn a_still_pointer_is_a_click() {
+        assert!(!is_drag(Vec2::new(100.0, 100.0), Vec2::new(100.0, 100.0)));
+    }
+
+    #[test]
+    fn a_shaky_hand_is_still_a_click() {
+        // Without some slop, a click that moved a pixel would read as a drag and
+        // silently do nothing.
+        assert!(!is_drag(Vec2::new(100.0, 100.0), Vec2::new(102.0, 102.0)));
+    }
+
+    #[test]
+    fn moving_the_node_is_a_drag() {
+        assert!(is_drag(Vec2::new(100.0, 100.0), Vec2::new(140.0, 100.0)));
+        assert!(is_drag(Vec2::new(100.0, 100.0), Vec2::new(100.0, 60.0)));
     }
 }
 

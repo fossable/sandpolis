@@ -20,6 +20,26 @@ pub struct NodeEntity {
 #[derive(Component)]
 pub struct Selected;
 
+/// The one piece of `Data` that identifies a node to the user: the hostname for
+/// an instance, the username for an account, the display name for a probe
+/// device. Shown at the top of the node's panel.
+///
+/// Whoever spawns a kind of node keeps this current, which is what lets the
+/// account and probe layers name their nodes without this crate knowing either
+/// concept exists.
+#[derive(Component, Clone, Default)]
+pub struct NodeIdentity(pub String);
+
+/// Overrides the active layer's icon on this node's panel — used by the account
+/// layer, whose nodes are better identified by the service's favicon than by a
+/// generic glyph.
+#[derive(Component, Clone)]
+pub struct PanelIcon(pub Handle<Image>);
+
+/// Keeps this node's panel expanded after the node is deselected.
+#[derive(Component)]
+pub struct PanelPinned;
+
 /// Marker component for nodes the client currently can't reach.
 #[derive(Component)]
 pub struct Offline;

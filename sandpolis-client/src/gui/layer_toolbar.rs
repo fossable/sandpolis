@@ -1,6 +1,6 @@
 //! Layer toolbar: a row of icon buttons shown just above the layer indicator. The
 //! buttons depend on the active layer and come from each layer's registered
-//! [`ToolbarAction`](crate::gui::ui::controller::ToolbarAction)s.
+//! [`ToolbarAction`](crate::gui::ui::layer::ToolbarAction)s.
 //!
 //! The toolbar root is spawned (empty) as a child of the layer-chrome column in
 //! [`crate::gui::layer_ui`]; [`rebuild_layer_toolbar`] fills it with buttons
@@ -12,7 +12,7 @@
 
 use crate::gui::input::CurrentLayer;
 use crate::gui::ui::Activate;
-use crate::gui::ui::controller::{LayerRegistry, ToolbarEnabledFn};
+use crate::gui::ui::layer::{LayerRegistry, ToolbarEnabledFn};
 use crate::gui::ui::icon::IconCache;
 use crate::gui::ui::theme::Theme;
 use crate::gui::ui::tooltip::Tooltip;

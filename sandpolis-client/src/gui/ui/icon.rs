@@ -22,6 +22,7 @@ use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use resvg::{tiny_skia, usvg};
 use std::collections::HashMap;
 use std::io::Cursor;
+use std::sync::LazyLock;
 
 /// Installs the icon cache.
 pub struct IconPlugin;
@@ -69,9 +70,22 @@ fn rasterize_svg(path: &str, size: u32) -> Option<Image> {
     rasterize_svg_bytes(bytes, size)
 }
 
+/// Rendering options shared by every rasterization, carrying a font database.
+///
+/// Several icons letter their glyph — the Shell layer's `$`, the SSH probe's
+/// `$_`, the IPMI probe's `BMC`. `usvg::Options::default()` ships an *empty*
+/// font database, so those all resolved to nothing and warned once per
+/// rasterization. The system fonts are loaded once, lazily, because the scan
+/// isn't free and a build with no lettered icon on screen shouldn't pay for it.
+static SVG_OPTIONS: LazyLock<usvg::Options<'static>> = LazyLock::new(|| {
+    let mut options = usvg::Options::default();
+    options.fontdb_mut().load_system_fonts();
+    options
+});
+
 /// Rasterize SVG source into a square RGBA [`Image`], preserving aspect ratio.
 fn rasterize_svg_bytes(bytes: &[u8], size: u32) -> Option<Image> {
-    let tree = usvg::Tree::from_data(bytes, &usvg::Options::default())
+    let tree = usvg::Tree::from_data(bytes, &SVG_OPTIONS)
         .map_err(|e| warn!("svg icon parse failed: {e}"))
         .ok()?;
 

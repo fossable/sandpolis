@@ -313,11 +313,12 @@ pub fn manage_help_panel(
         "Mouse wheel  -  Zoom",
         "N  -  Find node",
         "T  -  Theme picker",
-        "P  -  Toggle node previews",
+        "P  -  Toggle node panels",
         "F3  -  Diagnostics overlay",
         "H  -  This help",
         "Click layer indicator  -  Switch layers",
-        "Double-click a node  -  Open controller",
+        "Click a node  -  Expand its panel",
+        "Ctrl-click  -  Select several nodes",
     ];
 
     let exists = !root.is_empty();

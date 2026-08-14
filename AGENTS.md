@@ -133,7 +133,8 @@ Users interact with the Sandpolis network via a real-time graph called the
 _world view_. The graph is made of:
 
 - Nodes
-  - A _node_ could be an instance
+  - A _node_ is a point on the map. It could be an instance, probe, or a generic
+    entity.
 - Links
   - A _link_ expresses some general relationship between two nodes
 - Terrains
@@ -179,7 +180,20 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
+- Remove the CoLo mode special cases. The program can still build all three
+  instances, but we want them to be called separately like this:
+
+```sh
+sandpolis agent # Start agent daemon
+sandpolis server # Start server daemon
+sandpolis client # Start client foreground
+```
+
+This should also simplify `InstanceId` which no longer carries multiple instance
+support.
+
 - `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should be "Managers"
+  - crates are "subsystems" while layer specifically refers to the UI concept
 - On desktop, probe, and shell layers: servers are present in the graph (so we
   have links), but they are not interactable. When the server layer is active,
   only servers are shown and they become interactable. Clients are only present
@@ -189,30 +203,9 @@ cd android && ./gradlew assembleDebug
   - "selected" - we currently have this
   - "multi-selected" - we currently have this
   - "disabled" / "offline"
-- Let's redesign the node controller windows for all layers in the GUI. We want
-  a solid framework that layers can easily build upon.
-  - First, let's rename the window below each node in the world view from "node
-    controller" to "node panel".
-  - The panel shows a piece of `Data` identifying the node at the top. For
-    instances, this is always the hostname. For account nodes, it's the
-    username.
-  - When a node is not selected, show simplified information on the panel (don't
-    show buttons like "Open" or anything else). When a single node is selected,
-    expand the node panel to it's full detail (this completely replaces the
-    modal dialog we currently have). When a node panel is opened, it should
-    immediately begin any relevant streams such as SSH sessions, RTSP streams,
-    VNC sessions, etc. When multiple nodes are selected, show the simplified
-    node panel instead.
-  - When a node panel is expanded, there should always be a button somewhere to
-    "pin" it open so it doesn't close when the node is deselected. On mobile,
-    the expansion of a node panel should lock the screen to the panel until it's
-    closed.
-  - The unexpanded node panel should also have three levels of "verbosity",
-    corresponding to how zoomed in the world view is. The higher the zoom, the
-    more verbose the details, the lower the zoom, the panel shrinks.
-  - The node panel framework should provide reusable controls like buttons and
-    gauges (progress bars) that layers can use. The inventory layer should
-    render storage, memory, and CPU stats using these.
+- The node panel framework needs more shared controls. It has buttons, text and
+  gauges today (`sandpolis-client/src/gui/ui/{widgets,gauge}.rs`); charts and
+  tables are the obvious gaps, and every layer currently rolls its own list.
 - Notifications currently only reach the user as a toast or an OS notification.
   Add a notification center in the GUI (history, per-layer muting). When the
   client is running in the foreground, show in-app toasts and no OS-native
@@ -238,6 +231,8 @@ cd android && ./gradlew assembleDebug
   framework resolves them through `deploy::binary::AgentBinarySource`, which
   currently has no source installed, so a fresh install stops with "no prebuilt
   agent binary available".
+- Add `sandpolis agent deploy` subcommand which drives the same flow as the GUI
+  - Also support `--dryrun` mode of operation
 
 ## `sandpolis-account`
 

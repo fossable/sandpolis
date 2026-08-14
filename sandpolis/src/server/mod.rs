@@ -14,10 +14,10 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     let account_config = options.merged_account_config();
 
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     // Before the services start, so the first favicon sweep sees every
     // configured domain.
     state.account.seed_accounts(&account_config)?;
@@ -32,7 +32,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     // Scraping third-party data (favicons, etc) is server-only: agents have no
     // reason to reach out on the estate's behalf, and every client doing it
     // independently would just multiply the traffic.
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     state
         .account
         .register_services(&account_config, &mut services)?;

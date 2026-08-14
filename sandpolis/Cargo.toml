@@ -127,35 +127,35 @@ client = [
 ]
 
 # Layers
-layer-account = ["dep:sandpolis-account"]
-layer-audit = ["dep:sandpolis-audit"]
-layer-desktop = ["dep:sandpolis-desktop"]
-layer-filesystem = ["dep:sandpolis-filesystem"]
-layer-health = ["dep:sandpolis-health"]
-layer-inventory = ["dep:sandpolis-inventory"]
-layer-shell = ["dep:sandpolis-shell"]
-layer-snapshot = ["dep:sandpolis-snapshot"]
+account = ["dep:sandpolis-account"]
+audit = ["dep:sandpolis-audit"]
+desktop = ["dep:sandpolis-desktop"]
+filesystem = ["dep:sandpolis-filesystem"]
+health = ["dep:sandpolis-health"]
+inventory = ["dep:sandpolis-inventory"]
+shell = ["dep:sandpolis-shell"]
+snapshot = ["dep:sandpolis-snapshot"]
 # The weak `?` deps give the shell/desktop layers probe support only when those
 # layers are enabled too, which is the closest cargo gets to "both features on".
-layer-probe = [
+probe = [
   "dep:sandpolis-probe",
   "sandpolis-shell?/probe",
   "sandpolis-desktop?/probe",
 ]
-layer-tunnel = []
+tunnel = []
 
 # Enable all layers
 default = [
-  "layer-account",
-  "layer-audit",
-  "layer-desktop",
-  "layer-filesystem",
-  "layer-health",
-  "layer-inventory",
-  "layer-probe",
-  "layer-shell",
-  "layer-snapshot",
-  "layer-tunnel",
+  "account",
+  "audit",
+  "desktop",
+  "filesystem",
+  "health",
+  "inventory",
+  "probe",
+  "shell",
+  "snapshot",
+  "tunnel",
 ]
 
 # client-wayland = ["client", "bevy/wayland"]
@@ -170,7 +170,7 @@ required-features = ["client"]
 
 [[example]]
 name = "client_gui_filesystem"
-required-features = ["client", "layer-filesystem"]
+required-features = ["client", "filesystem"]
 
 [[example]]
 name = "client_gui_network"
@@ -181,7 +181,7 @@ name = "client_gui_activity"
 required-features = ["client"]
 
 [[example]]
-name = "client_gui_controllers"
+name = "client_gui_panels"
 required-features = ["client"]
 
 [[example]]

@@ -2,7 +2,11 @@ use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
 
+#[cfg(feature = "agent")]
+pub mod agent;
+
 #[data(instance)]
+#[derive(Default)]
 pub struct CpuData {
     /// Product model
     pub model: Option<String>,
@@ -19,6 +23,7 @@ pub struct CpuData {
 }
 
 #[data(instance)]
+#[derive(Default)]
 pub struct CpuCoreData {
     #[secondary_key]
     pub index: u32,
@@ -30,4 +35,16 @@ pub struct CpuCoreData {
     pub usage: f64,
     /// The core's temperature in Celsius
     pub temperature: Option<f64>,
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| {
+        r.register_scoped::<CpuData>(|d| d._instance_id)
+    })
+}
+
+inventory::submit! {
+    sandpolis_instance::database::sync::SyncRegistration(|r| {
+        r.register_scoped::<CpuCoreData>(|d| d._instance_id)
+    })
 }

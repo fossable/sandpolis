@@ -97,7 +97,7 @@ impl RuntimeOptions {
     /// pools them for now. Per-realm account layering is a larger change than
     /// this file format.
     // TODO seed each realm's accounts into that realm's database
-    #[cfg(all(feature = "server", feature = "layer-account"))]
+    #[cfg(all(feature = "server", feature = "account"))]
     pub fn merged_account_config(&self) -> sandpolis_account::config::AccountLayerConfig {
         let mut merged = sandpolis_account::config::AccountLayerConfig::default();
         for (index, realm) in self.realms.iter().enumerate() {
@@ -113,7 +113,7 @@ impl RuntimeOptions {
 
     /// The probe sections of every loaded realm, merged. See
     /// [`merged_account_config`](Self::merged_account_config) for why.
-    #[cfg(all(feature = "server", feature = "layer-probe"))]
+    #[cfg(all(feature = "server", feature = "probe"))]
     pub fn merged_probe_config(&self) -> sandpolis_probe::config::ProbeLayerConfig {
         sandpolis_probe::config::ProbeLayerConfig {
             devices: self
@@ -165,26 +165,26 @@ pub fn stratum(args: &cli::CommandLine) -> Result<ServerStratum> {
 #[cfg_attr(feature = "server", derive(axum_macros::FromRef))]
 #[derive(Clone)]
 pub struct InstanceState {
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     pub account: sandpolis_account::AccountLayer,
     pub agent: sandpolis_agent::AgentLayer,
-    #[cfg(feature = "layer-desktop")]
+    #[cfg(feature = "desktop")]
     pub desktop: sandpolis_desktop::DesktopLayer,
-    #[cfg(feature = "layer-filesystem")]
+    #[cfg(feature = "filesystem")]
     pub filesystem: sandpolis_filesystem::FilesystemLayer,
-    #[cfg(feature = "layer-health")]
+    #[cfg(feature = "health")]
     pub health: sandpolis_health::HealthLayer,
     pub realms: Realms,
     pub instance: sandpolis_instance::InstanceLayer,
     pub network: sandpolis_instance::network::NetworkLayer,
-    #[cfg(feature = "layer-inventory")]
+    #[cfg(feature = "inventory")]
     pub inventory: sandpolis_inventory::InventoryLayer,
     pub server: sandpolis_server::ServerLayer,
-    #[cfg(feature = "layer-shell")]
+    #[cfg(feature = "shell")]
     pub shell: sandpolis_shell::ShellLayer,
-    #[cfg(feature = "layer-snapshot")]
+    #[cfg(feature = "snapshot")]
     pub snapshot: sandpolis_snapshot::SnapshotLayer,
-    #[cfg(feature = "layer-probe")]
+    #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::ProbeLayer,
     pub user: sandpolis_server::user::UserLayer,
 }
@@ -235,29 +235,29 @@ impl InstanceState {
         #[cfg(feature = "server")]
         sandpolis_agent::deploy::server::install_realms(realms.clone());
 
-        #[cfg(feature = "layer-inventory")]
+        #[cfg(feature = "inventory")]
         let inventory =
             sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
 
-        #[cfg(feature = "layer-health")]
+        #[cfg(feature = "health")]
         let health = sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
 
-        #[cfg(feature = "layer-shell")]
+        #[cfg(feature = "shell")]
         let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
 
-        #[cfg(feature = "layer-filesystem")]
+        #[cfg(feature = "filesystem")]
         let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
 
-        #[cfg(feature = "layer-desktop")]
+        #[cfg(feature = "desktop")]
         let desktop = sandpolis_desktop::DesktopLayer::new(database.clone()).await?;
 
-        #[cfg(feature = "layer-account")]
+        #[cfg(feature = "account")]
         let account = sandpolis_account::AccountLayer::new(database.clone()).await?;
 
-        #[cfg(feature = "layer-snapshot")]
+        #[cfg(feature = "snapshot")]
         let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
 
-        #[cfg(feature = "layer-probe")]
+        #[cfg(feature = "probe")]
         let probe = sandpolis_probe::ProbeLayer::new(
             {
                 #[cfg(feature = "server")]
@@ -273,21 +273,21 @@ impl InstanceState {
         );
 
         Ok(Self {
-            #[cfg(feature = "layer-inventory")]
+            #[cfg(feature = "inventory")]
             inventory,
-            #[cfg(feature = "layer-health")]
+            #[cfg(feature = "health")]
             health,
-            #[cfg(feature = "layer-shell")]
+            #[cfg(feature = "shell")]
             shell,
-            #[cfg(feature = "layer-filesystem")]
+            #[cfg(feature = "filesystem")]
             filesystem,
-            #[cfg(feature = "layer-desktop")]
+            #[cfg(feature = "desktop")]
             desktop,
-            #[cfg(feature = "layer-snapshot")]
+            #[cfg(feature = "snapshot")]
             snapshot,
-            #[cfg(feature = "layer-probe")]
+            #[cfg(feature = "probe")]
             probe,
-            #[cfg(feature = "layer-account")]
+            #[cfg(feature = "account")]
             account,
             user,
             agent,
@@ -305,7 +305,7 @@ impl InstanceState {
 /// without permissions and consequently are allowed to do almost nothing.
 pub enum InstancePermission {
     Wake(sandpolis_agent::wake::WakePermission),
-    #[cfg(feature = "layer-filesystem")]
+    #[cfg(feature = "filesystem")]
     Filesystem(sandpolis_filesystem::FilesystemPermission),
 }
 
@@ -384,19 +384,19 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     }
 
     // Shell layer
-    #[cfg(feature = "layer-shell")]
+    #[cfg(feature = "shell")]
     {
         m.define::<sandpolis_shell::ShellSessionData>().unwrap();
     }
 
     // Desktop layer
-    #[cfg(feature = "layer-desktop")]
+    #[cfg(feature = "desktop")]
     {
         m.define::<sandpolis_desktop::DesktopData>().unwrap();
     }
 
     // Account layer
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     {
         m.define::<sandpolis_account::AccountLayerData>().unwrap();
         m.define::<sandpolis_account::AccountData>().unwrap();
@@ -406,7 +406,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     }
 
     // Health layer
-    #[cfg(feature = "layer-health")]
+    #[cfg(feature = "health")]
     {
         m.define::<sandpolis_health::HealthLayerData>().unwrap();
         m.define::<sandpolis_health::systemd::SystemdUnitData>()
@@ -414,7 +414,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     }
 
     // Inventory layer
-    #[cfg(feature = "layer-inventory")]
+    #[cfg(feature = "inventory")]
     {
         m.define::<sandpolis_inventory::InventoryLayerData>()
             .unwrap();
@@ -425,6 +425,10 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
         m.define::<sandpolis_inventory::hardware::memory::MemoryDeviceData>()
             .unwrap();
         m.define::<sandpolis_inventory::hardware::battery::BatteryData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::hardware::cpu::CpuData>()
+            .unwrap();
+        m.define::<sandpolis_inventory::hardware::cpu::CpuCoreData>()
             .unwrap();
         m.define::<sandpolis_inventory::os::OsData>().unwrap();
         m.define::<sandpolis_inventory::os::user::UserData>()

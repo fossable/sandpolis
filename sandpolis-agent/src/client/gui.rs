@@ -18,7 +18,7 @@ use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use bevy::text::EditableText;
 use sandpolis_client::gui::ui::Activate;
-use sandpolis_client::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
 use sandpolis_client::gui::ui::panel::modal_scrim;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};

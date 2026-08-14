@@ -1,7 +1,7 @@
 //! Diagnostics for a layer's background services.
 //!
 //! Opened from the layer toolbar (see
-//! [`LayerClientInfo::with_services`](super::ui::controller::LayerClientInfo::with_services)),
+//! [`LayerClientInfo::with_services`](super::ui::layer::LayerClientInfo::with_services)),
 //! this lists the services the active layer registered — across the server and
 //! every connected agent — with their schedule, run counts, and last error, and
 //! lets each one be switched on or off or prodded into running now.

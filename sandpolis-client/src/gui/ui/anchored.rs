@@ -1,6 +1,7 @@
 //! World-anchored UI: position a UI node so it tracks a world entity on screen.
 //!
-//! Used for node previews (and, later, anything that floats next to a graph node).
+//! Used for node panels (and, later, anything else that floats next to a graph
+//! node).
 //! The node's [`Node::left`]/[`Node::top`] are set from the target's projected
 //! screen position each frame; the node is hidden when the target is off-screen.
 
@@ -9,6 +10,7 @@ use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use crate::gui::ui::z;
 use bevy::image::Image;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 
 /// Anchor a UI node to a world entity's on-screen position, plus a screen-space
 /// offset. The node should use `position_type: Absolute`.
@@ -18,23 +20,35 @@ pub struct WorldAnchored {
     pub target: Entity,
     /// Screen-space offset applied after centering horizontally on the target.
     pub offset: Vec2,
+    /// Keep the node fully on screen, sliding it back inside the viewport when
+    /// following the target exactly would push it out.
+    ///
+    /// Off for small cards, where a few pixels of drift would read as the card
+    /// having come loose from its node; on for anything large enough that
+    /// running off the edge would hide real content.
+    pub clamp: bool,
 }
 
 /// The chrome shared by every card that floats beside a world entity: an
 /// absolutely positioned, themed row anchored under `target`.
 ///
-/// Instance node previews and account controller boxes both build on this so the
-/// two can't drift apart visually.
-pub fn anchored_card(theme: &Theme, target: Entity, offset: Vec2) -> impl Bundle {
+/// Collapsed node panels build on this, so every kind of node gets the same card
+/// without each layer rebuilding it. `padding` is a parameter because a card
+/// shrinks with the world view's zoom, and the border and fill should not.
+pub fn anchored_card(theme: &Theme, target: Entity, offset: Vec2, padding: f32) -> impl Bundle {
     (
-        WorldAnchored { target, offset },
+        WorldAnchored {
+            target,
+            offset,
+            clamp: false,
+        },
         GlobalZIndex(z::ANCHORED),
         Node {
             position_type: PositionType::Absolute,
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::Center,
-            column_gap: Val::Px(6.0),
-            padding: UiRect::all(Val::Px(6.0)),
+            column_gap: Val::Px(padding),
+            padding: UiRect::all(Val::Px(padding)),
             border: UiRect::all(Val::Px(1.0)),
             ..default()
         },
@@ -72,12 +86,18 @@ impl Plugin for AnchoredPlugin {
 /// Project each anchored node's target to screen space and reposition it.
 pub fn update_world_anchored(
     camera: Query<(&Camera, &GlobalTransform), With<WorldView>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
     targets: Query<&GlobalTransform>,
     mut anchored: Query<(&WorldAnchored, &mut Node, &mut Visibility, &ComputedNode)>,
 ) {
     let Ok((camera, camera_transform)) = camera.single() else {
         return;
     };
+    let viewport = windows
+        .single()
+        .ok()
+        .map(|window| Vec2::new(window.width(), window.height()));
+
     for (anchor, mut node, mut visibility, computed) in &mut anchored {
         let Ok(target) = targets.get(anchor.target) else {
             *visibility = Visibility::Hidden;
@@ -85,9 +105,24 @@ pub fn update_world_anchored(
         };
         match camera.world_to_viewport(camera_transform, target.translation()) {
             Ok(screen) => {
-                let half_width = computed.size().x / 2.0;
-                node.left = Val::Px(screen.x - half_width + anchor.offset.x);
-                node.top = Val::Px(screen.y + anchor.offset.y);
+                let size = computed.size() * computed.inverse_scale_factor();
+                let mut position = Vec2::new(
+                    screen.x - size.x / 2.0 + anchor.offset.x,
+                    screen.y + anchor.offset.y,
+                );
+                // Clamped after offsetting, so a panel whose node sits at the edge
+                // slides inward instead of hanging half off the window. `max(0.0)`
+                // on the limit keeps a node larger than the viewport pinned to the
+                // top-left rather than flipped past it.
+                if anchor.clamp
+                    && let Some(viewport) = viewport
+                {
+                    let margin = Vec2::splat(8.0);
+                    let limit = (viewport - size - margin).max(margin);
+                    position = position.clamp(margin, limit);
+                }
+                node.left = Val::Px(position.x);
+                node.top = Val::Px(position.y);
                 *visibility = Visibility::Inherited;
             }
             Err(_) => *visibility = Visibility::Hidden,

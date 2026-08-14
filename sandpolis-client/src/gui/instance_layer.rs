@@ -2,47 +2,61 @@
 //!
 //! A diagnostic layer that shows every instance/node regardless of type (no
 //! per-type visibility filtering), so duplicate or phantom nodes are all
-//! visible at once. Its node controller shows metadata about the clicked node
-//! only: the instance id, its decoded types, whether it is the local instance,
-//! the cluster id, OS info, and every `ConnectionData` row that references it
-//! (the connection ids, sockets, timestamps and byte counters).
+//! visible at once. Its node panel shows metadata about the node only: the
+//! instance id, its decoded types, whether it is the local instance, the cluster
+//! id, OS info, and every `ConnectionData` row that references it (the
+//! connection ids, sockets, timestamps and byte counters).
 //!
 //! The layer's toolbar exposes a "View database" action that opens the generic
 //! database browser (see [`crate::gui::database_browser`]).
 
-use crate::gui::controller::ControllerTarget;
 use crate::gui::queries;
 use crate::gui::ui::bind::bind_text;
-use crate::gui::ui::controller::NodeController;
-use crate::gui::ui::theme::{Role, Theme};
+use crate::gui::ui::node_panel::{NodePanel, PanelCtx};
+use crate::gui::ui::theme::Role;
 use crate::gui::ui::widgets::{heading, text};
 use bevy::prelude::*;
 use sandpolis_instance::network::NetworkLayer;
 use sandpolis_instance::{InstanceId, InstanceLayer};
 
-/// The debug Instance layer's node controller.
+/// The debug Instance layer's node panel.
 ///
-/// Holds clones of the layers it reads (the [`NodeController::build`] signature
-/// does not receive resources), matching how other controllers carry their own
-/// data handles.
-pub struct InstanceController {
+/// Holds clones of the layers it reads (the [`NodePanel`] build methods do not
+/// receive resources), matching how other panels carry their own data handles.
+pub struct InstancePanel {
     pub network: NetworkLayer,
     pub instance: InstanceLayer,
 }
 
-impl NodeController for InstanceController {
-    fn title(&self) -> &str {
-        "Instance"
+impl NodePanel for InstancePanel {
+    fn build_summary(&self, ctx: &mut PanelCtx) {
+        let Some(instance) = ctx.target.instance else {
+            return;
+        };
+        let network = self.network.clone();
+        let detailed = ctx.verbosity.is_detailed();
+        let font = ctx.theme.metrics.font_sm;
+        let theme = ctx.theme;
+
+        ctx.children(|p| {
+            p.spawn((
+                text(theme, "", font, Role::TextMuted),
+                bind_text(move || {
+                    let connections = count_connections(&network, instance);
+                    if detailed {
+                        format!("{instance}\n{connections} connection(s)")
+                    } else {
+                        format!("{connections} connection(s)")
+                    }
+                }),
+            ));
+        });
     }
 
-    fn build(
-        &self,
-        commands: &mut Commands,
-        body: Entity,
-        target: ControllerTarget,
-        theme: &Theme,
-    ) {
-        let instance = target.instance;
+    fn build_detail(&self, ctx: &mut PanelCtx) {
+        let Some(instance) = ctx.target.instance else {
+            return;
+        };
         let is_local = instance == self.instance.instance_id;
         let cluster = self.instance.cluster_id;
         let types = instance.types();
@@ -52,8 +66,9 @@ impl NodeController for InstanceController {
 
         // Captured by the live connection list below.
         let network = self.network.clone();
+        let theme = ctx.theme;
 
-        commands.entity(body).with_children(|p| {
+        ctx.children(|p| {
             p.spawn(heading(theme, "Identity"));
             p.spawn(text(
                 theme,
@@ -100,8 +115,20 @@ impl NodeController for InstanceController {
     }
 }
 
+/// How many `ConnectionData` rows reference `instance` as either endpoint.
+fn count_connections(network: &NetworkLayer, instance: InstanceId) -> usize {
+    network
+        .connections
+        .iter()
+        .filter(|connection| {
+            let cd = connection.read();
+            cd._instance_id == instance || cd.remote_instance == instance
+        })
+        .count()
+}
+
 /// Summarize every `ConnectionData` row referencing `instance` (as either
-/// endpoint) for the controller's live connection list.
+/// endpoint) for the panel's live connection list.
 fn describe_connections(network: &NetworkLayer, instance: InstanceId) -> String {
     let mut lines = Vec::new();
     for connection in network.connections.iter() {

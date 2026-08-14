@@ -280,31 +280,32 @@ impl Plugin for ThemePlugin {
     }
 }
 
-/// Paint [`ThemedBg`] nodes on spawn and whenever the theme changes.
+/// Paint [`ThemedBg`] nodes on spawn, whenever the theme changes, and whenever
+/// the node is moved to a different role (a gauge's fill does this as it fills).
 fn apply_bg(theme: Res<Theme>, mut query: Query<(Ref<ThemedBg>, &mut BackgroundColor)>) {
     let theme_changed = theme.is_changed();
     for (themed, mut bg) in &mut query {
-        if theme_changed || themed.is_added() {
+        if theme_changed || themed.is_changed() {
             bg.0 = theme.color(themed.0);
         }
     }
 }
 
-/// Paint [`ThemedText`] nodes on spawn and whenever the theme changes.
+/// Paint [`ThemedText`] nodes on spawn, on a theme change, and on a role change.
 fn apply_text(theme: Res<Theme>, mut query: Query<(Ref<ThemedText>, &mut TextColor)>) {
     let theme_changed = theme.is_changed();
     for (themed, mut color) in &mut query {
-        if theme_changed || themed.is_added() {
+        if theme_changed || themed.is_changed() {
             color.0 = theme.color(themed.0);
         }
     }
 }
 
-/// Paint [`ThemedBorder`] nodes on spawn and whenever the theme changes.
+/// Paint [`ThemedBorder`] nodes on spawn, on a theme change, and on a role change.
 fn apply_border(theme: Res<Theme>, mut query: Query<(Ref<ThemedBorder>, &mut BorderColor)>) {
     let theme_changed = theme.is_changed();
     for (themed, mut border) in &mut query {
-        if theme_changed || themed.is_added() {
+        if theme_changed || themed.is_changed() {
             *border = BorderColor::all(theme.color(themed.0));
         }
     }

@@ -15,8 +15,8 @@
 //!   for marker components that don't implement `Clone`/`Default`, which `bsn!`
 //!   requires). Markers on *child* entities must be declared inside the scene, so
 //!   they need `Clone + Default` derives.
-//! - **Build into an existing entity** (e.g. a controller body handed to
-//!   [`super::controller::NodeController::build`]) with
+//! - **Build into an existing entity** (e.g. a panel body handed to
+//!   [`super::node_panel::NodePanel`]) with
 //!   `commands.entity(body).apply_scene(bsn! { Children [ .. ] })`.
 //! - **Theme colors** are captured into locals and embedded with `{...}`:
 //!   `let panel = theme.color(Role::Panel); bsn! { BackgroundColor({panel}) }`.
@@ -41,7 +41,7 @@
 //! # What is *not* migrated
 //!
 //! Scenes that must hand back child entity ids synchronously at spawn time — most
-//! notably [`super::panel::spawn_floating_panel`], whose callers spawn controller
+//! notably [`super::panel::spawn_floating_panel`], whose callers spawn their
 //! content into the returned `body` entity — don't fit the `spawn_scene` model
 //! cleanly and are intentionally left imperative. The full migration status is
 //! tracked in `AGENTS.md`.

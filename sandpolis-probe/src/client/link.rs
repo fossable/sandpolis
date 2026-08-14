@@ -22,7 +22,7 @@ use bevy::window::PrimaryWindow;
 use sandpolis_client::gui::drag::{cursor_world_position, is_visible};
 use sandpolis_client::gui::input::CurrentLayer;
 use sandpolis_client::gui::node::{NodeEntity, WorldView};
-use sandpolis_client::gui::ui::controller::LayerRegistry;
+use sandpolis_client::gui::ui::layer::LayerRegistry;
 use sandpolis_client::gui::ui::gating::UiPointerState;
 use sandpolis_client::gui::ui::theme::{Role, Theme};
 use sandpolis_client::gui::ui::tooltip::WorldTooltip;

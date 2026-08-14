@@ -44,10 +44,10 @@ pub struct RealmConfig {
     /// this file is the durable copy.
     pub ca: Option<CaConfig>,
 
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     pub account: sandpolis_account::config::AccountLayerConfig,
 
-    #[cfg(feature = "layer-probe")]
+    #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::config::ProbeLayerConfig,
 }
 

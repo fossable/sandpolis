@@ -1,41 +1,14 @@
-//! Retained-mode node controller abstraction.
-//!
-//! This replaces the old immediate-mode `LayerGuiExtension::render_controller`.
-//! A layer provides a [`NodeController`] whose [`NodeController::build`] spawns a
-//! `bevy_ui` subtree once (when the controller opens), rather than redrawing every
-//! frame. Live values come from [`super::bind`] components.
+//! What the client knows about each layer.
 //!
 //! Layers register themselves with [`RegisterLayerClient::register_layer_client`]
 //! from their `LayerClientPlugin`, replacing the compile-time `inventory`
-//! collection. The [`LayerRegistry`] resource then drives the controller host, the
-//! layer picker, and per-layer node visibility.
+//! collection. The [`LayerRegistry`] resource then drives the node panel host,
+//! the layer picker, the layer toolbar, and per-layer node visibility.
 
-use super::theme::Theme;
-use crate::gui::controller::ControllerTarget;
+use super::node_panel::NodePanel;
 use bevy::prelude::*;
 use sandpolis_instance::{InstanceType, LayerName};
 use std::sync::Arc;
-
-/// A layer's retained-mode controller.
-///
-/// [`build`](NodeController::build) is called once when the controller panel opens
-/// for a node; it should spawn the body UI as children of `body`. To react to
-/// clicks, attach an observer to a spawned button capturing `target`, e.g.
-/// `child.spawn(button(theme, "Go")).observe(move |_: On<Activate>, ...| { .. })`.
-/// For live-updating labels use [`super::bind::bind_text`].
-pub trait NodeController: Send + Sync + 'static {
-    /// Title shown in the controller panel's titlebar.
-    fn title(&self) -> &str;
-
-    /// Title for a particular target, when one name doesn't fit every node the
-    /// controller can open for. Defaults to [`title`](NodeController::title).
-    fn title_for(&self, _target: ControllerTarget) -> String {
-        self.title().to_string()
-    }
-
-    /// Build the controller body as children of `body`.
-    fn build(&self, commands: &mut Commands, body: Entity, target: ControllerTarget, theme: &Theme);
-}
 
 /// Callback run when a layer toolbar button is clicked. It receives `Commands`
 /// so it can queue work (e.g. open a dialog) without the registry needing to know
@@ -62,7 +35,7 @@ pub struct ToolbarAction {
 }
 
 /// Everything the client needs to know about a layer, registered by its
-/// `LayerClientPlugin`. Replaces the old `LayerGuiExtension` trait object.
+/// `LayerClientPlugin`.
 #[derive(Clone)]
 pub struct LayerClientInfo {
     /// The layer this describes.
@@ -78,19 +51,16 @@ pub struct LayerClientInfo {
     /// protocol. Only meaningful when [`show_probe_nodes`](Self::show_probe_nodes)
     /// is set. Kept as strings so this crate needn't depend on the probe layer.
     pub probe_protocols: &'static [&'static str],
-    /// Whether this layer's controller opens for plain instance nodes. Layers
-    /// whose controller describes a sub-node turn this off, so double-clicking
-    /// the instance those sub-nodes hang off does nothing.
-    pub controller_on_instance_nodes: bool,
-    /// The layer's node controller, if it has one.
-    pub controller: Option<Arc<dyn NodeController>>,
+    /// The layer's node panel, if it has one. Layers without one still get a
+    /// panel per node; it just shows the node's identity and nothing else.
+    pub panel: Option<Arc<dyn NodePanel>>,
     /// Buttons shown in the layer toolbar while this layer is active.
     pub toolbar_actions: Vec<ToolbarAction>,
 }
 
 impl LayerClientInfo {
     /// Create an info for `layer` with sensible defaults (servers + agents visible,
-    /// no probes, no controller).
+    /// no probes, no panel).
     pub fn new(layer: impl Into<LayerName>, description: &'static str) -> Self {
         Self {
             layer: layer.into(),
@@ -98,15 +68,14 @@ impl LayerClientInfo {
             visible_instance_types: &[InstanceType::Server, InstanceType::Agent],
             show_probe_nodes: false,
             probe_protocols: &[],
-            controller_on_instance_nodes: true,
-            controller: None,
+            panel: None,
             toolbar_actions: Vec::new(),
         }
     }
 
-    /// Attach a controller.
-    pub fn with_controller(mut self, controller: impl NodeController) -> Self {
-        self.controller = Some(Arc::new(controller));
+    /// Attach a node panel.
+    pub fn with_panel(mut self, panel: impl NodePanel) -> Self {
+        self.panel = Some(Arc::new(panel));
         self
     }
 
@@ -170,7 +139,7 @@ impl LayerClientInfo {
     }
 
     /// Show every probe node while this layer is active. The layer that does
-    /// this also owns probe lifecycle (selection, deletion).
+    /// this also owns probe lifecycle (deletion).
     pub fn showing_probe_nodes(mut self) -> Self {
         self.show_probe_nodes = true;
         self
@@ -181,13 +150,6 @@ impl LayerClientInfo {
     pub fn showing_probe_nodes_for(mut self, protocols: &'static [&'static str]) -> Self {
         self.show_probe_nodes = true;
         self.probe_protocols = protocols;
-        self
-    }
-
-    /// Only open this layer's controller from sub-nodes, never from the plain
-    /// instance nodes they hang off.
-    pub fn without_instance_controller(mut self) -> Self {
-        self.controller_on_instance_nodes = false;
         self
     }
 }

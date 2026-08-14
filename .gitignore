@@ -3,5 +3,5 @@
 .gradle
 build
 target
-default.realm
+data
 vendor

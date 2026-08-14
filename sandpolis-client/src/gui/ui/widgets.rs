@@ -48,6 +48,23 @@ pub fn panel(theme: &Theme) -> impl Bundle {
     )
 }
 
+/// A titled block: a heading over a gapped column its caller fills.
+///
+/// Panel bodies are mostly a stack of these, so they're worth not rebuilding by
+/// hand each time.
+pub fn section(theme: &Theme, title: impl Into<String>) -> impl Bundle {
+    (
+        Node {
+            flex_direction: FlexDirection::Column,
+            width: Val::Percent(100.0),
+            row_gap: Val::Px(theme.metrics.space_sm),
+            margin: UiRect::bottom(Val::Px(theme.metrics.space_sm)),
+            ..default()
+        },
+        children![text(theme, title, theme.metrics.font_lg, Role::Text)],
+    )
+}
+
 /// A horizontal flex row with centered items and the given column gap.
 pub fn row(gap: f32) -> Node {
     Node {

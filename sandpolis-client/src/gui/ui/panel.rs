@@ -2,7 +2,8 @@
 //!
 //! `bevy_ui` has no window/dialog concept, so these provide the egui `Window`
 //! affordances we rely on: a full-screen modal scrim (centered, blocks the world)
-//! and a draggable, titled, closable [`FloatingPanel`] (the node controller host).
+//! and a draggable, titled, closable [`FloatingPanel`] (the database browser and
+//! services panel).
 
 use super::gating::{BlocksWorldInput, ModalRoot};
 use super::theme::{Role, Theme, ThemedBg, ThemedBorder};

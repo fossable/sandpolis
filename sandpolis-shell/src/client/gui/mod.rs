@@ -1,9 +1,9 @@
 //! GUI components for the Shell layer.
 //!
 //! Renders remote shell sessions through [`alacritty_terminal`], a headless VT
-//! emulator. "Create" opens a [`ShellSessionStreamRequester`] to the agent via
-//! [`InstanceConnection::open_stream_to`](sandpolis_instance); the agent runs
-//! the shell on a real PTY. Output bytes are fed to an
+//! emulator. Expanding a node's panel opens a [`ShellSessionStreamRequester`] to
+//! the agent via [`InstanceConnection::open_stream_to`](sandpolis_instance); the
+//! agent runs the shell on a real PTY. Output bytes are fed to an
 //! [`alacritty_terminal::Term`] grid and rendered as a fixed grid of styled
 //! text rows; keystrokes are translated to terminal input and sent back as
 //! `Stdin`.
@@ -18,12 +18,11 @@ use alacritty_terminal::vte::ansi::Processor;
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
-use sandpolis_client::gui::ui::Activate;
-use sandpolis_client::gui::controller::ControllerTarget;
-use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
 use sandpolis_client::gui::ui::gating::WantsKeyboard;
-use sandpolis_client::gui::ui::theme::{Role, Theme};
-use sandpolis_client::gui::ui::widgets::{button, row, text};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx, PanelTarget};
+use sandpolis_client::gui::ui::theme::Role;
+use sandpolis_client::gui::ui::widgets::{row, text};
 use sandpolis_instance::network::stream::StreamMessage;
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use std::collections::HashMap;
@@ -40,6 +39,9 @@ const CELL_W: f32 = FONT_SIZE * 0.6;
 const CELL_H: f32 = FONT_SIZE * 1.2;
 /// Default terminal background.
 const TERM_BG: Color = Color::srgb(0.08, 0.08, 0.10);
+/// Height the terminal grid claims inside a panel, so a session opens with a
+/// usable number of rows instead of whatever a zero-height flex box leaves.
+const TERMINAL_MIN_HEIGHT: f32 = 260.0;
 
 /// Handle to the embedded monospace font the terminal renders with.
 #[derive(Resource)]
@@ -47,12 +49,12 @@ struct TerminalFont(Handle<Font>);
 
 /// Active client-side shell sessions, keyed by the node they belong to.
 ///
-/// The key is a [`ControllerTarget`] rather than a bare `InstanceId` because a
+/// The key is a [`PanelTarget`] rather than a bare `InstanceId` because a
 /// probe node borrows its gateway server's id; only the sub-node device id tells
 /// an SSH probe apart from the server it orbits.
 #[derive(Resource, Default)]
 struct ShellStreams {
-    sessions: HashMap<ControllerTarget, ShellStreamSession>,
+    sessions: HashMap<PanelTarget, ShellStreamSession>,
 }
 
 /// A live shell session the GUI is rendering.
@@ -66,8 +68,8 @@ struct ShellStreamSession {
     term: Term<EventProxy>,
     /// ANSI byte parser driving `term`.
     processor: Processor,
-    /// The grid container entity this session renders into, if a controller
-    /// panel is currently open. `None` while the panel is closed.
+    /// The grid container entity this session renders into, if a node panel is
+    /// currently expanded on it. `None` while the panel is collapsed.
     grid: Option<Entity>,
     rows: u16,
     cols: u16,
@@ -112,51 +114,56 @@ impl Dimensions for TermDimensions {
     }
 }
 
-/// Marks the grid container of a terminal controller.
+/// Marks the grid container of a terminal panel.
 #[derive(Component)]
 struct TerminalGrid {
-    target: ControllerTarget,
+    target: PanelTarget,
 }
 
 /// Marks a grid that should open a session once its size is known.
 #[derive(Component)]
 struct TerminalPendingStart;
 
-/// The shell layer's node controller (VT terminal).
-pub struct ShellController;
+/// The shell layer's node panel (VT terminal).
+pub struct ShellPanel;
 
-impl NodeController for ShellController {
-    fn title(&self) -> &str {
-        "Terminal"
+impl NodePanel for ShellPanel {
+    fn build_summary(&self, ctx: &mut PanelCtx) {
+        let target = ctx.target;
+        let theme = ctx.theme;
+        ctx.children(|p| {
+            p.spawn((
+                // Filled in by `update_session_summaries`, which reads the
+                // session map rather than captured state — so a session started
+                // from an expanded panel shows up here the moment that panel
+                // collapses.
+                text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                SessionSummary { target },
+            ));
+        });
     }
 
-    fn title_for(&self, target: ControllerTarget) -> String {
-        #[cfg(feature = "probe")]
-        if let Some(device) = ssh_probe_device(target) {
-            return device.display_name();
-        }
-        #[cfg(not(feature = "probe"))]
-        let _ = target;
-        self.title().to_string()
-    }
+    /// Terminal panels open their session immediately: expanding the panel is
+    /// the request for a shell, and a button in front of it was only ever an
+    /// extra click. Collapsing and reopening the panel is how a session that
+    /// ended gets restarted.
+    fn build_detail(&self, ctx: &mut PanelCtx) {
+        let target = ctx.target;
+        let theme = ctx.theme;
 
-    fn build(
-        &self,
-        commands: &mut Commands,
-        body: Entity,
-        target: ControllerTarget,
-        theme: &Theme,
-    ) {
         // Grid container: captures keyboard focus and renders the terminal.
-        let grid = commands
+        let grid = ctx
+            .commands
             .spawn((
                 TerminalGrid { target },
+                TerminalPendingStart,
                 WantsKeyboard,
                 TabIndex(0),
                 Interaction::default(),
                 Node {
                     flex_direction: FlexDirection::Column,
                     flex_grow: 1.0,
+                    min_height: Val::Px(TERMINAL_MIN_HEIGHT),
                     padding: UiRect::all(Val::Px(theme.metrics.space_xs)),
                     overflow: Overflow::clip(),
                     ..default()
@@ -166,31 +173,56 @@ impl NodeController for ShellController {
             .id();
 
         // Clicking the grid focuses it so keystrokes route to the terminal.
-        commands.entity(grid).observe(
+        ctx.commands.entity(grid).observe(
             move |_: On<Pointer<Click>>, mut focus: ResMut<InputFocus>| {
                 focus.set(grid, FocusCause::Navigated);
             },
         );
 
-        // Header with a Create button.
-        let header = commands
+        let header = ctx
+            .commands
             .spawn(row(theme.metrics.space_sm))
             .with_children(|h| {
-                h.spawn(text(theme, "Shell:", theme.metrics.font_md, Role::TextMuted));
-                h.spawn(button(theme, "Create")).observe(
-                    move |_: On<Activate>, mut commands: Commands, streams: Res<ShellStreams>| {
-                        // Reattachment of an existing session is handled by
-                        // `attach_terminal_grids`; only start a fresh one.
-                        if streams.sessions.contains_key(&target) {
-                            return;
-                        }
-                        commands.entity(grid).insert(TerminalPendingStart);
-                    },
-                );
+                h.spawn((
+                    text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                    SessionSummary { target },
+                ));
             })
             .id();
 
-        commands.entity(body).add_children(&[header, grid]);
+        ctx.commands
+            .entity(ctx.body)
+            .add_children(&[header, grid]);
+    }
+}
+
+/// Marks a label describing a target's session state, filled in by
+/// [`update_session_summaries`].
+#[derive(Component)]
+struct SessionSummary {
+    target: PanelTarget,
+}
+
+/// Describe each target's session state in its summary labels.
+fn update_session_summaries(
+    streams: Res<ShellStreams>,
+    mut labels: Query<(&SessionSummary, &mut Text)>,
+) {
+    // The websocket comes up asynchronously after startup, so a panel expanded
+    // early has nothing to open a session over yet. Saying so beats "no
+    // session", which reads as "and nothing is trying to change that".
+    let connected = sandpolis_client::sync::connection().is_some();
+
+    for (summary, mut label) in &mut labels {
+        let value = match streams.sessions.get(&summary.target) {
+            Some(session) if session.ended => "Session ended".to_string(),
+            Some(session) => format!("Shell {}×{}", session.cols, session.rows),
+            None if !connected => "Waiting for server…".to_string(),
+            None => "No session".to_string(),
+        };
+        if label.0 != value {
+            label.0 = value;
+        }
     }
 }
 
@@ -202,16 +234,29 @@ fn load_terminal_font(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 /// Reattach a live session to a freshly (re)built grid entity, e.g. when the
-/// controller panel is reopened.
+/// node panel is expanded again.
+///
+/// This runs before [`start_pending_sessions`], which is what makes a panel that
+/// reopens on a live session reattach to it rather than start a second one. A
+/// session whose shell already exited is dropped instead, so reopening the panel
+/// is what restarts it — there's no "restart" button, and reattaching to a dead
+/// terminal would leave one permanently stuck.
 fn attach_terminal_grids(
+    mut commands: Commands,
     grids: Query<(Entity, &TerminalGrid), Added<TerminalGrid>>,
     mut streams: ResMut<ShellStreams>,
 ) {
     for (entity, grid) in grids.iter() {
-        if let Some(session) = streams.sessions.get_mut(&grid.target) {
-            session.grid = Some(entity);
-            session.dirty = true;
+        let Some(session) = streams.sessions.get_mut(&grid.target) else {
+            continue;
+        };
+        if session.ended {
+            streams.sessions.remove(&grid.target);
+            continue;
         }
+        session.grid = Some(entity);
+        session.dirty = true;
+        commands.entity(entity).remove::<TerminalPendingStart>();
     }
 }
 
@@ -222,6 +267,11 @@ fn start_pending_sessions(
     mut streams: ResMut<ShellStreams>,
 ) {
     for (entity, grid, node) in pending.iter() {
+        // Reattachment already claimed this grid.
+        if streams.sessions.contains_key(&grid.target) {
+            commands.entity(entity).remove::<TerminalPendingStart>();
+            continue;
+        }
         let logical = node.size() * node.inverse_scale_factor();
         if logical.x < CELL_W || logical.y < CELL_H {
             continue; // not laid out yet
@@ -230,6 +280,21 @@ fn start_pending_sessions(
         let rows = ((logical.y / CELL_H).floor() as u16).max(2);
 
         let (outbound, outbound_rx) = channel(64);
+
+        let output = match open_session_stream(grid.target, rows, cols, outbound_rx) {
+            SessionStart::Opened(output) => output,
+            // Keep the marker and come back next frame. Recording a session here
+            // would be worse than waiting: the terminal would look live, take
+            // keystrokes nothing reads, and block the retry that would have
+            // worked once the websocket came up.
+            SessionStart::NotReady => continue,
+            SessionStart::Unsupported => {
+                // Nothing this layer can drive on the other end (an account
+                // node, or a probe with no SSH). Stop asking.
+                commands.entity(entity).remove::<TerminalPendingStart>();
+                continue;
+            }
+        };
 
         let dims = TermDimensions {
             columns: cols as usize,
@@ -240,8 +305,6 @@ fn start_pending_sessions(
             &dims,
             EventProxy(outbound.clone()),
         );
-
-        let output = open_session_stream(grid.target, rows, cols, outbound_rx);
 
         streams.sessions.insert(
             grid.target,
@@ -258,10 +321,7 @@ fn start_pending_sessions(
             },
         );
         commands.entity(entity).remove::<TerminalPendingStart>();
-        info!(
-            "Shell session started for {} ({}x{})",
-            grid.target.instance, cols, rows
-        );
+        info!("Shell session opened for {:?} ({}x{})", grid.target, cols, rows);
     }
 }
 
@@ -271,7 +331,7 @@ fn start_pending_sessions(
 /// `sandpolis_probe::client::gui`, whose helpers are behind that crate's `client`
 /// feature — depending on them would drag its whole GUI stack in here.
 #[cfg(feature = "probe")]
-fn ssh_probe_device(target: ControllerTarget) -> Option<sandpolis_probe::RegisteredDevice> {
+fn ssh_probe_device(target: PanelTarget) -> Option<sandpolis_probe::RegisteredDevice> {
     let device_id = target.sub?;
     let device = sandpolis_probe::REGISTERED_DEVICES
         .read()
@@ -286,26 +346,63 @@ fn ssh_probe_device(target: ControllerTarget) -> Option<sandpolis_probe::Registe
 /// Open the stream backing a new session and hand back the channel its output
 /// arrives on.
 ///
+/// The outcome of trying to open a session's stream.
+enum SessionStart {
+    /// The stream is open; here is where its output will arrive.
+    Opened(UnboundedReceiver<ShellOutput>),
+    /// There's no server connection yet. Worth trying again shortly — the
+    /// websocket comes up asynchronously after startup, so a panel expanded in
+    /// the first second of a run lands here.
+    NotReady,
+    /// Nothing this layer can open a shell to, now or later.
+    Unsupported,
+}
+
 /// A probe target gets an SSH session run by the device's owning server; anything
 /// else gets a PTY on the agent itself. Both produce [`ShellOutput`], so the
 /// terminal above this doesn't care which it got.
+///
+/// The connection is resolved here rather than inside the spawn helpers so that
+/// "no connection yet" is reported instead of leaving the caller holding a
+/// session whose stream was never opened.
 fn open_session_stream(
-    target: ControllerTarget,
+    target: PanelTarget,
     rows: u16,
     cols: u16,
     outbound_rx: Receiver<ShellSessionStreamRequest>,
-) -> UnboundedReceiver<ShellOutput> {
+) -> SessionStart {
     #[cfg(feature = "probe")]
     if let Some(device) = ssh_probe_device(target) {
+        // Probes are reachable only from servers, so this routes to the server
+        // that owns the device, falling back to the primary.
+        let Some(conn) = device
+            .device
+            .server
+            .as_ref()
+            .and_then(sandpolis_client::sync::connection_for)
+            .or_else(sandpolis_client::sync::connection)
+        else {
+            return SessionStart::NotReady;
+        };
         let (requester, output) = crate::ssh::SshSessionStreamRequester::channel();
         let initial = crate::ssh::SshSessionStreamRequest::Start {
             device_id: device.id,
             rows: rows as u32,
             cols: cols as u32,
         };
-        spawn_ssh_stream(&device, requester, initial, outbound_rx);
-        return output;
+        spawn_ssh_stream(conn, requester, initial, outbound_rx);
+        return SessionStart::Opened(output);
     }
+
+    // A sub-node that isn't an SSH probe borrows its gateway's instance id, so
+    // falling through to the agent path would open a shell on the wrong host.
+    let instance = match (target.instance, target.sub) {
+        (Some(instance), None) => instance,
+        _ => return SessionStart::Unsupported,
+    };
+    let Some(conn) = sandpolis_client::sync::connection() else {
+        return SessionStart::NotReady;
+    };
 
     let (requester, output) = ShellSessionStreamRequester::channel();
     let initial = ShellSessionStreamRequest::Start {
@@ -314,33 +411,23 @@ fn open_session_stream(
         rows: rows as u32,
         cols: cols as u32,
     };
-    spawn_shell_stream(target.instance, requester, initial, outbound_rx);
-    output
+    spawn_shell_stream(conn, instance, requester, initial, outbound_rx);
+    SessionStart::Opened(output)
 }
 
-/// Open an SSH session to a probe device and forward outbound requests over it
-/// until the channel closes.
+/// Open an SSH session to a probe device over `conn` and forward outbound
+/// requests over it until the channel closes.
 ///
-/// Probes are reachable only from servers, so this opens a stream *to the owning
-/// server* (not a relayed one to an agent) and translates the terminal's
-/// agent-shaped requests into the SSH wire type on the way out.
+/// `conn` is the owning server's connection (not a relayed one to an agent),
+/// resolved by the caller; this translates the terminal's agent-shaped requests
+/// into the SSH wire type on the way out.
 #[cfg(feature = "probe")]
 fn spawn_ssh_stream(
-    device: &sandpolis_probe::RegisteredDevice,
+    conn: std::sync::Arc<sandpolis_instance::network::InstanceConnection>,
     requester: crate::ssh::SshSessionStreamRequester,
     initial: crate::ssh::SshSessionStreamRequest,
     mut outbound_rx: Receiver<ShellSessionStreamRequest>,
 ) {
-    let conn = device
-        .device
-        .server
-        .as_ref()
-        .and_then(sandpolis_client::sync::connection_for)
-        .or_else(sandpolis_client::sync::connection);
-    let Some(conn) = conn else {
-        warn!("No server connection; cannot start SSH session");
-        return;
-    };
     sandpolis_client::sync::spawn(async move {
         let (id, msg_tx) = match conn.open_stream(requester, initial).await {
             Ok(v) => v,
@@ -372,18 +459,15 @@ fn spawn_ssh_stream(
     });
 }
 
-/// Open a relayed shell session to `instance` and forward outbound requests
-/// (stdin, resize) over it until the channel closes.
+/// Open a relayed shell session to `instance` over `conn` and forward outbound
+/// requests (stdin, resize) over it until the channel closes.
 fn spawn_shell_stream(
+    conn: std::sync::Arc<sandpolis_instance::network::InstanceConnection>,
     instance: InstanceId,
     requester: ShellSessionStreamRequester,
     initial: ShellSessionStreamRequest,
     mut outbound_rx: Receiver<ShellSessionStreamRequest>,
 ) {
-    let Some(conn) = sandpolis_client::sync::connection() else {
-        warn!("No server connection; cannot start shell session");
-        return;
-    };
     sandpolis_client::sync::spawn(async move {
         let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
             Ok(v) => v,
@@ -482,6 +566,7 @@ impl Plugin for ShellClientPlugin {
                     keys::terminal_keyboard_input,
                     drive_shell_streams,
                     handle_terminal_resize,
+                    update_session_summaries,
                     render::render_terminals,
                 )
                     .chain(),
@@ -491,7 +576,7 @@ impl Plugin for ShellClientPlugin {
                     LayerName::from("Shell"),
                     "Remote shell access and command execution",
                 )
-                .with_controller(ShellController)
+                .with_panel(ShellPanel)
                 .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
                 // SSH probes get a terminal just like agents do. Devices that
                 // expose nothing this layer can drive stay hidden.

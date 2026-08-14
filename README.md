@@ -85,7 +85,7 @@ source, it's easy to pick and choose what layers are included:
 
 ```sh
 # Build the Sandpolis server with remote desktop capabilities ONLY
-cargo build --no-default-features --features server --features layer-desktop
+cargo build --no-default-features --features server --features desktop
 ```
 
 If you don't build from source, you can still enable/disable layers, but they
@@ -159,7 +159,7 @@ features you need. For example, to build with support for remote desktop and
 nothing else:
 
 ```sh
-cargo install sandpolis --no-default-features --features layer-desktop
+cargo install sandpolis --no-default-features --features desktop
 ```
 
 As a result, your installation artifacts will be smaller and will be unable to

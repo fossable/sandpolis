@@ -8,7 +8,10 @@
 //!   the pointer/keyboard is captured by the UI (replaces egui's
 //!   `wants_pointer_input` / `is_pointer_over_area` checks).
 //! - [`icon`]: SVG-to-texture rasterization for icons inside UI nodes.
-//! - [`widgets`]: themed spawn-helpers built on top of `bevy_ui_widgets`.
+//! - [`widgets`] / [`gauge`]: themed spawn-helpers built on top of
+//!   `bevy_ui_widgets`.
+//! - [`layer`]: the registry each layer's client plugin registers itself in.
+//! - [`node_panel`]: the panel abstraction layers build their node UI on.
 //!
 //! Add [`UiPlugin`] to install everything.
 
@@ -16,9 +19,11 @@ use bevy::prelude::*;
 
 pub mod anchored;
 pub mod bind;
-pub mod controller;
 pub mod gating;
+pub mod gauge;
 pub mod icon;
+pub mod layer;
+pub mod node_panel;
 pub mod panel;
 pub mod scene;
 pub mod scroll;
@@ -38,7 +43,7 @@ pub mod z {
     pub const ANCHORED: i32 = 100;
     /// Always-on chrome (minimap, layer indicator).
     pub const CHROME: i32 = 200;
-    /// Floating panels (node controllers).
+    /// Floating panels (database browser, services) and expanded node panels.
     pub const PANEL: i32 = 300;
     /// Modal scrim + dialogs.
     pub const MODAL: i32 = 400;
@@ -76,8 +81,9 @@ impl Plugin for UiPlugin {
             .add_plugins(scroll::ScrollPlugin)
             .add_plugins(anchored::AnchoredPlugin)
             .add_plugins(bind::BindPlugin)
+            .add_plugins(gauge::GaugePlugin)
             .add_plugins(tooltip::TooltipPlugin)
-            .init_resource::<controller::LayerRegistry>()
+            .init_resource::<layer::LayerRegistry>()
             .add_observer(text_input::focus_text_input_on_click);
     }
 }

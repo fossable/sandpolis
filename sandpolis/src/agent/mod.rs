@@ -30,10 +30,10 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
         state.instance.instance_id,
     );
 
-    #[cfg(feature = "layer-health")]
+    #[cfg(feature = "health")]
     state.health.register_services(&mut services);
 
-    #[cfg(feature = "layer-inventory")]
+    #[cfg(feature = "inventory")]
     state.inventory.register_services(&mut services);
 
     services.start()?;

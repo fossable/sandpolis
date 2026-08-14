@@ -1,6 +1,6 @@
 //! GUI components for the Probe layer.
 //!
-//! One graph node per registered *device*; its node controller shows a tab per
+//! One graph node per registered *device*; its node panel shows a tab per
 //! protocol the device exposes (RTSP renders live video, Wake-on-LAN offers a
 //! Wake button, etc.). Devices are added/deleted over the management stream, which
 //! the server persists to `sandpolis.ron` and broadcasts back to all clients.
@@ -16,24 +16,22 @@ use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::bind::bind_text;
-use sandpolis_client::gui::ui::controller::{
-    LayerClientInfo, LayerRegistry, NodeController, RegisterLayerClient,
-};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, LayerRegistry, RegisterLayerClient};
 use sandpolis_client::gui::ui::panel::modal_scrim;
 use bevy::text::EditableText;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder, ThemedText};
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, row, text};
-use sandpolis_client::gui::controller::ControllerTarget;
 use sandpolis_client::gui::node::{
-    ExcludeFromSelection, NeedsScaling, NodeEntity, NodeHitbox, SubNode,
+    NeedsScaling, NodeEntity, NodeHitbox, NodeIdentity, SubNode,
 };
+use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx, PanelTarget};
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use sandpolis_server::ServerUrl;
 use std::sync::Arc;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, UnboundedSender, channel};
 
 use crate::config::{DeviceConfig, RtspProbeConfig, WolProbeConfig};
@@ -63,13 +61,13 @@ pub const PROBE_NODE_VISUAL_DIAMETER: f32 = 50.0;
 pub struct ProbeNodeBundle {
     pub probe_node: ProbeNode,
     pub node_entity: NodeEntity,
-    /// Carries the device id, which is what lets the controller host tell a
-    /// probe apart from the gateway server whose `InstanceId` it borrows.
+    /// Carries the device id, which is what lets the panel host tell a probe
+    /// apart from the gateway server whose `InstanceId` it borrows.
     pub sub_node: SubNode,
-    pub exclude: ExcludeFromSelection,
-    /// Keeps these nodes draggable now that dragging keys on the hitbox instead
-    /// of on `NodeEntity`. `ExcludeFromSelection` still keeps them out of the
-    /// generic selection, which they have their own version of.
+    /// The device's display name, shown at the top of its node panel.
+    pub identity: NodeIdentity,
+    /// Opts these nodes into the generic selection and drag systems, which key
+    /// on the hitbox rather than on `NodeEntity`.
     pub hitbox: NodeHitbox,
     pub collider: Collider,
     pub rigid_body: RigidBody,
@@ -118,7 +116,7 @@ pub fn spawn_probe_node(
             },
             node_entity: NodeEntity { instance_id },
             sub_node: SubNode(device.id),
-            exclude: ExcludeFromSelection,
+            identity: NodeIdentity(device.display_name()),
             hitbox: NodeHitbox { radius: 25.0 },
             collider: Collider::ball(25.0),
             rigid_body: RigidBody::Dynamic,
@@ -404,6 +402,9 @@ pub(crate) struct ProbeStreams {
     /// Why the last stream for a device ended, shown once its session is gone.
     /// Also carries the reason a start never got off the ground at all.
     last_status: HashMap<u64, StreamStatus>,
+    /// Devices whose stream the user stopped by hand. Without this the
+    /// auto-start would reopen the stream on the very next frame.
+    stopped: HashSet<u64>,
 }
 
 /// What a device's stream is currently doing, mirrored into its status label.
@@ -478,76 +479,94 @@ struct RtspStatusText {
 }
 
 /// The set of currently selected device nodes (by id).
+///
+/// Derived from the generic [`SelectionSet`](sandpolis_client::gui::drag::SelectionSet)
+/// by [`sync_device_selection`] rather than maintained by its own click handler —
+/// device nodes select like any other node.
 #[derive(Resource, Default)]
 pub struct DeviceSelectionSet {
     pub selected: Vec<u64>,
 }
 
-/// Marker for a selected device node entity.
-#[derive(Component)]
-struct DeviceSelected;
-
-/// A device controller's tab bar; `active` is the visible tab index.
+/// A device panel's tab bar; `active` is the visible tab index.
 #[derive(Component)]
 struct DeviceTabBar {
     device_id: u64,
     active: usize,
 }
 
-/// One tab's content panel within a device controller.
+/// One tab's content panel within a device panel.
 #[derive(Component)]
 struct DeviceTabContent {
     device_id: u64,
     index: usize,
 }
 
-/// The probe layer's node controller.
+/// The probe layer's node panel.
 ///
-/// Opened from a probe node, it shows just that device. Server nodes don't open
-/// it at all (`without_instance_controller`); the gateway-wide list below is a
-/// fallback for any caller that targets a bare instance.
-pub struct ProbeController;
+/// Expanded from a device node it shows just that device; expanded from the
+/// gateway server the devices orbit, it lists all of them.
+pub struct ProbePanel;
 
-impl NodeController for ProbeController {
-    fn title(&self) -> &str {
-        "Devices"
-    }
+impl NodePanel for ProbePanel {
+    fn build_summary(&self, ctx: &mut PanelCtx) {
+        let target = ctx.target;
+        let theme = ctx.theme;
 
-    fn title_for(&self, target: ControllerTarget) -> String {
-        target
-            .sub
-            .and_then(device_by_id)
-            .map(|device| device.display_name())
-            .unwrap_or_else(|| self.title().to_string())
-    }
-
-    fn build(
-        &self,
-        commands: &mut Commands,
-        body: Entity,
-        target: ControllerTarget,
-        theme: &Theme,
-    ) {
         if let Some(device_id) = target.sub {
-            commands.entity(body).with_children(|p| {
-                match device_by_id(device_id) {
-                    Some(device) => build_device_section(p, theme, &device),
-                    None => {
-                        p.spawn(muted(
-                            theme,
-                            "This device is no longer registered.",
-                            theme.metrics.font_md,
-                        ));
-                    }
+            ctx.children(|p| {
+                p.spawn((
+                    text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                    bind_text(move || match device_by_id(device_id) {
+                        Some(device) => device
+                            .device
+                            .protocols()
+                            .iter()
+                            .map(|protocol| protocol.display_name())
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                        None => "Unregistered".to_string(),
+                    }),
+                ));
+            });
+            return;
+        }
+
+        let Some(instance) = target.instance else {
+            return;
+        };
+        ctx.children(|p| {
+            p.spawn((
+                text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                bind_text(move || format!("{} device(s)", query_devices(instance).len())),
+            ));
+        });
+    }
+
+    fn build_detail(&self, ctx: &mut PanelCtx) {
+        let target = ctx.target;
+        let theme = ctx.theme;
+
+        if let Some(device_id) = target.sub {
+            ctx.children(|p| match device_by_id(device_id) {
+                Some(device) => build_device_section(p, theme, &device),
+                None => {
+                    p.spawn(muted(
+                        theme,
+                        "This device is no longer registered.",
+                        theme.metrics.font_md,
+                    ));
                 }
             });
             return;
         }
 
-        let instance = target.instance;
+        let Some(instance) = target.instance else {
+            return;
+        };
         let devices = query_devices(instance);
 
-        commands.entity(body).with_children(|p| {
+        ctx.children(|p| {
             p.spawn((
                 heading(theme, "Devices"),
                 bind_text(move || format!("Devices ({})", query_devices(instance).len())),
@@ -565,6 +584,50 @@ impl NodeController for ProbeController {
                 build_device_section(p, theme, device);
             }
         });
+    }
+
+    /// A camera feed is worth nothing once nobody is looking at it, so a
+    /// collapsing panel takes its stream down with it.
+    fn on_collapse(&self, commands: &mut Commands, target: PanelTarget) {
+        let Some(device_id) = target.sub else {
+            return;
+        };
+        commands.queue(move |world: &mut World| {
+            let Some(mut streams) = world.get_resource_mut::<ProbeStreams>() else {
+                return;
+            };
+            // Clearing both is what makes reopening the panel the way to
+            // restart a stream that was stopped or that failed.
+            streams.stopped.remove(&device_id);
+            streams.last_status.remove(&device_id);
+            if let Some(session) = streams.streams.remove(&device_id) {
+                let _ = session.outbound.try_send(RtspSessionStreamRequest::Stop);
+            }
+            if let Some(mut thumbnails) = world.get_resource_mut::<ProbeThumbnails>() {
+                thumbnails.0.remove(&device_id);
+            }
+        });
+    }
+}
+
+/// Mirror the generic node selection into [`DeviceSelectionSet`], which the
+/// layer's "Delete probe" action is gated on.
+fn sync_device_selection(
+    selection: Res<sandpolis_client::gui::drag::SelectionSet>,
+    probes: Query<&ProbeNode>,
+    mut devices: ResMut<DeviceSelectionSet>,
+) {
+    if !selection.is_changed() {
+        return;
+    }
+    let selected: Vec<u64> = selection
+        .selected_nodes
+        .iter()
+        .filter_map(|entity| probes.get(*entity).ok())
+        .map(|probe| probe.device_id)
+        .collect();
+    if devices.selected != selected {
+        devices.selected = selected;
     }
 }
 
@@ -668,32 +731,22 @@ fn build_tab_content(
                 RtspStatusText { device_id },
                 text(theme, "", theme.metrics.font_sm, Role::TextMuted),
             ));
-            content.spawn(row(theme.metrics.space_sm)).with_children(|controls| {
-                controls
-                    .spawn(button(theme, "Start stream"))
-                    .observe(
-                        move |_: On<Activate>, mut streams: ResMut<ProbeStreams>| {
-                            start_rtsp_stream(device_id, &mut streams);
-                        },
-                    );
-                controls
-                    .spawn(button(theme, "Stop stream"))
-                    .observe(
+            // No "Start": the stream opens as soon as the view is spawned (see
+            // `start_pending_rtsp_streams`), because opening the panel on a
+            // camera is the request to see what it sees.
+            content
+                .spawn(row(theme.metrics.space_sm))
+                .with_children(|controls| {
+                    controls.spawn(button(theme, "Stop")).observe(
                         move |_: On<Activate>,
                               mut streams: ResMut<ProbeStreams>,
                               mut thumbnails: ResMut<ProbeThumbnails>,
                               mut views: Query<(&RtspStreamView, &mut ImageNode)>| {
-                            let Some(session) = streams.streams.remove(&device_id) else {
-                                return;
-                            };
-                            let _ = session.outbound.try_send(RtspSessionStreamRequest::Stop);
-                            streams
-                                .last_status
-                                .insert(device_id, StreamStatus::Ended("Stopped".into()));
-                            clear_stream_view(device_id, &mut thumbnails, &mut views);
+                            stop_rtsp_stream(device_id, &mut streams, &mut thumbnails, &mut views);
+                            streams.stopped.insert(device_id);
                         },
                     );
-            });
+                });
         }
         ProbeType::Wol => {
             if let Some(wol) = device.device.wol.clone() {
@@ -715,9 +768,67 @@ fn build_tab_content(
     }
 }
 
+/// Stop `device_id`'s stream, blank its view, and drop its node thumbnail.
+fn stop_rtsp_stream(
+    device_id: u64,
+    streams: &mut ProbeStreams,
+    thumbnails: &mut ProbeThumbnails,
+    views: &mut Query<(&RtspStreamView, &mut ImageNode)>,
+) {
+    let Some(session) = streams.streams.remove(&device_id) else {
+        return;
+    };
+    let _ = session.outbound.try_send(RtspSessionStreamRequest::Stop);
+    streams
+        .last_status
+        .insert(device_id, StreamStatus::Ended("Stopped".into()));
+    clear_stream_view(device_id, thumbnails, views);
+}
+
+/// Open a stream for every RTSP view that doesn't have one yet.
+///
+/// Checked every frame rather than on `Added` so a start that couldn't happen
+/// yet (no connection) is retried until it can. A device that already reported
+/// how its last stream ended is left alone, so a camera that can't be reached is
+/// retried when the panel is reopened rather than sixty times a second.
+fn start_pending_rtsp_streams(mut streams: ResMut<ProbeStreams>, views: Query<&RtspStreamView>) {
+    for view in &views {
+        let device_id = view.device_id;
+        if streams.streams.contains_key(&device_id)
+            || streams.stopped.contains(&device_id)
+            || streams.last_status.contains_key(&device_id)
+        {
+            continue;
+        }
+        // Wait for a connection before starting at all. `start_rtsp_stream`
+        // would happily defer the launch, but its deferral window is finite —
+        // spending it on the seconds before the websocket even exists means the
+        // stream gives up just as the connection becomes usable.
+        if device_by_id(device_id)
+            .as_ref()
+            .and_then(connection_for_device)
+            .is_none()
+        {
+            continue;
+        }
+        start_rtsp_stream(device_id, &mut streams);
+    }
+}
+
+/// The connection that reaches `device`: the server that owns it, else the
+/// primary. `None` while neither is up yet.
+fn connection_for_device(device: &RegisteredDevice) -> Option<Arc<InstanceConnection>> {
+    device
+        .device
+        .server
+        .as_ref()
+        .and_then(sandpolis_client::sync::connection_for)
+        .or_else(sandpolis_client::sync::connection)
+}
+
 /// Open an RTSP stream for `device_id` if one isn't already running. Every way
 /// this can decline to start records a reason, so the tab's status label can say
-/// what happened instead of the button appearing to do nothing.
+/// what happened instead of nothing appearing to happen at all.
 fn start_rtsp_stream(device_id: u64, streams: &mut ProbeStreams) {
     if streams.streams.contains_key(&device_id) {
         return;
@@ -777,6 +888,8 @@ fn launch_pending_streams(mut streams: ResMut<ProbeStreams>) {
             continue;
         }
         // Route to the server that owns the device; fall back to the primary.
+        // Same resolution as `connection_for_device`, but from the launch's
+        // recorded server rather than the (possibly deleted) device.
         let conn = session
             .pending
             .as_ref()
@@ -924,7 +1037,7 @@ fn drive_probe_streams(
             // Passively capture the latest frame as the node's thumbnail.
             thumbnails.0.insert(*device_id, handle.clone());
             // Resolved by device id rather than a cached entity: the node
-            // controller panel is rebuilt when reopened, so any entity captured
+            // node panel is rebuilt when reopened, so any entity captured
             // at start time goes stale.
             for (view, mut node) in views.iter_mut() {
                 if view.device_id == *device_id {
@@ -1050,118 +1163,6 @@ fn update_device_tabs(
             if *vis != want {
                 *vis = want;
             }
-        }
-    }
-}
-
-/// Click handling for device-node selection (single / Ctrl-multi), Probe layer
-/// only. Mirrors the generic node selection but keys off device id.
-fn handle_device_selection(
-    ui_pointer: Res<sandpolis_client::gui::ui::gating::UiPointerState>,
-    current_layer: Res<sandpolis_client::gui::input::CurrentLayer>,
-    registry: Res<LayerRegistry>,
-    mouse_button: Res<ButtonInput<MouseButton>>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<sandpolis_client::gui::node::WorldView>>,
-    mut commands: Commands,
-    probe_query: Query<(Entity, &Transform, &ProbeNode)>,
-    mut selection: ResMut<DeviceSelectionSet>,
-) {
-    // Only the layer showing *every* probe owns their lifecycle. Shell and
-    // Desktop show a filtered subset to work with, not to select or delete.
-    if !registry.show_probe_nodes(&current_layer)
-        || !registry.probe_protocols(&current_layer).is_empty()
-    {
-        return;
-    }
-    if ui_pointer.over_ui_blocking || !mouse_button.just_pressed(MouseButton::Left) {
-        return;
-    }
-    let Ok(window) = windows.single() else {
-        return;
-    };
-    let Some(cursor) = window.cursor_position() else {
-        return;
-    };
-    let Ok((camera, camera_transform)) = camera_query.single() else {
-        return;
-    };
-    let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor) else {
-        return;
-    };
-
-    const CLICK_RADIUS: f32 = 30.0;
-    let mut clicked: Option<(Entity, u64)> = None;
-    for (entity, transform, probe) in probe_query.iter() {
-        if world_pos.distance(transform.translation.truncate()) <= CLICK_RADIUS {
-            clicked = Some((entity, probe.device_id));
-            break;
-        }
-    }
-
-    let ctrl = keyboard.pressed(KeyCode::ControlLeft)
-        || keyboard.pressed(KeyCode::ControlRight)
-        || keyboard.pressed(KeyCode::SuperLeft)
-        || keyboard.pressed(KeyCode::SuperRight);
-
-    if let Some((entity, device_id)) = clicked {
-        if ctrl {
-            if selection.selected.contains(&device_id) {
-                selection.selected.retain(|&id| id != device_id);
-                commands.entity(entity).remove::<DeviceSelected>();
-            } else {
-                selection.selected.push(device_id);
-                commands.entity(entity).insert(DeviceSelected);
-            }
-        } else {
-            for (e, _, _) in probe_query.iter() {
-                commands.entity(e).remove::<DeviceSelected>();
-            }
-            selection.selected.clear();
-            selection.selected.push(device_id);
-            commands.entity(entity).insert(DeviceSelected);
-        }
-    } else if !ctrl {
-        for (e, _, _) in probe_query.iter() {
-            commands.entity(e).remove::<DeviceSelected>();
-        }
-        selection.selected.clear();
-    }
-}
-
-/// Selection-ring visuals for selected device nodes.
-#[derive(Component)]
-struct DeviceSelectionRing;
-
-fn update_device_selection_visuals(
-    mut commands: Commands,
-    selected: Query<Entity, (With<ProbeNode>, With<DeviceSelected>)>,
-    rings: Query<(Entity, &ChildOf), With<DeviceSelectionRing>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    // Remove rings whose node is no longer selected.
-    for (ring, parent) in rings.iter() {
-        if !selected.contains(parent.parent()) {
-            commands.entity(ring).despawn();
-        }
-    }
-    // Add rings for newly selected nodes.
-    for node in selected.iter() {
-        let has_ring = rings.iter().any(|(_, p)| p.parent() == node);
-        if !has_ring {
-            let ring = Mesh::from(Circle::new(32.0));
-            commands.entity(node).with_children(|parent| {
-                parent.spawn((
-                    Mesh2d(meshes.add(ring)),
-                    MeshMaterial2d(
-                        materials.add(ColorMaterial::from(Color::srgba(0.3, 0.8, 1.0, 0.6))),
-                    ),
-                    Transform::from_xyz(0.0, 0.0, -0.1),
-                    DeviceSelectionRing,
-                ));
-            });
         }
     }
 }
@@ -1468,13 +1469,13 @@ impl Plugin for ProbeClientPlugin {
                 manage_register_probe,
                 focus_register_probe_input,
                 sync_register_probe_inputs,
+                start_pending_rtsp_streams,
                 launch_pending_streams,
                 drive_probe_streams,
                 update_rtsp_status.after(drive_probe_streams),
                 update_probe_node_icons,
                 update_device_tabs,
-                handle_device_selection,
-                update_device_selection_visuals,
+                sync_device_selection,
                 open_device_subscription,
                 super::link::sample_link_traffic.after(drive_probe_streams),
                 super::link::hover_probe_links,
@@ -1493,13 +1494,12 @@ impl Plugin for ProbeClientPlugin {
         );
         app.register_layer_client(
             LayerClientInfo::new(LayerName::from("Probe"), "Device monitoring probes")
-                .with_controller(ProbeController)
+                .with_panel(ProbePanel)
                 // Probes are reachable only from servers (`management.rs` stamps
                 // the serving server's own id as the gateway), so agent nodes
                 // would just be clutter here.
                 .with_visible_instance_types(&[InstanceType::Server])
                 .showing_probe_nodes()
-                .without_instance_controller()
                 .with_toolbar_action("Register probe", "toolbar/register_probe.svg", |commands| {
                     commands.queue(|world: &mut World| {
                         if let Some(mut state) =

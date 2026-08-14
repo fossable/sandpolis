@@ -286,14 +286,14 @@ pub enum Commands {
     },
 
     /// Manage probes
-    #[cfg(all(feature = "client", feature = "layer-probe"))]
+    #[cfg(all(feature = "client", feature = "probe"))]
     Probe {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Connect to remote desktop sessions
-    #[cfg(all(feature = "client", feature = "layer-desktop"))]
+    #[cfg(all(feature = "client", feature = "desktop"))]
     Desktop {
         #[command(subcommand)]
         action: Option<sandpolis_desktop::cli::DesktopCommand>,
@@ -303,42 +303,42 @@ pub enum Commands {
     },
 
     /// Connect to remote shell sessions
-    #[cfg(all(feature = "client", feature = "layer-shell"))]
+    #[cfg(all(feature = "client", feature = "shell"))]
     Shell {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Inspect agent health
-    #[cfg(all(feature = "client", feature = "layer-health"))]
+    #[cfg(all(feature = "client", feature = "health"))]
     Health {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Inspect agent inventory
-    #[cfg(all(feature = "client", feature = "layer-inventory"))]
+    #[cfg(all(feature = "client", feature = "inventory"))]
     Inventory {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Browse agent filesystems
-    #[cfg(all(feature = "client", feature = "layer-filesystem"))]
+    #[cfg(all(feature = "client", feature = "filesystem"))]
     Filesystem {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Manage accounts
-    #[cfg(all(feature = "client", feature = "layer-account"))]
+    #[cfg(all(feature = "client", feature = "account"))]
     Account {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Manage cold snapshots
-    #[cfg(all(feature = "client", feature = "layer-snapshot"))]
+    #[cfg(all(feature = "client", feature = "snapshot"))]
     Snapshot {
         #[clap(flatten)]
         target: TargetArgs,
@@ -352,14 +352,14 @@ pub enum Commands {
     },
 
     /// Inspect audit events (interactive TUI)
-    #[cfg(all(feature = "client", feature = "layer-audit"))]
+    #[cfg(all(feature = "client", feature = "audit"))]
     Audit {
         #[clap(flatten)]
         target: TargetArgs,
     },
 
     /// Manage tunnels
-    #[cfg(all(feature = "client", feature = "layer-tunnel"))]
+    #[cfg(all(feature = "client", feature = "tunnel"))]
     Tunnel {
         #[clap(flatten)]
         target: TargetArgs,
@@ -442,32 +442,32 @@ impl Commands {
         match self {
             Commands::Agent { action } => client::agent(action, fps).await,
             Commands::Server { action } => client::server(action, &state.server, fps).await,
-            #[cfg(feature = "layer-probe")]
+            #[cfg(feature = "probe")]
             Commands::Probe { target } => {
                 sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
             }
-            #[cfg(feature = "layer-desktop")]
+            #[cfg(feature = "desktop")]
             Commands::Desktop { action, target } => {
                 sandpolis_desktop::cli::dispatch(action, target, &state.desktop, fps).await
             }
-            #[cfg(feature = "layer-shell")]
+            #[cfg(feature = "shell")]
             Commands::Shell { target } => {
                 sandpolis_shell::cli::dispatch(target, state.shell.clone(), fps).await
             }
-            #[cfg(feature = "layer-health")]
+            #[cfg(feature = "health")]
             Commands::Health { target } => client::stub("health", target, fps).await,
-            #[cfg(feature = "layer-inventory")]
+            #[cfg(feature = "inventory")]
             Commands::Inventory { target } => client::stub("inventory", target, fps).await,
-            #[cfg(feature = "layer-filesystem")]
+            #[cfg(feature = "filesystem")]
             Commands::Filesystem { target } => client::stub("filesystem", target, fps).await,
-            #[cfg(feature = "layer-account")]
+            #[cfg(feature = "account")]
             Commands::Account { target } => client::stub("account", target, fps).await,
-            #[cfg(feature = "layer-snapshot")]
+            #[cfg(feature = "snapshot")]
             Commands::Snapshot { target } => client::stub("snapshot", target, fps).await,
             Commands::Wake { target } => client::stub("wake", target, fps).await,
-            #[cfg(feature = "layer-audit")]
+            #[cfg(feature = "audit")]
             Commands::Audit { target } => client::stub("audit", target, fps).await,
-            #[cfg(feature = "layer-tunnel")]
+            #[cfg(feature = "tunnel")]
             Commands::Tunnel { target } => client::stub("tunnel", target, fps).await,
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),

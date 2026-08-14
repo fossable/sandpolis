@@ -1,72 +1,123 @@
 //! GUI components for the Inventory layer.
 //!
-//! Provides the system-information node controller and the layer's client plugin.
+//! Provides the system-information node panel and the layer's client plugin.
+//!
+//! The bounded quantities — CPU, memory, swap, per-filesystem storage — are all
+//! drawn with the shared [`gauge`] control, so "how full is it" reads the same
+//! way here as anywhere else in the GUI.
 
-use super::{query_memory, query_packages, query_users};
+use super::{query_cpu_cores, query_memory, query_mountpoints, query_packages, query_users};
 use bevy::prelude::*;
-use sandpolis_client::gui::controller::ControllerTarget;
-use sandpolis_client::gui::ui::controller::{LayerClientInfo, NodeController, RegisterLayerClient};
-use sandpolis_client::gui::ui::scene::{bound_text, text_line};
-use sandpolis_client::gui::ui::theme::{Role, Theme};
-use sandpolis_instance::{InstanceType, LayerName};
+use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::ui::gauge::{GaugeValue, bind_gauge, gauge};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx};
+use sandpolis_client::gui::ui::theme::Role;
+use sandpolis_client::gui::ui::widgets::{heading, text};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 
-/// The inventory layer's node controller (system information).
-pub struct InventoryController;
+/// Width a gauge is given inside a collapsed panel, whose own width is only
+/// whatever its content asks for — a percentage-width track would collapse to
+/// nothing there.
+const SUMMARY_GAUGE_WIDTH: f32 = 170.0;
 
-impl NodeController for InventoryController {
-    fn title(&self) -> &str {
-        "System Information"
+/// How many filesystems the panel draws a gauge for. Beyond this the list is
+/// more scrolling than information; they're sorted largest-first, so what's cut
+/// is the least interesting.
+const MAX_MOUNTS: usize = 6;
+
+/// The inventory layer's node panel (system information).
+pub struct InventoryPanel;
+
+impl NodePanel for InventoryPanel {
+    fn build_summary(&self, ctx: &mut PanelCtx) {
+        let Some(instance) = ctx.target.instance else {
+            return;
+        };
+        super::subscribe(instance);
+
+        let detailed = ctx.verbosity.is_detailed();
+        let theme = ctx.theme;
+
+        ctx.children(|p| {
+            p.spawn(Node {
+                width: Val::Px(SUMMARY_GAUGE_WIDTH),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(theme.metrics.space_xs),
+                ..default()
+            })
+            .with_children(|slot| {
+                slot.spawn((
+                    gauge(theme, "CPU", cpu_usage(instance)),
+                    bind_gauge(move || cpu_usage(instance)),
+                ));
+                slot.spawn((
+                    gauge(theme, "Memory", memory_usage(instance)),
+                    bind_gauge(move || memory_usage(instance)),
+                ));
+                // Zoomed right in there's room for the disks too; at the middle
+                // level the two live numbers are the point.
+                if detailed {
+                    slot.spawn((
+                        gauge(theme, "Storage", storage_usage(instance)),
+                        bind_gauge(move || storage_usage(instance)),
+                    ));
+                }
+            });
+        });
     }
 
-    fn build(
-        &self,
-        commands: &mut Commands,
-        body: Entity,
-        target: ControllerTarget,
-        theme: &Theme,
-    ) {
-        let instance = target.instance;
+    fn build_detail(&self, ctx: &mut PanelCtx) {
+        let Some(instance) = ctx.target.instance else {
+            return;
+        };
         // Subscribe to live inventory updates for this instance.
         super::subscribe(instance);
 
-        let font_md = theme.metrics.font_md;
-        let font_heading = theme.metrics.font_heading;
-        commands.entity(body).apply_scene(bsn! {
-            Children [
-                // Memory usage
-                {vec![text_line(theme, "Memory Usage", Role::Text, font_heading)]},
-                {vec![bound_text(theme, Role::Text, font_md, move || {
-                    let Ok(Some(m)) = query_memory(instance) else {
-                        return "No data".into();
-                    };
-                    let used = m.total.saturating_sub(m.free);
-                    format!(
-                        "{} / {} ({:.0}%)",
-                        format_bytes(used),
-                        format_bytes(m.total),
-                        percent(used, m.total),
-                    )
-                })]},
-                // Swap usage
-                {vec![text_line(theme, "Swap Usage", Role::Text, font_heading)]},
-                {vec![bound_text(theme, Role::Text, font_md, move || {
-                    let Ok(Some(m)) = query_memory(instance) else {
-                        return "No data".into();
-                    };
-                    if m.swap_total == 0 {
-                        return "No swap".into();
-                    }
-                    let used = m.swap_total.saturating_sub(m.swap_free);
-                    format!(
-                        "{} / {} ({:.0}%)",
-                        format_bytes(used),
-                        format_bytes(m.swap_total),
-                        percent(used, m.swap_total),
-                    )
-                })]},
-                // Users
-                {vec![text_line(theme, "Users", Role::Text, font_heading)]},
-                {vec![bound_text(theme, Role::Text, font_md, move || {
+        let theme = ctx.theme;
+        ctx.children(|p| {
+            p.spawn(heading(theme, "CPU"));
+            p.spawn((
+                gauge(theme, "Utilization", cpu_usage(instance)),
+                bind_gauge(move || cpu_usage(instance)),
+            ));
+
+            p.spawn(heading(theme, "Memory"));
+            p.spawn((
+                gauge(theme, "RAM", memory_usage(instance)),
+                bind_gauge(move || memory_usage(instance)),
+            ));
+            p.spawn((
+                gauge(theme, "Swap", swap_usage(instance)),
+                bind_gauge(move || swap_usage(instance)),
+            ));
+
+            p.spawn(heading(theme, "Storage"));
+            // One gauge per filesystem, spawned against the mounts known now.
+            // A filesystem appearing later needs the panel reopened; disks don't
+            // come and go often enough to warrant rebuilding this every frame.
+            let mounts = query_mountpoints(instance).unwrap_or_default();
+            if mounts.is_empty() {
+                p.spawn(text(
+                    theme,
+                    "No filesystem data",
+                    theme.metrics.font_md,
+                    Role::TextMuted,
+                ));
+            }
+            for mount in mounts.iter().take(MAX_MOUNTS) {
+                let path = mount.path.clone();
+                let lookup = path.clone();
+                p.spawn((
+                    gauge(theme, path, mount_usage_of(mount)),
+                    bind_gauge(move || mount_usage(instance, &lookup)),
+                ));
+            }
+
+            p.spawn(heading(theme, "Users"));
+            p.spawn((
+                text(theme, "", theme.metrics.font_md, Role::Text),
+                bind_text(move || {
                     let users = query_users(instance).unwrap_or_default();
                     if users.is_empty() {
                         return "No user data".into();
@@ -81,25 +132,119 @@ impl NodeController for InventoryController {
                         .collect();
                     names.sort();
                     format!("{} users — {}", users.len(), names.join(", "))
-                })]},
-                // Packages
-                {vec![text_line(theme, "Packages", Role::Text, font_heading)]},
-                {vec![bound_text(theme, Role::Text, font_md, move || {
+                }),
+            ));
+
+            p.spawn(heading(theme, "Packages"));
+            p.spawn((
+                text(theme, "", theme.metrics.font_md, Role::Text),
+                bind_text(move || {
                     let packages = query_packages(instance).unwrap_or_default();
                     if packages.is_empty() {
                         return "No package data".into();
                     }
                     format!("{} installed packages", packages.len())
-                })]},
-                {vec![text_line(
-                    theme,
-                    format!("Instance: {}", instance),
-                    Role::TextMuted,
-                    theme.metrics.font_sm,
-                )]},
-            ]
+                }),
+            ));
+
+            p.spawn(text(
+                theme,
+                format!("Instance: {instance}"),
+                theme.metrics.font_sm,
+                Role::TextMuted,
+            ));
         });
     }
+}
+
+/// Mean utilization across an instance's cores.
+fn cpu_usage(instance: InstanceId) -> GaugeValue {
+    let cores = query_cpu_cores(instance).unwrap_or_default();
+    if cores.is_empty() {
+        return GaugeValue::new(0.0, "No data");
+    }
+    let mean = cores.iter().map(|core| core.usage).sum::<f64>() / cores.len() as f64;
+    GaugeValue::new(
+        mean as f32,
+        format!("{:.0}% of {} cores", mean * 100.0, cores.len()),
+    )
+}
+
+/// An instance's RAM usage.
+fn memory_usage(instance: InstanceId) -> GaugeValue {
+    let Ok(Some(memory)) = query_memory(instance) else {
+        return GaugeValue::new(0.0, "No data");
+    };
+    let used = memory.total.saturating_sub(memory.free);
+    GaugeValue::ratio(
+        used,
+        memory.total,
+        format!(
+            "{} / {}",
+            format_bytes(used),
+            format_bytes(memory.total)
+        ),
+    )
+}
+
+/// An instance's swap usage.
+fn swap_usage(instance: InstanceId) -> GaugeValue {
+    let Ok(Some(memory)) = query_memory(instance) else {
+        return GaugeValue::new(0.0, "No data");
+    };
+    if memory.swap_total == 0 {
+        return GaugeValue::new(0.0, "No swap");
+    }
+    let used = memory.swap_total.saturating_sub(memory.swap_free);
+    GaugeValue::ratio(
+        used,
+        memory.swap_total,
+        format!(
+            "{} / {}",
+            format_bytes(used),
+            format_bytes(memory.swap_total)
+        ),
+    )
+}
+
+/// Usage across every mounted filesystem, for the one-line summary.
+fn storage_usage(instance: InstanceId) -> GaugeValue {
+    let mounts = query_mountpoints(instance).unwrap_or_default();
+    if mounts.is_empty() {
+        return GaugeValue::new(0.0, "No data");
+    }
+    let total: u64 = mounts.iter().map(|mount| mount.total_bytes()).sum();
+    let used: u64 = mounts.iter().map(|mount| mount.used_bytes()).sum();
+    GaugeValue::ratio(
+        used,
+        total,
+        format!("{} / {}", format_bytes(used), format_bytes(total)),
+    )
+}
+
+/// Usage of one filesystem, looked up fresh by mount path.
+fn mount_usage(instance: InstanceId, path: &str) -> GaugeValue {
+    match query_mountpoints(instance)
+        .unwrap_or_default()
+        .iter()
+        .find(|mount| mount.path == path)
+    {
+        Some(mount) => mount_usage_of(mount),
+        None => GaugeValue::new(0.0, "Unmounted"),
+    }
+}
+
+/// Usage of a filesystem already in hand.
+fn mount_usage_of(mount: &crate::os::mountpoint::MountpointData) -> GaugeValue {
+    GaugeValue::ratio(
+        mount.used_bytes(),
+        mount.total_bytes(),
+        format!(
+            "{} / {}",
+            format_bytes(mount.used_bytes()),
+            format_bytes(mount.total_bytes())
+        ),
+    )
 }
 
 /// Format a byte count as a human-readable string (GB/MB/KB).
@@ -115,16 +260,7 @@ fn format_bytes(bytes: u64) -> String {
     } else if b >= KB {
         format!("{:.2} KB", b / KB)
     } else {
-        format!("{} B", bytes)
-    }
-}
-
-/// Percentage of `used` over `total`, guarding against division by zero.
-fn percent(used: u64, total: u64) -> f64 {
-    if total == 0 {
-        0.0
-    } else {
-        (used as f64 / total as f64) * 100.0
+        format!("{bytes} B")
     }
 }
 
@@ -138,7 +274,7 @@ impl Plugin for InventoryClientPlugin {
                 LayerName::from("Inventory"),
                 "Hardware and software inventory",
             )
-            .with_controller(InventoryController)
+            .with_panel(InventoryPanel)
             .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
             .with_services(),
         );

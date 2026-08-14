@@ -30,6 +30,10 @@ pub struct InventoryLayer {
     #[cfg(feature = "agent")]
     pub memory: Arc<Mutex<os::memory::agent::MemoryMonitor>>,
     #[cfg(feature = "agent")]
+    pub cpu: Arc<Mutex<hardware::cpu::agent::CpuCollector>>,
+    #[cfg(feature = "agent")]
+    pub mountpoints: Arc<Mutex<os::mountpoint::agent::MountpointCollector>>,
+    #[cfg(feature = "agent")]
     pub users: Arc<Mutex<os::user::agent::UserCollector>>,
     #[cfg(feature = "agent")]
     pub packages: Arc<Mutex<package::agent::PackageCollector>>,
@@ -44,6 +48,18 @@ impl InventoryLayer {
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
+            #[cfg(feature = "agent")]
+            cpu: Arc::new(Mutex::new(hardware::cpu::agent::CpuCollector::new(
+                database.realm(RealmName::default())?,
+                instance.instance_id,
+            )?)),
+            #[cfg(feature = "agent")]
+            mountpoints: Arc::new(Mutex::new(
+                os::mountpoint::agent::MountpointCollector::new(
+                    database.realm(RealmName::default())?,
+                    instance.instance_id,
+                )?,
+            )),
             #[cfg(feature = "agent")]
             users: Arc::new(Mutex::new(os::user::agent::UserCollector::new(
                 database.realm(RealmName::default())?,
@@ -61,7 +77,9 @@ impl InventoryLayer {
     /// Add the layer's background services to the agent's runner.
     ///
     /// Packages get their own longer interval because enumerating them is
-    /// expensive and they change rarely, unlike memory and users.
+    /// expensive and they change rarely, unlike memory and users. CPU is the
+    /// other way around: utilization averaged over half a minute says nothing,
+    /// so it polls fast enough to still be a live reading.
     #[cfg(feature = "agent")]
     pub fn register_services(&self, runner: &mut sandpolis_instance::service::ServiceRunner) {
         use sandpolis_agent::CollectorService;
@@ -73,6 +91,20 @@ impl InventoryLayer {
             "memory",
             "Collects the host's memory usage",
             Duration::from_secs(30),
+        ));
+        runner.register(CollectorService::new(
+            self.cpu.clone(),
+            "Inventory",
+            "cpu",
+            "Collects the host's per-core CPU utilization",
+            Duration::from_secs(5),
+        ));
+        runner.register(CollectorService::new(
+            self.mountpoints.clone(),
+            "Inventory",
+            "mountpoints",
+            "Collects the host's mounted filesystems and their capacity",
+            Duration::from_secs(60),
         ));
         runner.register(CollectorService::new(
             self.users.clone(),

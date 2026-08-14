@@ -7,7 +7,8 @@
 //! focus.
 //!
 //! Tag the *root* of any UI element that should block world input with
-//! [`BlocksWorldInput`]; world-anchored decorations (node previews, edge labels)
+//! [`BlocksWorldInput`]; world-anchored decorations (collapsed node panels, edge
+//! labels)
 //! should NOT be tagged (and should be `Pickable::IGNORE`) so the world stays
 //! interactive beneath them. Tag focusable text entry with [`WantsKeyboard`].
 

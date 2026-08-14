@@ -18,13 +18,13 @@ use bevy_rapier2d::dynamics::{Damping, ExternalForce, RigidBody, Velocity};
 use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
 use sandpolis_client::gui::input::CurrentLayer;
-use sandpolis_client::gui::node::{NeedsScaling, NodeHitbox};
-use sandpolis_client::gui::preview::PreviewsVisible;
+use sandpolis_client::gui::node::{NeedsScaling, NodeHitbox, NodeIdentity, PanelIcon, SubNode};
 use sandpolis_client::gui::terrain::TerrainMember;
 use sandpolis_client::gui::ui::Activate;
-use sandpolis_client::gui::ui::anchored::{anchored_card, card_icon};
-use sandpolis_client::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::icon::{IconCache, decode_icon_bytes};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx};
 use sandpolis_client::gui::ui::panel::modal_scrim;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
@@ -96,6 +96,11 @@ pub struct AccountLink {
 struct AccountNodeBundle {
     account_node: AccountNode,
     terrain_member: TerrainMember,
+    /// Carries the account id. An account node has no `NodeEntity` at all, so
+    /// this is the whole of its [`PanelTarget`](sandpolis_client::gui::ui::node_panel::PanelTarget).
+    sub_node: SubNode,
+    /// The username (else email) shown at the top of the node's panel.
+    identity: NodeIdentity,
     /// Opts these nodes into the generic selection and drag systems, which key
     /// on the hitbox rather than on `NodeEntity`.
     hitbox: NodeHitbox,
@@ -356,8 +361,8 @@ fn update_account_nodes(
         }
     };
 
-    // Refresh the fields the icon, controller box and terrain systems read, so
-    // an edited account doesn't need its node respawned.
+    // Refresh the fields the icon, panel and terrain systems read, so an edited
+    // account doesn't need its node respawned.
     for (entity, mut node) in existing.iter_mut() {
         let Some(account) = accounts.iter().find(|a| a.account_id == node.account_id) else {
             continue;
@@ -368,6 +373,9 @@ fn update_account_nodes(
         }
         if node.identity != account.identity() {
             node.identity = account.identity().to_string();
+            commands
+                .entity(entity)
+                .insert(NodeIdentity(node.identity.clone()));
         }
     }
 
@@ -395,6 +403,8 @@ fn update_account_nodes(
                     identity: account.identity().to_string(),
                 },
                 terrain_member: terrain_member(&account.domain),
+                sub_node: SubNode(account.account_id.0),
+                identity: NodeIdentity(account.identity().to_string()),
                 hitbox: NodeHitbox::from_diameter(ACCOUNT_NODE_DIAMETER),
                 collider: Collider::ball(ACCOUNT_NODE_DIAMETER / 2.0),
                 rigid_body: RigidBody::Dynamic,
@@ -621,24 +631,101 @@ fn update_account_node_visibility(
     }
 }
 
-/// A controller box floating below an account node.
-#[derive(Component)]
-pub struct AccountPreviewUi {
-    /// The account node this box tracks.
-    pub node: Entity,
-    pub account_id: AccountId,
+/// The account layer's node panel.
+///
+/// Account nodes have no `InstanceId`, so their whole target is the account id
+/// in their `SubNode`; everything shown here is looked up from that.
+pub struct AccountPanel;
+
+impl NodePanel for AccountPanel {
+    fn build_summary(&self, ctx: &mut PanelCtx) {
+        let Some(account_id) = ctx.target.sub.map(AccountId) else {
+            return;
+        };
+        // The identity line above already carries the username, so the summary
+        // is the service it belongs to.
+        let theme = ctx.theme;
+        ctx.children(|p| {
+            p.spawn((
+                text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                bind_text(move || domain_of(account_id).unwrap_or_else(|| "Unknown".into())),
+            ));
+        });
+    }
+
+    fn build_detail(&self, ctx: &mut PanelCtx) {
+        let Some(account_id) = ctx.target.sub.map(AccountId) else {
+            return;
+        };
+        let theme = ctx.theme;
+        ctx.children(|p| {
+            p.spawn(heading(theme, "Account"));
+            p.spawn((
+                text(theme, "", theme.metrics.font_md, Role::Text),
+                bind_text(move || describe_account(account_id)),
+            ));
+
+            p.spawn(heading(theme, "Links"));
+            p.spawn((
+                text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+                bind_text(move || describe_links(account_id)),
+            ));
+        });
+    }
 }
 
-/// Marker for a controller box's icon, so it can be refreshed in place.
-#[derive(Component)]
-pub struct AccountPreviewIcon;
+/// The domain an account belongs to.
+fn domain_of(account_id: AccountId) -> Option<String> {
+    super::query_accounts()
+        .ok()?
+        .into_iter()
+        .find(|account| account.account_id == account_id)
+        .map(|account| account.domain)
+}
 
-/// Marker for a controller box's identity label.
-#[derive(Component)]
-pub struct AccountPreviewLabel;
+/// Everything the synced row says about an account, in a few lines.
+fn describe_account(account_id: AccountId) -> String {
+    let Ok(accounts) = super::query_accounts() else {
+        return "No account data".into();
+    };
+    let Some(account) = accounts
+        .into_iter()
+        .find(|account| account.account_id == account_id)
+    else {
+        return "This account is no longer registered.".into();
+    };
+    let mut lines = vec![format!("Domain: {}", account.domain)];
+    if let Some(username) = account.username.as_ref() {
+        lines.push(format!("Username: {username}"));
+    }
+    if let Some(email) = account.email.as_ref() {
+        lines.push(format!("Email: {email}"));
+    }
+    lines.join("\n")
+}
 
-/// The icon a controller box should show: the domain's favicon, else the same
-/// generic glyph the node falls back to.
+/// What this account has in common with the rest of the estate.
+///
+/// These are the derived rows the server computes; they're the whole reason an
+/// account is worth drawing as a node rather than listing in a table.
+fn describe_links(account_id: AccountId) -> String {
+    let Ok(links) = super::query_links() else {
+        return "No link data".into();
+    };
+    let related: Vec<String> = links
+        .iter()
+        .filter(|link| link.source == account_id || link.target == account_id)
+        .map(|link| format!("{:?}", link.r#type))
+        .collect();
+    if related.is_empty() {
+        "No links to other accounts.".into()
+    } else {
+        format!("{} link(s):\n{}", related.len(), related.join("\n"))
+    }
+}
+
+/// The icon an account node's panel should show: the domain's favicon, else the
+/// same generic glyph the node itself falls back to.
 fn card_icon_handle(
     textures: &FaviconTextures,
     icon_cache: &mut IconCache,
@@ -651,103 +738,27 @@ fn card_icon_handle(
     }
 }
 
-/// Spawn/despawn a controller box per account node.
-#[allow(clippy::too_many_arguments)]
-fn sync_account_previews(
-    mut commands: Commands,
-    theme: Res<Theme>,
-    visible: Res<PreviewsVisible>,
-    current_layer: Res<CurrentLayer>,
-    textures: Res<FaviconTextures>,
-    mut images: ResMut<Assets<Image>>,
-    mut icon_cache: ResMut<IconCache>,
-    nodes: Query<(Entity, &AccountNode)>,
-    previews: Query<(Entity, &AccountPreviewUi)>,
-) {
-    // `WorldAnchored` tracks the node's screen position without consulting its
-    // visibility, so leaving the layer has to clear these explicitly.
-    if !visible.0 || current_layer.name() != LAYER {
-        for (entity, _) in previews.iter() {
-            commands.entity(entity).despawn();
-        }
-        return;
-    }
-
-    for (node_entity, node) in nodes.iter() {
-        if previews.iter().any(|(_, p)| p.node == node_entity) {
-            continue;
-        }
-        let icon = card_icon_handle(&textures, &mut icon_cache, &mut images, &node.domain);
-
-        commands
-            .spawn((
-                AccountPreviewUi {
-                    node: node_entity,
-                    account_id: node.account_id,
-                },
-                // Account nodes are 64 units across rather than the 100 of an
-                // instance node, so the box sits closer.
-                anchored_card(&theme, node_entity, Vec2::new(0.0, 40.0)),
-            ))
-            .with_children(|card| {
-                card.spawn((AccountPreviewIcon, card_icon(icon, CARD_ICON_PX as f32)));
-                card.spawn((
-                    AccountPreviewLabel,
-                    text(
-                        &theme,
-                        node.identity.clone(),
-                        theme.metrics.font_md,
-                        Role::Text,
-                    ),
-                ));
-            });
-    }
-
-    for (preview_entity, preview) in previews.iter() {
-        if !nodes.iter().any(|(entity, _)| entity == preview.node) {
-            commands.entity(preview_entity).despawn();
-        }
-    }
-}
-
-/// Keep each controller box's icon and label in step with its account.
+/// Give each account node the favicon its panel should be titled with.
 ///
-/// [`sync_account_previews`] already spawns a box with the right contents, so
-/// this only has to catch later changes: a favicon arriving, or the account's
-/// identity being edited. Rasterizing and looking up handles unconditionally
-/// would mean allocating (and dirtying `Assets<Image>`) on every single frame.
-#[allow(clippy::too_many_arguments)]
-fn update_account_preview_content(
+/// Rasterizing and looking up handles unconditionally would mean allocating (and
+/// dirtying `Assets<Image>`) on every single frame, so this only runs when a
+/// favicon arrives or an account is edited.
+fn update_account_panel_icons(
+    mut commands: Commands,
     textures: Res<FaviconTextures>,
     mut images: ResMut<Assets<Image>>,
     mut icon_cache: ResMut<IconCache>,
-    nodes: Query<&AccountNode>,
+    nodes: Query<(Entity, &AccountNode, Option<&PanelIcon>)>,
     changed_nodes: Query<(), Changed<AccountNode>>,
-    previews: Query<(&AccountPreviewUi, &Children)>,
-    mut icons: Query<&mut ImageNode, With<AccountPreviewIcon>>,
-    mut labels: Query<&mut Text, With<AccountPreviewLabel>>,
 ) {
     if !textures.is_changed() && changed_nodes.is_empty() {
         return;
     }
 
-    for (preview, children) in previews.iter() {
-        let Ok(node) = nodes.get(preview.node) else {
-            continue;
-        };
-        for child in children.iter() {
-            if let Ok(mut icon) = icons.get_mut(child) {
-                let handle =
-                    card_icon_handle(&textures, &mut icon_cache, &mut images, &node.domain);
-                if icon.image != handle {
-                    icon.image = handle;
-                }
-            }
-            if let Ok(mut label) = labels.get_mut(child)
-                && label.0 != node.identity
-            {
-                label.0 = node.identity.clone();
-            }
+    for (entity, node, current) in nodes.iter() {
+        let handle = card_icon_handle(&textures, &mut icon_cache, &mut images, &node.domain);
+        if current.map(|icon| &icon.0) != Some(&handle) {
+            commands.entity(entity).insert(PanelIcon(handle));
         }
     }
 }
@@ -936,8 +947,7 @@ impl Plugin for AccountClientPlugin {
                 // user is holding, instead of the layout's forces.
                 apply_account_layout
                     .before(sandpolis_client::gui::drag::disable_forces_while_dragging),
-                sync_account_previews,
-                update_account_preview_content.after(sync_account_previews),
+                update_account_panel_icons,
                 manage_add_account,
                 focus_add_account_input,
                 sync_add_account_inputs,
@@ -962,6 +972,7 @@ impl Plugin for AccountClientPlugin {
                 LayerName::from(LAYER),
                 "Online accounts and their relationships",
             )
+            .with_panel(AccountPanel)
             // Accounts get the whole canvas; instance nodes are hidden.
             .with_visible_instance_types(&[])
             .with_toolbar_action(

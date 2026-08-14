@@ -17,8 +17,8 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use sandpolis_client::gui::assets::EmbeddedDirReader;
-use sandpolis_client::gui::instance_layer::{InstanceController, open_database_browser};
-use sandpolis_client::gui::ui::controller::{LayerClientInfo, RegisterLayerClient};
+use sandpolis_client::gui::instance_layer::{InstancePanel, open_database_browser};
+use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
 use sandpolis_instance::{InstanceType, LayerName};
 
 // Import GUI types from sandpolis-client submodules
@@ -31,7 +31,7 @@ use sandpolis_client::gui::activity::{
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
 };
 use sandpolis_client::gui::core_toolbar::CoreLayerToolbarPlugin;
-use sandpolis_client::gui::controller::ControllerHostPlugin;
+use sandpolis_client::gui::node_panel::NodePanelPlugin;
 use sandpolis_client::gui::drag::{
     DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection, start_node_drag,
     stop_node_drag, update_node_drag, update_selection_ui,
@@ -73,9 +73,6 @@ use sandpolis_client::gui::node_picker::{
     NodePickerState, focus_node_search, handle_node_picker_toggle, manage_node_picker,
     node_picker_keys, rebuild_node_rows, sync_node_search,
 };
-use sandpolis_client::gui::preview::{
-    PreviewsVisible, sync_node_previews, toggle_previews, update_preview_content,
-};
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::terrain::{
@@ -88,8 +85,7 @@ use sandpolis_client::gui::theme::{
 };
 
 // Re-export submodules for external access
-pub use sandpolis_client::gui::controller;
-pub use sandpolis_client::gui::preview;
+pub use sandpolis_client::gui::node_panel;
 
 /// Initialize and start rendering the UI.
 pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
@@ -114,9 +110,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     // asset source. Must be registered before `AssetPlugin` (part of
     // `DefaultPlugins`) is built.
     let mut asset_dirs = vec![sandpolis_client::gui::assets::dir()];
-    #[cfg(feature = "layer-probe")]
+    #[cfg(feature = "probe")]
     asset_dirs.push(sandpolis_probe::client::assets::dir());
-    #[cfg(feature = "layer-shell")]
+    #[cfg(feature = "shell")]
     asset_dirs.push(sandpolis_shell::client::assets::dir());
     app.register_asset_source(
         AssetSourceId::Default,
@@ -149,8 +145,10 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .add_plugins(bevy::dev_tools::diagnostics_overlay::DiagnosticsOverlayPlugin)
     .add_plugins(bevy_svg::prelude::SvgPlugin)
     .add_plugins(sandpolis_client::gui::ui::UiPlugin)
-    .add_plugins(ControllerHostPlugin)
-    .add_plugins(CoreLayerToolbarPlugin)
+    .add_plugins(NodePanelPlugin)
+    .add_plugins(CoreLayerToolbarPlugin {
+        network: state.network.clone(),
+    })
     // Notification toasts. Adding this is also what tells the notification
     // watcher a GUI exists, so notifications raised while the window has focus
     // land here instead of going to the OS.
@@ -184,7 +182,6 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .insert_resource(options)
     .insert_resource(MousePressed(false))
     .insert_resource(PanningState::default())
-    .insert_resource(PreviewsVisible::default())
     .insert_resource(TerrainConfig::default())
     .add_systems(Startup, setup)
     // Native bevy_ui chrome (migrated off egui).
@@ -221,10 +218,6 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                 update_login_error,
             ),
         ),
-    )
-    .add_systems(
-        Update,
-        (sync_node_previews, toggle_previews, update_preview_content),
     )
     .add_systems(
         Update,
@@ -327,26 +320,26 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     // Per-layer client plugins (controllers, node visibility, probe systems).
     // These replace the old `inventory`-collected `LayerGuiExtension`s.
-    // The agent layer has no `layer-` feature: it ships with every build, and
+    // The agent layer has no `` feature: it ships with every build, and
     // this is what registers its deploy dialog.
     app.add_plugins(sandpolis_agent::client::gui::AgentClientPlugin);
-    #[cfg(feature = "layer-inventory")]
+    #[cfg(feature = "inventory")]
     app.add_plugins(sandpolis_inventory::client::gui::InventoryClientPlugin);
-    #[cfg(feature = "layer-desktop")]
+    #[cfg(feature = "desktop")]
     app.add_plugins(sandpolis_desktop::client::gui::DesktopClientPlugin);
-    #[cfg(feature = "layer-filesystem")]
+    #[cfg(feature = "filesystem")]
     app.add_plugins(sandpolis_filesystem::client::gui::FilesystemClientPlugin);
-    #[cfg(feature = "layer-health")]
+    #[cfg(feature = "health")]
     app.add_plugins(sandpolis_health::client::gui::HealthClientPlugin);
-    #[cfg(feature = "layer-shell")]
+    #[cfg(feature = "shell")]
     app.add_plugins(sandpolis_shell::client::gui::ShellClientPlugin);
-    #[cfg(feature = "layer-probe")]
+    #[cfg(feature = "probe")]
     app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
-    #[cfg(feature = "layer-account")]
+    #[cfg(feature = "account")]
     app.add_plugins(sandpolis_account::client::gui::AccountClientPlugin);
 
     // Debug "Instance" layer: shows every node regardless of type, with a
-    // node controller that surfaces that node's identity and connection rows.
+    // node panel that surfaces that node's identity and connection rows.
     // The controller carries its own layer handles (build() gets no resources).
     app.register_layer_client(
         LayerClientInfo::new(LayerName::from("Instance"), "All instances (debug)")
@@ -355,7 +348,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                 InstanceType::Agent,
                 InstanceType::Client,
             ])
-            .with_controller(InstanceController {
+            .with_panel(InstancePanel {
                 network: state.network.clone(),
                 instance: state.instance.clone(),
             })

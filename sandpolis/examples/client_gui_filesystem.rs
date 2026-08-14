@@ -1,5 +1,5 @@
 /// Filesystem layer example demonstrating:
-/// - NodePreview windows with filesystem usage stats
+/// - Node panels with a filesystem usage gauge
 /// - Color-coded nodes based on disk usage
 /// - Activity lines for file transfers
 /// - OS-specific node icons

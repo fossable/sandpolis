@@ -3,7 +3,7 @@
 //! indicator or the `L` key.
 
 use crate::gui::input::CurrentLayer;
-use crate::gui::ui::controller::LayerRegistry;
+use crate::gui::ui::layer::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::text_input;

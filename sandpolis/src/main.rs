@@ -187,7 +187,7 @@ async fn main() -> Result<ExitCode> {
     //
     // Realm files live on the global stratum server only, so it is also the only
     // instance that writes changes back to them.
-    #[cfg(all(feature = "server", feature = "layer-account"))]
+    #[cfg(all(feature = "server", feature = "account"))]
     if stratum.is_global() {
         let realms_config = options.realms.clone();
         sandpolis_account::set_account_persist(move |accounts| {
@@ -219,7 +219,7 @@ async fn main() -> Result<ExitCode> {
     //
     // Only the global stratum server keeps the authoritative probe config; local
     // stratum servers don't persist a probe list of their own.
-    #[cfg(all(feature = "server", feature = "layer-probe"))]
+    #[cfg(all(feature = "server", feature = "probe"))]
     if stratum.is_global() {
         let realms_config = options.realms.clone();
         sandpolis_probe::set_device_persist(move |devices| {

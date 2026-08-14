@@ -225,32 +225,32 @@ pub fn cleanup_layer_activity_lines(
     for (entity, activity) in activity_query.iter() {
         let should_keep = match activity.activity_type {
             ActivityType::FileTransfer => {
-                #[cfg(feature = "layer-filesystem")]
+                #[cfg(feature = "filesystem")]
                 {
                     **current_layer == "Filesystem"
                 }
-                #[cfg(not(feature = "layer-filesystem"))]
+                #[cfg(not(feature = "filesystem"))]
                 {
                     false
                 }
             }
             ActivityType::NetworkTraffic => **current_layer == "Network",
             ActivityType::ShellCommand => {
-                #[cfg(feature = "layer-shell")]
+                #[cfg(feature = "shell")]
                 {
                     **current_layer == "Shell"
                 }
-                #[cfg(not(feature = "layer-shell"))]
+                #[cfg(not(feature = "shell"))]
                 {
                     false
                 }
             }
             ActivityType::DesktopStream => {
-                #[cfg(feature = "layer-desktop")]
+                #[cfg(feature = "desktop")]
                 {
                     **current_layer == "Desktop"
                 }
-                #[cfg(not(feature = "layer-desktop"))]
+                #[cfg(not(feature = "desktop"))]
                 {
                     false
                 }

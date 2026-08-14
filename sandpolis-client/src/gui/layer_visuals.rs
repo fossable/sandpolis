@@ -1,7 +1,7 @@
 use crate::gui::input::CurrentLayer;
 use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use crate::gui::queries;
-use crate::gui::ui::controller::LayerRegistry;
+use crate::gui::ui::layer::LayerRegistry;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
 use sandpolis_instance::{InstanceType, LayerName};
@@ -55,7 +55,7 @@ fn get_layer_svg_path(
     instance_id: sandpolis_instance::InstanceId,
 ) -> &'static str {
     match layer.name() {
-        #[cfg(feature = "layer-filesystem")]
+        #[cfg(feature = "filesystem")]
         "Filesystem" => {
             // Show OS-specific icons for filesystem layer
             if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
@@ -76,7 +76,7 @@ fn get_layer_svg_path(
             }
         }
 
-        #[cfg(feature = "layer-desktop")]
+        #[cfg(feature = "desktop")]
         "Desktop" => {
             // Show desktop environment icons
             // TODO: Query desktop environment from database
@@ -84,7 +84,7 @@ fn get_layer_svg_path(
             "desktop/generic.svg"
         }
 
-        #[cfg(feature = "layer-inventory")]
+        #[cfg(feature = "inventory")]
         "Inventory" => {
             // Show hardware type icons (server, desktop, laptop, mobile)
             // TODO: Query hardware type from database
@@ -100,7 +100,7 @@ fn get_layer_svg_path(
             }
         }
 
-        #[cfg(feature = "layer-shell")]
+        #[cfg(feature = "shell")]
         "Shell" => {
             // Show terminal icon
             "shell/terminal.svg"
@@ -117,7 +117,7 @@ fn get_layer_svg_path(
     }
 }
 
-/// Update node colors based on layer-specific states
+/// Update node colors based on specific states
 pub fn update_node_colors_for_layer(
     current_layer: Res<CurrentLayer>,
     network_layer: Res<sandpolis_instance::network::NetworkLayer>,
@@ -129,7 +129,7 @@ pub fn update_node_colors_for_layer(
     }
 
     for (node_entity, mut sprite) in node_query.iter_mut() {
-        // Get layer-specific color tint
+        // Get specific color tint
         let color = get_layer_color_tint(&current_layer, &network_layer, node_entity.instance_id);
         sprite.color = color;
     }
@@ -161,7 +161,7 @@ fn get_layer_color_tint(
             }
         }
 
-        #[cfg(feature = "layer-filesystem")]
+        #[cfg(feature = "filesystem")]
         "Filesystem" => {
             // Color based on disk usage
             if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
@@ -183,7 +183,7 @@ fn get_layer_color_tint(
             }
         }
 
-        #[cfg(feature = "layer-inventory")]
+        #[cfg(feature = "inventory")]
         "Inventory" => {
             // Color based on memory usage
             if let Ok(mem) = queries::query_memory_stats(instance_id) {
