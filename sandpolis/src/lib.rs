@@ -1,3 +1,4 @@
+use anyhow::Context;
 use anyhow::Result;
 use sandpolis_instance::LayerVersion;
 use sandpolis_instance::database::DatabaseManager;
@@ -21,11 +22,11 @@ pub mod server;
 pub use sandpolis_server::ServerStratum;
 
 /// Everything this process was told to do on the command line, plus what the
-/// `.server` file it was given contributes.
+/// realm cert it was given contributes.
 ///
 /// This is plumbing, not configuration: nothing here is serialized or read from
-/// disk. Realm-scoped settings live in `.realm` files ([`config::RealmConfig`]);
-/// what's here describes *this process*.
+/// disk. Realm-scoped settings live in realm configs
+/// ([`config::RealmConfig`]); what's here describes *this process*.
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[derive(Clone)]
 pub struct RuntimeOptions {
@@ -47,15 +48,15 @@ pub struct RuntimeOptions {
     #[cfg(feature = "client")]
     pub fps: u32,
 
-    /// Polling connection mode, from the `.server` file.
+    /// Polling connection mode, from `--poll`.
     #[cfg(feature = "agent")]
-    pub poll: Option<sandpolis_instance::realm::config::PollConfig>,
+    pub poll: Option<sandpolis_agent::PollConfig>,
 
-    /// The server this agent attaches to, named by its `.server` file.
+    /// The server this agent attaches to, named by its realm cert.
     #[cfg(feature = "agent")]
     pub server: Option<sandpolis_server::ServerUrl>,
 
-    /// Realms this server was told to serve, one per `--realm` file.
+    /// Realms this server was told to serve, one per realm config.
     #[cfg(feature = "server")]
     pub realms: Vec<crate::config::RealmConfig>,
 }
@@ -125,25 +126,54 @@ impl RuntimeOptions {
     }
 }
 
-/// Load the `.server` file given on the command line, if any.
+/// Load the realm cert given on the command line, if any.
 ///
-/// Returns the certificate it holds — which names exactly one server and realm —
-/// along with any polling settings written alongside it.
+/// Returns the certificate it holds, which names exactly one server and realm.
 #[cfg(not(target_os = "android"))]
-pub fn load_server_file(
+pub fn load_realm_cert(
     path: Option<&std::path::Path>,
-) -> Result<
-    Option<(
-        sandpolis_instance::realm::RealmCert,
-        Option<sandpolis_instance::realm::config::PollConfig>,
-    )>,
-> {
+) -> Result<Option<sandpolis_instance::realm::RealmCert>> {
     let Some(path) = path else {
         return Ok(None);
     };
-    Ok(Some(
-        sandpolis_instance::realm::config::ServerCertFile::load(path)?,
-    ))
+    Ok(Some(sandpolis_instance::realm::RealmCert::read_pem(path)?))
+}
+
+/// Every realm cert in `dir`, which is how an instance is attached without
+/// naming a file on the command line.
+///
+/// A directory that holds none is not an error — a client with nowhere to
+/// connect starts at its login dialog.
+#[cfg(not(target_os = "android"))]
+pub fn load_realm_certs_dir(
+    dir: &std::path::Path,
+) -> Result<Vec<sandpolis_instance::realm::RealmCert>> {
+    use sandpolis_instance::realm::config::REALM_CERT_SUFFIX;
+
+    if !dir.is_dir() {
+        return Ok(Vec::new());
+    }
+
+    let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(dir)
+        .with_context(|| format!("Reading {}", dir.display()))?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<std::io::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(REALM_CERT_SUFFIX))
+        })
+        .collect();
+
+    // Sorted so the first cert — the one the primary connection is made to — is
+    // the same on every start.
+    paths.sort();
+
+    paths
+        .iter()
+        .map(sandpolis_instance::realm::RealmCert::read_pem)
+        .collect()
 }
 
 /// Bring up the state an endpoint instance — an agent or a client — runs on.
@@ -167,28 +197,23 @@ pub async fn endpoint_state(
 
 /// Which stratum a server runs in.
 ///
-/// A `.server` file means this server attaches to the one it names, which puts
-/// it in the local stratum. Without one, this is the network's single global
+/// A realm cert means this server attaches to the one it names, which puts it
+/// in the local stratum. Without one, this is the network's single global
 /// stratum server.
 #[cfg(not(target_os = "android"))]
-pub fn stratum(server_file: Option<&std::path::Path>) -> Result<ServerStratum> {
-    stratum_of(load_server_file(server_file)?.as_ref())
+pub fn stratum(realm_cert: Option<&std::path::Path>) -> Result<ServerStratum> {
+    stratum_of(load_realm_cert(realm_cert)?.as_ref())
 }
 
-/// [`stratum`], for a caller that already loaded the `.server` file. The server
+/// [`stratum`], for a caller that already loaded the realm cert. The server
 /// itself needs the certificate for more than this, so it reads the file once
 /// and asks here rather than going back to disk.
 #[cfg(not(target_os = "android"))]
 pub fn stratum_of(
-    endpoint: Option<
-        &(
-            sandpolis_instance::realm::RealmCert,
-            Option<sandpolis_instance::realm::config::PollConfig>,
-        ),
-    >,
+    endpoint: Option<&sandpolis_instance::realm::RealmCert>,
 ) -> Result<ServerStratum> {
     Ok(match endpoint {
-        Some((cert, _)) => ServerStratum::Local {
+        Some(cert) => ServerStratum::Local {
             global: cert.url()?,
         },
         None => ServerStratum::Global,
@@ -228,7 +253,7 @@ impl InstanceState {
     /// without the server feature it is inert, since nothing consults it.
     ///
     /// `realms` is built by the caller, which is the only place that knows the
-    /// `.realm` and `.server` files this process was given.
+    /// realm configs and realm certs this process was given.
     pub async fn new(
         options: &RuntimeOptions,
         database: DatabaseManager,
@@ -353,6 +378,61 @@ pub fn layers() -> HashMap<sandpolis_instance::LayerName, LayerVersion> {
 /// Every model linked into this build, collected from the `#[data]` macro's
 /// registrations. Re-exported here because this is where callers expect it.
 pub use sandpolis_instance::database::MODELS;
+
+#[cfg(all(test, feature = "server", not(target_os = "android")))]
+mod test_realm_certs_dir {
+    use anyhow::Result;
+    use sandpolis_instance::realm::RealmCert;
+
+    /// Mint a realm cert for `realm` into `dir`, the way a server writes one out
+    /// at startup.
+    fn write_cert(dir: &std::path::Path, realm: &str) -> Result<()> {
+        let url: sandpolis_instance::realm::url::ServerUrl =
+            format!("gs.example.com:8768/{realm}").parse()?;
+        let ca = RealmCert::new_cluster(Default::default(), url.realm.clone())?;
+        ca.endpoint_cert(&url)?
+            .write_pem(dir.join(format!("{realm}.realm.pem")))
+    }
+
+    /// Every realm cert in the directory attaches the client, in a stable order,
+    /// and nothing else there is mistaken for one — the database and the realm
+    /// configs live alongside them.
+    #[test]
+    fn every_realm_cert_is_loaded_in_order() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        write_cert(dir.path(), "prod")?;
+        write_cert(dir.path(), "beta")?;
+        std::fs::write(dir.path().join("prod.realm.ron"), "")?;
+        std::fs::write(dir.path().join("default.db"), "")?;
+
+        let certs = super::load_realm_certs_dir(dir.path())?;
+        let names: Vec<_> = certs.iter().map(|cert| cert.name.to_string()).collect();
+        assert_eq!(names, vec!["beta", "prod"]);
+        Ok(())
+    }
+
+    /// A client with nowhere to connect starts at its login dialog, so neither
+    /// an empty directory nor a missing one is an error.
+    #[test]
+    fn no_certs_is_not_an_error() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        assert!(super::load_realm_certs_dir(dir.path())?.is_empty());
+        assert!(super::load_realm_certs_dir(&dir.path().join("absent"))?.is_empty());
+        Ok(())
+    }
+
+    /// A file named like a realm cert but holding something else is a
+    /// misconfiguration, not something to skip past — the client would
+    /// otherwise start with no connection and no explanation.
+    #[test]
+    fn a_malformed_cert_is_an_error() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        std::fs::write(dir.path().join("prod.realm.pem"), "not pem at all")?;
+
+        assert!(super::load_realm_certs_dir(dir.path()).is_err());
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 mod test_models {

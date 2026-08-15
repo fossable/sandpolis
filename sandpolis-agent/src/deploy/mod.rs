@@ -8,8 +8,9 @@
 //! Deployment walks a fixed sequence of [`DeployStep`]s and reports each one
 //! back over the stream, so the client can show progress rather than a spinner
 //! that hides a two-minute upload. A host that already has an agent installed
-//! stops after [`DeployStep::Upload`]: rewriting its `.server` file is the whole
-//! job, since the agent reads its connection policy from that file.
+//! stops after [`DeployStep::Upload`]: rewriting its realm cert is the whole
+//! job. Polling belongs to the unit file rather than the certificate, so
+//! redeploying to an installed host leaves its schedule as it was.
 
 use serde::{Deserialize, Serialize};
 
@@ -25,12 +26,12 @@ pub mod systemd;
 /// Where the agent binary is installed on the target.
 pub const INSTALL_PATH: &str = "/opt/sandpolis/sandpolis";
 
-/// The agent's data directory on the target, which is also where its `.server`
-/// file goes.
+/// The agent's data directory on the target, which is also where its realm
+/// cert goes.
 pub const DATA_PATH: &str = "/var/lib/sandpolis";
 
-/// The `.server` file written into [`DATA_PATH`].
-pub const SERVER_FILE: &str = "/var/lib/sandpolis/default.server";
+/// The realm cert written into [`DATA_PATH`].
+pub const REALM_FILE: &str = "/var/lib/sandpolis/default.realm.pem";
 
 /// How the server authenticates to the target host.
 ///
@@ -83,8 +84,9 @@ pub enum DeployStreamRequest {
         /// its realm decides which CA signs it.
         server: sandpolis_instance::realm::url::ServerUrl,
         /// Run the deployed agent in polling mode instead of keeping it
-        /// continuously connected.
-        poll: Option<sandpolis_instance::realm::config::PollConfig>,
+        /// continuously connected. Baked into the unit file, so it only applies
+        /// to a fresh installation.
+        poll: Option<crate::PollConfig>,
     },
 }
 
@@ -99,7 +101,7 @@ pub enum DeployStep {
     Probe,
     /// Mint an agent certificate from the realm CA.
     Certificate,
-    /// Write the `.server` file to the target's data directory.
+    /// Write the realm cert to the target's data directory.
     Upload,
     /// Upload the agent binary and install its systemd unit.
     Service,
@@ -139,7 +141,7 @@ pub enum DeployStreamResponse {
     /// A step finished successfully.
     Done { step: DeployStep },
     /// The deployment finished. `reconfigured` means the target already had an
-    /// agent, so only its `.server` file was rewritten.
+    /// agent, so only its realm cert was rewritten.
     Finished { reconfigured: bool },
     /// The deployment failed during `step` and has stopped.
     Failed { step: DeployStep, message: String },

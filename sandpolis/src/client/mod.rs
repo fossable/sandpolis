@@ -8,26 +8,26 @@ pub mod tui;
 
 /// Bring up everything a client needs and run `command`: the GUI in the
 /// foreground, or a subcommand's focused TUI.
-///
-/// A client keeps nothing across runs — its database is in memory and it owns it
-/// outright — so all it needs from the command line is the server to attach to.
 #[cfg(not(target_os = "android"))]
 pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process::ExitCode> {
     let args = command.client_args().cloned().unwrap_or_default();
     let options = args.options();
 
-    // Clients read no config file, so the `.server` file is the only way to
-    // point one at a server without going through the GUI login dialog.
-    let endpoint = crate::load_server_file(args.server.as_deref())?;
-    let endpoint_certs = endpoint
-        .as_ref()
-        .map(|(cert, _)| cert.clone())
-        .into_iter()
-        .collect();
+    // Clients read no config file, so a realm cert is the only way to point one
+    // at a server without going through the GUI login dialog. Naming one
+    // outright wins; otherwise every cert in the data directory attaches, which
+    // is how a client installed by a package manager is configured.
+    let endpoint_certs = match args.realm.as_deref() {
+        Some(path) => crate::load_realm_cert(Some(path))?.into_iter().collect(),
+        None => match args.data.as_deref() {
+            Some(dir) => crate::load_realm_certs_dir(dir)?,
+            None => Vec::new(),
+        },
+    };
 
-    let state = crate::endpoint_state(&options, endpoint_certs).await?;
+    let state = crate::endpoint_state(&options, endpoint_certs.clone()).await?;
 
-    if let Some((cert, _)) = endpoint {
+    for cert in &endpoint_certs {
         spawn_server_connection(state.clone(), cert.url()?);
     }
 
@@ -125,10 +125,10 @@ pub fn spawn_client_sync(state: InstanceState) {
 
 /// Open (and retain) a connection to `url`, retrying until it succeeds.
 ///
-/// Clients read no config file, so the `--server` file is how a standalone
-/// client is pointed at a server without going through the GUI login dialog.
-/// Either stratum works — the client addresses agents by id and the servers
-/// route to them.
+/// Clients read no config file, so a realm cert is how a standalone client is
+/// pointed at a server without going through the GUI login dialog. Either
+/// stratum works — the client addresses agents by id and the servers route to
+/// them.
 fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUrl) {
     let server = state.server.clone();
 

@@ -22,13 +22,13 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
 
     let mut options = args.options();
 
-    // The `.server` file is the whole trust bootstrap for a server that attaches
-    // to another one: it names the upstream, carries the realm CA, and holds
-    // this server's own certificate.
-    let endpoint = crate::load_server_file(args.server.as_deref())?;
+    // The realm cert is the whole trust bootstrap for a server that attaches to
+    // another one: it names the upstream, carries the realm CA, and holds this
+    // server's own certificate.
+    let endpoint = crate::load_realm_cert(args.realm.as_deref())?;
     let stratum = crate::stratum_of(endpoint.as_ref())?;
 
-    // Every realm this server serves comes from a `.realm` file in the data
+    // Every realm this server serves comes from a realm config in the data
     // directory. An ephemeral server has no such directory, so it gets an
     // implicit default realm whose CA lives only in the in-memory database —
     // which is what makes a development server work with no setup at all.
@@ -78,7 +78,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     .await?;
 
     let mut endpoint_certs = Vec::new();
-    if let Some((cert, _)) = endpoint {
+    if let Some(cert) = endpoint {
         endpoint_certs.push(cert);
     }
 
@@ -102,7 +102,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         }
     }
 
-    write_server_files(&startup.endpoint_certs, options.database.storage.as_deref())?;
+    write_realm_certs(&startup.endpoint_certs, options.database.storage.as_deref())?;
 
     install_persist_callbacks(&options, &stratum);
 
@@ -113,29 +113,31 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     Ok(std::process::ExitCode::SUCCESS)
 }
 
-/// Write out the `.server` file for each realm this server brought up.
+/// Write out the realm cert for each realm this server brought up.
 ///
 /// This is how clients and agents are given a certificate: the server mints one
-/// per realm on every start and drops it next to the realm files, so attaching
+/// per realm on every start and drops it next to the realm configs, so attaching
 /// an instance is a matter of copying a file rather than running a command.
 /// A server with no data directory keeps its realms in memory, so its files go
 /// to `/tmp` — enough to point instances started on the same host at it.
-fn write_server_files(
+fn write_realm_certs(
     endpoint_certs: &[sandpolis_instance::realm::RealmCert],
     data_dir: Option<&std::path::Path>,
 ) -> Result<()> {
+    use sandpolis_instance::realm::config::REALM_CERT_SUFFIX;
+
     for cert in endpoint_certs {
         let path = data_dir
             .unwrap_or_else(|| std::path::Path::new("/tmp"))
-            .join(format!("{}.server", cert.name));
+            .join(format!("{}{REALM_CERT_SUFFIX}", cert.name));
 
-        cert.write_server_file(&path, None)?;
+        cert.write_pem(&path)?;
         info!(realm = %cert.name, path = %path.display(), "Wrote the realm's endpoint certificate");
     }
     Ok(())
 }
 
-/// Realm files live on the global stratum server only, so it is also the only
+/// Realm configs live on the global stratum server only, so it is also the only
 /// instance that writes changes back to them.
 // TODO do this somewhere else
 #[allow(unused_variables)]
@@ -163,7 +165,7 @@ fn install_persist_callbacks(options: &RuntimeOptions, stratum: &crate::ServerSt
                 0 => Ok(()),
                 _ => {
                     tracing::warn!(
-                        "Not persisting accounts: several realm files are loaded and \
+                        "Not persisting accounts: several realm configs are loaded and \
                          accounts are not yet realm-scoped"
                     );
                     Ok(())
@@ -204,7 +206,7 @@ fn install_persist_callbacks(options: &RuntimeOptions, stratum: &crate::ServerSt
 
             if !only_realm && probe.devices.iter().any(|device| device.server.is_none()) {
                 tracing::warn!(
-                    "Some probe devices name no server and several realm files are \
+                    "Some probe devices name no server and several realm configs are \
                      loaded, so they were not persisted to any of them"
                 );
             }
@@ -356,7 +358,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 /// Holds randomized parameters for a test server.
 pub struct TestServer {
     pub port: u16,
-    /// A `.server` file a client can be pointed at to reach this server.
+    /// A realm cert a client can be pointed at to reach this server.
     pub endpoint_cert: PathBuf,
     certs: TempDir,
 }
@@ -385,15 +387,13 @@ pub async fn test_server() -> Result<TestServer> {
     )?;
 
     // The realm's CA is generated here and handed to the server as a bootstrap,
-    // exactly as a `.realm` file would.
+    // exactly as a realm config would.
     let ca_cert = RealmCert::new_cluster(ClusterId::default(), url.realm.clone())?;
 
-    // The client's half goes into a `.server` file for the caller to use.
+    // The client's half goes into a realm cert for the caller to use.
     let certs = tempdir()?;
-    let endpoint_cert = certs.path().join("test.server");
-    ca_cert
-        .endpoint_cert(&url)?
-        .write_server_file(&endpoint_cert, None)?;
+    let endpoint_cert = certs.path().join("test.realm.pem");
+    ca_cert.endpoint_cert(&url)?.write_pem(&endpoint_cert)?;
 
     let instance = sandpolis_instance::InstanceManager::new(
         database.clone(),

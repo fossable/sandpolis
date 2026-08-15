@@ -155,7 +155,7 @@ impl ServerManager {
 
         // Everything that dials a server presents the same kind of certificate,
         // including a local stratum server dialing its global stratum server
-        // with one supplied via a `.server` file.
+        // with one supplied via a realm cert.
         let cert = self.realms.find_endpoint_cert(url.realm.clone())?;
 
         let client_builder = || -> Result<reqwest::Client> {
@@ -541,9 +541,9 @@ impl ServerConnectStrategy {
 /// A network has **exactly one** global stratum (GS) server and **any number**
 /// of local stratum (LS) servers. The distinction decides three things:
 ///
-/// - **Configuration.** Only the GS reads `.realm` files, which declare the
+/// - **Configuration.** Only the GS reads realm configs, which declare the
 ///   realms it serves. Every other instance — LS servers, agents, clients — is
-///   configured by CLI flags plus the `.server` file naming the server it
+///   configured by CLI flags plus the realm cert naming the server it
 ///   trusts.
 /// - **Writability.** The GS holds full write authority over the estate. An LS
 ///   holds scoped authority ([`WriteAuthority::Scoped`]): it owns the data of

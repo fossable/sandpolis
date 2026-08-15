@@ -9,11 +9,31 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use tracing::debug;
 
-/// A realm as declared in a `.realm` file, which the global stratum server
-/// reads at startup.
+/// The filename suffix of a realm config, whose stem is the realm's name.
+pub const REALM_CONFIG_SUFFIX: &str = ".realm.ron";
+
+/// The realm a config file's name declares it to be for.
 ///
-/// The file *is* the realm: its name comes from the filename stem, and realms
-/// are never created any other way. Everything here is scoped to the one realm —
+/// This doubles as the test for whether a file in the data directory is a realm
+/// config at all, so the suffix is checked in exactly one place.
+fn realm_name(path: &Path) -> Result<&str> {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .and_then(|name| name.strip_suffix(REALM_CONFIG_SUFFIX))
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "{} is not named `<realm>{REALM_CONFIG_SUFFIX}`",
+                path.display()
+            )
+        })
+}
+
+/// A realm as declared in a realm config, which the global stratum server reads
+/// at startup.
+///
+/// The file *is* the realm: its name comes from the filename, and realms are
+/// never created any other way. Everything here is scoped to the one realm —
 /// instance-wide settings (where to listen, where the database lives) are CLI
 /// flags, because they describe this process rather than the estate.
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
@@ -24,7 +44,7 @@ pub struct RealmConfig {
     #[serde(skip)]
     path: Option<PathBuf>,
 
-    /// The realm's name, taken from the file stem rather than the contents so a
+    /// The realm's name, taken from the filename rather than the contents so a
     /// file can't claim to be a realm it isn't.
     #[serde(skip)]
     pub name: RealmName,
@@ -52,7 +72,7 @@ pub struct RealmConfig {
 }
 
 impl RealmConfig {
-    /// Load a `.realm` file.
+    /// Load a realm config.
     ///
     /// A blank file (empty or whitespace) is the "generate everything for me"
     /// case and yields defaults. Malformed RON is an error rather than a blank
@@ -63,19 +83,14 @@ impl RealmConfig {
         P: AsRef<Path>,
     {
         let path = path.as_ref();
-        debug!(path = %path.display(), "Loading realm file");
+        debug!(path = %path.display(), "Loading realm config");
 
-        let name = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .ok_or_else(|| anyhow::anyhow!("{} has no filename", path.display()))?
-            .parse::<RealmName>()
-            .with_context(|| {
-                format!(
-                    "{} is not a valid realm name (lowercase letters and digits, 4-32 characters)",
-                    path.display()
-                )
-            })?;
+        let name = realm_name(path)?.parse::<RealmName>().with_context(|| {
+            format!(
+                "{} is not a valid realm name (lowercase letters and digits, 4-32 characters)",
+                path.display()
+            )
+        })?;
 
         let contents =
             std::fs::read_to_string(path).with_context(|| format!("Reading {}", path.display()))?;
@@ -93,27 +108,50 @@ impl RealmConfig {
         Ok(config)
     }
 
-    /// Every realm declared in `dir`, one per `*.realm` file.
+    /// Every realm declared in `dir`, one per `*.realm.ron` file.
     ///
     /// This is how the global stratum server finds the realms it serves: the
-    /// directory holding its database is also where its realm files live, so
+    /// directory holding its database is also where its realm configs live, so
     /// nothing outside has to enumerate them. An empty directory gets a blank
-    /// `default.realm`, since a server that serves nothing is never what was
+    /// `default.realm.ron`, since a server that serves nothing is never what was
     /// wanted; its CA is minted on this same start and written back.
     pub fn load_dir<P>(dir: P) -> Result<Vec<Self>>
     where
         P: AsRef<Path>,
     {
         let dir = dir.as_ref();
-        std::fs::create_dir_all(dir)
-            .with_context(|| format!("Creating {}", dir.display()))?;
+        std::fs::create_dir_all(dir).with_context(|| format!("Creating {}", dir.display()))?;
 
-        let mut paths: Vec<PathBuf> = std::fs::read_dir(dir)
+        let entries: Vec<PathBuf> = std::fs::read_dir(dir)
             .with_context(|| format!("Reading {}", dir.display()))?
             .map(|entry| entry.map(|entry| entry.path()))
-            .collect::<std::io::Result<Vec<_>>>()?
+            .collect::<std::io::Result<Vec<_>>>()?;
+
+        // A directory left over from the old naming matches nothing below, so
+        // without this the server would mint a second CA and quietly orphan the
+        // realm those files describe.
+        let legacy: Vec<String> = entries
+            .iter()
+            .filter(|path| {
+                path.extension()
+                    .is_some_and(|ext| ext == "realm" || ext == "server")
+            })
+            .filter_map(|path| path.file_name()?.to_str().map(String::from))
+            .collect();
+        if !legacy.is_empty() {
+            bail!(
+                "{} holds files named the old way ({}). Realm configs are now \
+                 `<realm>{REALM_CONFIG_SUFFIX}` and realm certs are \
+                 `<realm>{}`; rename them and start again.",
+                dir.display(),
+                legacy.join(", "),
+                sandpolis_instance::realm::config::REALM_CERT_SUFFIX,
+            );
+        }
+
+        let mut paths: Vec<PathBuf> = entries
             .into_iter()
-            .filter(|path| path.extension().is_some_and(|ext| ext == "realm"))
+            .filter(|path| realm_name(path).is_ok())
             .collect();
 
         // Sorted so the set doesn't depend on directory iteration order, which
@@ -121,10 +159,9 @@ impl RealmConfig {
         paths.sort();
 
         if paths.is_empty() {
-            let path = dir.join("default.realm");
-            debug!(path = %path.display(), "Creating the initial realm file");
-            std::fs::write(&path, "")
-                .with_context(|| format!("Creating {}", path.display()))?;
+            let path = dir.join(format!("default{REALM_CONFIG_SUFFIX}"));
+            debug!(path = %path.display(), "Creating the initial realm config");
+            std::fs::write(&path, "").with_context(|| format!("Creating {}", path.display()))?;
             paths.push(path);
         }
 
@@ -179,7 +216,7 @@ impl RealmConfig {
         })
     }
 
-    /// Write the realm file back to where it was loaded from.
+    /// Write the realm config back to where it was loaded from.
     ///
     /// Acquires an exclusive advisory lock for the duration of the write so
     /// concurrent `sandpolis` processes can't clobber each other. The lock is
@@ -189,7 +226,7 @@ impl RealmConfig {
             return Ok(());
         };
 
-        debug!(path = %path.display(), "Saving realm file");
+        debug!(path = %path.display(), "Saving realm config");
 
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -213,7 +250,7 @@ impl RealmConfig {
         Ok(())
     }
 
-    /// Read-modify-write the on-disk realm file under an exclusive lock.
+    /// Read-modify-write the on-disk realm config under an exclusive lock.
     ///
     /// Re-reads the file from disk after acquiring the lock so the closure
     /// always sees the latest committed state, then writes the mutated value
@@ -285,7 +322,7 @@ mod test_realm_config {
     #[test]
     fn blank_file_loads_as_defaults() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("prod.realm");
+        let path = dir.path().join("prod.realm.ron");
         std::fs::write(&path, "  \n ")?;
 
         let config = RealmConfig::load(&path)?;
@@ -300,7 +337,7 @@ mod test_realm_config {
     #[test]
     fn malformed_file_is_an_error() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("prod.realm");
+        let path = dir.path().join("prod.realm.ron");
         std::fs::write(&path, "(address: ")?;
 
         assert!(RealmConfig::load(&path).is_err());
@@ -312,7 +349,7 @@ mod test_realm_config {
     #[test]
     fn invalid_filename_is_rejected() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("Prod!.realm");
+        let path = dir.path().join("Prod!.realm.ron");
         std::fs::write(&path, "")?;
 
         assert!(RealmConfig::load(&path).is_err());
@@ -324,7 +361,7 @@ mod test_realm_config {
     #[test]
     fn stored_ca_round_trips() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("prod.realm");
+        let path = dir.path().join("prod.realm.ron");
         std::fs::write(&path, "")?;
 
         let mut config = RealmConfig::load(&path)?;
@@ -341,7 +378,7 @@ mod test_realm_config {
         Ok(())
     }
 
-    /// A data directory with no realm file gets one, so a fresh install comes
+    /// A data directory with no realm config gets one, so a fresh install comes
     /// up serving something.
     #[test]
     fn empty_dir_gets_a_default_realm() -> Result<()> {
@@ -350,22 +387,27 @@ mod test_realm_config {
         let realms = RealmConfig::load_dir(dir.path())?;
         assert_eq!(realms.len(), 1);
         assert_eq!(realms[0].name, "default".parse()?);
-        assert!(dir.path().join("default.realm").exists());
+        assert!(dir.path().join("default.realm.ron").exists());
 
         // A second start finds the file rather than making another one.
         let realms = RealmConfig::load_dir(dir.path())?;
         assert_eq!(realms.len(), 1);
-        assert_eq!(realms[0].path(), Some(dir.path().join("default.realm")).as_deref());
+        assert_eq!(
+            realms[0].path(),
+            Some(dir.path().join("default.realm.ron")).as_deref()
+        );
         Ok(())
     }
 
-    /// Every realm file is loaded, in a fixed order, and nothing else in the
-    /// directory is mistaken for one — the database lives here too.
+    /// Every realm config is loaded, in a fixed order, and nothing else in the
+    /// directory is mistaken for one — the database and the realm certs live
+    /// here too.
     #[test]
     fn every_realm_file_is_loaded_in_order() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        std::fs::write(dir.path().join("prod.realm"), "")?;
-        std::fs::write(dir.path().join("beta.realm"), "")?;
+        std::fs::write(dir.path().join("prod.realm.ron"), "")?;
+        std::fs::write(dir.path().join("beta.realm.ron"), "")?;
+        std::fs::write(dir.path().join("prod.realm.pem"), "")?;
         std::fs::write(dir.path().join("default.db"), "")?;
         std::fs::write(dir.path().join("notes.txt"), "")?;
 
@@ -375,12 +417,28 @@ mod test_realm_config {
         Ok(())
     }
 
+    /// A directory holding files from before the rename would otherwise match
+    /// nothing, and the server would mint a second CA over a realm that already
+    /// has one.
+    #[test]
+    fn legacy_filenames_are_refused() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        std::fs::write(dir.path().join("prod.realm"), "")?;
+
+        let error = RealmConfig::load_dir(dir.path())
+            .expect_err("the old naming is not silently ignored")
+            .to_string();
+        assert!(error.contains("prod.realm"), "{error}");
+        assert!(!dir.path().join("default.realm.ron").exists());
+        Ok(())
+    }
+
     /// The address is realm-qualified, since that's what a certificate's common
     /// name has to encode.
     #[test]
     fn address_carries_the_realm() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("prod.realm");
+        let path = dir.path().join("prod.realm.ron");
         std::fs::write(&path, r#"(address: "gs.example.com:9000")"#)?;
 
         let url = RealmConfig::load(&path)?

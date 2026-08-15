@@ -42,9 +42,9 @@ simultaneously while agent instances belong to one realm at a time.
 As an example, you can have _work_ and _home_ realms that are completely
 isolated (other than running on the same server).
 
-A realm exists because a `.realm` file declares it — the filename stem is the
-realm's name — and the global stratum server serves every such file in its
-`--data` directory. Nothing creates a realm at runtime.
+A realm exists because a realm config declares it — a `<realm>.realm.ron`
+file, named for the realm — and the global stratum server serves every such
+file in its `--data` directory. Nothing creates a realm at runtime.
 
 ### Realm membership
 
@@ -60,8 +60,8 @@ cannot be removed.
 All connections to a server instance must be authenticated with a TLS
 certificate for a particular realm. A client or agent certificate encodes the
 server's address in its common name (`host:port/realm`), so the certificate
-names exactly one server and realm. It is distributed in a `.server` file
-alongside the realm CA that verifies the server.
+names exactly one server and realm. It is distributed in a realm cert
+(`<realm>.realm.pem`) alongside the realm CA that verifies the server.
 
 There are four types of certificate:
 

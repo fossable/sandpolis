@@ -4,7 +4,8 @@
 //! feature rather than the agent one — an agent manages its own host's units
 //! through `sandpolis-health`, not through here.
 
-use crate::deploy::{DATA_PATH, INSTALL_PATH, SERVER_FILE};
+use crate::PollConfig;
+use crate::deploy::{DATA_PATH, INSTALL_PATH, REALM_FILE};
 
 /// Where the unit file goes on the target.
 pub const UNIT_PATH: &str = "/etc/systemd/system/sandpolis-agent.service";
@@ -13,7 +14,21 @@ pub const UNIT_PATH: &str = "/etc/systemd/system/sandpolis-agent.service";
 pub const UNIT_NAME: &str = "sandpolis-agent.service";
 
 /// Render the unit file.
-pub fn unit_file() -> String {
+///
+/// The polling schedule is a command line option rather than something the
+/// certificate carries, so this is where a deployment records it.
+pub fn unit_file(poll: Option<&PollConfig>) -> String {
+    let poll = match poll {
+        Some(poll) => format!(
+            " --poll '{}' --poll-timeout {}",
+            // Cron expressions have no quotes to escape, and the schedule is
+            // rejected on the way in, but a stray one would end the argument.
+            poll.schedule.replace('\'', ""),
+            poll.timeout_secs
+        ),
+        None => String::new(),
+    };
+
     format!(
         "[Unit]\n\
          Description=Sandpolis Agent\n\
@@ -21,7 +36,7 @@ pub fn unit_file() -> String {
          Wants=network-online.target\n\
          \n\
          [Service]\n\
-         ExecStart={INSTALL_PATH} agent --server {SERVER_FILE} --data {DATA_PATH}\n\
+         ExecStart={INSTALL_PATH} agent --realm {REALM_FILE} --data {DATA_PATH}{poll}\n\
          Restart=always\n\
          RestartSec=5\n\
          \n\
@@ -39,11 +54,33 @@ mod test {
     /// anything.
     #[test]
     fn unit_names_the_installed_binary() {
-        let unit = unit_file();
+        let unit = unit_file(None);
         // The subcommand is what makes this an agent; a bare invocation prints
         // help and exits.
         assert!(unit.contains(&format!("ExecStart={INSTALL_PATH} agent ")));
-        assert!(unit.contains(SERVER_FILE));
+        assert!(unit.contains(REALM_FILE));
         assert!(!unit.contains("{}"));
+    }
+
+    /// A continuously connected agent is the absence of a schedule, so the unit
+    /// says nothing about polling at all.
+    #[test]
+    fn continuous_agent_has_no_poll_flags() {
+        let unit = unit_file(None);
+        assert!(!unit.contains("--poll"));
+    }
+
+    /// Polling is what the deployment recorded, so it has to survive into the
+    /// command the unit runs.
+    #[test]
+    fn polling_agent_carries_its_schedule() {
+        let unit = unit_file(Some(&PollConfig {
+            schedule: "0 */5 * * * *".into(),
+            timeout_secs: 45,
+        }));
+        assert!(
+            unit.contains("--poll '0 */5 * * * *' --poll-timeout 45"),
+            "{unit}"
+        );
     }
 }

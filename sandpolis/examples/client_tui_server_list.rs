@@ -8,8 +8,7 @@ use sandpolis::{
     server::test_server,
 };
 use sandpolis_instance::database::{DatabaseManager, WriteAuthority};
-use sandpolis_instance::realm::RealmManager;
-use sandpolis_instance::realm::config::ServerCertFile;
+use sandpolis_instance::realm::{RealmCert, RealmManager};
 use sandpolis_server::ServerStratum;
 
 #[tokio::main]
@@ -21,9 +20,9 @@ async fn main() -> Result<()> {
     let mut options = RuntimeOptions::embedded();
     options.database.storage = None;
 
-    // The test server hands out a `.server` file, which is the whole trust
+    // The test server hands out a realm cert, which is the whole trust
     // bootstrap a client needs.
-    let (cert, _) = ServerCertFile::load(&test_server.endpoint_cert)?;
+    let cert = RealmCert::read_pem(&test_server.endpoint_cert)?;
 
     let database = DatabaseManager::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
     let realms = RealmManager::for_endpoint(vec![cert], database.clone())?;

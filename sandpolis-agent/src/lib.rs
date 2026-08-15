@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use sandpolis_instance::database::DatabaseManager;
+use serde::{Deserialize, Serialize};
 
 pub mod bootagent;
 #[cfg(feature = "client")]
@@ -11,6 +12,30 @@ pub mod client;
 pub mod deploy;
 pub mod uefi;
 pub mod wake;
+
+/// The agent's "polling" connection mode, set by `--poll` and `--poll-timeout`.
+///
+/// A polling agent stays disconnected between check-ins instead of holding a
+/// connection open for its lifetime. It travels over the deploy stream too, so
+/// a deployment can put the agent it installs straight into polling mode.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct PollConfig {
+    /// Cron expression describing when the agent connects to check in, e.g.
+    /// `"0 */5 * * * *"` for every five minutes.
+    pub schedule: String,
+
+    /// How long the agent stays connected during each check-in window, in
+    /// seconds. The server pulls the agent's accumulated data and delivers any
+    /// pending work during this window before the connection is closed again.
+    #[serde(default = "PollConfig::default_timeout_secs")]
+    pub timeout_secs: u64,
+}
+
+impl PollConfig {
+    pub const fn default_timeout_secs() -> u64 {
+        30
+    }
+}
 
 #[derive(Clone)]
 pub struct AgentManager {

@@ -28,3 +28,6 @@ sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 # Android-specific dependencies
 jni = "0.22.4"
 ndk-context = "0.1"
+
+[target.'cfg(target_os = "android")'.dependencies]
+bevy = { workspace = true, features = ["android-game-activity"] }

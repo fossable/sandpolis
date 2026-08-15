@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+randomPort() {
+	local port
+	while true; do
+		port=$(( (RANDOM % 64512) + 1024 ))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+## Test that a client can connect to a server.
+testClientConnect() {
+	port=$(randomPort)
+
+	sandpolis server --listen 127.0.0.1:${port} --data . &
+
+	sandpolis --realm ./default.realm.pem server list
+}

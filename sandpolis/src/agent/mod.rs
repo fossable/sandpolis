@@ -8,18 +8,16 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info, warn};
 
-/// Bring up everything an agent needs and run it: the realm named by its
-/// `.server` file, the database its collectors write into, and the subsystems over
-/// both.
+/// Bring up everything an agent needs and run it: the realm named by its realm
+/// cert, the database its collectors write into, and the subsystems over both.
 pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode> {
     let mut options = args.options();
 
-    // The `.server` file is the whole connection policy: it names the server,
-    // carries the realm CA, holds this agent's own certificate, and says whether
-    // to stay connected or check in on a schedule.
+    // The realm cert names the server, carries the realm CA, and holds this
+    // agent's own certificate. How the agent connects to that server — straight
+    // through or on a schedule — comes from the command line.
     let mut endpoint_certs = Vec::new();
-    if let Some((cert, poll)) = crate::load_server_file(args.server.as_deref())? {
-        options.poll = poll;
+    if let Some(cert) = crate::load_realm_cert(args.realm.as_deref())? {
         options.server = Some(cert.url()?);
         endpoint_certs.push(cert);
     }
@@ -56,9 +54,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     services.start()?;
 
-    // Pick the connection strategy from the `.server` file: a `poll` schedule
-    // selects polling mode (periodic check-ins), otherwise the agent stays
-    // continuously connected.
+    // Pick the connection strategy from `--poll`: a schedule selects polling
+    // mode (periodic check-ins), otherwise the agent stays continuously
+    // connected.
     let strategy = match &options.poll {
         Some(poll) => {
             match ServerConnectStrategy::polling(

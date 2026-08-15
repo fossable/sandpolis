@@ -21,7 +21,6 @@ use russh::keys::{HashAlg, PrivateKeyWithHashAlg, decode_secret_key, ssh_key};
 use sandpolis_instance::network::{
     RegisterResponders, ResponderRegistration, StreamRegistry, StreamResponder,
 };
-use sandpolis_instance::realm::config::{PollConfig, ServerCertFile};
 use sandpolis_instance::realm::url::ServerUrl;
 use sandpolis_instance::realm::{RealmCert, RealmCertType, RealmManager};
 use sandpolis_macros::Stream;
@@ -147,7 +146,7 @@ impl Progress {
 async fn deploy(
     target: &DeployTarget,
     server: &ServerUrl,
-    poll: Option<PollConfig>,
+    poll: Option<crate::PollConfig>,
     progress: &mut Progress,
 ) -> Result<bool> {
     progress
@@ -183,17 +182,18 @@ async fn deploy(
             format!("Issuing an agent certificate for realm {}", server.realm),
         )
         .await;
-    let server_file = certificate(server, poll)?;
+    let realm_cert = certificate(server)?;
     progress.done().await;
 
     progress
-        .begin(DeployStep::Upload, format!("Writing {SERVER_FILE}"))
+        .begin(DeployStep::Upload, format!("Writing {REALM_FILE}"))
         .await;
-    upload(&session, SERVER_FILE, "600", server_file.into_bytes()).await?;
+    upload(&session, REALM_FILE, "600", realm_cert.into_bytes()).await?;
     progress.done().await;
 
-    // An agent that's already installed reads its whole connection policy from
-    // the file we just wrote, so there is nothing left to install.
+    // An agent that's already installed picks up the certificate we just wrote,
+    // so there is nothing left to install. Its polling schedule lives in the
+    // unit file, which belongs to the installation and is left alone here.
     if installed {
         return Ok(true);
     }
@@ -211,7 +211,7 @@ async fn deploy(
         &session,
         systemd::UNIT_PATH,
         "644",
-        systemd::unit_file().into_bytes(),
+        systemd::unit_file(poll.as_ref()).into_bytes(),
     )
     .await?;
     run_checked(&session, "systemctl daemon-reload").await?;
@@ -236,9 +236,9 @@ async fn deploy(
     Ok(false)
 }
 
-/// Mint an agent certificate from `server`'s realm CA and render the `.server`
-/// file the deployed agent will read.
-fn certificate(server: &ServerUrl, poll: Option<PollConfig>) -> Result<String> {
+/// Mint an agent certificate from `server`'s realm CA and render the realm cert
+/// the deployed agent will read.
+fn certificate(server: &ServerUrl) -> Result<String> {
     let realms = REALMS
         .get()
         .ok_or_else(|| anyhow!("the deploy responder is not initialized"))?;
@@ -266,7 +266,9 @@ fn certificate(server: &ServerUrl, poll: Option<PollConfig>) -> Result<String> {
         );
     }
 
-    ServerCertFile::from_endpoint(&ca.endpoint_cert(server)?, poll).to_ron()
+    Ok(sandpolis_instance::realm::config::to_pem(
+        &ca.endpoint_cert(server)?,
+    ))
 }
 
 /// Verifies the target's host key against the configured fingerprint.

@@ -11,7 +11,7 @@ pub const CERTIFICATE_TAG: &str = "CERTIFICATE";
 /// PEM tag for a PKCS#8 private key.
 pub const PRIVATE_KEY_TAG: &str = "PRIVATE KEY";
 
-/// A certificate or private key as it appears in a `.realm` or `.server` file.
+/// A certificate or private key as it appears in a realm config.
 ///
 /// Both forms hold PEM: either written out in the file itself, or in a separate
 /// file next to it. Inline is what the server writes back when it generates a
@@ -55,7 +55,7 @@ impl CertSource {
     }
 }
 
-/// A realm's root certificate authority, as declared in a `.realm` file.
+/// A realm's root certificate authority, as declared in a realm config.
 ///
 /// The global stratum server needs the key to issue certificates; a CA without
 /// one can only verify.
@@ -85,7 +85,7 @@ impl CaConfig {
 /// Everything a server needs to bring one realm up: what it's called, the trust
 /// root it serves under, and the address the certificates it mints will name.
 ///
-/// A realm only ever comes from a `.realm` file (or the implicit default of a
+/// A realm only ever comes from a realm config (or the implicit default of a
 /// zero-flag run), so this is the complete set of realms for a process.
 #[derive(Debug, Clone, Default)]
 pub struct RealmBootstrap {
@@ -102,133 +102,101 @@ pub struct RealmBootstrap {
     pub address: Option<ServerUrl>,
 }
 
-/// Configures the agent's "polling" connection mode.
-///
-/// Lives with the realm file formats because it is carried in the `.server`
-/// file that also holds the agent's certificate — an agent is handed its whole
-/// connection policy in one file.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct PollConfig {
-    /// Cron expression describing when the agent connects to check in, e.g.
-    /// `"0 */5 * * * *"` for every five minutes.
-    pub schedule: String,
-
-    /// How long the agent stays connected during each check-in window, in
-    /// seconds. The server pulls the agent's accumulated data and delivers any
-    /// pending work during this window before the connection is closed again.
-    #[serde(default = "PollConfig::default_timeout_secs")]
-    pub timeout_secs: u64,
-}
-
-impl PollConfig {
-    pub const fn default_timeout_secs() -> u64 {
-        30
-    }
-}
-
-/// A `.server` file: everything an instance needs to trust and reach one
-/// server, and nothing else.
-///
-/// The certificate's common name encodes the [`ServerUrl`], so the file names
-/// the server it belongs to; there is no separate address field to keep in
-/// sync. Whether the holder is a client or an agent follows from the
-/// certificate's extended key usage.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ServerCertFile {
-    /// The realm's cluster CA certificate, which verifies the server.
-    pub ca: CertSource,
-
-    /// This instance's client- or agent-type certificate. Its common name is
-    /// the server's [`ServerUrl::canonical`] form.
-    pub cert: CertSource,
-
-    pub key: Option<CertSource>,
-
-    /// Present to run an agent in polling mode instead of staying continuously
-    /// connected.
-    #[serde(default)]
-    pub poll: Option<PollConfig>,
-}
-
-/// RON parsing options for the file formats: allow optional fields without an
+/// RON parsing options for the realm config: allow optional fields without an
 /// explicit `Some`.
 pub fn ron_options() -> ron::Options {
     ron::Options::default().with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME)
 }
 
-impl ServerCertFile {
-    /// Build the file contents for an endpoint certificate.
-    pub fn from_endpoint(cert: &super::RealmCert, poll: Option<PollConfig>) -> Self {
-        Self {
-            ca: CertSource::inline_der(&cert.ca, CERTIFICATE_TAG),
-            cert: CertSource::inline_der(&cert.cert, CERTIFICATE_TAG),
-            key: cert
-                .key
-                .as_ref()
-                .map(|key| CertSource::inline_der(key, PRIVATE_KEY_TAG)),
-            poll,
+/// Filename suffix of a realm cert, which is also how a directory full of them
+/// is recognized.
+pub const REALM_CERT_SUFFIX: &str = ".realm.pem";
+
+/// Render an endpoint certificate as a realm cert.
+///
+/// Three PEM blocks: the endpoint certificate, the realm CA that signed it, and
+/// the endpoint's private key. Leaf first, as a TLS chain is conventionally
+/// written.
+pub fn to_pem(cert: &super::RealmCert) -> String {
+    let mut out = encode(&Pem::new(CERTIFICATE_TAG, cert.cert.clone()));
+    out.push_str(&encode(&Pem::new(CERTIFICATE_TAG, cert.ca.clone())));
+    if let Some(key) = cert.key.as_ref() {
+        out.push_str(&encode(&Pem::new(PRIVATE_KEY_TAG, key.clone())));
+    }
+    out
+}
+
+/// Decode a realm cert into the endpoint certificate it holds.
+///
+/// The realm it authenticates against comes from the certificate's common name,
+/// so the file never has to name it separately. `source` only names the file in
+/// error messages.
+pub fn from_pem(contents: &str, source: &Path) -> Result<super::RealmCert> {
+    use validator::Validate;
+
+    let blocks =
+        pem::parse_many(contents).with_context(|| format!("Parsing {}", source.display()))?;
+
+    let mut certs = Vec::new();
+    let mut keys = Vec::new();
+    for block in blocks {
+        match block.tag() {
+            CERTIFICATE_TAG => certs.push(block.into_contents()),
+            PRIVATE_KEY_TAG => keys.push(block.into_contents()),
+            tag => bail!("{} holds an unexpected {tag} block", source.display()),
         }
     }
 
-    /// Serialize to the RON text that goes in a `.server` file.
-    pub fn to_ron(&self) -> Result<String> {
-        Ok(ron::ser::to_string_pretty(
-            self,
-            ron::ser::PrettyConfig::default(),
-        )?)
+    if certs.len() != 2 {
+        bail!(
+            "{} holds {} certificates; a realm cert holds exactly two, the \
+             endpoint's and the realm CA's",
+            source.display(),
+            certs.len()
+        );
+    }
+    if keys.len() > 1 {
+        bail!("{} holds more than one private key", source.display());
     }
 
-    pub fn write<P>(&self, path: P) -> Result<()>
-    where
-        P: AsRef<Path>,
-    {
-        std::fs::write(path, self.to_ron()?)?;
-        Ok(())
+    // Written leaf first, but the two are told apart by which one signed
+    // itself, so a hand-assembled file in either order still loads.
+    let ca_first = is_self_signed(&certs[0])?;
+    if ca_first == is_self_signed(&certs[1])? {
+        bail!(
+            "{} holds two {} certificates; a realm cert pairs one endpoint \
+             certificate with the realm CA that signed it",
+            source.display(),
+            if ca_first { "self-signed" } else { "signed" }
+        );
     }
+    let (ca, cert) = if ca_first {
+        (certs[0].clone(), certs[1].clone())
+    } else {
+        (certs[1].clone(), certs[0].clone())
+    };
 
-    /// Read a `.server` file and decode the certificate it holds.
-    ///
-    /// Relative paths inside the file resolve against the file's own directory.
-    pub fn load<P>(path: P) -> Result<(super::RealmCert, Option<PollConfig>)>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-        let contents =
-            std::fs::read_to_string(path).with_context(|| format!("Reading {}", path.display()))?;
-        let file: Self = ron_options()
-            .from_str(&contents)
-            .with_context(|| format!("Parsing {}", path.display()))?;
+    let mut endpoint = super::RealmCert {
+        cert_type: super::RealmCertType::Endpoint,
+        ca,
+        cert,
+        key: keys.pop(),
+        ..Default::default()
+    };
+    endpoint
+        .validate()
+        .with_context(|| format!("{} is not an endpoint realm certificate", source.display()))?;
+    endpoint.name = endpoint.url()?.realm;
 
-        file.decode(path.parent())
-    }
+    Ok(endpoint)
+}
 
-    /// Decode the certificate material into an endpoint certificate.
-    ///
-    /// The realm it authenticates against comes from the common name, so the
-    /// file never has to name it separately.
-    pub fn decode(&self, base_dir: Option<&Path>) -> Result<(super::RealmCert, Option<PollConfig>)> {
-        use validator::Validate;
+/// Whether a certificate issued itself, which is what makes it the CA of the
+/// pair.
+fn is_self_signed(der: &[u8]) -> Result<bool> {
+    use x509_parser::prelude::FromDer;
 
-        let ca = self.ca.load_der(base_dir, CERTIFICATE_TAG)?;
-        let cert = self.cert.load_der(base_dir, CERTIFICATE_TAG)?;
-        let key = match &self.key {
-            Some(key) => Some(key.load_der(base_dir, PRIVATE_KEY_TAG)?),
-            None => None,
-        };
-
-        let mut endpoint = super::RealmCert {
-            cert_type: super::RealmCertType::Endpoint,
-            ca,
-            cert,
-            key,
-            ..Default::default()
-        };
-        endpoint
-            .validate()
-            .context("Certificate is not an endpoint realm certificate")?;
-        endpoint.name = endpoint.url()?.realm;
-
-        Ok((endpoint, self.poll.clone()))
-    }
+    let (_, cert) =
+        x509_parser::prelude::X509Certificate::from_der(der).context("Parsing certificate")?;
+    Ok(cert.issuer() == cert.subject())
 }

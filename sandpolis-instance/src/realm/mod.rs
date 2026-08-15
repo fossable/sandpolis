@@ -7,10 +7,9 @@ use crate::database::ResidentVec;
 use crate::database::{DatabaseManager, Resident};
 use crate::realm::config::CERTIFICATE_TAG;
 use crate::realm::config::PRIVATE_KEY_TAG;
-use crate::realm::config::PollConfig;
 use crate::realm::config::RealmBootstrap;
-use crate::realm::config::ServerCertFile;
 use crate::realm::url::ServerUrl;
+use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
@@ -141,7 +140,7 @@ fn endpoint_realm_names(certs: &[RealmCert]) -> Vec<RealmName> {
 /// for any this instance hasn't recorded yet.
 ///
 /// Shared between [`RealmManager::new`] and [`RealmManager::for_endpoint`]: a server with no
-/// realm files of its own and an endpoint attaching to one learn their realms
+/// realm configs of its own and an endpoint attaching to one learn their realms
 /// exactly the same way, from the certificates they hold.
 fn insert_endpoint_realms(
     inner: &mut BTreeMap<RealmName, Realm>,
@@ -179,7 +178,7 @@ pub struct Realm {
     pub data: Resident<RealmData>,
 }
 
-/// A realm CA that the caller should write back into the `.realm` file it came
+/// A realm CA that the caller should write back into the realm config it came
 /// from, so the file stays the durable source of truth.
 #[derive(Debug, Clone)]
 pub struct MintedCa {
@@ -195,17 +194,17 @@ pub struct MintedCa {
 /// server's files live.
 #[derive(Debug, Clone, Default)]
 pub struct RealmStartupOutput {
-    /// CAs to write back into the `.realm` files the bootstraps came from.
+    /// CAs to write back into the realm configs the bootstraps came from.
     pub minted_cas: Vec<MintedCa>,
 
     /// One freshly minted endpoint certificate per realm, to be written out as
-    /// `<realm>.server`.
+    /// `<realm>.realm.pem`.
     pub endpoint_certs: Vec<RealmCert>,
 }
 
 /// Every realm known to this instance.
 ///
-/// The set is frozen at startup: realms only ever come from `.realm` files
+/// The set is frozen at startup: realms only ever come from realm configs
 /// (server) or from the endpoint certificates this instance holds (client and
 /// agent), so nothing creates one at runtime.
 #[derive(Clone)]
@@ -219,7 +218,7 @@ pub struct RealmManager {
     /// knows what other realms exist.
     pub realms: ResidentVec<RealmData>,
 
-    /// Endpoint realm certs loaded from `.server` files. Kept in memory only.
+    /// Endpoint certificates loaded from realm certs. Kept in memory only.
     ///
     /// Clients and agents hold the same kind of certificate, and so does a local
     /// stratum server authenticating to its global stratum server — there is no
@@ -239,7 +238,7 @@ impl RealmManager {
     /// [`install_enrollment`](Self::install_enrollment)).
     ///
     /// Returns what the caller has to write out: any realm CAs that belong back
-    /// in the `.realm` files the bootstraps came from, and the endpoint
+    /// in the realm configs the bootstraps came from, and the endpoint
     /// certificate minted for each realm.
     ///
     /// `listen_port` is where this process's server binds, used to name
@@ -353,7 +352,7 @@ impl RealmManager {
                 };
                 url.realm = name.clone();
 
-                // The caller writes this out as `<realm>.server`. Clients and
+                // The caller writes this out as `<realm>.realm.pem`. Clients and
                 // agents both attach with it, so a realm is usable as soon as
                 // its server has started once.
                 output.endpoint_certs.push(ca.endpoint_cert(&url)?);
@@ -376,7 +375,7 @@ impl RealmManager {
                 if !inner.contains_key(&name) {
                     tracing::warn!(
                         realm = %name,
-                        "No realm file was given for this realm; removing it from the registry \
+                        "No realm config was given for this realm; removing it from the registry \
                          and leaving its database on disk"
                     );
                     let id = row.read().id();
@@ -722,12 +721,26 @@ impl RealmCert {
         bail!("Subject name not found");
     }
 
-    /// Write the certificate to a `.server` file.
-    pub fn write_server_file<P>(&self, path: P, poll: Option<PollConfig>) -> Result<()>
+    /// Write the certificate out as a realm cert.
+    pub fn write_pem<P>(&self, path: P) -> Result<()>
     where
         P: AsRef<Path>,
     {
-        ServerCertFile::from_endpoint(self, poll).write(path)
+        let path = path.as_ref();
+        std::fs::write(path, config::to_pem(self))
+            .with_context(|| format!("Writing {}", path.display()))?;
+        Ok(())
+    }
+
+    /// Read a realm cert.
+    pub fn read_pem<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref();
+        let contents =
+            std::fs::read_to_string(path).with_context(|| format!("Reading {}", path.display()))?;
+        config::from_pem(&contents, path)
     }
 
     /// The realm CA, for verifying the server this certificate names.
@@ -923,33 +936,28 @@ mod test_enrollment {
 }
 
 #[cfg(all(test, feature = "server"))]
-mod test_server_file {
+mod test_realm_cert {
     use super::*;
+    use crate::realm::config::{CERTIFICATE_TAG, to_pem};
     use crate::{InstanceId, InstanceType};
 
     fn url() -> ServerUrl {
         "gs.example.com:9000/myrealm".parse().unwrap()
     }
 
-    /// An endpoint certificate survives the round trip through a `.server` file
-    /// with its server URL and poll settings intact. The same file is what both
-    /// a client and an agent are given.
+    /// An endpoint certificate survives the round trip through a realm cert
+    /// with its server URL intact. The same file is what both a client and an
+    /// agent are given.
     #[test]
-    fn endpoint_cert_round_trips_with_poll() -> Result<()> {
+    fn endpoint_cert_round_trips() -> Result<()> {
         let cluster_id = crate::ClusterId::default();
         let ca = RealmCert::new_cluster(cluster_id, "myrealm".parse()?)?;
         let original = ca.endpoint_cert(&url())?;
 
         let temp_file = tempfile::NamedTempFile::new()?;
-        original.write_server_file(
-            temp_file.path(),
-            Some(PollConfig {
-                schedule: "0 */5 * * * *".into(),
-                timeout_secs: 45,
-            }),
-        )?;
+        original.write_pem(temp_file.path())?;
 
-        let (read_cert, poll) = ServerCertFile::load(temp_file.path())?;
+        let read_cert = RealmCert::read_pem(temp_file.path())?;
 
         assert_eq!(read_cert.cert_type, RealmCertType::Endpoint);
         assert_eq!(original.ca, read_cert.ca);
@@ -958,14 +966,38 @@ mod test_server_file {
         assert_eq!(read_cert.cluster_id()?, cluster_id);
         assert_eq!(read_cert.url()?.canonical(), url().canonical());
         assert_eq!(read_cert.name, "myrealm".parse()?);
-
-        let poll = poll.expect("poll settings survive the round trip");
-        assert_eq!(poll.schedule, "0 */5 * * * *");
-        assert_eq!(poll.timeout_secs, 45);
         Ok(())
     }
 
-    /// A `.server` file only ever holds an endpoint certificate, so one holding
+    /// The two certificates are told apart by which one signed itself, so a
+    /// file assembled by hand loads whichever order they were concatenated in.
+    #[test]
+    fn blocks_load_in_either_order() -> Result<()> {
+        let ca = RealmCert::new_cluster(crate::ClusterId::default(), "myrealm".parse()?)?;
+        let original = ca.endpoint_cert(&url())?;
+
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("reversed.realm.pem");
+        std::fs::write(
+            &path,
+            format!(
+                "{}{}{}",
+                encode(&Pem::new(CERTIFICATE_TAG, original.ca.clone())),
+                encode(&Pem::new(CERTIFICATE_TAG, original.cert.clone())),
+                encode(&Pem::new(
+                    crate::realm::config::PRIVATE_KEY_TAG,
+                    original.key.clone().expect("minted certs carry a key"),
+                )),
+            ),
+        )?;
+
+        let read_cert = RealmCert::read_pem(&path)?;
+        assert_eq!(original.cert, read_cert.cert);
+        assert_eq!(original.ca, read_cert.ca);
+        Ok(())
+    }
+
+    /// A realm cert only ever holds an endpoint certificate, so one holding
     /// anything else — a server certificate, say — is rejected rather than
     /// loaded as something it isn't.
     #[test]
@@ -974,49 +1006,27 @@ mod test_server_file {
         let server_cert = ca.server_cert(InstanceId::new(InstanceType::Server))?;
 
         let temp_file = tempfile::NamedTempFile::new()?;
-        ServerCertFile::from_endpoint(&server_cert, None).write(temp_file.path())?;
+        std::fs::write(temp_file.path(), to_pem(&server_cert))?;
 
-        assert!(ServerCertFile::load(temp_file.path()).is_err());
+        assert!(RealmCert::read_pem(temp_file.path()).is_err());
         Ok(())
     }
 
-    /// Certificate material may live in files next to the `.server` file, named
-    /// relative to it.
+    /// The realm CA has to be in the file too — without it there is nothing to
+    /// verify the server with, so a lone certificate is an error rather than a
+    /// half-usable credential.
     #[test]
-    fn cert_paths_resolve_against_the_file() -> Result<()> {
-        use crate::realm::config::{CERTIFICATE_TAG, CertSource, PRIVATE_KEY_TAG};
-
+    fn a_single_certificate_is_rejected() -> Result<()> {
         let ca = RealmCert::new_cluster(crate::ClusterId::default(), "myrealm".parse()?)?;
         let original = ca.endpoint_cert(&url())?;
 
-        let dir = tempfile::tempdir()?;
+        let temp_file = tempfile::NamedTempFile::new()?;
         std::fs::write(
-            dir.path().join("ca.pem"),
-            encode(&Pem::new(CERTIFICATE_TAG, original.ca.clone())),
-        )?;
-        std::fs::write(
-            dir.path().join("cert.pem"),
+            temp_file.path(),
             encode(&Pem::new(CERTIFICATE_TAG, original.cert.clone())),
         )?;
-        std::fs::write(
-            dir.path().join("key.pem"),
-            encode(&Pem::new(
-                PRIVATE_KEY_TAG,
-                original.key.clone().expect("minted certs carry a key"),
-            )),
-        )?;
 
-        let path = dir.path().join("ops.server");
-        ServerCertFile {
-            ca: CertSource::Path("ca.pem".into()),
-            cert: CertSource::Path("cert.pem".into()),
-            key: Some(CertSource::Path("key.pem".into())),
-            poll: None,
-        }
-        .write(&path)?;
-
-        let (read_cert, _) = ServerCertFile::load(&path)?;
-        assert_eq!(original.cert, read_cert.cert);
+        assert!(RealmCert::read_pem(temp_file.path()).is_err());
         Ok(())
     }
 }

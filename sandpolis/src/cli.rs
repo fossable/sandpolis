@@ -27,27 +27,28 @@ pub struct CommandLine {
 #[cfg(feature = "server")]
 #[derive(clap::Args, Debug, Clone)]
 pub struct ServerArgs {
-    /// Directory holding this server's database and the `.realm` files it
-    /// serves.
+    /// Directory holding this server's database and the realm configs it
+    /// serves ($S7S_DATA).
     ///
-    /// Every `*.realm` file in the directory declares one realm, named after
-    /// the filename stem. A blank file means "generate a realm CA for me",
-    /// which is then written back into the file — after which that file is the
-    /// durable copy of the realm's trust root. A global stratum server that
-    /// finds no realm file creates `default.realm`.
+    /// Every `*.realm.ron` file in the directory declares one realm, named
+    /// after the part of the filename before the suffix. A blank file means
+    /// "generate a realm CA for me", which is then written back into the file —
+    /// after which that file is the durable copy of the realm's trust root. A
+    /// global stratum server that finds no realm config creates
+    /// `default.realm.ron`.
     ///
     /// Without this flag the server is ephemeral: its databases are kept in
     /// memory and nothing survives the process.
-    #[clap(long, value_name = "DIR")]
+    #[clap(long, value_name = "DIR", env = "S7S_DATA")]
     pub data: Option<PathBuf>,
 
-    /// Path to a `.server` file naming this server's upstream ($S7S_SERVER).
+    /// Path to a realm cert naming this server's upstream ($S7S_REALM).
     ///
     /// Having one is what puts this server in the local stratum: it carries the
     /// realm CA and this server's own certificate, whose common name is the
     /// upstream's address. A local stratum server serves no realms of its own.
-    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
-    pub server: Option<PathBuf>,
+    #[clap(long, value_name = "PATH", env = "S7S_REALM")]
+    pub realm: Option<PathBuf>,
 
     /// Address:port for this server to listen on.
     #[clap(long, default_value = "0.0.0.0:8768")]
@@ -63,37 +64,63 @@ pub struct ServerArgs {
 #[cfg(feature = "agent")]
 #[derive(clap::Args, Debug, Clone, Default)]
 pub struct AgentArgs {
-    /// Directory holding this agent's database.
+    /// Directory holding this agent's database ($S7S_DATA).
     ///
     /// Without this flag the agent is ephemeral: its database is kept in memory
     /// and nothing survives the process.
-    #[clap(long, value_name = "DIR")]
+    #[clap(long, value_name = "DIR", env = "S7S_DATA")]
     pub data: Option<PathBuf>,
 
-    /// Path to the `.server` file naming the server this agent attaches to
-    /// ($S7S_SERVER).
+    /// Path to the realm cert naming the server this agent attaches to
+    /// ($S7S_REALM).
     ///
-    /// The file carries the realm CA, this agent's own certificate — whose
-    /// common name is the server's address — and its polling schedule, so one
-    /// file is the whole connection policy.
-    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
-    pub server: Option<PathBuf>,
+    /// It carries the realm CA and this agent's own certificate, whose common
+    /// name is the server's address.
+    #[clap(long, value_name = "PATH", env = "S7S_REALM")]
+    pub realm: Option<PathBuf>,
+
+    /// Cron expression putting the agent in polling mode, e.g. `0 */5 * * * *`
+    /// for a check-in every five minutes ($S7S_POLL).
+    ///
+    /// Without it the agent stays connected continuously.
+    #[clap(long, value_name = "CRON", env = "S7S_POLL")]
+    pub poll: Option<String>,
+
+    /// How long each check-in window stays open, in seconds ($S7S_POLL_TIMEOUT).
+    ///
+    /// Only meaningful alongside `--poll`.
+    #[clap(
+        long,
+        value_name = "SECONDS",
+        env = "S7S_POLL_TIMEOUT",
+        default_value_t = sandpolis_agent::PollConfig::default_timeout_secs(),
+    )]
+    pub poll_timeout: u64,
 }
 
 /// Flags for the client, which every client subcommand shares.
-///
-/// A client keeps no database on disk, so it has no `--data`.
 #[cfg(feature = "client")]
 #[derive(clap::Args, Debug, Clone, Default)]
 pub struct ClientArgs {
-    /// Path to a `.server` file naming the server this client connects to
-    /// ($S7S_SERVER).
+    /// Path to a realm cert naming the server this client connects to
+    /// ($S7S_REALM).
     ///
-    /// The file carries the realm CA and this client's own certificate, whose
-    /// common name is the server's address. Without it the GUI asks for a
-    /// server to log into.
-    #[clap(long, value_name = "PATH", env = "S7S_SERVER")]
-    pub server: Option<PathBuf>,
+    /// It carries the realm CA and this client's own certificate, whose common
+    /// name is the server's address. Without it — and without a realm cert in
+    /// `--data` — the GUI asks for a server to log into.
+    #[clap(long, value_name = "PATH", env = "S7S_REALM")]
+    pub realm: Option<PathBuf>,
+
+    /// Directory holding this client's database and its realm certs
+    /// ($S7S_DATA).
+    ///
+    /// Every `*.realm.pem` file in the directory attaches this client to the
+    /// server that cert names, which is how a client is configured without
+    /// naming a file on the command line. Without this flag the client is
+    /// ephemeral: its database is kept in memory and nothing survives the
+    /// process.
+    #[clap(long, value_name = "DIR", env = "S7S_DATA")]
+    pub data: Option<PathBuf>,
 
     /// Frame rate for the GUI and TUI ($S7S_FPS).
     #[clap(long, default_value_t = 30, env = "S7S_FPS")]
@@ -104,7 +131,7 @@ pub struct ClientArgs {
 impl ServerArgs {
     /// The process-wide options these flags describe. The realms and stratum
     /// are filled in by the caller, which is what reads the `--data` directory
-    /// and the `.server` file.
+    /// and the realm cert.
     pub fn options(&self) -> RuntimeOptions {
         RuntimeOptions {
             database: sandpolis_instance::database::config::DatabaseConfig {
@@ -121,7 +148,7 @@ impl ServerArgs {
 
 #[cfg(feature = "agent")]
 impl AgentArgs {
-    /// The process-wide options these flags describe. What the `.server` file
+    /// The process-wide options these flags describe. What the realm cert
     /// contributes is filled in by the caller, which is what loads it.
     pub fn options(&self) -> RuntimeOptions {
         RuntimeOptions {
@@ -130,6 +157,13 @@ impl AgentArgs {
                 ..Default::default()
             },
             instance_type: sandpolis_instance::InstanceType::Agent,
+            poll: self
+                .poll
+                .clone()
+                .map(|schedule| sandpolis_agent::PollConfig {
+                    schedule,
+                    timeout_secs: self.poll_timeout,
+                }),
             ..Default::default()
         }
     }
@@ -140,6 +174,10 @@ impl ClientArgs {
     /// The process-wide options these flags describe.
     pub fn options(&self) -> RuntimeOptions {
         RuntimeOptions {
+            database: sandpolis_instance::database::config::DatabaseConfig {
+                storage: self.data.clone(),
+                ..Default::default()
+            },
             instance_type: sandpolis_instance::InstanceType::Client,
             fps: self.fps,
             ..Default::default()
@@ -534,13 +572,13 @@ mod test_stratum_args {
     use sandpolis_instance::realm::RealmCert;
     use sandpolis_server::ServerStratum;
 
-    /// Write a `.server` file whose certificate names `url`, the way a server
+    /// Write a realm cert whose certificate names `url`, the way a server
     /// writes one out for its realm at startup.
-    fn client_server_file(dir: &std::path::Path, url: &str) -> Result<PathBuf> {
+    fn upstream_realm_cert(dir: &std::path::Path, url: &str) -> Result<PathBuf> {
         let url: sandpolis_server::ServerUrl = url.parse()?;
         let ca = RealmCert::new_cluster(Default::default(), url.realm.clone())?;
-        let path = dir.join("upstream.server");
-        ca.endpoint_cert(&url)?.write_server_file(&path, None)?;
+        let path = dir.join("upstream.realm.pem");
+        ca.endpoint_cert(&url)?.write_pem(&path)?;
         Ok(path)
     }
 
@@ -558,29 +596,29 @@ mod test_stratum_args {
         assert!(CommandLine::try_parse_from(["sandpolis"]).is_err());
     }
 
-    /// Absent `--server`, this is the network's single global stratum server.
+    /// Absent `--realm`, this is the network's single global stratum server.
     #[test]
-    fn no_server_file_means_global_stratum() -> Result<()> {
+    fn no_realm_cert_means_global_stratum() -> Result<()> {
         let args = server_args(&["sandpolis", "server"]).expect("`server` parses");
         assert_eq!(
-            crate::stratum(args.server.as_deref())?,
+            crate::stratum(args.realm.as_deref())?,
             ServerStratum::Global
         );
         Ok(())
     }
 
-    /// The `.server` file names the upstream and selects the local stratum; the
+    /// The realm cert names the upstream and selects the local stratum; the
     /// address comes out of the certificate rather than a separate flag.
     #[test]
-    fn server_file_means_local_stratum() -> Result<()> {
+    fn realm_cert_means_local_stratum() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = client_server_file(dir.path(), "gs.example.com:8768/default")?;
+        let path = upstream_realm_cert(dir.path(), "gs.example.com:8768/default")?;
 
-        let args = server_args(&["sandpolis", "server", "--server", path.to_str().unwrap()])
-            .expect("--server parses");
+        let args = server_args(&["sandpolis", "server", "--realm", path.to_str().unwrap()])
+            .expect("--realm parses");
 
-        let ServerStratum::Local { global } = crate::stratum(args.server.as_deref())? else {
-            panic!("--server must select the local stratum");
+        let ServerStratum::Local { global } = crate::stratum(args.realm.as_deref())? else {
+            panic!("--realm must select the local stratum");
         };
         assert_eq!(global.host, "gs.example.com");
         assert_eq!(global.port, 8768);
@@ -590,16 +628,16 @@ mod test_stratum_args {
     /// A local stratum server keeps a database of its own, so the two flags
     /// describe different things and go together.
     #[test]
-    fn data_and_server_go_together() -> Result<()> {
+    fn data_and_realm_go_together() -> Result<()> {
         let args = server_args(&[
             "sandpolis",
             "server",
             "--data",
             "/var/lib/sandpolis",
-            "--server",
-            "./upstream.server",
+            "--realm",
+            "./upstream.realm.pem",
         ])
-        .expect("--data and --server parse together");
+        .expect("--data and --realm parse together");
 
         assert_eq!(
             args.data.as_deref(),
@@ -608,18 +646,18 @@ mod test_stratum_args {
         Ok(())
     }
 
-    /// A `.server` file that isn't there is a misconfiguration, not something to
+    /// A realm cert that isn't there is a misconfiguration, not something to
     /// silently fall back from.
     #[test]
-    fn missing_server_file_is_an_error() {
+    fn missing_realm_cert_is_an_error() {
         let args = server_args(&[
             "sandpolis",
             "server",
-            "--server",
-            "/nonexistent/upstream.server",
+            "--realm",
+            "/nonexistent/upstream.realm.pem",
         ])
-        .expect("--server parses");
-        assert!(crate::stratum(args.server.as_deref()).is_err());
+        .expect("--realm parses");
+        assert!(crate::stratum(args.realm.as_deref()).is_err());
     }
 }
 
@@ -633,25 +671,62 @@ mod test_agent_args {
         let command = CommandLine::try_parse_from([
             "sandpolis",
             "agent",
-            "--server",
-            "./fleet.server",
+            "--realm",
+            "./fleet.realm.pem",
             "--data",
             "/var/lib/sandpolis",
         ])
-        .expect("`agent --server --data` parses")
+        .expect("`agent --realm --data` parses")
         .command;
 
         let Commands::Agent { args, .. } = command else {
             panic!("expected the agent subcommand, got {command:?}");
         };
         assert_eq!(
-            args.server.as_deref(),
-            Some(std::path::Path::new("./fleet.server"))
+            args.realm.as_deref(),
+            Some(std::path::Path::new("./fleet.realm.pem"))
         );
         assert_eq!(
             args.data.as_deref(),
             Some(std::path::Path::new("/var/lib/sandpolis"))
         );
+    }
+
+    /// Polling is a property of how this agent runs rather than of the
+    /// certificate it holds, so it comes from the command line.
+    #[test]
+    fn poll_flags_build_the_poll_config() {
+        let command = CommandLine::try_parse_from([
+            "sandpolis",
+            "agent",
+            "--poll",
+            "0 */5 * * * *",
+            "--poll-timeout",
+            "45",
+        ])
+        .expect("`agent --poll --poll-timeout` parses")
+        .command;
+
+        let Commands::Agent { args, .. } = command else {
+            panic!("expected the agent subcommand, got {command:?}");
+        };
+        let poll = args.options().poll.expect("--poll selects polling mode");
+        assert_eq!(poll.schedule, "0 */5 * * * *");
+        assert_eq!(poll.timeout_secs, 45);
+    }
+
+    /// Without `--poll` the agent stays continuously connected, whatever
+    /// `--poll-timeout` says.
+    #[test]
+    fn no_poll_flag_means_continuous() {
+        let command = CommandLine::try_parse_from(["sandpolis", "agent", "--poll-timeout", "45"])
+            .expect("`agent --poll-timeout` parses")
+            .command;
+
+        let Commands::Agent { args, .. } = command else {
+            panic!("expected the agent subcommand, got {command:?}");
+        };
+        assert!(args.options().poll.is_none());
     }
 }
 
@@ -666,29 +741,19 @@ mod test_lsp_args {
         }
     }
 
-    /// Neither flag leaves the root type undecided, which would serve
-    /// completions for whichever format happened to be the default.
+    /// Naming no format leaves the root type undecided, which would serve
+    /// completions for whichever one happened to be the default.
     #[test]
     fn a_root_type_is_required() {
         assert!(lsp_args(&["sandpolis", "lsp"]).is_err());
     }
 
-    /// A document has one root type, so the two flags can't both be given.
+    /// The flag selects the format it names.
     #[test]
-    fn root_types_are_exclusive() {
-        assert!(lsp_args(&["sandpolis", "lsp", "--realm", "--server"]).is_err());
-    }
-
-    /// Each flag selects the format it names.
-    #[test]
-    fn each_flag_selects_its_format() -> Result<()> {
+    fn the_flag_selects_its_format() -> Result<()> {
         assert_eq!(
             lsp_args(&["sandpolis", "lsp", "--realm"])?.root_type(),
             "crate::config::RealmConfig"
-        );
-        assert_eq!(
-            lsp_args(&["sandpolis", "lsp", "--server"])?.root_type(),
-            "sandpolis_instance::realm::config::ServerCertFile"
         );
         Ok(())
     }

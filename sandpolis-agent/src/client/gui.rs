@@ -562,7 +562,7 @@ fn start_deploy(
         },
         server,
         // Deployed agents stay connected; polling is a per-agent choice made
-        // when its `.server` file is minted by hand.
+        // by whoever wrote the unit file.
         poll: None,
     };
 
@@ -622,7 +622,7 @@ fn poll_deploy_events(mut state: ResMut<DeployDialogState>) {
             DeployStreamResponse::Finished { reconfigured } => {
                 let message = if reconfigured {
                     format!(
-                        "{} already had an agent; its server file was rewritten.",
+                        "{} already had an agent; its realm cert was rewritten.",
                         state.host
                     )
                 } else {

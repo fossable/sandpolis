@@ -57,11 +57,12 @@ connects to exactly one GS, and never to another LS.
 
 The distinction decides five things:
 
-- **Configuration.** Only the GS reads `.realm` files, one per realm it serves,
-  which it finds by scanning its `--data` directory; a realm exists only because
-  a file declares it, and can never be created at runtime. Every other instance
-  — LS servers, agents, clients — is configured by CLI flags plus the `.server`
-  file naming the server it trusts.
+- **Configuration.** Only the GS reads _realm configs_ (`<realm>.realm.ron`),
+  one per realm it serves, which it finds by scanning its `--data` directory; a
+  realm exists only because a file declares it, and can never be created at
+  runtime. Every other instance — LS servers, agents, clients — is configured by
+  CLI flags plus the _realm cert_ (`<realm>.realm.pem`) naming the server it
+  trusts.
 - **Trust.** The GS holds the realm CA and is the network's single trust root.
   An LS never generates a CA; on first start it enrolls with the GS, which
   issues it a server certificate. The CA's private key never leaves the GS, so
@@ -89,36 +90,41 @@ The distinction decides five things:
   GS, and points its own default route at the GS for everything else.
 
 ```sh
-# The global stratum server. It serves every .realm file in its data directory,
-# creating ./data/default.realm if it finds none. A blank realm file means
-# "generate a CA for me", which is written back into the file on first start.
+# The global stratum server. It serves every realm config in its data
+# directory, creating ./data/default.realm.ron if it finds none. A blank realm
+# config means "generate a CA for me", which is written back into the file on
+# first start.
 sandpolis server --data ./data
 
-# Mint a .server file for another instance. The certificate's common name is
-# the address given here, so it names exactly one server and realm.
-sandpolis new-client-cert --realm ./data/default.realm \
-          --address gs.example.com:8768 --output ops.server
-sandpolis new-agent-cert --realm ./data/default.realm \
-          --address gs.example.com:8768 --output fleet.server
+# Every start also mints one realm cert per realm and writes it to
+# <realm>.realm.pem in the same directory. That file is what attaches another
+# instance: copy it where it's needed. Its common name is the realm's address,
+# so it names exactly one server and realm.
+cp ./data/default.realm.pem ./ops.realm.pem
 
-# A local stratum server. The .server file is how it authenticates to the GS in
+# A local stratum server. The realm cert is how it authenticates to the GS in
 # order to enroll, and having one is what puts this server in the local stratum,
-# so it serves no realms of its own — realm files in its data directory are
+# so it serves no realms of its own — realm configs in its data directory are
 # ignored.
-sandpolis server --server ./ops.server --data ./ls-data --listen 0.0.0.0:8769
+sandpolis server --realm ./ops.realm.pem --data ./ls-data --listen 0.0.0.0:8769
 
 # An agent, attached to either stratum. Without --data it keeps nothing across
-# restarts; clients have no --data flag and are always ephemeral.
-sandpolis agent --server ./fleet.server --data ./agent-data
+# restarts. --poll makes it check in on a schedule rather than staying
+# connected.
+sandpolis agent --realm ./ops.realm.pem --data ./agent-data \
+          --poll '0 */5 * * * *' --poll-timeout 30
 
-# A client, attached to either stratum. Without --server it starts with the
-# login dialog instead.
-sandpolis client --server ./ops.server
+# A client, attached to either stratum. It picks up every realm cert in --data,
+# so naming one is only necessary without a data directory. With neither it
+# starts at the login dialog instead.
+sandpolis client --realm ./ops.realm.pem
+sandpolis client --data ./client-data
 ```
 
-A `.server` file carries the realm CA, this instance's own certificate, and —
-for an agent — its polling schedule, so one file is the whole connection policy.
-`$S7S_SERVER` is the environment alias for `--server`.
+A realm cert is three PEM blocks — this instance's certificate, the realm CA
+that verifies the server, and the private key — so it is readable by `openssl`
+and assembled by hand if need be. `$S7S_REALM` is the environment alias for
+`--realm`, `$S7S_DATA` for `--data`.
 
 Replication always follows ownership, and it is always pull-based: the owner
 serves, the replica subscribes. An agent attached to an LS has its records
@@ -177,7 +183,7 @@ estate a server manages rather than the servers managing it.
 ## Development loop
 
 Every time a server starts, it mints an endpoint certificate for each realm it
-serves and writes it to `<realm>.server` in the data directory. Clients and
+serves and writes it to `<realm>.realm.pem` in the data directory. Clients and
 agents hold the same kind of certificate, so that one file attaches either.
 
 A server started with no `--data` has no directory to scan, so it serves an
@@ -186,9 +192,9 @@ certificate goes to `/tmp` instead. That's the whole setup for running the three
 instances against each other on one host:
 
 ```sh
-sandpolis server                               # terminal 1
-sandpolis agent  --server /tmp/default.server  # terminal 2
-sandpolis client --server /tmp/default.server  # terminal 3
+sandpolis server                                  # terminal 1
+sandpolis agent  --realm /tmp/default.realm.pem   # terminal 2
+sandpolis client --realm /tmp/default.realm.pem   # terminal 3
 ```
 
 ## Mobile App
@@ -227,11 +233,10 @@ cd android && ./gradlew assembleDebug
   OS-native notifcations.
   - Notification on errors
 - Ensure the following constraints:
-  - GS servers must serve every .realm file in their --data directory
-  - LS server must accept a single --server arg
-  - Agents must accept a single --server arg
-  - Clients must accept a single --server arg
-- Replace `.server` with `.realm.pem`
+  - GS servers must serve every .realm.ron file in their --data directory
+  - LS server must accept a single --realm arg
+  - Agents must accept a single --realm arg
+  - Clients must accept a single --realm arg
 
 ## `sandpolis-tunnel`
 
@@ -379,3 +384,6 @@ sandpolis shell --instance UUID
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following subsystems are supported by bootagents: shell, snapshot
+- Convert all Dockerfiles to use nix base image
+- The node panel icons for instances should always follow the type - not the
+  layer icon
