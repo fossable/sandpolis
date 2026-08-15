@@ -36,14 +36,51 @@ struct ServerConnectionEntry {
 /// websocket the client brings up (including the primary). Idempotent per server.
 pub fn register_connection(url: ServerUrl, connection: Arc<InstanceConnection>) {
     let instance_id = connection.data.read().remote_instance;
-    let mut conns = CONNECTIONS.write().unwrap();
-    if conns.iter().any(|c| c.instance_id == instance_id) {
-        return;
+    {
+        let mut conns = CONNECTIONS.write().unwrap();
+        match conns.iter_mut().find(|c| c.instance_id == instance_id) {
+            // A reconnect replaces the dead entry rather than being ignored,
+            // which is what puts the server back on [`connected_instances`].
+            Some(existing) => {
+                if !existing.connection.cancel.is_cancelled() {
+                    return;
+                }
+                existing.url = url;
+                existing.connection = connection.clone();
+            }
+            None => conns.push(ServerConnectionEntry {
+                url,
+                instance_id,
+                connection: connection.clone(),
+            }),
+        }
     }
-    conns.push(ServerConnectionEntry {
-        url,
-        instance_id,
-        connection,
+
+    watch_connection(instance_id, connection);
+}
+
+/// Tell the user when a server this client is talking to goes away.
+///
+/// An unreachable server writes no liveness row of its own, so this side is the
+/// only one that can report it — and it is the case the user is most likely to
+/// be watching when it happens.
+fn watch_connection(instance_id: InstanceId, connection: Arc<InstanceConnection>) {
+    let cancel = connection.cancel.clone();
+    drop(connection);
+
+    // The first connection is registered before `init`, so this can't go through
+    // the handle that `spawn` uses.
+    let Ok(runtime) = Handle::try_current() else {
+        return;
+    };
+
+    runtime.spawn(async move {
+        cancel.cancelled().await;
+        sandpolis_instance::notification::notify(
+            sandpolis_instance::notification::Notification::warn("Network", "Server went offline")
+                .body(instance_id.to_string())
+                .about(instance_id),
+        );
     });
 }
 
@@ -96,13 +133,28 @@ pub fn servers() -> Vec<(ServerUrl, InstanceId)> {
         .collect()
 }
 
-/// Install the client's database and websocket connection for sync. Call once
-/// after the websocket to the server is established.
+/// Install the client's database and websocket connection for sync. Called after
+/// the websocket to the server is established, and again after each reconnect.
+///
+/// A reconnect swaps the socket underneath the existing handle and forgets the
+/// subscriptions that were open on the dead one, so the views that want them ask
+/// again. Installing a whole new handle instead would strand every caller that
+/// already holds one.
 pub fn init(connection: Arc<InstanceConnection>, database: DatabaseLayer) {
     let _ = DATABASE.set(database.clone());
+
+    if let Some(handle) = HANDLE.get() {
+        if Arc::ptr_eq(&handle.inner.connection.read().unwrap(), &connection) {
+            return;
+        }
+        handle.inner.subs.lock().unwrap().clear();
+        *handle.inner.connection.write().unwrap() = connection;
+        return;
+    }
+
     let _ = HANDLE.set(SyncHandle {
         inner: Arc::new(SyncHandleInner {
-            connection,
+            connection: RwLock::new(connection),
             database,
             subs: Mutex::new(HashMap::new()),
             // Captured here because `init` runs inside the Tokio runtime. UI
@@ -135,10 +187,48 @@ pub fn client_database() -> Option<DatabaseLayer> {
     DATABASE.get().cloned()
 }
 
+/// Every record of a model in the client's local (synced) database.
+///
+/// This is how a layer's client code reads what its subscription replicated
+/// down. An empty result before the database exists is deliberate: views are
+/// built before the connection is, and a view with nothing to show yet is
+/// correct rather than an error.
+pub fn scan_all<T>() -> anyhow::Result<Vec<T>>
+where
+    T: sandpolis_instance::database::Data + native_model::Model + 'static,
+{
+    let Some(database) = client_database() else {
+        return Ok(vec![]);
+    };
+    let realm = database.realm(RealmName::default())?;
+    let r = realm.r_transaction()?;
+    Ok(r.scan()
+        .primary::<T>()?
+        .all()?
+        .collect::<std::result::Result<Vec<_>, _>>()?)
+}
+
+/// Subscribe to live updates for several models at once, optionally scoped to
+/// one instance. The mirror of [`unsubscribe_all`].
+pub fn subscribe_all(model_ids: impl IntoIterator<Item = u32>, instance: Option<InstanceId>) {
+    for model_id in model_ids {
+        subscribe(model_id, instance);
+    }
+}
+
+/// Drop the subscriptions created by [`subscribe_all`].
+pub fn unsubscribe_all(model_ids: impl IntoIterator<Item = u32>, instance: Option<InstanceId>) {
+    for model_id in model_ids {
+        unsubscribe(model_id, instance);
+    }
+}
+
 /// The client's websocket connection to the server, if established. Used to open
 /// relayed streams to agents (desktop, shell, filesystem).
 pub fn connection() -> Option<Arc<InstanceConnection>> {
-    HANDLE.get().map(|h| h.inner.connection.clone())
+    HANDLE
+        .get()
+        .map(|h| h.inner.connection.read().unwrap().clone())
 }
 
 /// Wait until the server connection is established (or `timeout` elapses),
@@ -188,7 +278,9 @@ struct SyncHandle {
 }
 
 struct SyncHandleInner {
-    connection: Arc<InstanceConnection>,
+    /// Swapped out on reconnect, so callers that hold the handle keep working
+    /// across a server restart.
+    connection: RwLock<Arc<InstanceConnection>>,
     database: DatabaseLayer,
     subs: Mutex<HashMap<SubKey, SubState>>,
     runtime: Handle,
@@ -213,19 +305,20 @@ impl SyncHandle {
             }
         };
         let this = self.clone();
+        let connection = self.inner.connection.read().unwrap().clone();
         self.inner.runtime.spawn(async move {
             let filters = vec![SyncFilter {
                 model_id: Some(model_id),
                 scope: instance.map_or(FilterScope::All, FilterScope::Instance),
             }];
-            match this.inner.connection.open_sync(realm, filters).await {
+            match connection.open_sync(realm, filters).await {
                 Ok((id, tx)) => {
                     let mut subs = this.inner.subs.lock().unwrap();
                     // Only keep it if it wasn't unsubscribed while pending.
                     if subs.remove(&key).is_some() {
                         subs.insert(key, SubState::Active { id, tx });
                     } else {
-                        this.inner.connection.close_stream(id);
+                        connection.close_stream(id);
                     }
                 }
                 Err(e) => {
@@ -240,7 +333,7 @@ impl SyncHandle {
         let key = (model_id, instance);
         let state = self.inner.subs.lock().unwrap().remove(&key);
         if let Some(SubState::Active { id, tx }) = state {
-            let connection = self.inner.connection.clone();
+            let connection = self.inner.connection.read().unwrap().clone();
             self.inner.runtime.spawn(async move {
                 let _ = connection.close_sync(id, &tx).await;
             });

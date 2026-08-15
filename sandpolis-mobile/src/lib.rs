@@ -57,7 +57,7 @@ pub fn main() {
             // The app holds no realm certificate until the user logs in, so it
             // starts with just the default realm its own data lives in.
             let realms =
-                sandpolis_instance::realm::Realms::for_client(Vec::new(), database.clone())
+                sandpolis_instance::realm::Realms::for_endpoint(Vec::new(), database.clone())
                     .unwrap();
 
             let state = InstanceState::new(

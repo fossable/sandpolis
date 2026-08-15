@@ -737,6 +737,8 @@ impl Plugin for DesktopClientPlugin {
                 )
                 .with_panel(DesktopPanel)
                 .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                // TODO: pick per desktop environment once agents report one
+                .with_node_icon(|_| "desktop/generic.svg")
                 // VNC probes stream just like agents do; RDP ones are shown but
                 // open a placeholder until there's a backend for them.
                 .showing_probe_nodes_for(&["VNC", "RDP"]),

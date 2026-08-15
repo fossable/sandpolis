@@ -137,6 +137,39 @@ fn endpoint_realm_names(certs: &[RealmCert]) -> Vec<RealmName> {
     names
 }
 
+/// Add the realms named by `endpoint_certs` to `inner`, creating a registry row
+/// for any this instance hasn't recorded yet.
+///
+/// Shared between [`Realms::new`] and [`Realms::for_endpoint`]: a server with no
+/// realm files of its own and an endpoint attaching to one learn their realms
+/// exactly the same way, from the certificates they hold.
+fn insert_endpoint_realms(
+    inner: &mut BTreeMap<RealmName, Realm>,
+    registry: &ResidentVec<RealmData>,
+    database: &DatabaseLayer,
+    endpoint_certs: &[RealmCert],
+) -> Result<()> {
+    for name in endpoint_realm_names(endpoint_certs) {
+        let realm_db = database.realm(name.clone())?;
+        let data = match registry.iter().find(|row| row.read().name == name) {
+            Some(existing) => existing,
+            None => registry.push_local(RealmData {
+                name: name.clone(),
+                ..Default::default()
+            })?,
+        };
+        inner.insert(
+            name.clone(),
+            Realm {
+                name,
+                database: realm_db,
+                data,
+            },
+        );
+    }
+    Ok(())
+}
+
 /// A realm this instance serves or connects to: its name, the database holding
 /// its data, and its row in the realm registry.
 #[derive(Clone)]
@@ -357,24 +390,7 @@ impl Realms {
         if !authored_from_files {
             // Everyone else learns which realms exist from the certificates they
             // hold, since those name exactly what they can authenticate against.
-            for name in endpoint_realm_names(&endpoint_certs) {
-                let realm_db = database.realm(name.clone())?;
-                let data = match registry.iter().find(|row| row.read().name == name) {
-                    Some(existing) => existing,
-                    None => registry.push_local(RealmData {
-                        name: name.clone(),
-                        ..Default::default()
-                    })?,
-                };
-                inner.insert(
-                    name.clone(),
-                    Realm {
-                        name,
-                        database: realm_db,
-                        data,
-                    },
-                );
-            }
+            insert_endpoint_realms(&mut inner, &registry, &database, &endpoint_certs)?;
         }
 
         Ok((
@@ -389,31 +405,17 @@ impl Realms {
         ))
     }
 
-    /// Build the realm set for an instance that only ever connects out (a
-    /// standalone client, the mobile app, an example).
-    pub fn for_client(endpoint_certs: Vec<RealmCert>, database: DatabaseLayer) -> Result<Self> {
+    /// Build the realm set for an instance that only ever connects out — an
+    /// agent, a standalone client, the mobile app, an example.
+    ///
+    /// Such an instance serves no realms of its own, so its certificates are the
+    /// whole story: it knows exactly the realms they name and nothing else.
+    pub fn for_endpoint(endpoint_certs: Vec<RealmCert>, database: DatabaseLayer) -> Result<Self> {
         let registry: ResidentVec<RealmData> =
             database.realm(RealmName::default())?.resident_vec(())?;
 
         let mut inner = BTreeMap::new();
-        for name in endpoint_realm_names(&endpoint_certs) {
-            let realm_db = database.realm(name.clone())?;
-            let data = match registry.iter().find(|row| row.read().name == name) {
-                Some(existing) => existing,
-                None => registry.push_local(RealmData {
-                    name: name.clone(),
-                    ..Default::default()
-                })?,
-            };
-            inner.insert(
-                name.clone(),
-                Realm {
-                    name,
-                    database: realm_db,
-                    data,
-                },
-            );
-        }
+        insert_endpoint_realms(&mut inner, &registry, &database, &endpoint_certs)?;
 
         Ok(Self {
             database,
@@ -809,7 +811,7 @@ mod test_enrollment {
     /// A local stratum server's realm set: it knows the default realm but was
     /// issued nothing yet.
     fn layer(database: DatabaseLayer) -> Realms {
-        Realms::for_client(Vec::new(), database).unwrap()
+        Realms::for_endpoint(Vec::new(), database).unwrap()
     }
 
     /// A local stratum server starts with nothing: it must not invent a CA, and

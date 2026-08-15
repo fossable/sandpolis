@@ -25,13 +25,24 @@ pub struct NetworkEdge {
 
 /// Query all instances from the database
 /// This is the initial query run on startup to spawn all nodes
+///
+/// Both sources matter: the identity rows say which instances *exist* in the
+/// estate, including every agent this client has no connection to, while the
+/// connection rows cover a server that's dialed but whose identity row hasn't
+/// replicated in yet.
 pub fn query_all_instances(
     instance_layer: &InstanceLayer,
     network_layer: &NetworkLayer,
 ) -> Result<Vec<InstanceId>> {
     let mut instance_ids = vec![instance_layer.instance_id];
 
-    // Get all connections and extract unique remote instance IDs
+    for instance in instance_layer.instances().iter() {
+        let id = instance.read()._instance_id;
+        if !instance_ids.contains(&id) {
+            instance_ids.push(id);
+        }
+    }
+
     for connection in network_layer.connections.iter() {
         let conn = connection.read();
         if !instance_ids.contains(&conn.remote_instance) {

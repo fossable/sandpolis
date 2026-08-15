@@ -17,6 +17,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
 use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::network::{NetworkLayer, liveness};
 
 /// How far the shading disc extends past the node's hitbox.
 const RING_MARGIN: f32 = 5.0;
@@ -192,21 +193,25 @@ pub struct OfflineScrim {
 
 /// Mark nodes the client currently can't reach.
 ///
-/// This only knows about servers the client dials directly, which is every node
-/// the world view spawns today. See the roadmap item in `AGENTS.md` about hooking
-/// [`Offline`] up to a replicated liveness signal so agents and probe devices are
-/// covered too.
+/// The servers this client dials are the part it knows first-hand; everything
+/// else — agents, and servers it has no connection to — comes from the liveness
+/// rows those servers replicate, resolved outward from the direct connections by
+/// [`liveness::reachable`].
 pub fn update_offline_markers(
     mut commands: Commands,
     instance_layer: Res<InstanceLayer>,
+    network: Res<NetworkLayer>,
     nodes: Query<(Entity, &NodeEntity, Has<Offline>)>,
 ) {
-    let connected = crate::sync::connected_instances();
+    let online = liveness::reachable(
+        network.liveness.iter().map(|row| row.read().clone()),
+        crate::sync::connected_instances(),
+    );
 
     for (entity, node, marked) in nodes.iter() {
         // We're never out of touch with ourselves.
-        let offline = node.instance_id != instance_layer.instance_id
-            && !connected.contains(&node.instance_id);
+        let offline =
+            node.instance_id != instance_layer.instance_id && !online.contains(&node.instance_id);
 
         if offline && !marked {
             commands.entity(entity).insert(Offline);

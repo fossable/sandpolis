@@ -245,11 +245,8 @@ impl Ownership {
 /// server owns its own scope and is never owned).
 pub(crate) fn attached_instances(network: &NetworkLayer) -> BTreeSet<InstanceId> {
     network
-        .inbound
-        .read()
-        .unwrap()
+        .live_inbound()
         .iter()
-        .filter(|c| !c.cancel.is_cancelled())
         .map(|c| c.data.read().remote_instance)
         .filter(|id| !id.is_server())
         .collect()

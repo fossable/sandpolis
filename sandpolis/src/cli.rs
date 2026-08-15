@@ -188,8 +188,6 @@ pub enum ServerCommand {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
-    InstallCert {},
-
     /// Show versions of all installed layers
     About,
 
@@ -350,7 +348,7 @@ impl Commands {
     /// establishing a client connection.
     pub fn standalone(&self) -> bool {
         match self {
-            Commands::InstallCert {} | Commands::About => true,
+            Commands::About => true,
             #[cfg(feature = "client")]
             Commands::Lsp { .. } => true,
             #[allow(unreachable_patterns)]
@@ -453,7 +451,6 @@ impl Commands {
             Commands::Lsp { args } => {
                 crate::lsp::run(args).await?;
             }
-            Commands::InstallCert {} => todo!(),
             Commands::About => {
                 for line in fossable::sandpolis_word() {
                     println!("{line}");
@@ -565,7 +562,10 @@ mod test_stratum_args {
     #[test]
     fn no_server_file_means_global_stratum() -> Result<()> {
         let args = server_args(&["sandpolis", "server"]).expect("`server` parses");
-        assert_eq!(crate::stratum(args.server.as_deref())?, ServerStratum::Global);
+        assert_eq!(
+            crate::stratum(args.server.as_deref())?,
+            ServerStratum::Global
+        );
         Ok(())
     }
 
@@ -795,6 +795,10 @@ mod client {
 
         // Subscribe only after the connection is up so the call isn't a no-op.
         sandpolis_client::sync::subscribe(sandpolis_instance::instance_layer_model_id(), None);
+        sandpolis_client::sync::subscribe(
+            sandpolis_instance::network::liveness::liveness_model_id(),
+            None,
+        );
 
         // Give the subscription a moment to deliver records.
         info!("list_agents_json: waiting 500ms for sync delivery");
@@ -808,6 +812,16 @@ mod client {
         let all: Vec<InstanceLayerData> =
             r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
+        // Which of them are up is a separate, server-written model, resolved the
+        // same way the GUI resolves it: an observer's word counts only while the
+        // observer itself is reachable.
+        let rows: Vec<sandpolis_instance::network::liveness::LivenessData> =
+            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        let online = sandpolis_instance::network::liveness::reachable(
+            rows,
+            sandpolis_client::sync::connected_instances(),
+        );
+
         let agents: Vec<_> = all
             .into_iter()
             .filter(|i| i._instance_id.is_agent())
@@ -816,6 +830,7 @@ mod client {
                     "instance_id": i._instance_id.to_string(),
                     "cluster_id": i.cluster_id.to_string(),
                     "os": i.os_info.to_string(),
+                    "online": online.contains(&i._instance_id),
                 })
             })
             .collect();

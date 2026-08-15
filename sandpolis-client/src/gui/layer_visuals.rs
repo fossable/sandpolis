@@ -1,6 +1,8 @@
 use crate::gui::input::CurrentLayer;
 use crate::gui::node::{NeedsScaling, NodeEntity, NodeSvg};
 use crate::gui::queries;
+#[allow(unused_imports)] // referenced from doc links below
+use crate::gui::ui::layer::LayerClientInfo;
 use crate::gui::ui::layer::LayerRegistry;
 use bevy::prelude::*;
 use bevy_svg::prelude::{Origin, Svg2d};
@@ -12,6 +14,7 @@ pub fn update_node_svgs_for_layer(
     current_layer: Res<CurrentLayer>,
     asset_server: Res<AssetServer>,
     instance_layer: Res<sandpolis_instance::InstanceLayer>,
+    registry: Res<LayerRegistry>,
     node_query: Query<(Entity, &NodeEntity)>,
     children_query: Query<&Children>,
     svg_query: Query<Entity, With<NodeSvg>>,
@@ -29,7 +32,12 @@ pub fn update_node_svgs_for_layer(
 
     // Update each node's SVG based on current layer
     for (entity, node_entity) in node_query.iter() {
-        let svg_path = get_layer_svg_path(&current_layer, &instance_layer, node_entity.instance_id);
+        let svg_path = get_layer_svg_path(
+            &registry,
+            &current_layer,
+            &instance_layer,
+            node_entity.instance_id,
+        );
 
         // Find the SVG child entity
         if let Ok(children) = children_query.get(entity) {
@@ -48,23 +56,22 @@ pub fn update_node_svgs_for_layer(
     }
 }
 
-/// Get the appropriate SVG path for a node based on the current layer
+/// Get the appropriate SVG path for a node based on the current layer.
+///
+/// A layer picks its own icon by registering [`LayerClientInfo::with_node_icon`];
+/// this crate can't do it per-layer itself, because the layer crates depend on
+/// it rather than the other way around.
 fn get_layer_svg_path(
+    registry: &LayerRegistry,
     layer: &LayerName,
     instance_layer: &sandpolis_instance::InstanceLayer,
     instance_id: sandpolis_instance::InstanceId,
 ) -> &'static str {
-    match layer.name() {
-        #[cfg(feature = "filesystem")]
-        "Filesystem" => {
-            // Show OS-specific icons for filesystem layer
-            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
-                super::node::get_os_image(metadata.os_type)
-            } else {
-                "os/Unknown.svg"
-            }
-        }
+    if let Some(icon) = registry.get(layer).and_then(|info| info.node_icon.as_ref()) {
+        return icon(instance_id);
+    }
 
+    match layer.name() {
         "Network" => {
             // Distinguish between servers and agents
             // TODO: Query instance type from database
@@ -74,36 +81,6 @@ fn get_layer_svg_path(
             } else {
                 "network/server.svg"
             }
-        }
-
-        #[cfg(feature = "desktop")]
-        "Desktop" => {
-            // Show desktop environment icons
-            // TODO: Query desktop environment from database
-            // For now, default to generic desktop icon
-            "desktop/generic.svg"
-        }
-
-        #[cfg(feature = "inventory")]
-        "Inventory" => {
-            // Show hardware type icons (server, desktop, laptop, mobile)
-            // TODO: Query hardware type from database
-            if let Ok(metadata) = queries::query_instance_metadata(instance_id) {
-                // Use OS type as proxy for device type
-                match metadata.os_type {
-                    os_info::Type::Android => "inventory/mobile.svg",
-                    os_info::Type::Windows | os_info::Type::Macos => "inventory/desktop.svg",
-                    _ => "inventory/server.svg",
-                }
-            } else {
-                "inventory/server.svg"
-            }
-        }
-
-        #[cfg(feature = "shell")]
-        "Shell" => {
-            // Show terminal icon
-            "shell/terminal.svg"
         }
 
         _ => {
@@ -121,6 +98,7 @@ fn get_layer_svg_path(
 pub fn update_node_colors_for_layer(
     current_layer: Res<CurrentLayer>,
     network_layer: Res<sandpolis_instance::network::NetworkLayer>,
+    registry: Res<LayerRegistry>,
     mut node_query: Query<(&NodeEntity, &mut Sprite)>,
 ) {
     // Only update when layer changes
@@ -130,17 +108,31 @@ pub fn update_node_colors_for_layer(
 
     for (node_entity, mut sprite) in node_query.iter_mut() {
         // Get specific color tint
-        let color = get_layer_color_tint(&current_layer, &network_layer, node_entity.instance_id);
+        let color = get_layer_color_tint(
+            &registry,
+            &current_layer,
+            &network_layer,
+            node_entity.instance_id,
+        );
         sprite.color = color;
     }
 }
 
-/// Get color tint for a node based on layer and state
+/// Get color tint for a node based on layer and state.
+///
+/// A layer tints its own nodes by registering
+/// [`LayerClientInfo::with_node_tint`]; see [`get_layer_svg_path`] for why this
+/// can't live here.
 fn get_layer_color_tint(
+    registry: &LayerRegistry,
     layer: &LayerName,
     network_layer: &sandpolis_instance::network::NetworkLayer,
     instance_id: sandpolis_instance::InstanceId,
 ) -> Color {
+    if let Some(tint) = registry.get(layer).and_then(|info| info.node_tint.as_ref()) {
+        return tint(instance_id);
+    }
+
     match layer.name() {
         "Network" => {
             // Color based on connection latency
@@ -161,51 +153,25 @@ fn get_layer_color_tint(
             }
         }
 
-        #[cfg(feature = "filesystem")]
-        "Filesystem" => {
-            // Color based on disk usage
-            if let Ok(usage) = queries::query_filesystem_usage(instance_id) {
-                let percent = if usage.total > 0 {
-                    (usage.used as f64 / usage.total as f64) * 100.0
-                } else {
-                    0.0
-                };
-
-                if percent < 70.0 {
-                    Color::srgb(0.7, 1.0, 0.7) // Green
-                } else if percent < 90.0 {
-                    Color::srgb(1.0, 1.0, 0.7) // Yellow
-                } else {
-                    Color::srgb(1.0, 0.7, 0.7) // Red
-                }
-            } else {
-                Color::WHITE
-            }
-        }
-
-        #[cfg(feature = "inventory")]
-        "Inventory" => {
-            // Color based on memory usage
-            if let Ok(mem) = queries::query_memory_stats(instance_id) {
-                let percent = if mem.total > 0 {
-                    (mem.used as f64 / mem.total as f64) * 100.0
-                } else {
-                    0.0
-                };
-
-                if percent < 70.0 {
-                    Color::srgb(0.7, 1.0, 0.7) // Green
-                } else if percent < 90.0 {
-                    Color::srgb(1.0, 1.0, 0.7) // Yellow
-                } else {
-                    Color::srgb(1.0, 0.7, 0.7) // Red
-                }
-            } else {
-                Color::WHITE
-            }
-        }
-
         _ => Color::WHITE, // No tint for other layers
+    }
+}
+
+/// Map a 0-100 utilization percentage onto the shared green / yellow / red
+/// gradient that every layer's node tint uses.
+pub fn utilization_tint(used: u64, total: u64) -> Color {
+    let percent = if total > 0 {
+        (used as f64 / total as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    if percent < 70.0 {
+        Color::srgb(0.7, 1.0, 0.7) // Green
+    } else if percent < 90.0 {
+        Color::srgb(1.0, 1.0, 0.7) // Yellow
+    } else {
+        Color::srgb(1.0, 0.7, 0.7) // Red
     }
 }
 

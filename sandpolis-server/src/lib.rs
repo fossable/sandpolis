@@ -36,6 +36,8 @@ pub mod banner;
 pub mod block;
 #[cfg(feature = "client")]
 pub mod client;
+#[cfg(feature = "server")]
+pub mod liveness;
 pub mod location;
 pub mod login;
 #[cfg(feature = "server")]
@@ -330,6 +332,16 @@ impl ServerConnection {
                 None => request,
             };
 
+            // A polling agent announces its schedule, because otherwise the
+            // server cannot tell it apart from an agent that died: both look
+            // like a connection that closed and did not come back.
+            let request = match &self.strategy {
+                ServerConnectStrategy::Polling { schedule, timeout } => request
+                    .header("x-poll-schedule", schedule.to_string())
+                    .header("x-poll-timeout", timeout.as_secs().to_string()),
+                ServerConnectStrategy::Continuous => request,
+            };
+
             request.upgrade().send().await?
         };
         // The server reports its own instance id in the upgrade response so we can
@@ -369,6 +381,28 @@ impl ServerConnection {
             &handlers,
         );
         *self.inner.write().unwrap() = Some(connection.clone());
+
+        // Clean up after the socket however it ends: the row leaves the database
+        // (which is what wakes the `connections.listen` reconcilers) and the slot
+        // goes empty, so the reconnect loops here and in the client see there is
+        // work to do.
+        {
+            let cancel = connection.cancel.clone();
+            let row = connection.data.read()._id;
+            let connections = network.connections.clone();
+            let inner = self.inner.clone();
+            tokio::spawn(async move {
+                cancel.cancelled().await;
+                if let Err(e) = connections.remove_local(row) {
+                    debug!(error = %e, "Failed to remove a closed connection");
+                }
+                let mut slot = inner.write().unwrap();
+                if slot.as_ref().is_some_and(|c| c.cancel.is_cancelled()) {
+                    *slot = None;
+                }
+            });
+        }
+
         Ok(connection)
     }
 
@@ -378,17 +412,15 @@ impl ServerConnection {
     /// `ConnectionData` row) is cleaned up so repeated windows don't accumulate
     /// stale connections.
     #[cfg(any(feature = "client", feature = "agent", feature = "server"))]
-    pub fn close_websocket(&self, network: &NetworkLayer) {
+    pub fn close_websocket(&self) {
         let Some(connection) = self.inner.write().unwrap().take() else {
             return;
         };
 
         // Cancel the socket task explicitly. `Drop` would also do this once every
-        // Arc is gone, but a stream may still hold a reference.
+        // Arc is gone, but a stream may still hold a reference. The janitor
+        // spawned by `open_websocket` removes the row once this lands.
         connection.cancel.cancel();
-
-        let id = connection.data.read()._id;
-        let _ = network.connections.remove_local(id);
     }
 
     pub async fn get<Response>(&self, endpoint: &str, body: impl Serialize) -> Result<Response>
@@ -536,6 +568,7 @@ pub enum ServerStratum {
     /// for on-premise installations, where it keeps serving (and recording for)
     /// the instances around it even while the link to the GS is down.
     Local {
+        // TODO remove
         /// The global stratum server this one enrolls with and replicates from.
         global: ServerUrl,
     },
@@ -568,6 +601,7 @@ impl ServerStratum {
     }
 }
 
+// TODO GS or LS
 impl Display for ServerStratum {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -575,13 +609,4 @@ impl Display for ServerStratum {
             Self::Local { global } => write!(f, "local stratum (via {global})"),
         }
     }
-}
-
-/// A group is a collection of instances within the same realm.
-#[data]
-pub struct GroupData {
-    #[secondary_key(unique)]
-    pub name: String,
-
-    pub members: Vec<InstanceId>,
 }

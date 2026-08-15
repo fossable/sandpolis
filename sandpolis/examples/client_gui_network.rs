@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     let database = DatabaseLayer::new(db_config, &*MODELS, WriteAuthority::Full)?;
 
     // Create instance state
-    let realms = Realms::for_client(Vec::new(), database.clone())?;
+    let realms = Realms::for_endpoint(Vec::new(), database.clone())?;
     let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     // TODO: Populate test data with:

@@ -77,7 +77,7 @@ impl CaConfig {
     }
 
     /// Decode just the CA certificate into DER.
-    pub fn load_cert_der(&self, base_dir: Option<&Path>) -> Result<Vec<u8>> {
+    fn load_cert_der(&self, base_dir: Option<&Path>) -> Result<Vec<u8>> {
         self.cert.load_der(base_dir, CERTIFICATE_TAG)
     }
 }

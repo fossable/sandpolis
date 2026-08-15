@@ -308,6 +308,12 @@ async fn attempt_link(
     // Block until the link drops.
     link.cancel.cancelled().await;
 
+    // Nobody else can report this: an unreachable global stratum server writes
+    // no liveness row of its own, and this server is the one that noticed. The
+    // notification waits here until the link is back, since that is the only way
+    // out of an edge server during an outage.
+    crate::liveness::report_unreachable(link.data.read().remote_instance);
+
     Ok(established.elapsed())
 }
 

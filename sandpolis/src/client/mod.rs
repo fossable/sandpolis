@@ -13,9 +13,6 @@ pub mod tui;
 /// outright — so all it needs from the command line is the server to attach to.
 #[cfg(not(target_os = "android"))]
 pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process::ExitCode> {
-    use sandpolis_instance::database::{DatabaseLayer, WriteAuthority};
-    use sandpolis_instance::realm::Realms;
-
     let args = command.client_args().cloned().unwrap_or_default();
     let options = args.options();
 
@@ -28,27 +25,10 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
         .into_iter()
         .collect();
 
-    let database = DatabaseLayer::new(
-        options.database.clone(),
-        &crate::MODELS,
-        WriteAuthority::Full,
-    )?;
-
-    // The client knows the realm its certificate names, plus the default realm
-    // its own local data lives in.
-    let realms = Realms::for_client(endpoint_certs, database.clone())?;
-
-    let state = InstanceState::new(
-        &options,
-        database,
-        realms,
-        // A client runs no server of its own, so this is inert.
-        crate::ServerStratum::Global,
-    )
-    .await?;
+    let state = crate::endpoint_state(&options, endpoint_certs).await?;
 
     if let Some((cert, _)) = endpoint {
-        spawn_configured_server_connections(state.clone(), &[cert.url()?]);
+        spawn_server_connection(state.clone(), cert.url()?);
     }
 
     // The GUI establishes the sync websocket itself; a subcommand needs it
@@ -119,6 +99,19 @@ pub fn spawn_client_sync(state: InstanceState) {
                         // subscription is standing rather than opened by a
                         // panel.
                         sandpolis_client::notification::subscribe();
+
+                        // Which instances exist, and which of them are up. The
+                        // client holds no connection to an agent, so both are
+                        // things it can only learn by replication — and it needs
+                        // them for as long as there's a world view to draw.
+                        sandpolis_client::sync::subscribe(
+                            sandpolis_instance::instance_layer_model_id(),
+                            None,
+                        );
+                        sandpolis_client::sync::subscribe(
+                            sandpolis_instance::network::liveness::liveness_model_id(),
+                            None,
+                        );
                     }
                     Err(e) => {
                         tracing::info!(error = %e, "Failed to open sync websocket");
@@ -130,21 +123,12 @@ pub fn spawn_client_sync(state: InstanceState) {
     });
 }
 
-/// Connect to each server given on the command line with `--server`.
-///
-/// Clients read no config file, so this is how a standalone client is pointed at
-/// a server without going through the GUI login dialog. Either stratum works —
-/// the client addresses agents by id and the servers route to them.
-pub fn spawn_configured_server_connections(
-    state: InstanceState,
-    urls: &[sandpolis_server::ServerUrl],
-) {
-    for url in urls {
-        spawn_server_connection(state.clone(), url.clone());
-    }
-}
-
 /// Open (and retain) a connection to `url`, retrying until it succeeds.
+///
+/// Clients read no config file, so the `--server` file is how a standalone
+/// client is pointed at a server without going through the GUI login dialog.
+/// Either stratum works — the client addresses agents by id and the servers
+/// route to them.
 fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUrl) {
     let server = state.server.clone();
 

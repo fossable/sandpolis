@@ -8,6 +8,8 @@
 
 use super::{query_cpu_cores, query_memory, query_mountpoints, query_packages, query_users};
 use bevy::prelude::*;
+use sandpolis_client::gui::layer_visuals::utilization_tint;
+use sandpolis_client::gui::queries::query_instance_metadata;
 use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::gauge::{GaugeValue, bind_gauge, gauge};
 use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
@@ -264,6 +266,28 @@ fn format_bytes(bytes: u64) -> String {
     }
 }
 
+/// Hardware-type icon for a node while the Inventory layer is active.
+///
+/// OS type stands in for device class until the hardware inventory reports one
+/// directly.
+fn node_icon(id: InstanceId) -> &'static str {
+    match query_instance_metadata(id).map(|metadata| metadata.os_type) {
+        Ok(os_info::Type::Android) => "inventory/mobile.svg",
+        Ok(os_info::Type::Windows | os_info::Type::Macos) => "inventory/desktop.svg",
+        _ => "inventory/server.svg",
+    }
+}
+
+/// Tint a node by its memory pressure while the Inventory layer is active.
+fn node_tint(id: InstanceId) -> Color {
+    match query_memory(id) {
+        Ok(Some(memory)) => {
+            utilization_tint(memory.total.saturating_sub(memory.free), memory.total)
+        }
+        _ => Color::WHITE,
+    }
+}
+
 /// The inventory layer's client plugin.
 pub struct InventoryClientPlugin;
 
@@ -276,6 +300,8 @@ impl Plugin for InventoryClientPlugin {
             )
             .with_panel(InventoryPanel)
             .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+            .with_node_icon(node_icon)
+            .with_node_tint(node_tint)
             .with_services(),
         );
     }

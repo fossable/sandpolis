@@ -588,10 +588,7 @@ mod server {
             Ok(())
         }
 
-        /// The export is what gets written to `sandpolis.ron`, so it has to be a
-        /// pure function of the account set: the scan returns rows in random
-        /// primary-key order, which would otherwise reshuffle the file on every
-        /// write.
+        /// Sorting prevents reshuffling the file on every write.
         #[test]
         fn export_is_sorted() -> Result<()> {
             let realm = realm()?;
@@ -658,9 +655,7 @@ mod client {
                 Ok(p) => p,
                 Err(_) => return,
             };
-            let _ = tx
-                .send(StreamMessage::local(id, payload))
-                .await;
+            let _ = tx.send(StreamMessage::local(id, payload)).await;
             conn.close_stream(id);
         });
     }

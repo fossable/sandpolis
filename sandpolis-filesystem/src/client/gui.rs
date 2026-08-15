@@ -8,6 +8,7 @@
 //! actions.
 
 use bevy::prelude::*;
+use sandpolis_client::gui::layer_visuals::utilization_tint;
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::gauge::{GaugeValue, bind_gauge, gauge};
 use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
@@ -145,6 +146,17 @@ impl NodePanel for FilesystemPanel {
     }
 }
 
+/// Tint a node by its disk usage while the Filesystem layer is active.
+///
+/// The layer keeps its OS icon: what distinguishes a node here is how full it
+/// is, not what it runs.
+fn node_tint(id: InstanceId) -> Color {
+    match query_filesystem_usage(id) {
+        Ok(usage) => utilization_tint(usage.used, usage.total),
+        Err(_) => Color::WHITE,
+    }
+}
+
 /// The filesystem layer's client plugin.
 pub struct FilesystemClientPlugin;
 
@@ -156,7 +168,8 @@ impl Plugin for FilesystemClientPlugin {
                 "Browse and manage remote filesystems",
             )
             .with_panel(FilesystemPanel)
-            .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent]),
+            .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+            .with_node_tint(node_tint),
         );
     }
 }

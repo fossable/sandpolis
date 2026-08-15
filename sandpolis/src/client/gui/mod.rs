@@ -46,8 +46,8 @@ use sandpolis_client::gui::input::{
     toggle_help,
 };
 use sandpolis_client::gui::layer_picker::{
-    LayerPickerState, focus_layer_search, layer_picker_keys, manage_layer_picker,
-    rebuild_layer_rows, sync_layer_search,
+    LayerPickerState, focus_layer_search, handle_layer_picker_toggle, layer_picker_keys,
+    manage_layer_picker, rebuild_layer_rows, sync_layer_search,
 };
 use sandpolis_client::gui::layer_toolbar::{rebuild_layer_toolbar, update_toolbar_button_enabled};
 use sandpolis_client::gui::layer_ui::{
@@ -232,6 +232,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             sandpolis_client::gui::input::handle_touch_camera,
             #[cfg(target_os = "android")]
             sandpolis_client::gui::input::handle_touch_zoom,
+            handle_layer_picker_toggle,
             handle_node_picker_toggle,
             handle_theme_picker_toggle,
             handle_lifetime,

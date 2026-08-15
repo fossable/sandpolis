@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::IntoValues;
 use std::ops::{Add, RangeBounds};
 use std::sync::Arc;
+use std::sync::LazyLock;
 use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace, warn};
@@ -22,6 +23,29 @@ use tracing::{debug, trace, warn};
 pub mod browse;
 pub mod config;
 pub mod sync;
+
+/// Submitted automatically by the `#[data]` attribute macro for every model,
+/// alongside its [`browse::BrowseRegistration`].
+///
+/// Collecting these is what builds [`MODELS`], so a type is defined in the
+/// database if and only if it is browsable — the two can no longer drift.
+pub struct ModelRegistration(pub fn(&mut Models) -> Result<(), native_db::db_type::Error>);
+inventory::collect!(ModelRegistration);
+
+/// Every `#[data]` model linked into this binary.
+///
+/// Which models that is depends on which layer crates the build enabled, since
+/// a type can only submit its registration if its crate is linked.
+pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
+    let mut models = Models::new();
+    for registration in inventory::iter::<ModelRegistration> {
+        // `define` only fails on a duplicate native_model id, which is a
+        // collision between two `#[data]` types and not something a caller can
+        // recover from.
+        (registration.0)(&mut models).expect("every model id is unique");
+    }
+    models
+});
 
 /// Which authority a record falls under: the estate as a whole, or a single
 /// instance.

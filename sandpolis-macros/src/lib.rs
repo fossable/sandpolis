@@ -278,6 +278,12 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
         #krate::inventory::submit! {
             #krate::database::browse::BrowseRegistration(|r| #register)
         }
+
+        // ...and in the model registry, so the type is always defined in the
+        // database it's browsable from.
+        #krate::inventory::submit! {
+            #krate::database::ModelRegistration(|m| m.define::<#struct_ident>())
+        }
     };
 
     tokens.into()

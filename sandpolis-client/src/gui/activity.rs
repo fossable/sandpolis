@@ -221,40 +221,15 @@ pub fn cleanup_layer_activity_lines(
     activity_query: Query<(Entity, &ActivityLine)>,
     current_layer: Res<CurrentLayer>,
 ) {
-    // Only keep activity lines relevant to current layer
+    // Only keep activity lines relevant to current layer. A line belongs to the
+    // layer that raises it; if that layer isn't in this build nothing spawns the
+    // line in the first place, so there's nothing to gate on here.
     for (entity, activity) in activity_query.iter() {
         let should_keep = match activity.activity_type {
-            ActivityType::FileTransfer => {
-                #[cfg(feature = "filesystem")]
-                {
-                    **current_layer == "Filesystem"
-                }
-                #[cfg(not(feature = "filesystem"))]
-                {
-                    false
-                }
-            }
+            ActivityType::FileTransfer => **current_layer == "Filesystem",
             ActivityType::NetworkTraffic => **current_layer == "Network",
-            ActivityType::ShellCommand => {
-                #[cfg(feature = "shell")]
-                {
-                    **current_layer == "Shell"
-                }
-                #[cfg(not(feature = "shell"))]
-                {
-                    false
-                }
-            }
-            ActivityType::DesktopStream => {
-                #[cfg(feature = "desktop")]
-                {
-                    **current_layer == "Desktop"
-                }
-                #[cfg(not(feature = "desktop"))]
-                {
-                    false
-                }
-            }
+            ActivityType::ShellCommand => **current_layer == "Shell",
+            ActivityType::DesktopStream => **current_layer == "Desktop",
         };
 
         if !should_keep {

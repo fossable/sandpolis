@@ -37,12 +37,31 @@ impl InstanceConnection {
             handler.register_responders(&streams);
         }
 
+        // The socket task times its own keepalive, so it writes the connection
+        // row the same as the `InstanceConnection` it belongs to.
+        let mut latency = crate::network::LatencyProbe::new(data.clone());
+
         // Spawn task that owns the actual WebSocket
         tokio::spawn(async move {
             let (mut ws_tx, mut ws_rx) = socket.split();
 
+            let mut keepalive = tokio::time::interval(crate::network::KEEPALIVE_INTERVAL);
+            keepalive.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+            let mut last_frame = tokio::time::Instant::now();
+
             loop {
                 tokio::select! {
+                    // Prove the peer is still there. Tungstenite answers a ping
+                    // itself, so any frame arriving is enough to keep this from
+                    // firing — no cooperation needed from the other end.
+                    _ = keepalive.tick() => {
+                        if last_frame.elapsed() > crate::network::KEEPALIVE_DEADLINE {
+                            break;
+                        }
+                        if ws_tx.send(Message::Ping(latency.ping().into())).await.is_err() {
+                            break;
+                        }
+                    }
                     // Handle outgoing stream messages
                     Some(msg) = stream_rx.recv() => {
                         let data = serde_cbor::to_vec(&msg).unwrap();
@@ -53,12 +72,27 @@ impl InstanceConnection {
                     }
                     // Handle incoming messages from websocket
                     msg = ws_rx.next() => {
+                        // Any frame at all, including the pong answering our
+                        // ping, says the peer is alive.
+                        last_frame = tokio::time::Instant::now();
                         match msg {
                             Some(Ok(Message::Binary(data))) => {
                                 if let Ok(message) = serde_cbor::from_slice::<StreamMessage>(&data) {
                                     streams_clone.record_rx(message.stream_id, data.len() as u64);
                                     streams_clone.dispatch(message).await;
                                 }
+                            }
+                            // Tungstenite queues a pong itself, but only flushes
+                            // it on the next write; answering here guarantees
+                            // one, which is what the peer's deadline is waiting
+                            // for.
+                            Some(Ok(Message::Ping(payload))) => {
+                                if ws_tx.send(Message::Pong(payload)).await.is_err() {
+                                    break;
+                                }
+                            }
+                            Some(Ok(Message::Pong(payload))) => {
+                                latency.pong(&payload);
                             }
                             Some(Ok(_)) => {}
                             Some(Err(_)) | None => break,
@@ -70,6 +104,11 @@ impl InstanceConnection {
                     }
                 }
             }
+
+            // However the socket ended, the connection is over. Cancelling here
+            // is what tells the rest of the process: every `is_cancelled` check
+            // and every janitor waiting on this token keys off it.
+            cancel_clone.cancel();
         });
 
         Arc::new(Self {
@@ -78,6 +117,7 @@ impl InstanceConnection {
             cluster_id,
             cancel,
             streams,
+            poll: Default::default(),
         })
     }
 }

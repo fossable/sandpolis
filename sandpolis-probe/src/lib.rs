@@ -6,6 +6,7 @@
 
 use config::{DeviceConfig, ProbeLayerConfig};
 use sandpolis_instance::InstanceId;
+use sandpolis_instance::config::ConfigPersistHook;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, LazyLock, OnceLock, RwLock};
 
@@ -24,10 +25,10 @@ pub mod ups;
 pub mod vnc;
 pub mod wol;
 
-#[cfg(feature = "client")]
-pub mod client;
 #[cfg(all(feature = "client", not(target_os = "android")))]
 pub mod cli;
+#[cfg(feature = "client")]
+pub mod client;
 
 /// Devices registered on this instance (populated from config at startup, kept
 /// in sync over the management stream).
@@ -38,12 +39,7 @@ pub mod cli;
 pub static REGISTERED_DEVICES: LazyLock<Arc<RwLock<Vec<RegisteredDevice>>>> =
     LazyLock::new(Default::default);
 
-/// Hook installed by the top-level `sandpolis` crate (server only) to persist the
-/// device list back to `sandpolis.ron`. The probe crate cannot reference the main
-/// crate's `Configuration` directly, so persistence is injected here.
-static DEVICE_PERSIST: OnceLock<
-    Box<dyn Fn(&[RegisteredDevice]) -> anyhow::Result<()> + Send + Sync>,
-> = OnceLock::new();
+static DEVICE_PERSIST: ConfigPersistHook<RegisteredDevice> = ConfigPersistHook::new("probe");
 
 /// This instance's own id, captured when [`ProbeLayer`] is constructed. Probes are
 /// accessed only from servers, so the server's management responder stamps this as
@@ -61,15 +57,12 @@ pub fn gateway() -> Option<InstanceId> {
 pub fn set_device_persist(
     f: impl Fn(&[RegisteredDevice]) -> anyhow::Result<()> + Send + Sync + 'static,
 ) {
-    let _ = DEVICE_PERSIST.set(Box::new(f));
+    DEVICE_PERSIST.set(f);
 }
 
 /// Persist the current device list if a hook is installed.
 pub fn persist_devices(devices: &[RegisteredDevice]) {
-    if let Some(f) = DEVICE_PERSIST.get()
-        && let Err(e) = f(devices) {
-            tracing::warn!(error = %e, "Failed to persist probe devices");
-        }
+    DEVICE_PERSIST.persist(devices);
 }
 
 /// Rebuild the on-disk config from the current device list.

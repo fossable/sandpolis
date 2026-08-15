@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
         WriteAuthority::Full,
     )?;
 
-    let realms = Realms::for_client(Vec::new(), database.clone())?;
+    let realms = Realms::for_endpoint(Vec::new(), database.clone())?;
     let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     // The client watches the database from `spawn_client_sync`, which the GUI

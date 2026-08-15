@@ -4,7 +4,7 @@
 //! server's [`DeviceMgmtResponder`] answers with the current device list and then
 //! streams the full list again whenever it changes. `Register`/`Delete` requests
 //! (sent on short-lived streams) mutate the server's [`REGISTERED_DEVICES`],
-//! persist them to `sandpolis.ron`, and broadcast the new list to all subscribers.
+//! persist them to the realm config, and broadcast the new list to all subscribers.
 
 use crate::RegisteredDevice;
 use crate::config::DeviceConfig;
@@ -195,9 +195,7 @@ mod client {
                 Ok(p) => p,
                 Err(_) => return,
             };
-            let _ = tx
-                .send(StreamMessage::local(id, payload))
-                .await;
+            let _ = tx.send(StreamMessage::local(id, payload)).await;
         });
     }
 
@@ -209,9 +207,7 @@ mod client {
                 Ok(p) => p,
                 Err(_) => return,
             };
-            let _ = tx
-                .send(StreamMessage::local(id, payload))
-                .await;
+            let _ = tx.send(StreamMessage::local(id, payload)).await;
             conn.close_stream(id);
         });
     }

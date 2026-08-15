@@ -1,9 +1,8 @@
 use anyhow::Result;
-use native_db::Models;
 use sandpolis_instance::LayerVersion;
 use sandpolis_instance::database::DatabaseLayer;
 use sandpolis_instance::realm::Realms;
-use std::{collections::HashMap, sync::LazyLock};
+use std::collections::HashMap;
 
 #[cfg(feature = "agent")]
 pub mod agent;
@@ -147,6 +146,25 @@ pub fn load_server_file(
     ))
 }
 
+/// Bring up the state an endpoint instance — an agent or a client — runs on.
+///
+/// The two differ only in how they came by their certificate. Past that they
+/// agree: each owns its database outright (the server it attaches to replicates
+/// *from* it), each knows exactly the realms its certificate names, and neither
+/// runs a server of its own, so the stratum it reports is inert.
+#[cfg(not(target_os = "android"))]
+pub async fn endpoint_state(
+    options: &RuntimeOptions,
+    endpoint_certs: Vec<sandpolis_instance::realm::RealmCert>,
+) -> Result<InstanceState> {
+    use sandpolis_instance::database::WriteAuthority;
+
+    let database = DatabaseLayer::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
+    let realms = Realms::for_endpoint(endpoint_certs, database.clone())?;
+
+    InstanceState::new(options, database, realms, ServerStratum::Global).await
+}
+
 /// Which stratum a server runs in.
 ///
 /// A `.server` file means this server attaches to the one it names, which puts
@@ -154,7 +172,22 @@ pub fn load_server_file(
 /// stratum server.
 #[cfg(not(target_os = "android"))]
 pub fn stratum(server_file: Option<&std::path::Path>) -> Result<ServerStratum> {
-    Ok(match load_server_file(server_file)? {
+    stratum_of(load_server_file(server_file)?.as_ref())
+}
+
+/// [`stratum`], for a caller that already loaded the `.server` file. The server
+/// itself needs the certificate for more than this, so it reads the file once
+/// and asks here rather than going back to disk.
+#[cfg(not(target_os = "android"))]
+pub fn stratum_of(
+    endpoint: Option<
+        &(
+            sandpolis_instance::realm::RealmCert,
+            Option<sandpolis_instance::realm::config::PollConfig>,
+        ),
+    >,
+) -> Result<ServerStratum> {
+    Ok(match endpoint {
         Some((cert, _)) => ServerStratum::Local {
             global: cert.url()?,
         },
@@ -317,135 +350,20 @@ pub fn layers() -> HashMap<sandpolis_instance::LayerName, LayerVersion> {
     HashMap::from([])
 }
 
-// TODO dynamic loading
-pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
-    let mut m = Models::new();
+/// Every model linked into this build, collected from the `#[data]` macro's
+/// registrations. Re-exported here because this is where callers expect it.
+pub use sandpolis_instance::database::MODELS;
 
-    // Network layer
-    {
-        m.define::<sandpolis_instance::network::NetworkLayerData>()
-            .unwrap();
-        m.define::<sandpolis_instance::network::ConnectionData>()
-            .unwrap();
-        // m.define::<sandpolis_instance::network::ServerConnectionData>()
-        //     .unwrap();
+#[cfg(test)]
+mod test_models {
+    /// Building the registry is what proves the estate's models agree: every
+    /// `#[data]` type registers itself, and `define` rejects a duplicate
+    /// native_model id, so a collision between two layers fails here rather
+    /// than when an instance starts.
+    ///
+    /// This binary links every layer, which is what makes the check meaningful.
+    #[test]
+    fn models_have_no_id_collisions() {
+        let _ = &*super::MODELS;
     }
-
-    // Realm layer
-    {
-        m.define::<sandpolis_instance::realm::RealmData>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmCert>().unwrap();
-    }
-
-    // Instance layer
-    {
-        m.define::<sandpolis_instance::InstanceLayerData>().unwrap();
-        m.define::<sandpolis_instance::domain::DomainData>()
-            .unwrap();
-        m.define::<sandpolis_instance::service::ServiceData>()
-            .unwrap();
-        m.define::<sandpolis_instance::notification::NotificationData>()
-            .unwrap();
-        // How far this client has surfaced notifications. Client-local, so it
-        // is neither defined nor replicated anywhere else.
-        #[cfg(feature = "client")]
-        m.define::<sandpolis_client::notification::NotificationWatermarkData>()
-            .unwrap();
-    }
-
-    // User layer
-    {
-        m.define::<sandpolis_server::user::UserLayerData>().unwrap();
-        m.define::<sandpolis_server::user::UserData>().unwrap();
-        #[cfg(feature = "server")]
-        m.define::<sandpolis_server::user::server::PasswordData>()
-            .unwrap();
-        #[cfg(feature = "server")]
-        m.define::<sandpolis_server::user::server::ServerJwtSecret>()
-            .unwrap();
-    }
-
-    // Server layer
-    {
-        m.define::<sandpolis_server::ServerLayerData>().unwrap();
-        #[cfg(feature = "server")]
-        m.define::<sandpolis_server::banner::ServerBannerData>()
-            .unwrap();
-        #[cfg(feature = "server")]
-        m.define::<sandpolis_server::ownership::OwnershipData>()
-            .unwrap();
-        #[cfg(feature = "client")]
-        m.define::<sandpolis_server::client::SavedServerData>()
-            .unwrap();
-    }
-
-    // Shell layer
-    #[cfg(feature = "shell")]
-    {
-        m.define::<sandpolis_shell::ShellSessionData>().unwrap();
-    }
-
-    // Desktop layer
-    #[cfg(feature = "desktop")]
-    {
-        m.define::<sandpolis_desktop::DesktopData>().unwrap();
-    }
-
-    // Account layer
-    #[cfg(feature = "account")]
-    {
-        m.define::<sandpolis_account::AccountLayerData>().unwrap();
-        m.define::<sandpolis_account::AccountData>().unwrap();
-        m.define::<sandpolis_account::AccountLinkData>().unwrap();
-        m.define::<sandpolis_account::favicon::FaviconData>()
-            .unwrap();
-    }
-
-    // Health layer
-    #[cfg(feature = "health")]
-    {
-        m.define::<sandpolis_health::HealthLayerData>().unwrap();
-        m.define::<sandpolis_health::systemd::SystemdUnitData>()
-            .unwrap();
-    }
-
-    // Inventory layer
-    #[cfg(feature = "inventory")]
-    {
-        m.define::<sandpolis_inventory::InventoryLayerData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::display::DisplayData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::firmware::FirmwareData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::memory::MemoryDeviceData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::battery::BatteryData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::cpu::CpuData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::hardware::cpu::CpuCoreData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::OsData>().unwrap();
-        m.define::<sandpolis_inventory::os::user::UserData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::group::GroupData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::mountpoint::MountpointData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::process::ProcessData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::memory::MemoryData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::network::NetworkData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::os::KernelModuleData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::package::PackageManagerData>()
-            .unwrap();
-        m.define::<sandpolis_inventory::package::PackageData>()
-            .unwrap();
-    }
-
-    m
-});
+}

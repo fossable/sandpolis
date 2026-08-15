@@ -72,20 +72,33 @@ pub async fn create_user(
 
 #[axum_macros::debug_handler]
 pub async fn get_users(
-    _state: State<UserLayer>,
-    _claims: Claims,
+    state: State<UserLayer>,
+    claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
-    if let Some(_username) = request.username {
-        // match state.users.get_document(&*username) {
-        //     Ok(Some(user)) => return
-        // Ok(Json(GetUsersResponse::Ok(vec![user.data]))),     Ok(None)
-        // => return Ok(Json(GetUsersResponse::Ok(Vec::new()))),
-        //     Err(_) => todo!(),
-        // }
-    }
+    let users: Vec<UserData> = state
+        .users
+        .iter()
+        .map(|user| user.read().clone())
+        // A regular user only ever sees their own account; listing the estate's
+        // users is an admin capability.
+        .filter(|user| claims.admin || user.username == claims.sub)
+        .filter(|user| {
+            request
+                .username
+                .as_ref()
+                .is_none_or(|prefix| user.username.starts_with(prefix.as_str()))
+        })
+        .filter(|user| {
+            request.email.as_ref().is_none_or(|prefix| {
+                user.email
+                    .as_ref()
+                    .is_some_and(|email| email.starts_with(prefix))
+            })
+        })
+        .collect();
 
-    todo!()
+    Ok(Json(GetUsersResponse::Ok(users)))
 }
 
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
@@ -399,6 +412,27 @@ pub async fn connect(
         .unwrap_or("")
         .to_string();
 
+    // A polling peer says how often it means to come back, which is the only
+    // way this server can tell "away until the next window" from "gone".
+    let poll = headers
+        .get("x-poll-schedule")
+        .and_then(|v| v.to_str().ok())
+        .filter(|schedule| {
+            !schedule.is_empty()
+                && schedule.len()
+                    <= sandpolis_instance::network::liveness::MAX_SCHEDULE_LEN
+        })
+        .map(|schedule| sandpolis_instance::network::liveness::PollAnnouncement {
+            schedule: schedule.to_string(),
+            timeout: std::time::Duration::from_secs(
+                headers
+                    .get("x-poll-timeout")
+                    .and_then(|v| v.to_str().ok())
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0),
+            ),
+        });
+
     // A peer identifying as a server, by its instance id or its stratum header.
     // The header is what a *server* build sends; the id bit is the fallback.
     let peer_is_server =
@@ -450,6 +484,10 @@ pub async fn connect(
 
         let connection = InstanceConnection::websocket(socket, data, realm, cluster_id, &handlers);
 
+        if let Some(poll) = poll {
+            let _ = connection.poll.set(poll);
+        }
+
         // Let this connection relay streams to other connections (client -> agent).
         connection
             .streams
@@ -486,7 +524,7 @@ pub async fn connect(
             }
         }
 
-        network.inbound.write().unwrap().push(connection);
+        network.track_inbound(connection);
     });
 
     // Report our own instance id back to the dialer (mirrors the `x-instance-id`

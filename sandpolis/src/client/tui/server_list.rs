@@ -471,7 +471,9 @@ impl EventHandler for ServerListWidget {
                     }
                     _ => {}
                 },
-                _ => todo!(),
+                // Neither mode owns any keys of its own yet, so anything
+                // arriving here falls through to whoever owns this widget.
+                ServerListWidgetMode::Connected | ServerListWidgetMode::Selecting => {}
             }
         }
         Some(event)

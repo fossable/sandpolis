@@ -16,7 +16,7 @@ use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use stream::{StreamId, StreamMessage};
 pub use stream::{StreamRegistry, StreamRequester, StreamResponder};
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
+use tracing::{debug, trace};
 
 /// Trait for layers to register their stream responders on new connections.
 pub trait RegisterResponders: Send + Sync + 'static {
@@ -39,6 +39,7 @@ pub fn collected_responders() -> impl Iterator<Item = &'static dyn RegisterRespo
 
 #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
 pub mod client;
+pub mod liveness;
 pub mod messages;
 pub mod ping;
 pub mod reachability;
@@ -65,10 +66,43 @@ pub struct NetworkLayer {
     /// All connections tracked in the database
     pub connections: ResidentVec<ConnectionData>,
 
+    /// Who is reachable, as reported by the servers that can see them. Written
+    /// by servers, read by anyone — a client's whole picture of which agents are
+    /// up comes from here, since it holds no connection to any of them.
+    pub liveness: ResidentVec<liveness::LivenessData>,
+
     pub database: DatabaseLayer,
 }
 
+/// How often each side of a websocket sends a keepalive ping.
+pub(crate) const KEEPALIVE_INTERVAL: Duration = Duration::from_secs(30);
+
+/// How long a websocket may go without receiving anything before it's declared
+/// dead. A peer that vanishes without closing its socket (a partition, a killed
+/// machine) is otherwise indistinguishable from an idle one, and that is exactly
+/// the case where going offline needs to be noticed.
+///
+/// Generous relative to the ping interval: a missed pong is not yet a fault.
+pub(crate) const KEEPALIVE_DEADLINE: Duration = Duration::from_secs(90);
+
 impl NetworkLayer {
+    /// The inbound connections that are still live, i.e. whose socket hasn't
+    /// been cancelled.
+    ///
+    /// Callers want the set of instances attached to this server right now, but
+    /// they each want a different slice of it, so this hands back the
+    /// connections and lets them map. Snapshotted rather than borrowed so the
+    /// lock isn't held across whatever the caller does next.
+    pub fn live_inbound(&self) -> Vec<Arc<InstanceConnection>> {
+        self.inbound
+            .read()
+            .unwrap()
+            .iter()
+            .filter(|c| !c.cancel.is_cancelled())
+            .cloned()
+            .collect()
+    }
+
     pub async fn new(database: DatabaseLayer) -> Result<Self> {
         debug!("Initializing network layer");
 
@@ -79,10 +113,45 @@ impl NetworkLayer {
             inbound,
             data: realm.resident(())?,
             connections: realm.resident_vec(())?,
+            liveness: realm.resident_vec(())?,
             database,
         };
 
         Ok(network)
+    }
+
+    /// Track an accepted connection and clean up after it.
+    ///
+    /// When the socket task ends — the peer closed, the transport errored, or
+    /// the keepalive deadline passed — the connection leaves `inbound` and its
+    /// [`ConnectionData`] row leaves the database. The removal is what fires
+    /// `connections.listen`, so everything watching for a disconnect (ownership
+    /// reconcilers, liveness) wakes without polling.
+    pub fn track_inbound(&self, connection: Arc<InstanceConnection>) {
+        let cancel = connection.cancel.clone();
+        let row = connection.data.read()._id;
+        let weak = Arc::downgrade(&connection);
+
+        self.inbound.write().unwrap().push(connection);
+
+        let inbound = self.inbound.clone();
+        let connections = self.connections.clone();
+        tokio::spawn(async move {
+            cancel.cancelled().await;
+
+            // Dropping the last `Arc` is itself one of the ways we get here, so
+            // a failed upgrade just means `inbound` let go first.
+            if let Some(connection) = weak.upgrade() {
+                inbound
+                    .write()
+                    .unwrap()
+                    .retain(|c| !Arc::ptr_eq(c, &connection));
+            }
+
+            if let Err(e) = connections.remove_local(row) {
+                debug!(error = %e, "Failed to remove a closed connection");
+            }
+        });
     }
 }
 
@@ -111,6 +180,12 @@ pub struct ConnectionData {
     /// "Recent" write throughput in bytes/second
     pub write_throughput: u64,
 
+    /// Round trip time to the peer in microseconds, measured by timing the
+    /// pong that answers the keepalive ping. `None` until the first pong
+    /// arrives, so a connection younger than [`KEEPALIVE_INTERVAL`] has no
+    /// measurement yet.
+    pub latency: Option<u32>,
+
     pub local_socket: Option<SocketAddr>,
     pub remote_socket: Option<SocketAddr>,
 
@@ -119,6 +194,60 @@ pub struct ConnectionData {
 
     #[serde(with = "ts_seconds_option")]
     pub disconnected: Option<DateTime<Utc>>,
+}
+
+/// Times the keepalive ping/pong exchange so a connection can report how far
+/// away its peer is.
+///
+/// The socket already pings every [`KEEPALIVE_INTERVAL`] to prove the peer is
+/// there, so the round trip costs nothing extra to measure. Only one ping is
+/// ever outstanding, but the pong still has to carry the nonce back: a peer is
+/// allowed to send an unsolicited pong as a heartbeat, and timing one of those
+/// against our own ping would report a round trip that never happened.
+pub(crate) struct LatencyProbe {
+    data: Resident<ConnectionData>,
+    nonce: u64,
+    outstanding: Option<(u64, tokio::time::Instant)>,
+}
+
+impl LatencyProbe {
+    pub(crate) fn new(data: Resident<ConnectionData>) -> Self {
+        Self {
+            data,
+            nonce: 0,
+            outstanding: None,
+        }
+    }
+
+    /// Payload for the next keepalive ping, which starts the clock. A ping that
+    /// was never answered is simply forgotten here.
+    pub(crate) fn ping(&mut self) -> Vec<u8> {
+        self.nonce = self.nonce.wrapping_add(1);
+        self.outstanding = Some((self.nonce, tokio::time::Instant::now()));
+        self.nonce.to_le_bytes().to_vec()
+    }
+
+    /// Record the round trip if this pong answers the outstanding ping.
+    pub(crate) fn pong(&mut self, payload: &[u8]) {
+        let Some((nonce, sent)) = self.outstanding else {
+            return;
+        };
+        if payload != nonce.to_le_bytes() {
+            return;
+        }
+        self.outstanding = None;
+
+        let latency = sent.elapsed().as_micros().min(u32::MAX as u128) as u32;
+
+        // Connection rows are local bookkeeping that never replicate, so this
+        // is writable even on a read-only replica.
+        if let Err(e) = self.data.update_local(|data| {
+            data.latency = Some(latency);
+            Ok(())
+        }) {
+            trace!(error = %e, "Failed to record connection latency");
+        }
+    }
 }
 
 /// Connection to another instance that's suitable for running streams. The transport
@@ -133,6 +262,11 @@ pub struct InstanceConnection {
     pub cluster_id: ClusterId,
     pub cancel: CancellationToken,
     pub streams: Arc<StreamRegistry>,
+
+    /// The check-in schedule a polling peer announced when it connected, set by
+    /// whichever side accepted the socket. In memory only: it describes this
+    /// socket, and a peer that reconnects announces it again.
+    pub poll: std::sync::OnceLock<liveness::PollAnnouncement>,
 }
 
 impl Drop for InstanceConnection {

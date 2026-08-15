@@ -7,7 +7,7 @@
 
 use super::node_panel::NodePanel;
 use bevy::prelude::*;
-use sandpolis_instance::{InstanceType, LayerName};
+use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use std::sync::Arc;
 
 /// Callback run when a layer toolbar button is clicked. It receives `Commands`
@@ -19,6 +19,15 @@ pub type ToolbarCallback = Arc<dyn Fn(&mut Commands) + Send + Sync>;
 /// `World` (e.g. a layer-specific selection resource) so the registry needs no
 /// knowledge of layer-specific types. Evaluated every frame.
 pub type ToolbarEnabledFn = Arc<dyn Fn(&World) -> bool + Send + Sync>;
+
+/// Picks the node icon for an instance while a layer is active. Returns a path
+/// under the SVG asset root (e.g. `"shell/terminal.svg"`).
+pub type NodeIconFn = Arc<dyn Fn(InstanceId) -> &'static str + Send + Sync>;
+
+/// Tints a node's sprite for an instance while a layer is active — the layer's
+/// chance to say something about the node's state at a glance (disk usage,
+/// memory pressure) without owning a system of its own.
+pub type NodeTintFn = Arc<dyn Fn(InstanceId) -> Color + Send + Sync>;
 
 /// A single button shown in the layer toolbar while a layer is active.
 #[derive(Clone)]
@@ -56,6 +65,10 @@ pub struct LayerClientInfo {
     pub panel: Option<Arc<dyn NodePanel>>,
     /// Buttons shown in the layer toolbar while this layer is active.
     pub toolbar_actions: Vec<ToolbarAction>,
+    /// Node icon override. `None` leaves nodes on their OS icon.
+    pub node_icon: Option<NodeIconFn>,
+    /// Node sprite tint. `None` leaves nodes untinted.
+    pub node_tint: Option<NodeTintFn>,
 }
 
 impl LayerClientInfo {
@@ -70,7 +83,27 @@ impl LayerClientInfo {
             probe_protocols: &[],
             panel: None,
             toolbar_actions: Vec::new(),
+            node_icon: None,
+            node_tint: None,
         }
+    }
+
+    /// Choose the node icon shown while this layer is active.
+    pub fn with_node_icon(
+        mut self,
+        icon: impl Fn(InstanceId) -> &'static str + Send + Sync + 'static,
+    ) -> Self {
+        self.node_icon = Some(Arc::new(icon));
+        self
+    }
+
+    /// Tint node sprites while this layer is active.
+    pub fn with_node_tint(
+        mut self,
+        tint: impl Fn(InstanceId) -> Color + Send + Sync + 'static,
+    ) -> Self {
+        self.node_tint = Some(Arc::new(tint));
+        self
     }
 
     /// Attach a node panel.

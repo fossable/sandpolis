@@ -1,37 +1,28 @@
-//! GUI components for the Probe layer.
-//!
-//! One graph node per registered *device*; its node panel shows a tab per
-//! protocol the device exposes (RTSP renders live video, Wake-on-LAN offers a
-//! Wake button, etc.). Devices are added/deleted over the management stream, which
-//! the server persists to `sandpolis.ron` and broadcasts back to all clients.
-
 use bevy::asset::RenderAssetUsages;
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::image::Image;
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
+use bevy::text::EditableText;
 use bevy_rapier2d::dynamics::{Damping, ExternalForce, RigidBody, Velocity};
 use bevy_rapier2d::geometry::{Collider, Restitution};
 use bevy_svg::prelude::{Origin, Svg2d};
+use sandpolis_client::gui::node::{NeedsScaling, NodeEntity, NodeHitbox, NodeIdentity, SubNode};
 use sandpolis_client::gui::ui::Activate;
 use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::layer::{LayerClientInfo, LayerRegistry, RegisterLayerClient};
+use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx, PanelTarget};
 use sandpolis_client::gui::ui::panel::modal_scrim;
-use bevy::text::EditableText;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder, ThemedText};
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, row, text};
-use sandpolis_client::gui::node::{
-    NeedsScaling, NodeEntity, NodeHitbox, NodeIdentity, SubNode,
-};
-use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx, PanelTarget};
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use sandpolis_server::ServerUrl;
-use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, UnboundedSender, channel};
 
 use crate::config::{DeviceConfig, RtspProbeConfig, WolProbeConfig};
@@ -101,8 +92,7 @@ pub fn spawn_probe_node(
 
     // Position device nodes in an orbit around the parent, using the device id for
     // consistent golden-angle placement.
-    let angle =
-        (device.id as f32 * 0.618_034 * std::f32::consts::TAU) % std::f32::consts::TAU;
+    let angle = (device.id as f32 * 0.618_034 * std::f32::consts::TAU) % std::f32::consts::TAU;
     let orbit_radius = 120.0;
     let x = parent_position.x + orbit_radius * angle.cos();
     let y = parent_position.y + orbit_radius * angle.sin();
@@ -138,7 +128,12 @@ pub fn spawn_probe_node(
 
     // Deliberately not tagged with NodeSvg so the layer visual systems don't
     // replace the icon or rescale it to regular node size.
-    spawn_probe_icon(commands, asset_server, node_entity, ProbeNodeIcon::Svg(icon));
+    spawn_probe_icon(
+        commands,
+        asset_server,
+        node_entity,
+        ProbeNodeIcon::Svg(icon),
+    );
 }
 
 /// Attach an icon child of the given kind to a probe node. The SVG variant keeps
@@ -235,10 +230,11 @@ pub fn update_probe_nodes(
 
     for device in &all_devices {
         if !existing_ids.contains(&device.id)
-            && let Some(&parent_pos) = gateway_positions.get(&device.gateway) {
-                let visible = device_visible(&registry, &current_layer, &device.device);
-                spawn_probe_node(&asset_server, &mut commands, device, parent_pos, visible);
-            }
+            && let Some(&parent_pos) = gateway_positions.get(&device.gateway)
+        {
+            let visible = device_visible(&registry, &current_layer, &device.device);
+            spawn_probe_node(&asset_server, &mut commands, device, parent_pos, visible);
+        }
     }
 
     let db_ids: std::collections::HashSet<u64> = all_devices.iter().map(|d| d.id).collect();
@@ -761,7 +757,10 @@ fn build_tab_content(
         other => {
             content.spawn(muted(
                 theme,
-                format!("{} integration is not implemented yet.", other.display_name()),
+                format!(
+                    "{} integration is not implemented yet.",
+                    other.display_name()
+                ),
                 theme.metrics.font_sm,
             ));
         }
@@ -1070,12 +1069,15 @@ fn update_rtsp_status(
             .or_else(|| streams.last_status.get(&status.device_id).cloned());
 
         let (value, role) = match state {
-            Some(StreamStatus::Pending) => ("Waiting for server connection…".to_string(), Role::TextMuted),
+            Some(StreamStatus::Pending) => (
+                "Waiting for server connection…".to_string(),
+                Role::TextMuted,
+            ),
             Some(StreamStatus::Connecting) => ("Connecting…".to_string(), Role::TextMuted),
-            Some(StreamStatus::Streaming(w, h)) => {
-                (format!("Streaming {w}×{h}"), Role::TextMuted)
+            Some(StreamStatus::Streaming(w, h)) => (format!("Streaming {w}×{h}"), Role::TextMuted),
+            Some(StreamStatus::Ended(reason)) => {
+                (format!("Stream ended: {reason}"), Role::TextMuted)
             }
-            Some(StreamStatus::Ended(reason)) => (format!("Stream ended: {reason}"), Role::TextMuted),
             Some(StreamStatus::Failed(reason)) => (reason, Role::Error),
             None => ("Stream inactive".to_string(), Role::TextMuted),
         };
@@ -1286,7 +1288,8 @@ pub fn manage_register_probe(
                         .with_children(|row| {
                             row.spawn(button(&theme, "Register"))
                                 .observe(on_register_submit);
-                            row.spawn(button(&theme, "Cancel")).observe(on_register_cancel);
+                            row.spawn(button(&theme, "Cancel"))
+                                .observe(on_register_cancel);
                         });
                     });
             });
@@ -1486,9 +1489,8 @@ impl Plugin for ProbeClientPlugin {
         app.add_systems(
             PostUpdate,
             (
-                update_probe_node_visibility.after(
-                    sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer,
-                ),
+                update_probe_node_visibility
+                    .after(sandpolis_client::gui::layer_visuals::update_node_visibility_for_layer),
                 super::link::render_probe_links,
             ),
         );

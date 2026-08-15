@@ -6,7 +6,6 @@
 use crate::favicon::FaviconData;
 use crate::{AccountData, AccountLinkData};
 use native_model::Model;
-use sandpolis_instance::realm::RealmName;
 
 pub mod gui;
 
@@ -28,44 +27,29 @@ pub fn favicon_model_id() -> u32 {
 /// Subscribe to live account updates. Accounts aren't scoped to an instance, so
 /// the subscription covers every account the server knows about.
 pub fn subscribe() {
-    sandpolis_client::sync::subscribe(account_model_id(), None);
-    sandpolis_client::sync::subscribe(link_model_id(), None);
-    sandpolis_client::sync::subscribe(favicon_model_id(), None);
+    sandpolis_client::sync::subscribe_all(account_model_ids(), None);
 }
 
 /// Drop the subscription created by [`subscribe`].
 pub fn unsubscribe() {
-    sandpolis_client::sync::unsubscribe(account_model_id(), None);
-    sandpolis_client::sync::unsubscribe(link_model_id(), None);
-    sandpolis_client::sync::unsubscribe(favicon_model_id(), None);
+    sandpolis_client::sync::unsubscribe_all(account_model_ids(), None);
+}
+
+fn account_model_ids() -> [u32; 3] {
+    [account_model_id(), link_model_id(), favicon_model_id()]
 }
 
 /// Every account in the client's local database.
 pub fn query_accounts() -> anyhow::Result<Vec<AccountData>> {
-    scan()
+    sandpolis_client::sync::scan_all()
 }
 
 /// Every account link in the client's local database.
 pub fn query_links() -> anyhow::Result<Vec<AccountLinkData>> {
-    scan()
+    sandpolis_client::sync::scan_all()
 }
 
 /// Every domain favicon in the client's local database.
 pub fn query_favicons() -> anyhow::Result<Vec<FaviconData>> {
-    scan()
-}
-
-fn scan<T>() -> anyhow::Result<Vec<T>>
-where
-    T: sandpolis_instance::database::Data + Model + 'static,
-{
-    let Some(database) = sandpolis_client::sync::client_database() else {
-        return Ok(vec![]);
-    };
-    let realm = database.realm(RealmName::default())?;
-    let r = realm.r_transaction()?;
-    Ok(r.scan()
-        .primary::<T>()?
-        .all()?
-        .collect::<std::result::Result<Vec<_>, _>>()?)
+    sandpolis_client::sync::scan_all()
 }

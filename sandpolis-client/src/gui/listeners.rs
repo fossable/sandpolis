@@ -65,6 +65,18 @@ pub async fn setup_all_listeners(
         }
     });
 
+    // Identity rows arrive by replication after login and are what put agents on
+    // the graph — the client holds no connection to any of them, so nothing else
+    // would ever announce one.
+    let tx_instances = tx.clone();
+    instance.instances().listen(move |event| {
+        if let ResidentVecEvent::Added(instance) = event {
+            let instance_id = instance.read()._instance_id;
+            let _ = tx_instances.send(DatabaseUpdate::InstanceAdded(instance_id));
+            tracing::info!("Instance known: {}", instance_id);
+        }
+    });
+
     // Domains arrive by replication after login, so terrain membership has to be
     // resolved again whenever the set changes.
     let tx_domains = tx.clone();

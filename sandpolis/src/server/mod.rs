@@ -26,12 +26,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     // to another one: it names the upstream, carries the realm CA, and holds
     // this server's own certificate.
     let endpoint = crate::load_server_file(args.server.as_deref())?;
-    let stratum = match endpoint.as_ref() {
-        Some((cert, _)) => crate::ServerStratum::Local {
-            global: cert.url()?,
-        },
-        None => crate::ServerStratum::Global,
-    };
+    let stratum = crate::stratum_of(endpoint.as_ref())?;
 
     // Every realm this server serves comes from a `.realm` file in the data
     // directory. An ephemeral server has no such directory, so it gets an
@@ -247,6 +242,22 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     // A local stratum server can't serve TLS until the global stratum server has
     // issued its certificate, so this blocks (with retries) before binding.
     sandpolis_server::stratum::enroll(&state.server, &state.instance).await?;
+
+    // Whether the instances attached here are up is this server's to record and
+    // replicate, on either stratum: a client has no connection to an agent, so
+    // this is the only way it can know. Runs regardless of ownership, since an
+    // edge server watching the agent in front of it shouldn't have to wait on a
+    // grant to say what it plainly sees.
+    {
+        let liveness = std::sync::Arc::new(sandpolis_server::liveness::Liveness::new(
+            &state.network,
+            state.instance.instance_id,
+        ));
+        tokio::spawn(sandpolis_server::liveness::maintain_liveness(
+            state.network.clone(),
+            liveness,
+        ));
+    }
 
     // The global stratum server claims its own attached instances against the
     // grant table; this is what revokes a local stratum server when an agent

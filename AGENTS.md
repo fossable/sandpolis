@@ -203,10 +203,6 @@ cd android && ./gradlew assembleDebug
   only servers are shown and they become interactable. Clients are only present
   in the graph when the client layer is active (servers are also present, but
   not interactable).
-- In GUI, implement 'node effects'
-  - "selected" - we currently have this
-  - "multi-selected" - we currently have this
-  - "disabled" / "offline"
 - The node panel framework needs more shared controls. It has buttons, text and
   gauges today (`sandpolis-client/src/gui/ui/{widgets,gauge}.rs`); charts and
   tables are the obvious gaps, and every layer currently rolls its own list.
@@ -216,7 +212,6 @@ cd android && ./gradlew assembleDebug
   notification. If the client is not running in the foreground, only show
   OS-native notifcations.
   - Notification on errors
-  - Notification when a new instance joins for the first time
 - Ensure the following constraints:
   - GS servers must serve every .realm file in their --data directory
   - LS server must accept a single --server arg

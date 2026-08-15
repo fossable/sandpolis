@@ -1,15 +1,7 @@
 //! Models online/offline accounts and the relationships between them.
 //!
-//! An account is identified by the service `domain` it belongs to plus a
-//! `username` and/or `email`. Accounts are created by clients over the
-//! [`management`] stream, stored by the server, and replicated back to clients
-//! by the database sync engine.
-//!
-//! The account set is mirrored into the config file, so `sandpolis.ron` stays a
-//! readable record of the estate's accounts and can be edited by hand: the
-//! server imports anything new there at startup ([`AccountLayer::seed_accounts`])
-//! and rewrites the list whenever an account is created or deleted
-//! ([`persist_accounts`]).
+//! An account is identified by the `domain` it belongs to plus a
+//! `username` and/or `email`.
 //!
 //! Whenever the account set changes, the server re-derives [`AccountLinkData`]
 //! rows connecting accounts that share an identity (a common username, a common
@@ -21,11 +13,11 @@ use anyhow::Result;
 use native_db::*;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
+use sandpolis_instance::config::ConfigPersistHook;
 use sandpolis_instance::database::{DatabaseLayer, RealmDatabase};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
 use validator::{Validate, ValidationError, ValidationErrors};
 
 #[cfg(feature = "client")]
@@ -37,24 +29,17 @@ pub mod scrape;
 
 use config::AccountConfig;
 
-/// Hook installed by the top-level `sandpolis` crate (server only) to persist the
-/// account list back to `sandpolis.ron`. The account crate cannot reference the
-/// main crate's `Configuration` directly, so persistence is injected here.
-static ACCOUNT_PERSIST: OnceLock<Box<dyn Fn(&[AccountConfig]) -> Result<()> + Send + Sync>> =
-    OnceLock::new();
+static ACCOUNT_PERSIST: ConfigPersistHook<AccountConfig> = ConfigPersistHook::new("account");
 
 /// Install the persistence hook (see [`ACCOUNT_PERSIST`]). Idempotent: the first
 /// caller wins.
 pub fn set_account_persist(f: impl Fn(&[AccountConfig]) -> Result<()> + Send + Sync + 'static) {
-    let _ = ACCOUNT_PERSIST.set(Box::new(f));
+    ACCOUNT_PERSIST.set(f);
 }
 
 /// Persist the current account set if a hook is installed.
 pub fn persist_accounts(accounts: &[AccountData]) {
-    if let Some(f) = ACCOUNT_PERSIST.get()
-        && let Err(e) = f(&accounts_to_config(accounts)) {
-            tracing::warn!(error = %e, "Failed to persist accounts");
-        }
+    ACCOUNT_PERSIST.persist(&accounts_to_config(accounts));
 }
 
 /// Rebuild the on-disk account list from the given accounts.

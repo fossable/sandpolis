@@ -1,7 +1,7 @@
 use crate::network::stream::Stream;
 use crate::network::stream::{StreamRequester, StreamResponder};
 use anyhow::Result;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, mpsc::Sender};
 
@@ -40,7 +40,8 @@ impl StreamResponder for PingStreamResponder {
 
 /// Initiates ping requests and processes pong responses.
 pub struct PingStreamRequester {
-    interval: Duration,
+    /// Every ping sent, when it went out, and its round trip in milliseconds
+    /// once the matching pong comes back.
     results: RwLock<Vec<(PingValue, DateTime<Utc>, Option<f32>)>>,
 }
 
@@ -55,11 +56,27 @@ impl StreamRequester for PingStreamRequester {
     type Out = PingStreamRequest;
 
     async fn new(initial: Self::Out, tx: Sender<Self::Out>) -> Result<Self> {
+        let sent = (initial.ping, Utc::now(), None);
         tx.send(initial).await?;
-        todo!()
+        Ok(Self {
+            results: RwLock::new(vec![sent]),
+        })
     }
 
-    async fn on_message(&self, _request: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
+    async fn on_message(&self, response: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
+        // Match the pong against the most recent ping still outstanding: the
+        // responder echoes the value back, so anything else on the stream
+        // belongs to a ping we've already timed.
+        if let Some((_, sent, rtt)) = self
+            .results
+            .write()
+            .await
+            .iter_mut()
+            .rev()
+            .find(|(ping, _, rtt)| *ping == response.pong && rtt.is_none())
+        {
+            *rtt = Some((Utc::now() - *sent).num_microseconds().unwrap_or(0) as f32 / 1000.0);
+        }
         Ok(())
     }
 }

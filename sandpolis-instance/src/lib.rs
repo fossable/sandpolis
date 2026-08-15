@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 #[cfg(not(target_os = "android"))]
 pub mod cli;
+pub mod config;
 pub mod database;
 pub mod domain;
 pub mod network;
@@ -138,9 +139,12 @@ impl<'de> Deserialize<'de> for InstanceId {
 impl InstanceId {
     /// Generate a new instance ID for an instance of the given type.
     pub fn new(instance_type: InstanceType) -> Self {
-        // Reverse the UUID to make visual comparison easier (dispersing the prefixes
-        // makes it easier to tell two UUIDs apart).
-        let mut uuid = Uuid::now_v7().to_u128_le();
+        // A v7 uuid leads with its timestamp, so ids generated near each other
+        // share a long prefix. `format_uuid` renders the low bytes first, which
+        // reverses that: the random bytes come first and two ids differ from the
+        // start. It also keeps the timestamp clear of the nibble below, which is
+        // what makes `timestamp` recoverable.
+        let mut uuid = Uuid::now_v7().as_u128();
 
         // Wipe out last nibble
         uuid &= 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0;
@@ -185,9 +189,15 @@ impl InstanceId {
         InstanceType::iter().find(|t| self.is_type(*t))
     }
 
-    /// Return the timestamp when the UUID was generated.
+    /// Return when this id was generated, in milliseconds since the unix epoch.
+    ///
+    /// This is the v7 uuid's own timestamp, so it's only as trustworthy as the
+    /// clock of whatever instance generated the id. Zero for [`Default`], which
+    /// was never generated at all.
     pub fn timestamp(&self) -> u64 {
-        todo!()
+        // v7 puts a 48-bit millisecond timestamp in the uuid's leading bytes,
+        // which `new` leaves untouched.
+        (self.0 >> 80) as u64
     }
 }
 
@@ -278,6 +288,49 @@ impl InstanceType {
 #[cfg(test)]
 mod test_instance_id {
     use super::*;
+
+    /// The generation timestamp survives the type nibble, for every type: the
+    /// two used to overlap, and the id's own creation time was unrecoverable.
+    #[test]
+    fn test_timestamp() {
+        for instance_type in InstanceType::iter() {
+            let before = chrono::Utc::now().timestamp_millis() as u64;
+            let id = InstanceId::new(instance_type);
+            let after = chrono::Utc::now().timestamp_millis() as u64;
+
+            assert!(
+                (before..=after).contains(&id.timestamp()),
+                "{instance_type:?} id {id} reported {}, expected {before}..={after}",
+                id.timestamp()
+            );
+        }
+    }
+
+    /// The id that names no instance was never generated, so it has no
+    /// creation time either.
+    #[test]
+    fn test_default_has_no_timestamp() {
+        assert_eq!(InstanceId::default().timestamp(), 0);
+    }
+
+    /// Ids generated back to back have to be told apart at a glance, which is
+    /// why the formatted id leads with the uuid's random bytes rather than its
+    /// timestamp.
+    #[test]
+    fn test_display_differs_early() {
+        let first = InstanceId::new(InstanceType::Agent).to_string();
+        let second = InstanceId::new(InstanceType::Agent).to_string();
+
+        let common = first
+            .chars()
+            .zip(second.chars())
+            .take_while(|(a, b)| a == b)
+            .count();
+        assert!(
+            common < 8,
+            "ids share a {common} character prefix: {first} / {second}"
+        );
+    }
 
     #[test]
     fn test_new_single_types() {
@@ -501,6 +554,9 @@ pub struct InstanceLayer {
     /// Every domain in the estate. Assigned by the global stratum server and
     /// replicated from there, so this is a read-only view everywhere else.
     domains: ResidentVec<DomainData>,
+    /// Every instance in the estate, replicated in. The client's world view is
+    /// drawn from this, so it covers instances this one never talks to.
+    instances: ResidentVec<InstanceLayerData>,
     /// The default realm, so callers that need one (the service runner, say)
     /// don't have to be handed the whole [`DatabaseLayer`].
     realm: crate::database::RealmDatabase,
@@ -569,6 +625,7 @@ impl InstanceLayer {
             instance_id,
             cluster_id: { data.read().cluster_id },
             domains: realm.resident_vec(())?,
+            instances: realm.resident_vec(())?,
             realm,
         })
     }
@@ -604,6 +661,14 @@ impl InstanceLayer {
         &self.domains
     }
 
+    /// Every instance the estate knows about, this one included.
+    ///
+    /// A client draws a node per entry, which is how an agent it holds no
+    /// connection to shows up at all.
+    pub fn instances(&self) -> &ResidentVec<InstanceLayerData> {
+        &self.instances
+    }
+
     /// This instance's default realm.
     pub fn realm(&self) -> &crate::database::RealmDatabase {
         &self.realm
@@ -623,8 +688,37 @@ pub struct LayerVersion {
 impl TryFrom<String> for LayerVersion {
     type Error = anyhow::Error;
 
-    fn try_from(_value: String) -> Result<Self, Self::Error> {
-        todo!()
+    /// Parse `major.minor.patch` with an optional `-description` suffix, which
+    /// is the shape cargo's `CARGO_PKG_VERSION` takes.
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let (numbers, description) = match value.split_once('-') {
+            Some((numbers, description)) => (numbers, Some(description.to_string())),
+            None => (value.as_str(), None),
+        };
+
+        let mut parts = numbers.split('.');
+        let mut number = |field: &str| -> Result<u32, Self::Error> {
+            parts
+                .next()
+                .ok_or_else(|| anyhow::anyhow!("missing {field} version in: {value}"))?
+                .parse()
+                .map_err(|_| anyhow::anyhow!("invalid {field} version in: {value}"))
+        };
+
+        let major = number("major")?;
+        let minor = number("minor")?;
+        let patch = number("patch")?;
+
+        if parts.next().is_some() {
+            anyhow::bail!("trailing version component in: {value}");
+        }
+
+        Ok(Self {
+            major,
+            minor,
+            patch,
+            description,
+        })
     }
 }
 
@@ -651,5 +745,59 @@ impl Ord for LayerVersion {
         } else {
             Ordering::Equal
         }
+    }
+}
+
+#[cfg(test)]
+mod test_layer_version {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let version = LayerVersion::try_from("1.2.3".to_string()).unwrap();
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 2);
+        assert_eq!(version.patch, 3);
+        assert_eq!(version.description, None);
+    }
+
+    /// This crate's own version has to parse, since that's where these come
+    /// from.
+    #[test]
+    fn test_parse_own_version() {
+        LayerVersion::try_from(env!("CARGO_PKG_VERSION").to_string()).unwrap();
+    }
+
+    #[test]
+    fn test_parse_with_description() {
+        let version = LayerVersion::try_from("0.1.0-alpha.1".to_string()).unwrap();
+        assert_eq!(version.major, 0);
+        assert_eq!(version.minor, 1);
+        assert_eq!(version.patch, 0);
+        assert_eq!(version.description.as_deref(), Some("alpha.1"));
+    }
+
+    #[test]
+    fn test_parse_rejects_malformed() {
+        for value in ["", "1", "1.2", "1.2.3.4", "1.2.x", "v1.2.3", "-1.2.3"] {
+            assert!(
+                LayerVersion::try_from(value.to_string()).is_err(),
+                "expected {value} to be rejected"
+            );
+        }
+    }
+
+    /// Ordering ignores the description, so a prerelease and its release
+    /// compare equal.
+    #[test]
+    fn test_ordering() {
+        let older = LayerVersion::try_from("1.2.3".to_string()).unwrap();
+        let newer = LayerVersion::try_from("1.3.0".to_string()).unwrap();
+        assert!(newer > older);
+        assert!(older < LayerVersion::try_from("2.0.0".to_string()).unwrap());
+        assert_eq!(
+            older.cmp(&LayerVersion::try_from("1.2.3-alpha".to_string()).unwrap()),
+            Ordering::Equal
+        );
     }
 }

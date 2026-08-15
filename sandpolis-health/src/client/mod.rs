@@ -1,7 +1,6 @@
 use crate::systemd::{ActiveState, SystemdUnitData};
 use native_model::Model;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::realm::RealmName;
 
 #[cfg(feature = "client")]
 pub mod gui;
@@ -46,17 +45,7 @@ pub fn unsubscribe(instance: InstanceId) {
 /// Query the systemd units known for an instance from the client's local
 /// database (populated by the sync subscription).
 pub fn query_systemd_units(id: InstanceId) -> anyhow::Result<Vec<SystemdUnitInfo>> {
-    let Some(database) = sandpolis_client::sync::client_database() else {
-        return Ok(vec![]);
-    };
-    let realm = database.realm(RealmName::default())?;
-    let r = realm.r_transaction()?;
-    let units: Vec<SystemdUnitData> = r
-        .scan()
-        .primary::<SystemdUnitData>()?
-        .all()?
-        .collect::<std::result::Result<Vec<_>, _>>()?;
-    Ok(units
+    Ok(sandpolis_client::sync::scan_all::<SystemdUnitData>()?
         .into_iter()
         .filter(|u| u._instance_id == id)
         .map(Into::into)

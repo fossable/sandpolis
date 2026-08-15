@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let (cert, _) = ServerCertFile::load(&test_server.endpoint_cert)?;
 
     let database = DatabaseLayer::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
-    let realms = Realms::for_client(vec![cert], database.clone())?;
+    let realms = Realms::for_endpoint(vec![cert], database.clone())?;
     let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     let widget = ServerListWidget::new(state.server.clone())?;

@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
 
     // Create instance state
     // The local instance will be spawned automatically
-    let realms = Realms::for_client(Vec::new(), database.clone())?;
+    let realms = Realms::for_endpoint(Vec::new(), database.clone())?;
     let state =
         InstanceState::new(&options, database.clone(), realms, ServerStratum::Global).await?;
 

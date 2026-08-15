@@ -12,9 +12,6 @@ use tracing::{debug, info, warn};
 /// `.server` file, the database its collectors write into, and the layers over
 /// both.
 pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode> {
-    use sandpolis_instance::database::{DatabaseLayer, WriteAuthority};
-    use sandpolis_instance::realm::Realms;
-
     let mut options = args.options();
 
     // The `.server` file is the whole connection policy: it names the server,
@@ -27,39 +24,20 @@ pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode
         endpoint_certs.push(cert);
     }
 
-    // An agent owns its own database outright; the server it attaches to
-    // replicates from it.
-    let database = DatabaseLayer::new(
-        options.database.clone(),
-        &crate::MODELS,
-        WriteAuthority::Full,
-    )?;
+    let state = crate::endpoint_state(&options, endpoint_certs).await?;
 
-    // An agent knows exactly the realm its certificate names.
-    let realms = Realms::for_client(endpoint_certs, database.clone())?;
-
-    let state = InstanceState::new(
-        &options,
-        database,
-        realms,
-        // An agent runs no server of its own, so this is inert.
-        crate::ServerStratum::Global,
-    )
-    .await?;
-
-    info!("Starting Sandpolis agent");
     main(options, state).await?;
     Ok(std::process::ExitCode::SUCCESS)
 }
 
 pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
-    // The agent's server comes from the `.server` file it was given
-    // ($S7S_SERVER).
     let Some(url) = options.server.clone() else {
-        warn!("Agent has no configured server; idling");
+        warn!("Waiting for server configuration");
         std::future::pending::<()>().await;
         return Ok(());
     };
+
+    info!("Starting Sandpolis agent");
 
     // Every layer's collectors go on one runner, which owns their schedules and
     // lets a client enable or disable them individually. Their updates land in
@@ -116,13 +94,29 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
                         // Establish the websocket so the server can sync
                         // our database.
-                        if let Err(e) = entry.open_websocket(&network, &instance).await {
-                            warn!(error = %e, url = %url, "Failed to open websocket");
-                        }
+                        let socket = match entry.open_websocket(&network, &instance).await {
+                            Ok(socket) => Some(socket),
+                            Err(e) => {
+                                warn!(error = %e, url = %url, "Failed to open websocket");
+                                None
+                            }
+                        };
                         retry = RetryWait::default();
-                        // When the connection is cancelled (e.g. dropped
-                        // server-side), fall through and reconnect.
-                        cancel.cancelled().await;
+
+                        // Reconnect when either token fires: the socket's, which
+                        // is what a server-side drop or a dead peer cancels, or
+                        // the connection's own. Waiting on the latter alone would
+                        // never wake, since this loop holds the `Arc` that would
+                        // have to drop first.
+                        match socket {
+                            Some(socket) => {
+                                tokio::select! {
+                                    _ = socket.cancel.cancelled() => {}
+                                    _ = cancel.cancelled() => {}
+                                }
+                            }
+                            None => cancel.cancelled().await,
+                        }
                         server
                             .outbound
                             .write()
@@ -176,7 +170,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                     Ok(_) => {
                         info!(url = %url, timeout = ?timeout, "Poll window open");
                         sleep(*timeout).await;
-                        entry.close_websocket(&network);
+                        entry.close_websocket();
                         debug!(url = %url, "Poll window closed");
                     }
                     Err(e) => {
