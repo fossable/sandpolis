@@ -135,7 +135,7 @@ pub fn load_server_file(
     path: Option<&std::path::Path>,
 ) -> Result<
     Option<(
-        sandpolis_instance::realm::config::EndpointCert,
+        sandpolis_instance::realm::RealmCert,
         Option<sandpolis_instance::realm::config::PollConfig>,
     )>,
 > {
@@ -334,14 +334,7 @@ pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     // Realm layer
     {
         m.define::<sandpolis_instance::realm::RealmData>().unwrap();
-        m.define::<sandpolis_instance::realm::RealmClusterCert>()
-            .unwrap();
-        m.define::<sandpolis_instance::realm::RealmServerCert>()
-            .unwrap();
-        m.define::<sandpolis_instance::realm::RealmClientCert>()
-            .unwrap();
-        m.define::<sandpolis_instance::realm::RealmAgentCert>()
-            .unwrap();
+        m.define::<sandpolis_instance::realm::RealmCert>().unwrap();
     }
 
     // Instance layer

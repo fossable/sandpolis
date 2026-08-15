@@ -6,7 +6,6 @@ use crate::database::RealmDatabase;
 use crate::database::ResidentVec;
 use crate::database::{DatabaseLayer, Resident};
 use crate::realm::config::CERTIFICATE_TAG;
-use crate::realm::config::EndpointCert;
 use crate::realm::config::PRIVATE_KEY_TAG;
 use crate::realm::config::PollConfig;
 use crate::realm::config::RealmBootstrap;
@@ -128,39 +127,14 @@ mod test_realm_name {
 ///
 /// An instance with no certificates yet — a client before login, the mobile app
 /// — still needs the default realm, which is where its own local data lives.
-fn endpoint_realm_names(certs: &[EndpointCert]) -> Result<Vec<RealmName>> {
-    let mut names = certs
-        .iter()
-        .map(|cert| cert.realm())
-        .collect::<Result<Vec<RealmName>>>()?;
+fn endpoint_realm_names(certs: &[RealmCert]) -> Vec<RealmName> {
+    let mut names: Vec<RealmName> = certs.iter().map(|cert| cert.name.clone()).collect();
     names.sort();
     names.dedup();
     if names.is_empty() {
         names.push(RealmName::default());
     }
-    Ok(names)
-}
-
-#[cfg(feature = "agent")]
-fn collect_agent_certs(certs: &[EndpointCert]) -> Vec<RealmAgentCert> {
-    certs
-        .iter()
-        .filter_map(|cert| match cert {
-            EndpointCert::Agent(cert) => Some(cert.clone()),
-            EndpointCert::Client(_) => None,
-        })
-        .collect()
-}
-
-#[cfg(any(feature = "client", feature = "server"))]
-fn collect_client_certs(certs: &[EndpointCert]) -> Vec<RealmClientCert> {
-    certs
-        .iter()
-        .filter_map(|cert| match cert {
-            EndpointCert::Client(cert) => Some(cert.clone()),
-            EndpointCert::Agent(_) => None,
-        })
-        .collect()
+    names
 }
 
 /// A realm this instance serves or connects to: its name, the database holding
@@ -181,6 +155,21 @@ pub struct MintedCa {
     pub key_pem: String,
 }
 
+/// What bringing the realms up produced that belongs on disk rather than in the
+/// database.
+///
+/// Both are written by the caller, which is the only thing that knows where this
+/// server's files live.
+#[derive(Debug, Clone, Default)]
+pub struct RealmStartupOutput {
+    /// CAs to write back into the `.realm` files the bootstraps came from.
+    pub minted_cas: Vec<MintedCa>,
+
+    /// One freshly minted endpoint certificate per realm, to be written out as
+    /// `<realm>.server`.
+    pub endpoint_certs: Vec<RealmCert>,
+}
+
 /// Every realm known to this instance.
 ///
 /// The set is frozen at startup: realms only ever come from `.realm` files
@@ -197,16 +186,13 @@ pub struct Realms {
     /// knows what other realms exist.
     pub realms: ResidentVec<RealmData>,
 
-    /// Agent realm certs loaded from `.server` files. Kept in memory only.
-    #[cfg(feature = "agent")]
-    agent_certs: Vec<RealmAgentCert>,
-
-    /// Client realm certs loaded from `.server` files. Kept in memory only.
+    /// Endpoint realm certs loaded from `.server` files. Kept in memory only.
     ///
-    /// Also used by a local stratum server to authenticate to its global stratum
-    /// server — there is no separate server-to-server certificate type.
-    #[cfg(any(feature = "client", feature = "server"))]
-    client_certs: Vec<RealmClientCert>,
+    /// Clients and agents hold the same kind of certificate, and so does a local
+    /// stratum server authenticating to its global stratum server — there is no
+    /// separate server-to-server certificate type.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    endpoint_certs: Vec<RealmCert>,
 }
 
 impl Realms {
@@ -219,8 +205,9 @@ impl Realms {
     /// certificate by the global stratum server (see
     /// [`install_enrollment`](Self::install_enrollment)).
     ///
-    /// Returns any realm CAs the caller should write back into the `.realm`
-    /// files the bootstraps came from.
+    /// Returns what the caller has to write out: any realm CAs that belong back
+    /// in the `.realm` files the bootstraps came from, and the endpoint
+    /// certificate minted for each realm.
     ///
     /// `listen_port` is where this process's server binds, used to name
     /// certificates when a realm declares no address of its own — which is how
@@ -228,28 +215,21 @@ impl Realms {
     #[allow(unused_variables)]
     pub async fn new(
         bootstraps: Vec<RealmBootstrap>,
-        endpoint_certs: Vec<EndpointCert>,
+        endpoint_certs: Vec<RealmCert>,
         database: DatabaseLayer,
         instance: InstanceLayer,
         authoritative: bool,
         listen_port: u16,
-    ) -> Result<(Self, Vec<MintedCa>)> {
+    ) -> Result<(Self, RealmStartupOutput)> {
         debug!("Initializing realms");
 
         let registry: ResidentVec<RealmData> =
             database.realm(RealmName::default())?.resident_vec(())?;
 
         #[allow(unused_mut)]
-        let mut minted: Vec<MintedCa> = Vec::new();
+        let mut output = RealmStartupOutput::default();
         #[allow(unused_mut)]
         let mut inner: BTreeMap<RealmName, Realm> = BTreeMap::new();
-
-        #[cfg(feature = "agent")]
-        #[allow(unused_mut)]
-        let mut agent_certs = collect_agent_certs(&endpoint_certs);
-        #[cfg(any(feature = "client", feature = "server"))]
-        #[allow(unused_mut)]
-        let mut client_certs = collect_client_certs(&endpoint_certs);
 
         // Only the global stratum server holds the realm CA and can issue from
         // it. A local stratum server gets its server certificate from the GS
@@ -276,16 +256,20 @@ impl Realms {
                 // This instance's own certificates are local state, not estate
                 // data replicated from the global stratum server.
                 let rw = realm_db.local_write()?;
-                let stored: Vec<RealmClusterCert> =
+                let certs: Vec<RealmCert> =
                     rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
                 // The file is the source of truth: whatever it declares replaces
                 // what the database held.
                 let ca = if let Some((cert, key)) = bootstrap.ca.clone() {
-                    for old in stored {
-                        rw.remove(old)?;
+                    for old in certs
+                        .iter()
+                        .filter(|c| c.cert_type == RealmCertType::Cluster)
+                    {
+                        rw.remove(old.clone())?;
                     }
-                    let ca = RealmClusterCert {
+                    let ca = RealmCert {
+                        cert_type: RealmCertType::Cluster,
                         name: name.clone(),
                         cert,
                         key: Some(key),
@@ -296,16 +280,19 @@ impl Realms {
                 } else {
                     // The file declared no CA, so reuse the database's copy or
                     // mint one. Either way it goes back into the file.
-                    let ca = match stored.into_iter().next() {
-                        Some(existing) => existing,
+                    let ca = match certs
+                        .iter()
+                        .find(|c| c.cert_type == RealmCertType::Cluster)
+                    {
+                        Some(existing) => existing.clone(),
                         None => {
-                            let ca = RealmClusterCert::new(instance.cluster_id, name.clone())?;
+                            let ca = RealmCert::new_cluster(instance.cluster_id, name.clone())?;
                             rw.insert(ca.clone())?;
                             ca
                         }
                     };
                     if let Some(key) = ca.key.as_ref() {
-                        minted.push(MintedCa {
+                        output.minted_cas.push(MintedCa {
                             name: name.clone(),
                             cert_pem: encode(&Pem::new(CERTIFICATE_TAG, ca.cert.clone())),
                             key_pem: encode(&Pem::new(PRIVATE_KEY_TAG, key.clone())),
@@ -315,13 +302,9 @@ impl Realms {
                 };
 
                 // Get or create this instance's server cert
-                let server_certs: Vec<RealmServerCert> =
-                    rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-
-                if !server_certs
-                    .iter()
-                    .any(|c| c._instance_id == instance.instance_id)
-                {
+                if !certs.iter().any(|c| {
+                    c.cert_type == RealmCertType::Server && c._instance_id == instance.instance_id
+                }) {
                     rw.insert(ca.server_cert(instance.instance_id)?)?;
                 }
 
@@ -337,19 +320,10 @@ impl Realms {
                 };
                 url.realm = name.clone();
 
-                // Write certs in development mode to make testing easier: an
-                // agent and a client started from these files attach to this
-                // server without any certificate being minted by hand.
-                #[cfg(debug_assertions)]
-                {
-                    ca.client_cert(&url)?
-                        .write_server_file("/tmp/client.server", None)?;
-                    info!("Wrote client certificate to: /tmp/client.server");
-
-                    ca.agent_cert(&url)?
-                        .write_server_file("/tmp/agent.server", None)?;
-                    info!("Wrote agent certificate to: /tmp/agent.server");
-                }
+                // The caller writes this out as `<realm>.server`. Clients and
+                // agents both attach with it, so a realm is usable as soon as
+                // its server has started once.
+                output.endpoint_certs.push(ca.endpoint_cert(&url)?);
 
                 inner.insert(
                     name.clone(),
@@ -383,7 +357,7 @@ impl Realms {
         if !authored_from_files {
             // Everyone else learns which realms exist from the certificates they
             // hold, since those name exactly what they can authenticate against.
-            for name in endpoint_realm_names(&endpoint_certs)? {
+            for name in endpoint_realm_names(&endpoint_certs) {
                 let realm_db = database.realm(name.clone())?;
                 let data = match registry.iter().find(|row| row.read().name == name) {
                     Some(existing) => existing,
@@ -408,23 +382,21 @@ impl Realms {
                 database,
                 inner: Arc::new(inner),
                 realms: registry,
-                #[cfg(feature = "agent")]
-                agent_certs,
-                #[cfg(any(feature = "client", feature = "server"))]
-                client_certs,
+                #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+                endpoint_certs,
             },
-            minted,
+            output,
         ))
     }
 
     /// Build the realm set for an instance that only ever connects out (a
     /// standalone client, the mobile app, an example).
-    pub fn for_client(endpoint_certs: Vec<EndpointCert>, database: DatabaseLayer) -> Result<Self> {
+    pub fn for_client(endpoint_certs: Vec<RealmCert>, database: DatabaseLayer) -> Result<Self> {
         let registry: ResidentVec<RealmData> =
             database.realm(RealmName::default())?.resident_vec(())?;
 
         let mut inner = BTreeMap::new();
-        for name in endpoint_realm_names(&endpoint_certs)? {
+        for name in endpoint_realm_names(&endpoint_certs) {
             let realm_db = database.realm(name.clone())?;
             let data = match registry.iter().find(|row| row.read().name == name) {
                 Some(existing) => existing,
@@ -447,10 +419,8 @@ impl Realms {
             database,
             inner: Arc::new(inner),
             realms: registry,
-            #[cfg(feature = "agent")]
-            agent_certs: collect_agent_certs(&endpoint_certs),
-            #[cfg(any(feature = "client", feature = "server"))]
-            client_certs: collect_client_certs(&endpoint_certs),
+            #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+            endpoint_certs,
         })
     }
 
@@ -484,19 +454,18 @@ impl Realms {
             return false;
         };
 
-        let has_ca = (|| -> Result<bool> {
-            let cas: Vec<RealmClusterCert> =
-                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-            Ok(!cas.is_empty())
-        })()
-        .unwrap_or(false);
+        let Ok(certs) = (|| -> Result<Vec<RealmCert>> {
+            Ok(r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?)
+        })() else {
+            return false;
+        };
 
-        let has_cert = (|| -> Result<bool> {
-            let certs: Vec<RealmServerCert> =
-                r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-            Ok(certs.iter().any(|c| c._instance_id == instance_id))
-        })()
-        .unwrap_or(false);
+        let has_ca = certs
+            .iter()
+            .any(|c| c.cert_type == RealmCertType::Cluster);
+        let has_cert = certs
+            .iter()
+            .any(|c| c.cert_type == RealmCertType::Server && c._instance_id == instance_id);
 
         has_ca && has_cert
     }
@@ -520,26 +489,27 @@ impl Realms {
         let db = self.database.realm(realm.clone())?;
         let rw = db.local_write()?;
 
-        let existing: Vec<RealmClusterCert> =
+        let existing: Vec<RealmCert> =
             rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
         for old in existing {
-            rw.remove(old)?;
+            match old.cert_type {
+                RealmCertType::Cluster => rw.remove(old)?,
+                RealmCertType::Server if old._instance_id == instance_id => rw.remove(old)?,
+                _ => continue,
+            };
         }
-        rw.insert(RealmClusterCert {
+
+        rw.insert(RealmCert {
+            cert_type: RealmCertType::Cluster,
             name: realm.clone(),
-            cert: ca,
+            cert: ca.clone(),
             key: None,
             ..Default::default()
         })?;
-
-        let existing: Vec<RealmServerCert> =
-            rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-        for old in existing {
-            if old._instance_id == instance_id {
-                rw.remove(old)?;
-            }
-        }
-        rw.insert(RealmServerCert {
+        rw.insert(RealmCert {
+            cert_type: RealmCertType::Server,
+            name: realm.clone(),
+            ca,
             cert,
             key: Some(key),
             _instance_id: instance_id,
@@ -551,48 +521,20 @@ impl Realms {
         Ok(())
     }
 
-    /// The certificate this process presents when it dials a server, which is
-    /// decided by what this process is: agents hold agent certificates, while
-    /// clients — and local stratum servers, which have no server-to-server
-    /// certificate type — hold client ones.
+    /// The certificate this process presents when it dials a server.
+    ///
+    /// Clients, agents, and a local stratum server dialing its global stratum
+    /// server all present the same kind of certificate, so what this process is
+    /// doesn't come into it — only which realm it's dialing.
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn find_endpoint_cert(
-        &self,
-        realm: RealmName,
-        instance_type: crate::InstanceType,
-    ) -> Result<EndpointCert> {
-        Ok(match instance_type {
-            #[cfg(feature = "agent")]
-            crate::InstanceType::Agent => EndpointCert::Agent(self.find_agent_cert(realm)?),
-            #[cfg(any(feature = "client", feature = "server"))]
-            crate::InstanceType::Client | crate::InstanceType::Server => {
-                EndpointCert::Client(self.find_client_cert(realm)?)
-            }
-            #[allow(unreachable_patterns)]
-            _ => bail!("This build cannot dial a server as a {instance_type:?}"),
-        })
-    }
-
-    #[cfg(any(feature = "client", feature = "server"))]
-    pub fn find_client_cert(&self, realm: RealmName) -> Result<RealmClientCert> {
-        for cert in &self.client_certs {
-            if cert.name()? == realm {
+    pub fn find_endpoint_cert(&self, realm: RealmName) -> Result<RealmCert> {
+        for cert in &self.endpoint_certs {
+            if cert.name == realm {
                 return Ok(cert.clone());
             }
         }
 
-        bail!("No client realm certificate loaded for realm: {realm}");
-    }
-
-    #[cfg(feature = "agent")]
-    pub fn find_agent_cert(&self, realm: RealmName) -> Result<RealmAgentCert> {
-        for cert in &self.agent_certs {
-            if cert.name()? == realm {
-                return Ok(cert.clone());
-            }
-        }
-
-        bail!("No agent realm certificate loaded for realm: {realm}");
+        bail!("No realm certificate loaded for realm: {realm}");
     }
 }
 
@@ -609,66 +551,82 @@ pub struct RealmData {
     pub owner: String,
 }
 
-/// The realm's global CA certificate.
-#[data]
-#[derive(Default)]
-pub struct RealmClusterCert {
-    pub name: RealmName,
-    pub cert: Vec<u8>,
-    pub key: Option<Vec<u8>>,
+/// What a realm certificate is for, which decides how it's issued and which of
+/// its fields carry meaning.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RealmCertType {
+    /// The realm's CA, which signs every other certificate in the realm. This is
+    /// the only kind that can issue, and only where it still holds its key.
+    #[default]
+    Cluster,
+
+    /// A server's listener identity.
+    Server,
+
+    /// A client or agent: anything that dials a server.
+    Endpoint,
 }
 
-impl RealmClusterCert {
-    pub fn cluster_id(&self) -> Result<ClusterId> {
-        for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
-            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
-                for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name {
-                        return s.parse::<ClusterId>();
-                    }
-                }
-            }
+impl RealmCertType {
+    /// Custom extended key usage OID marking what the certificate is for.
+    ///
+    /// A CA needs none — its basic constraints already say what it is. The
+    /// endpoint arc is the agent and client masks together, because agents and
+    /// clients hold the same certificate.
+    pub fn oid(&self) -> Option<[u64; 4]> {
+        match self {
+            Self::Cluster => None,
+            Self::Server => Some([1, 1, 1, InstanceType::Server.mask() as u64]),
+            Self::Endpoint => Some([
+                1,
+                1,
+                1,
+                (InstanceType::Agent.mask() | InstanceType::Client.mask()) as u64,
+            ]),
         }
-
-        bail!("Subject name not found");
     }
 }
 
-/// Each server in the cluster gets its own server certificate.
+impl ToKey for RealmCertType {
+    fn to_key(&self) -> native_db::Key {
+        native_db::Key::new(vec![match self {
+            Self::Cluster => 0,
+            Self::Server => 1,
+            Self::Endpoint => 2,
+        }])
+    }
+
+    fn key_names() -> Vec<String> {
+        vec!["RealmCertType".to_string()]
+    }
+}
+
+/// A certificate belonging to one realm: the realm's CA, a server's listener
+/// identity, or an endpoint's credential for dialing one.
+///
+/// Clients and agents hold the same kind of certificate. The server doesn't
+/// distinguish them — what a client is allowed to do comes from the user it
+/// logs in as, not from the certificate that got it onto the network.
 #[data(instance)]
 #[derive(Default)]
-pub struct RealmServerCert {
-    pub cert: Vec<u8>,
-    pub key: Option<Vec<u8>>,
-}
+pub struct RealmCert {
+    pub cert_type: RealmCertType,
 
-impl RealmServerCert {
-    pub fn subject_name(&self) -> Result<String> {
-        for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
-            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
-                for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name {
-                        return Ok(s.to_string());
-                    }
-                }
-            }
-        }
+    /// The realm this certificate belongs to.
+    pub name: RealmName,
 
-        bail!("Subject name not found");
-    }
-}
-
-/// Realm certificate for client instances that can authenticate with a server
-/// instance against a particular realm.
-#[data]
-#[derive(Default)]
-pub struct RealmClientCert {
+    /// The realm CA, for verifying the peer. Empty on a
+    /// [`Cluster`](RealmCertType::Cluster) certificate, which is itself the CA.
     pub ca: Vec<u8>,
+
     pub cert: Vec<u8>,
+
+    /// The private half, which is absent wherever the holder can only verify:
+    /// the CA on a local stratum server, or a certificate handed out without it.
     pub key: Option<Vec<u8>>,
 }
 
-impl Validate for RealmClientCert {
+impl Validate for RealmCert {
     fn validate(&self) -> Result<(), ValidationErrors> {
         let mut errors = ValidationErrors::new();
 
@@ -684,27 +642,28 @@ impl Validate for RealmClientCert {
             }
         };
 
-        // Validate extended key usage for clientAuth
+        // A CA carries no type OID and doesn't authenticate anything itself.
+        let Some(oid) = self.cert_type.oid() else {
+            return Ok(());
+        };
+
         let mut client_auth = false;
-        let mut client_realm = false;
+        let mut typed = false;
         for ext in cert.iter_extensions() {
             if let ParsedExtension::ExtendedKeyUsage(eku) = ext.parsed_extension() {
                 if eku.client_auth {
                     client_auth = true;
                 }
-                if eku
-                    .other
-                    .contains(&Oid::from(&[1, 1, 1, InstanceType::Client.mask() as u64]).unwrap())
-                {
-                    client_realm = true;
+                if eku.other.contains(&Oid::from(&oid).unwrap()) {
+                    typed = true;
                 }
             }
         }
 
-        if !client_realm {
+        if !typed {
             errors.add(
                 "cert",
-                ValidationError::new("Certificate must have client extended key usage"),
+                ValidationError::new("Certificate is not of the expected type"),
             );
         }
         if !client_auth {
@@ -722,13 +681,37 @@ impl Validate for RealmClientCert {
     }
 }
 
-impl RealmClientCert {
+impl RealmCert {
+    /// The cluster this certificate's realm belongs to, which is named in the
+    /// CA's subject alternative name.
     pub fn cluster_id(&self) -> Result<ClusterId> {
-        for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
+        // A CA certificate is its own trust root, so it names the cluster itself.
+        let der = match self.cert_type {
+            RealmCertType::Cluster => &self.cert,
+            _ => &self.ca,
+        };
+
+        for ext in X509Certificate::from_der(der)?.1.iter_extensions() {
             if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
                 for name in &san.general_names {
                     if let GeneralName::DNSName(s) = name {
                         return s.parse::<ClusterId>();
+                    }
+                }
+            }
+        }
+
+        bail!("Subject name not found");
+    }
+
+    /// The name this certificate is served under, which is how the SNI resolver
+    /// keys a server certificate.
+    pub fn subject_name(&self) -> Result<String> {
+        for ext in X509Certificate::from_der(&self.cert)?.1.iter_extensions() {
+            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(s) = name {
+                        return Ok(s.to_string());
                     }
                 }
             }
@@ -742,14 +725,16 @@ impl RealmClientCert {
     where
         P: AsRef<Path>,
     {
-        ServerCertFile::from_client(self, poll).write(path)
+        ServerCertFile::from_endpoint(self, poll).write(path)
     }
 
+    /// The realm CA, for verifying the server this certificate names.
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn ca(&self) -> Result<reqwest::Certificate> {
+    pub fn root_certificate(&self) -> Result<reqwest::Certificate> {
         Ok(reqwest::Certificate::from_der(&self.ca)?)
     }
 
+    /// This certificate and its key, for authenticating to a server.
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn identity(&self) -> Result<reqwest::Identity> {
         // Combine cert and key together
@@ -778,15 +763,10 @@ impl RealmClientCert {
     pub fn url(&self) -> Result<ServerUrl> {
         common_name_url(&self.cert)
     }
-
-    /// The realm this certificate authenticates against.
-    pub fn name(&self) -> Result<RealmName> {
-        Ok(self.url()?.realm)
-    }
 }
 
 /// Parse the [`ServerUrl`] out of a certificate's common name.
-fn common_name_url(der: &[u8]) -> Result<ServerUrl> {
+pub(crate) fn common_name_url(der: &[u8]) -> Result<ServerUrl> {
     X509Certificate::from_der(der)?
         .1
         .subject()
@@ -810,8 +790,7 @@ mod test_enrollment {
         MODELS.get_or_init(|| {
             let mut m = native_db::Models::new();
             m.define::<RealmData>().unwrap();
-            m.define::<RealmClusterCert>().unwrap();
-            m.define::<RealmServerCert>().unwrap();
+            m.define::<RealmCert>().unwrap();
             m
         })
     }
@@ -849,7 +828,7 @@ mod test_enrollment {
     #[tokio::test]
     async fn enrollment_installs_ca_without_its_key() -> Result<()> {
         let cluster_id = crate::ClusterId::default();
-        let ca = RealmClusterCert::new(cluster_id, RealmName::default())?;
+        let ca = RealmCert::new_cluster(cluster_id, RealmName::default())?;
         let id = InstanceId::new(InstanceType::Server);
         let issued = ca.server_cert(id)?;
 
@@ -866,8 +845,14 @@ mod test_enrollment {
 
         let db = realms.database.realm(RealmName::default())?;
         let r = db.r_transaction()?;
-        let stored: Vec<RealmClusterCert> =
-            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+        let stored: Vec<RealmCert> = r
+            .scan()
+            .primary()?
+            .all()?
+            .collect::<Result<Vec<RealmCert>, _>>()?
+            .into_iter()
+            .filter(|cert| cert.cert_type == RealmCertType::Cluster)
+            .collect();
 
         assert_eq!(stored.len(), 1, "exactly one CA is stored");
         assert_eq!(stored[0].cert, ca.cert, "the CA certificate is the GS's");
@@ -876,7 +861,7 @@ mod test_enrollment {
             "the CA private key must never reach a local stratum server"
         );
         assert!(
-            stored[0].ca().is_err(),
+            stored[0].issuer().is_err(),
             "without the key, a local stratum server cannot issue certificates"
         );
         Ok(())
@@ -890,7 +875,7 @@ mod test_enrollment {
         let realms = layer(replica()?);
 
         for _ in 0..2 {
-            let ca = RealmClusterCert::new(crate::ClusterId::default(), RealmName::default())?;
+            let ca = RealmCert::new_cluster(crate::ClusterId::default(), RealmName::default())?;
             let issued = ca.server_cert(id)?;
             realms.install_enrollment(
                 RealmName::default(),
@@ -903,20 +888,30 @@ mod test_enrollment {
 
         let db = realms.database.realm(RealmName::default())?;
         let r = db.r_transaction()?;
-        let cas: Vec<RealmClusterCert> =
-            r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
-        let certs: Vec<RealmServerCert> =
+        let stored: Vec<RealmCert> =
             r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
-        assert_eq!(cas.len(), 1);
-        assert_eq!(certs.len(), 1);
+        assert_eq!(
+            stored
+                .iter()
+                .filter(|cert| cert.cert_type == RealmCertType::Cluster)
+                .count(),
+            1
+        );
+        assert_eq!(
+            stored
+                .iter()
+                .filter(|cert| cert.cert_type == RealmCertType::Server)
+                .count(),
+            1
+        );
         Ok(())
     }
 
     /// A server certificate is only ever issued to a server.
     #[tokio::test]
     async fn server_cert_requires_a_server_id() -> Result<()> {
-        let ca = RealmClusterCert::new(crate::ClusterId::default(), RealmName::default())?;
+        let ca = RealmCert::new_cluster(crate::ClusterId::default(), RealmName::default())?;
         assert!(
             ca.server_cert(InstanceId::new(InstanceType::Agent))
                 .is_err()
@@ -928,45 +923,20 @@ mod test_enrollment {
 #[cfg(all(test, feature = "server"))]
 mod test_server_file {
     use super::*;
-    use crate::realm::config::EndpointCert;
+    use crate::{InstanceId, InstanceType};
 
     fn url() -> ServerUrl {
         "gs.example.com:9000/myrealm".parse().unwrap()
     }
 
-    /// A client certificate survives the round trip through a `.server` file,
-    /// and comes back classified as a client with its server URL intact.
+    /// An endpoint certificate survives the round trip through a `.server` file
+    /// with its server URL and poll settings intact. The same file is what both
+    /// a client and an agent are given.
     #[test]
-    fn client_cert_round_trips() -> Result<()> {
+    fn endpoint_cert_round_trips_with_poll() -> Result<()> {
         let cluster_id = crate::ClusterId::default();
-        let ca = RealmClusterCert::new(cluster_id, "myrealm".parse()?)?;
-        let original = ca.client_cert(&url())?;
-
-        let temp_file = tempfile::NamedTempFile::new()?;
-        original.write_server_file(temp_file.path(), None)?;
-
-        let (loaded, poll) = ServerCertFile::load(temp_file.path())?;
-        assert!(poll.is_none());
-        let EndpointCert::Client(read_cert) = loaded else {
-            panic!("a client certificate must load as a client");
-        };
-
-        assert_eq!(original.ca, read_cert.ca);
-        assert_eq!(original.cert, read_cert.cert);
-        assert_eq!(original.key, read_cert.key);
-        assert_eq!(read_cert.cluster_id()?, cluster_id);
-        assert_eq!(read_cert.url()?.canonical(), url().canonical());
-        assert_eq!(read_cert.name()?, "myrealm".parse()?);
-        Ok(())
-    }
-
-    /// An agent certificate is distinguished from a client one by its extended
-    /// key usage alone, and carries the poll settings written alongside it.
-    #[test]
-    fn agent_cert_round_trips_with_poll() -> Result<()> {
-        let cluster_id = crate::ClusterId::default();
-        let ca = RealmClusterCert::new(cluster_id, "myrealm".parse()?)?;
-        let original = ca.agent_cert(&url())?;
+        let ca = RealmCert::new_cluster(cluster_id, "myrealm".parse()?)?;
+        let original = ca.endpoint_cert(&url())?;
 
         let temp_file = tempfile::NamedTempFile::new()?;
         original.write_server_file(
@@ -977,20 +947,34 @@ mod test_server_file {
             }),
         )?;
 
-        let (loaded, poll) = ServerCertFile::load(temp_file.path())?;
-        let EndpointCert::Agent(read_cert) = loaded else {
-            panic!("an agent certificate must load as an agent");
-        };
+        let (read_cert, poll) = ServerCertFile::load(temp_file.path())?;
 
+        assert_eq!(read_cert.cert_type, RealmCertType::Endpoint);
         assert_eq!(original.ca, read_cert.ca);
         assert_eq!(original.cert, read_cert.cert);
         assert_eq!(original.key, read_cert.key);
         assert_eq!(read_cert.cluster_id()?, cluster_id);
         assert_eq!(read_cert.url()?.canonical(), url().canonical());
+        assert_eq!(read_cert.name, "myrealm".parse()?);
 
         let poll = poll.expect("poll settings survive the round trip");
         assert_eq!(poll.schedule, "0 */5 * * * *");
         assert_eq!(poll.timeout_secs, 45);
+        Ok(())
+    }
+
+    /// A `.server` file only ever holds an endpoint certificate, so one holding
+    /// anything else — a server certificate, say — is rejected rather than
+    /// loaded as something it isn't.
+    #[test]
+    fn only_endpoint_certs_load() -> Result<()> {
+        let ca = RealmCert::new_cluster(crate::ClusterId::default(), "myrealm".parse()?)?;
+        let server_cert = ca.server_cert(InstanceId::new(InstanceType::Server))?;
+
+        let temp_file = tempfile::NamedTempFile::new()?;
+        ServerCertFile::from_endpoint(&server_cert, None).write(temp_file.path())?;
+
+        assert!(ServerCertFile::load(temp_file.path()).is_err());
         Ok(())
     }
 
@@ -1000,8 +984,8 @@ mod test_server_file {
     fn cert_paths_resolve_against_the_file() -> Result<()> {
         use crate::realm::config::{CERTIFICATE_TAG, CertSource, PRIVATE_KEY_TAG};
 
-        let ca = RealmClusterCert::new(crate::ClusterId::default(), "myrealm".parse()?)?;
-        let original = ca.client_cert(&url())?;
+        let ca = RealmCert::new_cluster(crate::ClusterId::default(), "myrealm".parse()?)?;
+        let original = ca.endpoint_cert(&url())?;
 
         let dir = tempfile::tempdir()?;
         std::fs::write(
@@ -1029,140 +1013,8 @@ mod test_server_file {
         }
         .write(&path)?;
 
-        let (loaded, _) = ServerCertFile::load(&path)?;
-        let EndpointCert::Client(read_cert) = loaded else {
-            panic!("a client certificate must load as a client");
-        };
+        let (read_cert, _) = ServerCertFile::load(&path)?;
         assert_eq!(original.cert, read_cert.cert);
         Ok(())
-    }
-}
-
-/// Realm certificate for agent instances that can authenticate with a server
-/// instance against a particular realm.
-#[data]
-#[derive(Default)]
-pub struct RealmAgentCert {
-    pub ca: Vec<u8>,
-    pub cert: Vec<u8>,
-    pub key: Option<Vec<u8>>,
-}
-
-impl Validate for RealmAgentCert {
-    fn validate(&self) -> Result<(), ValidationErrors> {
-        let mut errors = ValidationErrors::new();
-
-        // TODO check .name()
-
-        // Parse the certificate
-        let cert = match X509Certificate::from_der(&self.cert) {
-            Ok((_, cert)) => cert,
-            Err(_) => {
-                errors.add(
-                    "cert",
-                    ValidationError::new("Invalid X.509 certificate format"),
-                );
-                return Err(errors);
-            }
-        };
-
-        // Validate extended key usage for clientAuth
-        let mut client_auth = false;
-        let mut agent_realm = false;
-        for ext in cert.iter_extensions() {
-            if let ParsedExtension::ExtendedKeyUsage(eku) = ext.parsed_extension() {
-                if eku.client_auth {
-                    client_auth = true;
-                }
-                if eku
-                    .other
-                    .contains(&Oid::from(&[1, 1, 1, InstanceType::Agent.mask() as u64]).unwrap())
-                {
-                    agent_realm = true;
-                }
-            }
-        }
-
-        if !agent_realm {
-            errors.add(
-                "cert",
-                ValidationError::new("Certificate must have agent extended key usage"),
-            );
-        }
-        if !client_auth {
-            errors.add(
-                "cert",
-                ValidationError::new("Certificate must have clientAuth extended key usage"),
-            );
-        }
-
-        if errors.is_empty() {
-            Ok(())
-        } else {
-            Err(errors)
-        }
-    }
-}
-
-impl RealmAgentCert {
-    pub fn cluster_id(&self) -> Result<ClusterId> {
-        for ext in X509Certificate::from_der(&self.ca)?.1.iter_extensions() {
-            if let ParsedExtension::SubjectAlternativeName(san) = ext.parsed_extension() {
-                for name in &san.general_names {
-                    if let GeneralName::DNSName(s) = name {
-                        return s.parse::<ClusterId>();
-                    }
-                }
-            }
-        }
-
-        bail!("Subject name not found");
-    }
-
-    /// Write the certificate to a `.server` file.
-    pub fn write_server_file<P>(&self, path: P, poll: Option<PollConfig>) -> Result<()>
-    where
-        P: AsRef<Path>,
-    {
-        ServerCertFile::from_agent(self, poll).write(path)
-    }
-
-    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn ca(&self) -> Result<reqwest::Certificate> {
-        Ok(reqwest::Certificate::from_der(&self.ca)?)
-    }
-
-    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn identity(&self) -> Result<reqwest::Identity> {
-        // Combine cert and key together
-        let mut bundle = Vec::new();
-        bundle.extend_from_slice(encode(&Pem::new("CERTIFICATE", self.cert.clone())).as_bytes());
-        bundle.extend_from_slice(
-            encode(&Pem::new(
-                "PRIVATE KEY",
-                self.key.as_ref().ok_or_else(|| anyhow!("No key"))?.clone(),
-            ))
-            .as_bytes(),
-        );
-        Ok(reqwest::Identity::from_pem(&bundle)?)
-    }
-
-    /// Return when the certificate was generated.
-    pub fn creation_time(&self) -> Result<i64> {
-        Ok(X509Certificate::from_der(&self.cert)?
-            .1
-            .validity
-            .not_before
-            .timestamp())
-    }
-
-    /// The server this certificate was issued for, encoded in its common name.
-    pub fn url(&self) -> Result<ServerUrl> {
-        common_name_url(&self.cert)
-    }
-
-    /// The realm this certificate authenticates against.
-    pub fn name(&self) -> Result<RealmName> {
-        Ok(self.url()?.realm)
     }
 }

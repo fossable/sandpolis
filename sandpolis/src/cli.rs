@@ -186,138 +186,8 @@ pub enum ServerCommand {
     },
 }
 
-/// Flags shared by the two certificate-minting subcommands.
-///
-/// These issue from a realm's CA, which lives in its `.realm` file, so no
-/// database is involved.
-#[cfg(feature = "server")]
-#[derive(clap::Args, Debug, Clone)]
-pub struct NewCertArgs {
-    /// Path to the `.realm` file whose CA signs the new certificate.
-    #[clap(long, value_name = "PATH")]
-    pub realm: PathBuf,
-
-    /// Address the holder will use to reach the server, as `host` or
-    /// `host:port`. Defaults to the realm file's own `address`.
-    #[clap(long)]
-    pub address: Option<String>,
-
-    /// Run the agent in polling mode on this cron schedule (e.g. "0 */5 * * * *"
-    /// to check in every five minutes) instead of staying continuously
-    /// connected.
-    #[clap(long)]
-    pub poll: Option<String>,
-
-    /// How long the agent stays connected during each polling check-in, in
-    /// seconds.
-    #[clap(long, default_value_t = sandpolis_instance::realm::config::PollConfig::default_timeout_secs())]
-    pub poll_timeout: u64,
-
-    /// Output file path, or none for STDOUT.
-    #[clap(long)]
-    pub output: Option<PathBuf>,
-}
-
-#[cfg(feature = "server")]
-impl NewCertArgs {
-    /// Load the realm and work out what URL the minted certificate should name.
-    fn resolve(
-        &self,
-    ) -> Result<(
-        sandpolis_instance::realm::RealmClusterCert,
-        sandpolis_server::ServerUrl,
-    )> {
-        use anyhow::{Context, anyhow, bail};
-        use sandpolis_instance::realm::RealmClusterCert;
-
-        let config = crate::config::RealmConfig::load(&self.realm)?;
-
-        let Some(ca) = config.ca.as_ref() else {
-            bail!(
-                "{} declares no realm CA. Start the server once with \
-                 `--data {}` to generate one.",
-                self.realm.display(),
-                self.realm
-                    .parent()
-                    .unwrap_or_else(|| std::path::Path::new("."))
-                    .display()
-            );
-        };
-        let (cert, key) = ca.load_der(config.base_dir())?;
-        let key = key.ok_or_else(|| {
-            anyhow!(
-                "{} has the realm CA certificate but not its private key, \
-                 so it cannot issue new certificates",
-                self.realm.display()
-            )
-        })?;
-
-        let url = match self.address.as_ref() {
-            Some(address) => {
-                let mut url: sandpolis_server::ServerUrl = address
-                    .parse()
-                    .with_context(|| format!("Parsing address {address:?}"))?;
-                url.realm = config.name.clone();
-                url
-            }
-            None => config.server_url()?.ok_or_else(|| {
-                anyhow!(
-                    "{} declares no address; pass --address to say how the \
-                     holder reaches this server",
-                    self.realm.display()
-                )
-            })?,
-        };
-
-        Ok((
-            RealmClusterCert {
-                name: config.name.clone(),
-                cert,
-                key: Some(key),
-                ..Default::default()
-            },
-            url,
-        ))
-    }
-
-    fn poll(&self) -> Option<sandpolis_instance::realm::config::PollConfig> {
-        self.poll
-            .as_ref()
-            .map(|schedule| sandpolis_instance::realm::config::PollConfig {
-                schedule: schedule.clone(),
-                timeout_secs: self.poll_timeout,
-            })
-    }
-
-    /// Write `file` to `--output`, or to stdout when none was given.
-    fn emit(&self, file: sandpolis_instance::realm::config::ServerCertFile) -> Result<()> {
-        match self.output.as_ref() {
-            Some(path) => {
-                info!(path = %path.display(), "Writing endpoint certificate");
-                file.write(path)?;
-            }
-            None => println!("{}", file.to_ron()?),
-        }
-        Ok(())
-    }
-}
-
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
-    #[cfg(feature = "server")]
-    /// Generate a `.server` file for a client instance
-    NewClientCert {
-        #[clap(flatten)]
-        args: NewCertArgs,
-    },
-
-    #[cfg(feature = "server")]
-    /// Generate a `.server` file for an agent instance
-    NewAgentCert {
-        #[clap(flatten)]
-        args: NewCertArgs,
-    },
-
     InstallCert {},
 
     /// Show versions of all installed layers
@@ -480,8 +350,6 @@ impl Commands {
     /// establishing a client connection.
     pub fn standalone(&self) -> bool {
         match self {
-            #[cfg(feature = "server")]
-            Commands::NewClientCert { .. } | Commands::NewAgentCert { .. } => true,
             Commands::InstallCert {} | Commands::About => true,
             #[cfg(feature = "client")]
             Commands::Lsp { .. } => true,
@@ -585,26 +453,6 @@ impl Commands {
             Commands::Lsp { args } => {
                 crate::lsp::run(args).await?;
             }
-            #[cfg(feature = "server")]
-            Commands::NewClientCert { args } => {
-                use sandpolis_instance::realm::config::ServerCertFile;
-
-                let (ca, url) = args.resolve()?;
-                args.emit(ServerCertFile::from_client(
-                    &ca.client_cert(&url)?,
-                    args.poll(),
-                ))?;
-            }
-            #[cfg(feature = "server")]
-            Commands::NewAgentCert { args } => {
-                use sandpolis_instance::realm::config::ServerCertFile;
-
-                let (ca, url) = args.resolve()?;
-                args.emit(ServerCertFile::from_agent(
-                    &ca.agent_cert(&url)?,
-                    args.poll(),
-                ))?;
-            }
             Commands::InstallCert {} => todo!(),
             Commands::About => {
                 for line in fossable::sandpolis_word() {
@@ -686,16 +534,16 @@ impl Commands {
 #[cfg(all(test, feature = "server"))]
 mod test_stratum_args {
     use super::*;
-    use sandpolis_instance::realm::RealmClusterCert;
+    use sandpolis_instance::realm::RealmCert;
     use sandpolis_server::ServerStratum;
 
-    /// Write a `.server` file whose certificate names `url`, the way
-    /// `new-client-cert` would.
+    /// Write a `.server` file whose certificate names `url`, the way a server
+    /// writes one out for its realm at startup.
     fn client_server_file(dir: &std::path::Path, url: &str) -> Result<PathBuf> {
         let url: sandpolis_server::ServerUrl = url.parse()?;
-        let ca = RealmClusterCert::new(Default::default(), url.realm.clone())?;
+        let ca = RealmCert::new_cluster(Default::default(), url.realm.clone())?;
         let path = dir.join("upstream.server");
-        ca.client_cert(&url)?.write_server_file(&path, None)?;
+        ca.endpoint_cert(&url)?.write_server_file(&path, None)?;
         Ok(path)
     }
 

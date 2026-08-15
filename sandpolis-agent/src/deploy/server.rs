@@ -23,7 +23,7 @@ use sandpolis_instance::network::{
 };
 use sandpolis_instance::realm::config::{PollConfig, ServerCertFile};
 use sandpolis_instance::realm::url::ServerUrl;
-use sandpolis_instance::realm::{RealmClusterCert, Realms};
+use sandpolis_instance::realm::{RealmCert, RealmCertType, Realms};
 use sandpolis_macros::Stream;
 use std::sync::{Arc, OnceLock};
 use tokio::sync::mpsc::Sender;
@@ -245,13 +245,13 @@ fn certificate(server: &ServerUrl, poll: Option<PollConfig>) -> Result<String> {
 
     let database = realms.realm(server.realm.clone())?;
     let r = database.r_transaction()?;
-    let ca: RealmClusterCert = r
+    let ca: RealmCert = r
         .scan()
         .primary()?
         .all()?
-        .collect::<std::result::Result<Vec<_>, _>>()?
+        .collect::<std::result::Result<Vec<RealmCert>, _>>()?
         .into_iter()
-        .next()
+        .find(|cert| cert.cert_type == RealmCertType::Cluster)
         .ok_or_else(|| anyhow!("no realm CA for {}", server.realm))?;
     drop(r);
 
@@ -266,7 +266,7 @@ fn certificate(server: &ServerUrl, poll: Option<PollConfig>) -> Result<String> {
         );
     }
 
-    ServerCertFile::from_agent(&ca.agent_cert(server)?, poll).to_ron()
+    ServerCertFile::from_endpoint(&ca.endpoint_cert(server)?, poll).to_ron()
 }
 
 /// Verifies the target's host key against the configured fingerprint.

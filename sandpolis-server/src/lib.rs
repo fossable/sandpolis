@@ -151,20 +151,17 @@ impl ServerLayer {
     ) -> Result<ServerConnection> {
         debug!(url = %url, ?strategy, "Configuring server connection");
 
-        // Locate the realm certificate for whatever this process is. A local
-        // stratum server dialing its global stratum server authenticates with a
-        // client cert supplied via a `.server` file; there is no separate
-        // server-to-server cert type.
-        let cert = self
-            .realms
-            .find_endpoint_cert(url.realm.clone(), self.instance_type)?;
+        // Everything that dials a server presents the same kind of certificate,
+        // including a local stratum server dialing its global stratum server
+        // with one supplied via a `.server` file.
+        let cert = self.realms.find_endpoint_cert(url.realm.clone())?;
 
         let client_builder = || -> Result<reqwest::Client> {
             Ok(ClientBuilder::new()
-                .add_root_certificate(cert.ca()?)
+                .add_root_certificate(cert.root_certificate()?)
                 .identity(cert.identity()?)
                 .resolve_to_addrs(
-                    &format!("{}.{}", cert.cluster_id()?, cert.name()?),
+                    &format!("{}.{}", cert.cluster_id()?, cert.name),
                     &url.resolve()?,
                 )
                 .build()
@@ -177,7 +174,7 @@ impl ServerLayer {
             client: Arc::new(tokio::sync::RwLock::new(Some(client_builder()?))),
             cancel: CancellationToken::new(),
             banner: ServerBanner::default(),
-            realm: cert.name()?,
+            realm: cert.name.clone(),
             cluster_id: cert.cluster_id()?,
             url,
             #[cfg(feature = "server")]

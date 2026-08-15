@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
 };
 use rand::RngExt;
-use sandpolis_instance::realm::RealmClusterCert;
+use sandpolis_instance::realm::RealmCert;
 use sandpolis_instance::ClusterId;
 use std::path::PathBuf;
 use tempfile::TempDir;
@@ -87,7 +87,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         endpoint_certs.push(cert);
     }
 
-    let (realms, minted) = Realms::new(
+    let (realms, startup) = Realms::new(
         bootstraps,
         endpoint_certs,
         database.clone(),
@@ -100,12 +100,14 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     // A realm CA the server had to generate goes back into the file it came
     // from, which is the durable copy. The implicit default realm has no file,
     // so its CA stays in the database as before.
-    for ca in &minted {
+    for ca in &startup.minted_cas {
         if let Some(realm) = options.realms.iter_mut().find(|r| r.name == ca.name) {
             realm.store_ca(ca.cert_pem.clone(), ca.key_pem.clone())?;
             info!(realm = %ca.name, path = ?realm.path(), "Wrote the realm CA back to its file");
         }
     }
+
+    write_server_files(&startup.endpoint_certs, options.database.storage.as_deref())?;
 
     install_persist_callbacks(&options, &stratum);
 
@@ -114,6 +116,28 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     info!(%stratum, "Starting Sandpolis server");
     main(options, state).await?;
     Ok(std::process::ExitCode::SUCCESS)
+}
+
+/// Write out the `.server` file for each realm this server brought up.
+///
+/// This is how clients and agents are given a certificate: the server mints one
+/// per realm on every start and drops it next to the realm files, so attaching
+/// an instance is a matter of copying a file rather than running a command.
+/// A server with no data directory keeps its realms in memory, so its files go
+/// to `/tmp` — enough to point instances started on the same host at it.
+fn write_server_files(
+    endpoint_certs: &[sandpolis_instance::realm::RealmCert],
+    data_dir: Option<&std::path::Path>,
+) -> Result<()> {
+    for cert in endpoint_certs {
+        let path = data_dir
+            .unwrap_or_else(|| std::path::Path::new("/tmp"))
+            .join(format!("{}.server", cert.name));
+
+        cert.write_server_file(&path, None)?;
+        info!(realm = %cert.name, path = %path.display(), "Wrote the realm's endpoint certificate");
+    }
+    Ok(())
 }
 
 /// Realm files live on the global stratum server only, so it is also the only
@@ -351,13 +375,13 @@ pub async fn test_server() -> Result<TestServer> {
 
     // The realm's CA is generated here and handed to the server as a bootstrap,
     // exactly as a `.realm` file would.
-    let ca_cert = RealmClusterCert::new(ClusterId::default(), url.realm.clone())?;
+    let ca_cert = RealmCert::new_cluster(ClusterId::default(), url.realm.clone())?;
 
     // The client's half goes into a `.server` file for the caller to use.
     let certs = tempdir()?;
     let endpoint_cert = certs.path().join("test.server");
     ca_cert
-        .client_cert(&url)?
+        .endpoint_cert(&url)?
         .write_server_file(&endpoint_cert, None)?;
 
     let instance = sandpolis_instance::InstanceLayer::new(

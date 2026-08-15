@@ -164,16 +164,19 @@ estate a server manages rather than the servers managing it.
 
 ## Development loop
 
+Every time a server starts, it mints an endpoint certificate for each realm it
+serves and writes it to `<realm>.server` in the data directory. Clients and
+agents hold the same kind of certificate, so that one file attaches either.
+
 A server started with no `--data` has no directory to scan, so it serves an
-implicit `default` realm whose CA lives only in its in-memory database. In debug
-builds it mints an agent and a client certificate from that CA and writes them
-to `/tmp`, which is the whole setup for running the three instances against each
-other on one host:
+implicit `default` realm whose CA lives only in its in-memory database and its
+certificate goes to `/tmp` instead. That's the whole setup for running the three
+instances against each other on one host:
 
 ```sh
-sandpolis server                              # terminal 1
-sandpolis agent  --server /tmp/agent.server   # terminal 2
-sandpolis client --server /tmp/client.server  # terminal 3
+sandpolis server                               # terminal 1
+sandpolis agent  --server /tmp/default.server  # terminal 2
+sandpolis client --server /tmp/default.server  # terminal 3
 ```
 
 ## Mobile App

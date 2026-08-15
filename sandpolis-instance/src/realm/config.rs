@@ -150,65 +150,6 @@ pub struct ServerCertFile {
     pub poll: Option<PollConfig>,
 }
 
-/// A loaded endpoint certificate, classified by what it authenticates as.
-#[derive(Debug, Clone)]
-pub enum EndpointCert {
-    Client(super::RealmClientCert),
-    Agent(super::RealmAgentCert),
-}
-
-impl EndpointCert {
-    /// The server this certificate was issued for, parsed out of its common
-    /// name.
-    pub fn url(&self) -> Result<ServerUrl> {
-        match self {
-            Self::Client(cert) => cert.url(),
-            Self::Agent(cert) => cert.url(),
-        }
-    }
-
-    /// The realm this certificate authenticates against.
-    pub fn realm(&self) -> Result<RealmName> {
-        Ok(self.url()?.realm)
-    }
-
-    /// The realm this certificate authenticates against, named the way the
-    /// underlying certificates name it.
-    pub fn name(&self) -> Result<RealmName> {
-        match self {
-            Self::Client(cert) => cert.name(),
-            Self::Agent(cert) => cert.name(),
-        }
-    }
-
-    /// The cluster this certificate's realm belongs to.
-    pub fn cluster_id(&self) -> Result<super::ClusterId> {
-        match self {
-            Self::Client(cert) => cert.cluster_id(),
-            Self::Agent(cert) => cert.cluster_id(),
-        }
-    }
-
-    /// The realm CA, for verifying the server this certificate names.
-    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn ca(&self) -> Result<reqwest::Certificate> {
-        match self {
-            Self::Client(cert) => cert.ca(),
-            Self::Agent(cert) => cert.ca(),
-        }
-    }
-
-    /// This instance's own certificate and key, for authenticating to the
-    /// server.
-    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    pub fn identity(&self) -> Result<reqwest::Identity> {
-        match self {
-            Self::Client(cert) => cert.identity(),
-            Self::Agent(cert) => cert.identity(),
-        }
-    }
-}
-
 /// RON parsing options for the file formats: allow optional fields without an
 /// explicit `Some`.
 pub fn ron_options() -> ron::Options {
@@ -216,21 +157,8 @@ pub fn ron_options() -> ron::Options {
 }
 
 impl ServerCertFile {
-    /// Build the file contents for a client certificate.
-    pub fn from_client(cert: &super::RealmClientCert, poll: Option<PollConfig>) -> Self {
-        Self {
-            ca: CertSource::inline_der(&cert.ca, CERTIFICATE_TAG),
-            cert: CertSource::inline_der(&cert.cert, CERTIFICATE_TAG),
-            key: cert
-                .key
-                .as_ref()
-                .map(|key| CertSource::inline_der(key, PRIVATE_KEY_TAG)),
-            poll,
-        }
-    }
-
-    /// Build the file contents for an agent certificate.
-    pub fn from_agent(cert: &super::RealmAgentCert, poll: Option<PollConfig>) -> Self {
+    /// Build the file contents for an endpoint certificate.
+    pub fn from_endpoint(cert: &super::RealmCert, poll: Option<PollConfig>) -> Self {
         Self {
             ca: CertSource::inline_der(&cert.ca, CERTIFICATE_TAG),
             cert: CertSource::inline_der(&cert.cert, CERTIFICATE_TAG),
@@ -258,10 +186,10 @@ impl ServerCertFile {
         Ok(())
     }
 
-    /// Read a `.server` file and classify the certificate it holds.
+    /// Read a `.server` file and decode the certificate it holds.
     ///
     /// Relative paths inside the file resolve against the file's own directory.
-    pub fn load<P>(path: P) -> Result<(EndpointCert, Option<PollConfig>)>
+    pub fn load<P>(path: P) -> Result<(super::RealmCert, Option<PollConfig>)>
     where
         P: AsRef<Path>,
     {
@@ -272,12 +200,14 @@ impl ServerCertFile {
             .from_str(&contents)
             .with_context(|| format!("Parsing {}", path.display()))?;
 
-        file.classify(path.parent())
+        file.decode(path.parent())
     }
 
-    /// Decode the certificate material and decide whether it belongs to a client
-    /// or an agent, which follows from its extended key usage.
-    pub fn classify(&self, base_dir: Option<&Path>) -> Result<(EndpointCert, Option<PollConfig>)> {
+    /// Decode the certificate material into an endpoint certificate.
+    ///
+    /// The realm it authenticates against comes from the common name, so the
+    /// file never has to name it separately.
+    pub fn decode(&self, base_dir: Option<&Path>) -> Result<(super::RealmCert, Option<PollConfig>)> {
         use validator::Validate;
 
         let ca = self.ca.load_der(base_dir, CERTIFICATE_TAG)?;
@@ -287,26 +217,18 @@ impl ServerCertFile {
             None => None,
         };
 
-        let agent = super::RealmAgentCert {
-            ca: ca.clone(),
-            cert: cert.clone(),
-            key: key.clone(),
-            ..Default::default()
-        };
-        if agent.validate().is_ok() {
-            return Ok((EndpointCert::Agent(agent), self.poll.clone()));
-        }
-
-        let client = super::RealmClientCert {
+        let mut endpoint = super::RealmCert {
+            cert_type: super::RealmCertType::Endpoint,
             ca,
             cert,
             key,
             ..Default::default()
         };
-        client
+        endpoint
             .validate()
-            .context("Certificate is neither a client nor an agent realm certificate")?;
+            .context("Certificate is not an endpoint realm certificate")?;
+        endpoint.name = endpoint.url()?.realm;
 
-        Ok((EndpointCert::Client(client), self.poll.clone()))
+        Ok((endpoint, self.poll.clone()))
     }
 }

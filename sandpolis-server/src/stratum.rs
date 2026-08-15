@@ -81,15 +81,15 @@ pub enum IssueServerCertResponse {
 /// The caller has already been authenticated by `auth_middleware` against the
 /// realm's CA, so it holds a valid realm certificate for this network.
 ///
-/// TODO: this currently issues to any authenticated realm-certificate holder.
-/// Once the auth middleware distinguishes certificate types (there is already a
-/// matching TODO on the EKU check in `realm::server`), this should require a
-/// certificate that is actually entitled to run a server.
+/// TODO: this currently issues to any authenticated realm-certificate holder,
+/// which is every agent on the network. Issuance is meant to be gated on an
+/// operator approving the request in the GUI — the certificate itself can't
+/// carry that entitlement, since clients and agents hold the same kind.
 pub async fn issue_server_cert(
     axum::extract::State(server): axum::extract::State<ServerLayer>,
     axum::extract::Json(request): axum::extract::Json<IssueServerCertRequest>,
 ) -> axum::Json<IssueServerCertResponse> {
-    use sandpolis_instance::realm::{RealmClusterCert, RealmServerCert};
+    use sandpolis_instance::realm::{RealmCert, RealmCertType};
 
     if server.stratum.is_local() {
         return axum::Json(IssueServerCertResponse::NotGlobalStratum);
@@ -103,16 +103,16 @@ pub async fn issue_server_cert(
         return axum::Json(IssueServerCertResponse::Rejected);
     }
 
-    let issued = (|| -> Result<(RealmClusterCert, RealmServerCert)> {
+    let issued = (|| -> Result<(RealmCert, RealmCert)> {
         let db = server.realms.realm(request.realm.clone())?;
         let r = db.r_transaction()?;
-        let cluster_cert: RealmClusterCert = r
+        let cluster_cert: RealmCert = r
             .scan()
             .primary()?
             .all()?
-            .collect::<std::result::Result<Vec<_>, _>>()?
+            .collect::<std::result::Result<Vec<RealmCert>, _>>()?
             .into_iter()
-            .next()
+            .find(|cert| cert.cert_type == RealmCertType::Cluster)
             .ok_or_else(|| anyhow!("no realm CA for {}", request.realm))?;
         drop(r);
 
@@ -164,7 +164,7 @@ pub async fn enroll(server: &ServerLayer, instance: &InstanceLayer) -> Result<()
     // Without a realm certificate we can't authenticate to the global stratum
     // server at all. That's a misconfiguration, not an outage, so say so now
     // rather than retrying against it forever.
-    server.realms.find_client_cert(realm.clone()).map_err(|e| {
+    server.realms.find_endpoint_cert(realm.clone()).map_err(|e| {
         anyhow!(
             "{e}. A local stratum server authenticates to its global stratum \
              server with a realm certificate; pass one with --server."
