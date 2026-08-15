@@ -7,9 +7,9 @@ pub mod client;
 pub mod session;
 
 #[derive(Clone)]
-pub struct FilesystemLayer {}
+pub struct FilesystemManager {}
 
-impl FilesystemLayer {
+impl FilesystemManager {
     pub async fn new() -> Result<Self> {
         Ok(Self {})
     }

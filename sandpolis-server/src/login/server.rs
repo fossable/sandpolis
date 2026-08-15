@@ -1,5 +1,5 @@
 use super::{LoginRequest, LoginResponse};
-use crate::user::UserLayer;
+use crate::user::UserManager;
 use crate::user::server::Claims;
 use aws_lc_rs::pbkdf2;
 use axum::Json;
@@ -14,7 +14,7 @@ use validator::Validate;
 
 #[axum_macros::debug_handler]
 pub async fn post_login(
-    state: State<UserLayer>,
+    state: State<UserManager>,
     TypedHeader(realm): TypedHeader<RealmName>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {

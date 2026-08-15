@@ -1,6 +1,6 @@
 use bevy::prelude::bevy_main;
 use sandpolis::{InstanceState, RuntimeOptions};
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 use std::path::PathBuf;
 
 /// Get Android app's files directory using JNI
@@ -47,7 +47,7 @@ pub fn main() {
             }
 
             // Load state
-            let database = DatabaseLayer::new(
+            let database = DatabaseManager::new(
                 options.database.clone(),
                 &sandpolis::MODELS,
                 sandpolis_instance::database::WriteAuthority::Full,
@@ -57,7 +57,7 @@ pub fn main() {
             // The app holds no realm certificate until the user logs in, so it
             // starts with just the default realm its own data lives in.
             let realms =
-                sandpolis_instance::realm::Realms::for_endpoint(Vec::new(), database.clone())
+                sandpolis_instance::realm::RealmManager::for_endpoint(Vec::new(), database.clone())
                     .unwrap();
 
             let state = InstanceState::new(

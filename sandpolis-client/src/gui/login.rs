@@ -36,7 +36,7 @@ pub struct LoginPhase2Handle {
 pub fn handle_login_phase1(
     mut login_state: ResMut<LoginDialogState>,
     mut login_operation: ResMut<LoginOperation>,
-    server_layer: Res<sandpolis_server::ServerLayer>,
+    server_manager: Res<sandpolis_server::ServerManager>,
 ) {
     // Check if we need to start phase 1
     if matches!(login_state.phase, LoginPhase::ServerAddress)
@@ -56,11 +56,11 @@ pub fn handle_login_phase1(
         debug!(address = %server_url, "Starting phase 1: connecting to server");
 
         // Clone what we need for the async task
-        let server_layer = server_layer.clone();
+        let server_manager = server_manager.clone();
 
         // Spawn async task
         let task = bevy::tasks::AsyncComputeTaskPool::get().spawn(async move {
-            server_layer
+            server_manager
                 .connect(server_url)
                 .await
                 .map_err(|e| format!("Connection failed: {}", e))
@@ -98,7 +98,7 @@ pub fn handle_login_phase1(
 pub fn handle_login_phase2(
     mut login_state: ResMut<LoginDialogState>,
     mut login_operation: ResMut<LoginOperation>,
-    server_layer: Res<sandpolis_server::ServerLayer>,
+    server_manager: Res<sandpolis_server::ServerManager>,
 ) {
     // Check if we need to start phase 2
     if matches!(login_state.phase, LoginPhase::Credentials { .. })
@@ -128,7 +128,7 @@ pub fn handle_login_phase2(
         debug!(username = %username, "Starting phase 2: logging in");
 
         // Clone what we need for the async task
-        let server_layer_clone = server_layer.clone();
+        let server_layer_clone = server_manager.clone();
         let password = login_state.password.clone();
         let totp_token = if login_state.otp.is_empty() {
             None
@@ -180,7 +180,7 @@ pub fn handle_login_phase2(
                     info!("Phase 2 complete: login successful");
 
                     // Save the server for future use
-                    if let Err(e) = server_layer.save_server(SavedServerData {
+                    if let Err(e) = server_manager.save_server(SavedServerData {
                         address: handle.server_url,
                         token: client_auth_token,
                         user: handle.username,
@@ -233,7 +233,7 @@ pub fn handle_login_phase2(
 /// System to check for saved servers and skip to phase 2 if applicable
 pub fn check_saved_servers(
     mut login_state: ResMut<LoginDialogState>,
-    server_layer: Res<sandpolis_server::ServerLayer>,
+    server_manager: Res<sandpolis_server::ServerManager>,
 ) {
     // Only run when dialog is opened and in ServerAddress phase
     if !login_state.show || !matches!(login_state.phase, LoginPhase::ServerAddress) {
@@ -252,7 +252,7 @@ pub fn check_saved_servers(
     };
 
     // Check if we have a saved server with this address
-    for server_resident in server_layer.servers.iter() {
+    for server_resident in server_manager.servers.iter() {
         let server = server_resident.read();
         if server.address == server_url {
             debug!(

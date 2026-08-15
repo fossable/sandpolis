@@ -3,7 +3,7 @@ use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(default)]
-pub struct AccountLayerConfig {
+pub struct AccountManagerConfig {
     /// Accounts declared on disk. The server imports any that aren't in the
     /// database yet at startup, and rewrites this list whenever the account set
     /// changes.

@@ -102,7 +102,7 @@ impl Collector for PackageCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
 
@@ -110,7 +110,7 @@ mod tests {
     #[test_log::test]
     #[ignore = "runs the host's real package manager"]
     async fn test_package_collector() -> Result<()> {
-        let database: DatabaseLayer = test_db!(PackageData);
+        let database: DatabaseManager = test_db!(PackageData);
 
         let instance_id = InstanceId::new_server();
         let mut collector =

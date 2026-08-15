@@ -1,6 +1,6 @@
-## Sandpolis audit layer
+## Sandpolis audit subsystem
 
-This layer reads logs, audit events, and checks file signatures.
+This subsystem reads logs, audit events, and checks file signatures.
 
 ### Auditd
 

@@ -1,10 +1,10 @@
 use crate::ClusterId;
-use crate::InstanceLayer;
+use crate::InstanceManager;
 use crate::InstanceType;
 use crate::database::Data;
 use crate::database::RealmDatabase;
 use crate::database::ResidentVec;
-use crate::database::{DatabaseLayer, Resident};
+use crate::database::{DatabaseManager, Resident};
 use crate::realm::config::CERTIFICATE_TAG;
 use crate::realm::config::PRIVATE_KEY_TAG;
 use crate::realm::config::PollConfig;
@@ -140,13 +140,13 @@ fn endpoint_realm_names(certs: &[RealmCert]) -> Vec<RealmName> {
 /// Add the realms named by `endpoint_certs` to `inner`, creating a registry row
 /// for any this instance hasn't recorded yet.
 ///
-/// Shared between [`Realms::new`] and [`Realms::for_endpoint`]: a server with no
+/// Shared between [`RealmManager::new`] and [`RealmManager::for_endpoint`]: a server with no
 /// realm files of its own and an endpoint attaching to one learn their realms
 /// exactly the same way, from the certificates they hold.
 fn insert_endpoint_realms(
     inner: &mut BTreeMap<RealmName, Realm>,
     registry: &ResidentVec<RealmData>,
-    database: &DatabaseLayer,
+    database: &DatabaseManager,
     endpoint_certs: &[RealmCert],
 ) -> Result<()> {
     for name in endpoint_realm_names(endpoint_certs) {
@@ -209,8 +209,8 @@ pub struct RealmStartupOutput {
 /// (server) or from the endpoint certificates this instance holds (client and
 /// agent), so nothing creates one at runtime.
 #[derive(Clone)]
-pub struct Realms {
-    database: DatabaseLayer,
+pub struct RealmManager {
+    database: DatabaseManager,
 
     /// The realms themselves, keyed by name.
     inner: Arc<BTreeMap<RealmName, Realm>>,
@@ -228,7 +228,7 @@ pub struct Realms {
     endpoint_certs: Vec<RealmCert>,
 }
 
-impl Realms {
+impl RealmManager {
     /// `authoritative` is true only on the global stratum server, which owns the
     /// realm CA.
     ///
@@ -249,8 +249,8 @@ impl Realms {
     pub async fn new(
         bootstraps: Vec<RealmBootstrap>,
         endpoint_certs: Vec<RealmCert>,
-        database: DatabaseLayer,
-        instance: InstanceLayer,
+        database: DatabaseManager,
+        instance: InstanceManager,
         authoritative: bool,
         listen_port: u16,
     ) -> Result<(Self, RealmStartupOutput)> {
@@ -410,7 +410,7 @@ impl Realms {
     ///
     /// Such an instance serves no realms of its own, so its certificates are the
     /// whole story: it knows exactly the realms they name and nothing else.
-    pub fn for_endpoint(endpoint_certs: Vec<RealmCert>, database: DatabaseLayer) -> Result<Self> {
+    pub fn for_endpoint(endpoint_certs: Vec<RealmCert>, database: DatabaseManager) -> Result<Self> {
         let registry: ResidentVec<RealmData> =
             database.realm(RealmName::default())?.resident_vec(())?;
 
@@ -797,8 +797,8 @@ mod test_enrollment {
         })
     }
 
-    fn replica() -> Result<DatabaseLayer> {
-        Ok(DatabaseLayer::new(
+    fn replica() -> Result<DatabaseManager> {
+        Ok(DatabaseManager::new(
             crate::database::config::DatabaseConfig {
                 storage: None,
                 key: Default::default(),
@@ -810,15 +810,15 @@ mod test_enrollment {
 
     /// A local stratum server's realm set: it knows the default realm but was
     /// issued nothing yet.
-    fn layer(database: DatabaseLayer) -> Realms {
-        Realms::for_endpoint(Vec::new(), database).unwrap()
+    fn manager(database: DatabaseManager) -> RealmManager {
+        RealmManager::for_endpoint(Vec::new(), database).unwrap()
     }
 
     /// A local stratum server starts with nothing: it must not invent a CA, and
     /// it can't serve until the global stratum server has issued its cert.
     #[tokio::test]
     async fn replica_starts_without_certificates() -> Result<()> {
-        let realms = layer(replica()?);
+        let realms = manager(replica()?);
         let id = InstanceId::new(InstanceType::Server);
         assert!(!realms.has_server_cert(RealmName::default(), id));
         Ok(())
@@ -834,7 +834,7 @@ mod test_enrollment {
         let id = InstanceId::new(InstanceType::Server);
         let issued = ca.server_cert(id)?;
 
-        let realms = layer(replica()?);
+        let realms = manager(replica()?);
         realms.install_enrollment(
             RealmName::default(),
             ca.cert.clone(),
@@ -874,7 +874,7 @@ mod test_enrollment {
     #[tokio::test]
     async fn re_enrolling_replaces_credentials() -> Result<()> {
         let id = InstanceId::new(InstanceType::Server);
-        let realms = layer(replica()?);
+        let realms = manager(replica()?);
 
         for _ in 0..2 {
             let ca = RealmCert::new_cluster(crate::ClusterId::default(), RealmName::default())?;

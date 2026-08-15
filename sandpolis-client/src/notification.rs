@@ -19,7 +19,7 @@ use chrono::Utc;
 use native_db::*;
 use native_model::Model;
 use sandpolis_instance::database::{
-    DataIdentifier, DatabaseLayer, Resident, ResidentVecEvent,
+    DataIdentifier, DatabaseManager, Resident, ResidentVecEvent,
 };
 use sandpolis_instance::notification::{NotificationData, notification_model_id};
 use sandpolis_instance::realm::RealmName;
@@ -101,7 +101,7 @@ pub fn set_foreground(foreground: bool) {
 ///
 /// Watches the collection the process notifier already maintains, so this adds
 /// a callback rather than a second view of the same rows.
-pub fn watch(database: &DatabaseLayer) -> Result<()> {
+pub fn watch(database: &DatabaseManager) -> Result<()> {
     let realm = database.realm(RealmName::default())?;
     let watermark: Resident<NotificationWatermarkData> = realm.resident(())?;
 

@@ -1,4 +1,4 @@
-//! Long-running background work that any layer can build on.
+//! Long-running background work that any subsystem can build on.
 //!
 //! A service implements [`Service`]: a name, the layer it belongs to, a
 //! [`ServiceSchedule`], and one `async` [`run`](Service::run). The
@@ -13,10 +13,11 @@
 //! # Enabling and disabling
 //!
 //! [`ServiceData::enabled`] is the desired state and it lives in the database,
-//! so a service switched off from the client stays off across a restart. Layer
-//! configuration is a separate, coarser control: a service its layer declines to
-//! register (because a config flag turned its whole subsystem off) never reaches
-//! the runner at all and doesn't appear in the client. That means turning a
+//! so a service switched off from the client stays off across a restart.
+//! Subsystem configuration is a separate, coarser control: a service its
+//! subsystem declines to register (because a config flag turned that whole
+//! subsystem off) never reaches the runner at all and doesn't appear in the
+//! client. That means turning a
 //! config flag back on does *not* re-enable a service that was disabled from the
 //! GUI — the stored `enabled` still applies.
 

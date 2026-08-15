@@ -2,12 +2,12 @@
 //!
 //! A probe can't run an agent, so there's no capture backend to relay to.
 //! Instead the device's owning *server* speaks RFB to it and re-encodes what it
-//! sees into the desktop layer's own frame format. Reusing
+//! sees into the desktop subsystem's own frame format. Reusing
 //! [`DesktopStreamResponse`] as the response type means the client's decoder,
 //! texture upload, and input mapping are shared with agent streams.
 //!
 //! Credentials never leave the server. The client sends only a device id, which
-//! the server resolves against the probe layer's device registry.
+//! the server resolves against the probe subsystem's device registry.
 
 use crate::session::{DesktopStreamInputEvent, DesktopStreamResponse};
 use serde::{Deserialize, Serialize};
@@ -46,7 +46,7 @@ mod server {
     /// How long to idle when the device sent nothing, roughly one frame at 60Hz.
     const IDLE_SLEEP: Duration = Duration::from_millis(16);
 
-    /// Stream responder that mirrors a VNC device into the desktop layer.
+    /// Stream responder that mirrors a VNC device into the desktop subsystem.
     ///
     /// The `vnc` crate's client is blocking — `poll_event` is a `try_recv` over
     /// an internal reader thread — so the session lives on a dedicated OS thread
@@ -314,7 +314,7 @@ mod server {
                         return Ok(());
                     }
                     // Cursor shape, colour maps and the bell have nowhere to go
-                    // in the desktop layer's frame format.
+                    // in the desktop subsystem's frame format.
                     vnc::client::Event::SetCursor { .. }
                     | vnc::client::Event::SetColourMap { .. }
                     | vnc::client::Event::Bell => {}

@@ -1,15 +1,15 @@
-use crate::AgentLayer;
+use crate::AgentManager;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, WidgetRef};
 use sandpolis_client::tui::EventHandler;
 
 pub struct WakeWidget {
-    pub agent: AgentLayer,
+    pub agent: AgentManager,
 }
 
 impl WakeWidget {
-    pub fn new(agent: AgentLayer) -> Self {
+    pub fn new(agent: AgentManager) -> Self {
         WakeWidget { agent }
     }
 }

@@ -13,7 +13,7 @@ use tokio_util::sync::CancellationToken;
 impl InstanceConnection {
     /// Wrap a websocket with an `InstanceConnection`.
     ///
-    /// The `handlers` slice contains layers that will register their stream
+    /// The `handlers` slice contains subsystems that will register their stream
     /// responders with the connection's stream registry.
     pub fn websocket(
         socket: WebSocket,

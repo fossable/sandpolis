@@ -34,7 +34,7 @@ inventory::collect!(ModelRegistration);
 
 /// Every `#[data]` model linked into this binary.
 ///
-/// Which models that is depends on which layer crates the build enabled, since
+/// Which models that is depends on which subsystem crates the build enabled, since
 /// a type can only submit its registration if its crate is linked.
 pub static MODELS: LazyLock<Models> = LazyLock::new(|| {
     let mut models = Models::new();
@@ -113,7 +113,7 @@ impl std::fmt::Debug for WriteAuthority {
 
 /// The instance scopes a server currently owns.
 ///
-/// Shared between the database layer (which consults it on every gated write)
+/// Shared between the database manager (which consults it on every gated write)
 /// and the server's ownership machinery (which updates it as grants arrive from
 /// and are revoked by the global stratum server).
 #[derive(Debug, Default)]
@@ -206,29 +206,29 @@ impl ScopeTable {
     }
 }
 
-/// This layer manages separate databases for each realm.
+/// Manages a separate database for each realm.
 #[derive(Clone)]
-pub struct DatabaseLayer {
+pub struct DatabaseManager {
     config: DatabaseConfig,
 
     /// Container for all the possible types of `Data` we can interact with
     models: &'static Models,
 
-    /// Which scopes the databases in this layer may write locally.
+    /// Which scopes the databases in this manager may write locally.
     authority: WriteAuthority,
 
     /// Separate databases indexed by name
     inner: Arc<RwLock<BTreeMap<RealmName, RealmDatabase>>>,
 }
 
-impl DatabaseLayer {
-    /// Create a new `DatabaseLayer` initialized with the default realm.
+impl DatabaseManager {
+    /// Create a new `DatabaseManager` initialized with the default realm.
     pub fn new(
         config: DatabaseConfig,
         models: &'static Models,
         authority: WriteAuthority,
     ) -> Result<Self> {
-        debug!(?authority, "Initializing database layer");
+        debug!(?authority, "Initializing database manager");
 
         let default = if let Some(path) = config.get_storage_dir()? {
             let path = path.join("default.db");
@@ -251,7 +251,7 @@ impl DatabaseLayer {
         })
     }
 
-    /// Which scopes the databases in this layer may write locally.
+    /// Which scopes the databases in this manager may write locally.
     pub fn authority(&self) -> &WriteAuthority {
         &self.authority
     }
@@ -297,7 +297,7 @@ macro_rules! test_db {
             models.define::<$model>().unwrap();
         )+
 
-        $crate::database::DatabaseLayer::new(
+        $crate::database::DatabaseManager::new(
             $crate::database::config::DatabaseConfig {
                 storage: None,
                 key: Default::default(),
@@ -319,7 +319,7 @@ macro_rules! test_scoped_db {
             models.define::<$model>().unwrap();
         )+
 
-        $crate::database::DatabaseLayer::new(
+        $crate::database::DatabaseManager::new(
             $crate::database::config::DatabaseConfig {
                 storage: None,
                 key: Default::default(),
@@ -346,7 +346,7 @@ impl RealmDatabase {
     }
 
     /// Direct access to the underlying native_db database (for low-level
-    /// operations like watches in the sync layer).
+    /// operations like watches in the sync module).
     pub(crate) fn db(&self) -> &native_db::Database<'static> {
         &self.inner
     }
@@ -394,10 +394,10 @@ impl RealmDatabase {
     /// belong to *this process* rather than to the estate. Permitted callers,
     /// and nothing else:
     ///
-    /// - [`crate::InstanceLayer::new`] — this instance's own identity row
-    /// - [`crate::realm::RealmLayer::new`] — this instance's own certificates
-    /// - [`crate::network::NetworkLayer`] — live connection bookkeeping
-    /// - `sandpolis_server::ServerLayer::new` — purging stale connection rows
+    /// - [`crate::InstanceManager::new`] — this instance's own identity row
+    /// - [`crate::realm::RealmManager::new`] — this instance's own certificates
+    /// - [`crate::network::NetworkManager`] — live connection bookkeeping
+    /// - `sandpolis_server::ServerManager::new` — purging stale connection rows
     /// - `sandpolis_server::ownership` — a local stratum server's mirror of its
     ///   own grants, so ownership survives a restart while the GS is unreachable
     ///
@@ -1110,7 +1110,7 @@ mod test_scoped {
     }
 
     /// A missing singleton without write authority yields an unpersisted default
-    /// rather than failing or seeding a competing row, so layers can still start
+    /// rather than failing or seeding a competing row, so subsystems can still start
     /// against an empty scoped database.
     #[tokio::test]
     async fn resident_default_is_not_persisted_without_authority() -> Result<()> {

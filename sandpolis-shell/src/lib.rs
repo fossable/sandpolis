@@ -3,7 +3,7 @@ use native_db::*;
 use native_model::Model;
 use regex::Regex;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 use sandpolis_instance::network::{RegisterResponders, StreamRegistry, StreamRequester};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -25,14 +25,14 @@ pub mod shell;
 pub mod ssh;
 
 #[derive(Clone)]
-pub struct ShellLayer {
-    database: DatabaseLayer,
+pub struct ShellManager {
+    database: DatabaseManager,
     #[cfg(feature = "agent")]
     sessions: Arc<Mutex<Vec<crate::session::ShellSessionStreamResponder>>>,
 }
 
-impl ShellLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+impl ShellManager {
+    pub async fn new(database: DatabaseManager) -> Result<Self> {
         Ok(Self {
             database,
             #[cfg(feature = "agent")]

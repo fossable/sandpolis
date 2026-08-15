@@ -1,4 +1,4 @@
-use crate::DesktopLayer;
+use crate::DesktopManager;
 use crate::screenshot::{
     DesktopScreenshotRequest, DesktopScreenshotRequester, DesktopScreenshotResult,
 };
@@ -26,7 +26,7 @@ pub enum DesktopCommand {
 pub async fn dispatch(
     action: Option<DesktopCommand>,
     target: TargetArgs,
-    _layer: &DesktopLayer,
+    _layer: &DesktopManager,
     fps: f32,
 ) -> Result<ExitCode> {
     match action {

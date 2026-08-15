@@ -58,7 +58,7 @@ pub struct LayerClientInfo {
     /// Which probe protocols are shown while this layer is active, named by
     /// `ProbeType::display_name()` (e.g. `"SSH"`, `"VNC"`). Empty means every
     /// protocol. Only meaningful when [`show_probe_nodes`](Self::show_probe_nodes)
-    /// is set. Kept as strings so this crate needn't depend on the probe layer.
+    /// is set. Kept as strings so this crate needn't depend on the probe subsystem.
     pub probe_protocols: &'static [&'static str],
     /// The layer's node panel, if it has one. Layers without one still get a
     /// panel per node; it just shows the node's identity and nothing else.

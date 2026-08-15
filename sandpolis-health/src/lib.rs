@@ -2,8 +2,8 @@ use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::InstanceLayer;
-use sandpolis_instance::database::{DatabaseLayer, Resident};
+use sandpolis_instance::InstanceManager;
+use sandpolis_instance::database::{DatabaseManager, Resident};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 
@@ -17,14 +17,14 @@ pub mod systemd;
 
 #[data]
 #[derive(Default)]
-pub struct HealthLayerData {}
+pub struct HealthManagerData {}
 
-/// The health layer tracks the operational status of services and the host's
+/// The health subsystem tracks the operational status of services and the host's
 /// overall well-being (currently: systemd units).
 #[derive(Clone)]
-pub struct HealthLayer {
+pub struct HealthManager {
     #[allow(dead_code)]
-    data: Resident<HealthLayerData>,
+    data: Resident<HealthManagerData>,
     #[allow(dead_code)]
     pub instance_id: InstanceId,
 
@@ -33,8 +33,8 @@ pub struct HealthLayer {
     pub systemd: Arc<tokio::sync::Mutex<systemd::agent::SystemdCollector>>,
 }
 
-impl HealthLayer {
-    pub async fn new(database: DatabaseLayer, instance: InstanceLayer) -> Result<Self> {
+impl HealthManager {
+    pub async fn new(database: DatabaseManager, instance: InstanceManager) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "agent")]
             systemd: Arc::new(tokio::sync::Mutex::new(
@@ -48,7 +48,7 @@ impl HealthLayer {
         })
     }
 
-    /// Add the layer's background services to the agent's runner.
+    /// Add the subsystem's background services to the agent's runner.
     #[cfg(feature = "agent")]
     pub fn register_services(&self, runner: &mut sandpolis_instance::service::ServiceRunner) {
         runner.register(sandpolis_agent::CollectorService::new(

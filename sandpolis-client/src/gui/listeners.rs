@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::InstanceManager;
 use sandpolis_instance::database::ResidentVecEvent;
-use sandpolis_instance::network::NetworkLayer;
+use sandpolis_instance::network::NetworkManager;
 use tokio::sync::mpsc;
 
 /// Database update events from resident listeners.
@@ -38,11 +38,11 @@ pub struct DatabaseUpdateSender {
 /// Set up all resident listeners to forward database updates to Bevy
 /// This runs in a background tokio task and sends updates through the channel
 pub async fn setup_all_listeners(
-    network: NetworkLayer,
-    instance: InstanceLayer,
+    network: NetworkManager,
+    instance: InstanceManager,
     tx: mpsc::UnboundedSender<DatabaseUpdate>,
 ) {
-    // Listen for connection changes in the network layer
+    // Listen for connection changes in the network manager
     // Each connection represents an instance in the network
     let tx_connections = tx.clone();
     network.connections.listen(move |event| {

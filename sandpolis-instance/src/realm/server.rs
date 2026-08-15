@@ -1,11 +1,11 @@
 use super::RealmCert;
 use super::RealmCertType;
 use super::RealmName;
-use super::Realms;
+use super::RealmManager;
 use super::url::ServerUrl;
 use crate::ClusterId;
 use crate::InstanceId;
-use crate::InstanceLayer;
+use crate::InstanceManager;
 use crate::InstanceType;
 use anyhow::Result;
 use anyhow::anyhow;
@@ -251,7 +251,7 @@ pub struct TlsData {
 pub struct RealmAcceptor(RustlsAcceptor);
 
 impl RealmAcceptor {
-    pub async fn new(instance_layer: InstanceLayer, realms: Realms) -> Result<Self> {
+    pub async fn new(instance_manager: InstanceManager, realms: RealmManager) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
@@ -280,7 +280,7 @@ impl RealmAcceptor {
                 .iter()
                 .find(|cert| {
                     cert.cert_type == RealmCertType::Server
-                        && cert._instance_id == instance_layer.instance_id
+                        && cert._instance_id == instance_manager.instance_id
                 })
                 .ok_or_else(|| anyhow!("No server certificate for realm: {}", realm.name))?;
 

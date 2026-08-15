@@ -1,6 +1,6 @@
 //! The account-management stream: create and delete accounts.
 //!
-//! Unlike the probe layer's equivalent stream, this one carries writes only. The
+//! Unlike the probe subsystem's equivalent stream, this one carries writes only. The
 //! read path is the database sync engine: the server writes [`AccountData`] and
 //! [`AccountLinkData`] into its realm, and clients subscribe to those models (see
 //! [`crate::client`]) to receive a snapshot plus live updates.
@@ -44,7 +44,7 @@ mod server {
     use std::sync::OnceLock;
     use tokio::sync::mpsc::Sender;
 
-    /// The realm accounts live in, installed by `AccountLayer::new`.
+    /// The realm accounts live in, installed by `AccountManager::new`.
     ///
     /// Held in a static so [`AccountMgmtResponder`] can stay a unit struct and
     /// register through the stateless `inventory` path.
@@ -58,7 +58,7 @@ mod server {
     fn realm() -> Result<&'static RealmDatabase> {
         match REALM.get() {
             Some(realm) => Ok(realm),
-            None => bail!("Account layer is not initialized"),
+            None => bail!("Account subsystem is not initialized"),
         }
     }
 
@@ -351,7 +351,7 @@ mod server {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use sandpolis_instance::database::DatabaseLayer;
+        use sandpolis_instance::database::DatabaseManager;
         use sandpolis_instance::realm::RealmName;
         use sandpolis_instance::test_db;
 
@@ -379,7 +379,7 @@ mod server {
         }
 
         fn realm() -> Result<RealmDatabase> {
-            let db: DatabaseLayer = test_db!(AccountData, AccountLinkData);
+            let db: DatabaseManager = test_db!(AccountData, AccountLinkData);
             db.realm(RealmName::default())
         }
 

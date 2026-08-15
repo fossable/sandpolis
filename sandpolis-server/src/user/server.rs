@@ -1,6 +1,6 @@
 use super::{
     ClientAuthToken, CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
-    UserData, UserLayer, UserName,
+    UserData, UserManager, UserName,
 };
 use crate::login::LoginPassword;
 use anyhow::{Result, anyhow, bail};
@@ -33,7 +33,7 @@ const SHA256_OUTPUT_LEN: usize = 32;
 /// Create a new user
 #[axum_macros::debug_handler]
 pub async fn create_user(
-    state: State<UserLayer>,
+    state: State<UserManager>,
     claims: Claims,
     extract::Json(request): extract::Json<CreateUserRequest>,
 ) -> RequestResult<CreateUserResponse> {
@@ -72,7 +72,7 @@ pub async fn create_user(
 
 #[axum_macros::debug_handler]
 pub async fn get_users(
-    state: State<UserLayer>,
+    state: State<UserManager>,
     claims: Claims,
     extract::Json(request): extract::Json<GetUsersRequest>,
 ) -> RequestResult<GetUsersResponse> {
@@ -140,7 +140,7 @@ pub struct PasswordData {
     pub totp_secret: Option<String>,
 }
 
-impl UserLayer {
+impl UserManager {
     // TODO better users.find
     pub async fn user(&self, username: &UserName) -> Result<UserData> {
         for user in self.users.iter() {
@@ -344,12 +344,12 @@ pub struct Claims {
     pub realm: RealmName,
 }
 
-impl FromRequestParts<UserLayer> for Claims {
+impl FromRequestParts<UserManager> for Claims {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &UserLayer,
+        state: &UserManager,
     ) -> Result<Self, Self::Rejection> {
         // Extract the token from the authorization header
         let TypedHeader(Authorization(bearer)) = parts
@@ -390,7 +390,7 @@ impl FromRequestParts<UserLayer> for Claims {
 // TODO: verify the reported instance id against the connection's certificate.
 #[axum_macros::debug_handler]
 pub async fn connect(
-    State(state): State<UserLayer>,
+    State(state): State<UserManager>,
     TypedHeader(realm): TypedHeader<RealmName>,
     headers: axum::http::HeaderMap,
     ws: WebSocketUpgrade,

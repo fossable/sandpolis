@@ -6,7 +6,7 @@
 //! Whenever the account set changes, the server re-derives [`AccountLinkData`]
 //! rows connecting accounts that share an identity (a common username, a common
 //! email, or an email that matches another account's identity). Those links are
-//! the substrate for the layer's eventual attack-surface and compromise-tracing
+//! the substrate for the subsystem's eventual attack-surface and compromise-tracing
 //! analysis, hence [`AccountLinkType::compromisability`].
 
 use anyhow::Result;
@@ -14,7 +14,7 @@ use native_db::*;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::config::ConfigPersistHook;
-use sandpolis_instance::database::{DatabaseLayer, RealmDatabase};
+use sandpolis_instance::database::{DatabaseManager, RealmDatabase};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -63,17 +63,17 @@ pub fn accounts_to_config(accounts: &[AccountData]) -> Vec<AccountConfig> {
 
 #[data]
 #[derive(Default)]
-pub struct AccountLayerData {}
+pub struct AccountManagerData {}
 
 #[derive(Clone)]
-pub struct AccountLayer {
+pub struct AccountManager {
     #[allow(dead_code)]
-    database: DatabaseLayer,
+    database: DatabaseManager,
     realm: RealmDatabase,
 }
 
-impl AccountLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+impl AccountManager {
+    pub async fn new(database: DatabaseManager) -> Result<Self> {
         let realm = database.realm(RealmName::default())?;
 
         // The management stream's responder is registered through the stateless
@@ -84,7 +84,7 @@ impl AccountLayer {
         Ok(Self { database, realm })
     }
 
-    /// The realm this layer's data lives in.
+    /// The realm this subsystem's data lives in.
     pub fn realm(&self) -> &RealmDatabase {
         &self.realm
     }
@@ -94,11 +94,11 @@ impl AccountLayer {
     ///
     /// Call once from the server's startup path, before any client can connect.
     #[cfg(feature = "server")]
-    pub fn seed_accounts(&self, config: &config::AccountLayerConfig) -> Result<()> {
+    pub fn seed_accounts(&self, config: &config::AccountManagerConfig) -> Result<()> {
         management::seed(&self.realm, &config.accounts)
     }
 
-    /// Add the layer's background services to the server's runner.
+    /// Add the subsystem's background services to the server's runner.
     ///
     /// The config flags here are coarse startup switches: a service they turn off
     /// is never registered, so it doesn't appear in the client at all. Toggling a
@@ -106,7 +106,7 @@ impl AccountLayer {
     #[cfg(feature = "server")]
     pub fn register_services(
         &self,
-        config: &config::AccountLayerConfig,
+        config: &config::AccountManagerConfig,
         runner: &mut sandpolis_instance::service::ServiceRunner,
     ) -> Result<()> {
         if !config.scrape.enabled {

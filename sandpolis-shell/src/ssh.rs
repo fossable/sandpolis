@@ -8,7 +8,7 @@
 //! terminal — decoder, alacritty grid, renderer — is shared with agent sessions.
 //!
 //! Credentials never leave the server. The client sends only a device id, which
-//! the server resolves against the probe layer's device registry.
+//! the server resolves against the probe subsystem's device registry.
 
 use crate::session::ShellSessionStreamResponse;
 use serde::{Deserialize, Serialize};

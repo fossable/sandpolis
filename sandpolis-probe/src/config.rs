@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::net::IpAddr;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
-pub struct ProbeLayerConfig {
+pub struct ProbeManagerConfig {
     pub devices: Vec<DeviceConfig>,
 }
 
@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn device_config_ron_round_trip() {
-        let config = ProbeLayerConfig {
+        let config = ProbeManagerConfig {
             devices: vec![
                 DeviceConfig {
                     name: Some("Front door camera".into()),
@@ -297,7 +297,7 @@ mod tests {
         };
 
         let serialized = ron::ser::to_string(&config).unwrap();
-        let parsed: ProbeLayerConfig = ron::from_str(&serialized).unwrap();
+        let parsed: ProbeManagerConfig = ron::from_str(&serialized).unwrap();
         assert_eq!(config, parsed);
     }
 }

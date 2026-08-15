@@ -1,4 +1,4 @@
-use crate::FilesystemLayer;
+use crate::FilesystemManager;
 use chrono::{DateTime, Local};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -105,7 +105,7 @@ fn format_bytes(bytes: u64) -> String {
 /// Main filesystem viewer widget
 pub struct FilesystemViewerWidget {
     pub instance: InstanceId,
-    pub filesystem: FilesystemLayer,
+    pub filesystem: FilesystemManager,
     pub current_path: PathBuf,
     pub entries: Vec<FileEntry>,
     pub list_state: ListState,
@@ -133,7 +133,7 @@ pub enum ViewMode {
 impl FilesystemViewerWidget {
     pub fn new(
         instance: InstanceId,
-        filesystem: FilesystemLayer,
+        filesystem: FilesystemManager,
         initial_path: Option<PathBuf>,
     ) -> Self {
         let current_path = initial_path

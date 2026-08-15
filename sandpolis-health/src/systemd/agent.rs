@@ -149,7 +149,7 @@ impl From<&UnitListEntry> for SystemdUnitData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
 
@@ -157,7 +157,7 @@ mod tests {
     #[test_log::test]
     #[ignore = "requires a running systemd / system D-Bus"]
     async fn test_systemd_collector() -> Result<()> {
-        let database: DatabaseLayer = test_db!(SystemdUnitData);
+        let database: DatabaseManager = test_db!(SystemdUnitData);
 
         let mut collector =
             SystemdCollector::new(database.realm(RealmName::default())?, InstanceId::default())?;

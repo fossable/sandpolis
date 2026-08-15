@@ -13,7 +13,7 @@ pub fn update_node_svgs_for_layer(
     mut commands: Commands,
     current_layer: Res<CurrentLayer>,
     asset_server: Res<AssetServer>,
-    instance_layer: Res<sandpolis_instance::InstanceLayer>,
+    instance_manager: Res<sandpolis_instance::InstanceManager>,
     registry: Res<LayerRegistry>,
     node_query: Query<(Entity, &NodeEntity)>,
     children_query: Query<&Children>,
@@ -35,7 +35,7 @@ pub fn update_node_svgs_for_layer(
         let svg_path = get_layer_svg_path(
             &registry,
             &current_layer,
-            &instance_layer,
+            &instance_manager,
             node_entity.instance_id,
         );
 
@@ -64,7 +64,7 @@ pub fn update_node_svgs_for_layer(
 fn get_layer_svg_path(
     registry: &LayerRegistry,
     layer: &LayerName,
-    instance_layer: &sandpolis_instance::InstanceLayer,
+    instance_manager: &sandpolis_instance::InstanceManager,
     instance_id: sandpolis_instance::InstanceId,
 ) -> &'static str {
     if let Some(icon) = registry.get(layer).and_then(|info| info.node_icon.as_ref()) {
@@ -76,7 +76,7 @@ fn get_layer_svg_path(
             // Distinguish between servers and agents
             // TODO: Query instance type from database
             // For now, use the local instance as reference
-            if instance_id == instance_layer.instance_id {
+            if instance_id == instance_manager.instance_id {
                 "network/agent.svg"
             } else {
                 "network/server.svg"
@@ -97,7 +97,7 @@ fn get_layer_svg_path(
 /// Update node colors based on specific states
 pub fn update_node_colors_for_layer(
     current_layer: Res<CurrentLayer>,
-    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
+    network_manager: Res<sandpolis_instance::network::NetworkManager>,
     registry: Res<LayerRegistry>,
     mut node_query: Query<(&NodeEntity, &mut Sprite)>,
 ) {
@@ -111,7 +111,7 @@ pub fn update_node_colors_for_layer(
         let color = get_layer_color_tint(
             &registry,
             &current_layer,
-            &network_layer,
+            &network_manager,
             node_entity.instance_id,
         );
         sprite.color = color;
@@ -126,7 +126,7 @@ pub fn update_node_colors_for_layer(
 fn get_layer_color_tint(
     registry: &LayerRegistry,
     layer: &LayerName,
-    network_layer: &sandpolis_instance::network::NetworkLayer,
+    network_manager: &sandpolis_instance::network::NetworkManager,
     instance_id: sandpolis_instance::InstanceId,
 ) -> Color {
     if let Some(tint) = registry.get(layer).and_then(|info| info.node_tint.as_ref()) {
@@ -136,7 +136,7 @@ fn get_layer_color_tint(
     match layer.name() {
         "Network" => {
             // Color based on connection latency
-            if let Ok(stats) = queries::query_network_stats(network_layer, instance_id) {
+            if let Ok(stats) = queries::query_network_stats(network_manager, instance_id) {
                 if let Some(latency) = stats.latency_ms {
                     if latency < 50 {
                         Color::srgb(0.7, 1.0, 0.7) // Green - good connection

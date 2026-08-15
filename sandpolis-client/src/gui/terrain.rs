@@ -24,7 +24,7 @@ use crate::gui::queries::{InstanceMetadata, query_instance_metadata};
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use sandpolis_instance::{InstanceId, InstanceLayer, InstanceType};
+use sandpolis_instance::{InstanceId, InstanceManager, InstanceType};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
@@ -85,7 +85,7 @@ impl TerrainAttribute {
         &self,
         id: InstanceId,
         meta: &InstanceMetadata,
-        instance: &InstanceLayer,
+        instance: &InstanceManager,
     ) -> Option<(String, String)> {
         match self {
             TerrainAttribute::InstanceType => {
@@ -162,7 +162,7 @@ pub struct TerrainMembersDirty(pub bool);
 pub fn sync_instance_terrain_members(
     mut commands: Commands,
     config: Res<TerrainConfig>,
-    instance: Res<InstanceLayer>,
+    instance: Res<InstanceManager>,
     mut dirty: ResMut<TerrainMembersDirty>,
     nodes: Query<(Entity, Ref<NodeEntity>)>,
 ) {
@@ -246,7 +246,7 @@ pub struct TerrainLabel {
 fn node_segments(
     id: InstanceId,
     cfg: &TerrainConfig,
-    instance: &InstanceLayer,
+    instance: &InstanceManager,
 ) -> Vec<(String, String)> {
     let Ok(meta) = query_instance_metadata(id) else {
         return Vec::new();

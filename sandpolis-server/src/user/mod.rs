@@ -4,9 +4,9 @@ use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
 use regex::Regex;
-use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::InstanceManager;
 use sandpolis_instance::database::ResidentVec;
-use sandpolis_instance::database::{DatabaseLayer, Resident};
+use sandpolis_instance::database::{DatabaseManager, Resident};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -273,13 +273,13 @@ mod test_user_name {
 
 #[data]
 #[derive(Default)]
-pub struct UserLayerData {}
+pub struct UserManagerData {}
 
 #[derive(Clone)]
-pub struct UserLayer {
-    pub data: Resident<UserLayerData>,
-    pub instance: InstanceLayer,
-    pub database: DatabaseLayer,
+pub struct UserManager {
+    pub data: Resident<UserManagerData>,
+    pub instance: InstanceManager,
+    pub database: DatabaseManager,
     #[cfg(feature = "server")]
     pub users: ResidentVec<UserData>,
 
@@ -287,9 +287,9 @@ pub struct UserLayer {
     pub jwt_keys: HashMap<RealmName, (jsonwebtoken::EncodingKey, jsonwebtoken::DecodingKey)>,
 
     #[cfg(feature = "server")]
-    pub network: sandpolis_instance::network::NetworkLayer,
+    pub network: sandpolis_instance::network::NetworkManager,
 
-    /// The stratum of the server this layer belongs to, so the connect handler
+    /// The stratum of the server this manager belongs to, so the connect handler
     /// can enforce the network's shape and pick the right sync behavior.
     #[cfg(feature = "server")]
     pub stratum: crate::ServerStratum,
@@ -300,16 +300,16 @@ pub struct UserLayer {
     pub ownership: std::sync::Arc<crate::ownership::Ownership>,
 }
 
-impl UserLayer {
+impl UserManager {
     pub async fn new(
-        instance: InstanceLayer,
-        database: DatabaseLayer,
-        network: sandpolis_instance::network::NetworkLayer,
+        instance: InstanceManager,
+        database: DatabaseManager,
+        network: sandpolis_instance::network::NetworkManager,
         #[cfg(feature = "server")] stratum: crate::ServerStratum,
         #[cfg(feature = "server")] ownership: std::sync::Arc<crate::ownership::Ownership>,
     ) -> Result<Self> {
-        debug!("Initializing user layer");
-        let user_layer = Self {
+        debug!("Initializing user manager");
+        let user_manager = Self {
             instance,
             data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
@@ -361,11 +361,11 @@ impl UserLayer {
         // Users are estate data owned by the global stratum server; a local
         // stratum server receives them by replication instead of creating any.
         #[cfg(feature = "server")]
-        if user_layer.database.authority().is_full() {
-            user_layer.try_create_admin().await?;
+        if user_manager.database.authority().is_full() {
+            user_manager.try_create_admin().await?;
         }
 
-        Ok(user_layer)
+        Ok(user_manager)
     }
 }
 

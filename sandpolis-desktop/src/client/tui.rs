@@ -1,6 +1,6 @@
-//! Terminal viewer for the Desktop layer.
+//! Terminal viewer for the desktop subsystem.
 //!
-//! Mirrors the shell layer's `ShellTerminalWidget`: on connect it opens a relayed
+//! Mirrors the shell subsystem's `ShellTerminalWidget`: on connect it opens a relayed
 //! stream to the agent, decodes incoming frames (via the shared
 //! [`DesktopStreamRequester`]) and renders the latest one with `ratatui_image`
 //! halfblocks. Typed characters are forwarded to the remote as input events.

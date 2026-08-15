@@ -23,7 +23,7 @@ use sandpolis_instance::network::{
 };
 use sandpolis_instance::realm::config::{PollConfig, ServerCertFile};
 use sandpolis_instance::realm::url::ServerUrl;
-use sandpolis_instance::realm::{RealmCert, RealmCertType, Realms};
+use sandpolis_instance::realm::{RealmCert, RealmCertType, RealmManager};
 use sandpolis_macros::Stream;
 use std::sync::{Arc, OnceLock};
 use tokio::sync::mpsc::Sender;
@@ -33,12 +33,12 @@ use tracing::{debug, info, warn};
 /// The realms this server serves, installed at startup.
 ///
 /// Held in a static so [`DeployStreamResponder`] can be constructed by the
-/// stateless `inventory` factory, the same arrangement the account layer's
+/// stateless `inventory` factory, the same arrangement the account subsystem's
 /// management responder uses.
-static REALMS: OnceLock<Realms> = OnceLock::new();
+static REALMS: OnceLock<RealmManager> = OnceLock::new();
 
 /// Give the deployer access to the realm CAs. Called once at startup.
-pub fn install_realms(realms: Realms) {
+pub fn install_realms(realms: RealmManager) {
     let _ = REALMS.set(realms);
 }
 
@@ -241,7 +241,7 @@ async fn deploy(
 fn certificate(server: &ServerUrl, poll: Option<PollConfig>) -> Result<String> {
     let realms = REALMS
         .get()
-        .ok_or_else(|| anyhow!("the deploy layer is not initialized"))?;
+        .ok_or_else(|| anyhow!("the deploy responder is not initialized"))?;
 
     let database = realms.realm(server.realm.clone())?;
     let r = database.r_transaction()?;

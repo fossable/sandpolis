@@ -1,8 +1,8 @@
 use anyhow::Result;
 use native_db::ToKey;
 use native_model::Model;
-use sandpolis_instance::InstanceLayer;
-use sandpolis_instance::database::{DatabaseLayer, Resident};
+use sandpolis_instance::InstanceManager;
+use sandpolis_instance::database::{DatabaseManager, Resident};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 #[cfg(feature = "agent")]
@@ -18,15 +18,15 @@ pub mod package;
 
 #[data]
 #[derive(Default)]
-pub struct InventoryLayerData {}
+pub struct InventoryManagerData {}
 
 #[cfg(feature = "agent")]
 use tokio::sync::Mutex;
 
 #[derive(Clone)]
-pub struct InventoryLayer {
+pub struct InventoryManager {
     #[allow(dead_code)]
-    data: Resident<InventoryLayerData>,
+    data: Resident<InventoryManagerData>,
     #[cfg(feature = "agent")]
     pub memory: Arc<Mutex<os::memory::agent::MemoryMonitor>>,
     #[cfg(feature = "agent")]
@@ -39,9 +39,9 @@ pub struct InventoryLayer {
     pub packages: Arc<Mutex<package::agent::PackageCollector>>,
 }
 
-impl InventoryLayer {
+impl InventoryManager {
     #[cfg_attr(not(feature = "agent"), allow(unused_variables))]
-    pub async fn new(database: DatabaseLayer, instance: InstanceLayer) -> Result<Self> {
+    pub async fn new(database: DatabaseManager, instance: InstanceManager) -> Result<Self> {
         Ok(Self {
             #[cfg(feature = "agent")]
             memory: Arc::new(Mutex::new(os::memory::agent::MemoryMonitor::new(
@@ -74,7 +74,7 @@ impl InventoryLayer {
         })
     }
 
-    /// Add the layer's background services to the agent's runner.
+    /// Add the subsystem's background services to the agent's runner.
     ///
     /// Packages get their own longer interval because enumerating them is
     /// expensive and they change rarely, unlike memory and users. CPU is the

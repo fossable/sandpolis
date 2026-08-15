@@ -1,7 +1,7 @@
 ## `sandpolis-database`
 
-This layer implements the Sandpolis data model which is fundamental to all other
-layers. All instances maintain their own database for different reasons:
+This subsystem implements the Sandpolis data model which is fundamental to all other
+subsystems. All instances maintain their own database for different reasons:
 
 - The server's database persists data for the entire network for long periods of
   time

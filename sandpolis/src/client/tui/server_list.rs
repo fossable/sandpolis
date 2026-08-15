@@ -16,7 +16,7 @@ use sandpolis_instance::database::{Data, DataCreation, DataIdentifier};
 use sandpolis_server::ServerUrl;
 use sandpolis_server::login::{LoginPassword, LoginRequest, LoginResponse};
 use sandpolis_server::user::UserName;
-use sandpolis_server::{ServerLayer, client::SavedServerData};
+use sandpolis_server::{ServerManager, client::SavedServerData};
 use std::{
     sync::{Arc, RwLock},
     time::Duration,
@@ -31,7 +31,7 @@ use super::GRAPHICS;
 pub struct ServerListWidget {
     state: Arc<RwLock<ServerListWidgetState>>,
     focused: bool,
-    server_layer: ServerLayer,
+    server_manager: ServerManager,
     server_list_widget: Arc<RwLock<ResidentVecWidget<SavedServerData>>>,
 }
 
@@ -54,8 +54,8 @@ enum ServerListWidgetMode {
 }
 
 impl ServerListWidget {
-    pub fn new(server_layer: ServerLayer) -> anyhow::Result<Self> {
-        let server_list_widget = ResidentVecWidget::builder(server_layer.servers.clone())
+    pub fn new(server_manager: ServerManager) -> anyhow::Result<Self> {
+        let server_list_widget = ResidentVecWidget::builder(server_manager.servers.clone())
             .title("Server Selection")
             .item_renderer(|server_resident| {
                 let server_data = server_resident.read();
@@ -108,7 +108,7 @@ impl ServerListWidget {
         Ok(Self {
             state,
             focused: true,
-            server_layer,
+            server_manager,
             server_list_widget: Arc::new(RwLock::new(server_list_widget)),
         })
     }
@@ -300,7 +300,7 @@ impl EventHandler for ServerListWidget {
                                 drop(server_list_widget);
 
                                 debug!(server_id = ?server_id, "Removing server");
-                                if let Err(e) = self.server_layer.remove_server(server_id) {
+                                if let Err(e) = self.server_manager.remove_server(server_id) {
                                     debug!(error = %e, "Failed to remove server");
                                 }
                             }
@@ -315,13 +315,13 @@ impl EventHandler for ServerListWidget {
                                 state.mode = ServerListWidgetMode::TryingLogin;
                                 drop(state);
 
-                                let server_layer = self.server_layer.clone();
+                                let server_manager = self.server_manager.clone();
                                 let state_clone = self.state.clone();
 
                                 debug!(address = %server_data.address, "Connecting to server");
 
                                 tokio::spawn(async move {
-                                    match server_layer.connect(server_data.address.clone()).await {
+                                    match server_manager.connect(server_data.address.clone()).await {
                                         Ok(_connection) => {
                                             debug!(
                                                 "Connected successfully, attempting authentication with saved token"
@@ -380,14 +380,14 @@ impl EventHandler for ServerListWidget {
                         if let Ok(form_data) = state.add_server_widget.get_form_data() {
                             state.mode = ServerListWidgetMode::TryingLogin;
 
-                            let server_layer = self.server_layer.clone();
+                            let server_manager = self.server_manager.clone();
                             let state = self.state.clone();
 
                             tokio::spawn(async move {
                                 state.write().unwrap().add_server_widget =
                                     AddServerWidget::default(); // Reset login form
 
-                                match server_layer.connect(form_data.server_url.clone()).await {
+                                match server_manager.connect(form_data.server_url.clone()).await {
                                     Ok(connection) => {
                                         match connection
                                             .login(LoginRequest {
@@ -403,7 +403,7 @@ impl EventHandler for ServerListWidget {
                                         {
                                             Ok(LoginResponse::Ok(client_auth_token)) => {
                                                 debug!("Login successful, saving server");
-                                                match server_layer.save_server(SavedServerData {
+                                                match server_manager.save_server(SavedServerData {
                                                         address: form_data.server_url,
                                                         token: client_auth_token,
                                                         user: form_data.username,

@@ -293,7 +293,7 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
 fn struct_name_to_id(name: &str) -> u32 {
     let mut hasher = DefaultHasher::new();
 
-    // Include crate name to allow structs with the same name in different layers
+    // Include crate name to allow structs with the same name in different subsystems
     std::env::var("CARGO_PKG_NAME")
         .expect("Crate name not found")
         .hash(&mut hasher);

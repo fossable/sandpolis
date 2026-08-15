@@ -1,7 +1,7 @@
 //! Client-side access to synced inventory data.
 //!
-//! Mirrors the health layer: a view subscribes to the relevant models when it
-//! opens, and reads the records the sync layer has replicated into the client's
+//! Mirrors the health subsystem: a view subscribes to the relevant models when it
+//! opens, and reads the records the sync module has replicated into the client's
 //! local database.
 
 use crate::hardware::cpu::CpuCoreData;

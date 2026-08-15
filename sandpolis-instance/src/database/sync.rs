@@ -8,7 +8,7 @@
 //! This is the engine behind the `SyncStream` (see `network::sync`): a responder
 //! uses `snapshot` + `spawn_watch` to serve data; a requester uses `apply` to
 //! ingest it. The wire is cbor-encoded `Data` keyed by `native_model_id`, so the
-//! mechanism is generic over every layer's data.
+//! mechanism is generic over every subsystem's data.
 
 use super::{Data, RealmDatabase};
 use crate::InstanceId;
@@ -252,7 +252,7 @@ impl SyncRegistry {
     }
 }
 
-/// Layers register their syncable data types by submitting one of these via
+/// Subsystems register their syncable data types by submitting one of these via
 /// `inventory::submit!`, mirroring the stream responder registration pattern.
 ///
 /// ```ignore
@@ -317,7 +317,7 @@ where
 mod tests {
     use super::*;
     use crate::InstanceId;
-    use crate::database::DatabaseLayer;
+    use crate::database::DatabaseManager;
     use crate::realm::RealmName;
     use crate::test_db;
     use anyhow::Result;
@@ -354,7 +354,7 @@ mod tests {
         let mut reg = SyncRegistry::new();
         reg.register_scoped::<SyncTestData>(|d| d._instance_id);
 
-        let db: DatabaseLayer = test_db!(SyncTestData);
+        let db: DatabaseManager = test_db!(SyncTestData);
         let realm = db.realm(RealmName::default())?;
         let a = InstanceId::new(crate::InstanceType::Agent);
         let b = InstanceId::new(crate::InstanceType::Agent);
@@ -408,7 +408,7 @@ mod tests {
         reg.register_scoped::<SyncTestData>(|d| d._instance_id);
         reg.register::<GlobalTestData>();
 
-        let db: DatabaseLayer = test_db!(SyncTestData, GlobalTestData);
+        let db: DatabaseManager = test_db!(SyncTestData, GlobalTestData);
         let realm = db.realm(RealmName::default())?;
 
         let instance = InstanceId::new(crate::InstanceType::Agent);
@@ -456,7 +456,7 @@ mod tests {
         let mut reg = SyncRegistry::new();
         reg.register_scoped::<SyncTestData>(|d| d._instance_id);
 
-        let db: DatabaseLayer = test_db!(SyncTestData);
+        let db: DatabaseManager = test_db!(SyncTestData);
         let realm = db.realm(RealmName::default())?;
 
         let mut item = SyncTestData {
@@ -514,7 +514,7 @@ mod tests {
         let mut reg = SyncRegistry::new();
         reg.register_scoped::<SyncTestData>(|d| d._instance_id);
 
-        let db: DatabaseLayer = test_db!(SyncTestData);
+        let db: DatabaseManager = test_db!(SyncTestData);
         let realm = db.realm(RealmName::default())?;
 
         let (tx, mut rx) = tokio::sync::mpsc::channel(16);

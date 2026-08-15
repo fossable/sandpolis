@@ -321,7 +321,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     // Per-layer client plugins (controllers, node visibility, probe systems).
     // These replace the old `inventory`-collected `LayerGuiExtension`s.
-    // The agent layer has no `` feature: it ships with every build, and
+    // The agent subsystem has no `` feature: it ships with every build, and
     // this is what registers its deploy dialog.
     app.add_plugins(sandpolis_agent::client::gui::AgentClientPlugin);
     #[cfg(feature = "inventory")]
@@ -341,7 +341,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     // Debug "Instance" layer: shows every node regardless of type, with a
     // node panel that surfaces that node's identity and connection rows.
-    // The controller carries its own layer handles (build() gets no resources).
+    // The controller carries its own manager handles (build() gets no resources).
     app.register_layer_client(
         LayerClientInfo::new(LayerName::from("Instance"), "All instances (debug)")
             .with_visible_instance_types(&[
@@ -366,8 +366,8 @@ fn setup(
     mut commands: Commands,
     mut rapier_config: Query<&mut RapierConfiguration>,
     asset_server: Res<AssetServer>,
-    instance_layer: Res<sandpolis_instance::InstanceLayer>,
-    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
+    instance_manager: Res<sandpolis_instance::InstanceManager>,
+    network_manager: Res<sandpolis_instance::network::NetworkManager>,
 ) {
     // Set zero gravity for floating nodes
     for mut rapier_config in &mut rapier_config {
@@ -388,11 +388,11 @@ fn setup(
     ));
 
     // Query database for initial instances and spawn nodes
-    if let Ok(instances) = query_all_instances(&instance_layer, &network_layer) {
+    if let Ok(instances) = query_all_instances(&instance_manager, &network_manager) {
         for instance_id in instances {
             if let Ok(metadata) = query_instance_metadata(instance_id) {
                 // Spawn local instance at center, others at random positions
-                let position = if metadata.instance_id == instance_layer.instance_id {
+                let position = if metadata.instance_id == instance_manager.instance_id {
                     Some(Vec3::ZERO) // Center of screen
                 } else {
                     None // Random position

@@ -2,7 +2,7 @@ use anyhow::Result;
 use native_db::*;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 use sandpolis_macros::data;
 
 pub mod screenshot;
@@ -56,15 +56,15 @@ pub struct DesktopData {
 }
 
 #[derive(Clone)]
-pub struct DesktopLayer {
+pub struct DesktopManager {
     #[allow(dead_code)]
-    database: DatabaseLayer,
+    database: DatabaseManager,
     #[cfg(feature = "agent")]
     pub displays: std::sync::Arc<agent::DesktopDisplayCollector>,
 }
 
-impl DesktopLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+impl DesktopManager {
+    pub async fn new(database: DatabaseManager) -> Result<Self> {
         #[cfg(feature = "agent")]
         let displays = {
             use sandpolis_agent::Collector;

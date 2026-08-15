@@ -742,24 +742,24 @@ mod client {
 
     pub(super) async fn server(
         action: ServerCommand,
-        server_layer: &sandpolis_server::ServerLayer,
+        server_manager: &sandpolis_server::ServerManager,
         fps: f32,
     ) -> Result<ExitCode> {
         match action {
             ServerCommand::List { json, .. } => {
                 if json {
-                    return list_servers_json(server_layer);
+                    return list_servers_json(server_manager);
                 }
                 let widget =
-                    crate::client::tui::server_list::ServerListWidget::new(server_layer.clone())?;
+                    crate::client::tui::server_list::ServerListWidget::new(server_manager.clone())?;
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
         }
     }
 
-    fn list_servers_json(server_layer: &sandpolis_server::ServerLayer) -> Result<ExitCode> {
-        let servers: Vec<_> = server_layer
+    fn list_servers_json(server_manager: &sandpolis_server::ServerManager) -> Result<ExitCode> {
+        let servers: Vec<_> = server_manager
             .servers
             .iter()
             .map(|resident| {
@@ -780,7 +780,7 @@ mod client {
     /// asynchronously), then subscribes to the instance model and reads from
     /// the client database.
     async fn list_agents_json() -> Result<ExitCode> {
-        use sandpolis_instance::InstanceLayerData;
+        use sandpolis_instance::InstanceManagerData;
         use sandpolis_instance::realm::RealmName;
         use std::time::Duration;
 
@@ -794,7 +794,7 @@ mod client {
         info!("list_agents_json: connection established, subscribing");
 
         // Subscribe only after the connection is up so the call isn't a no-op.
-        sandpolis_client::sync::subscribe(sandpolis_instance::instance_layer_model_id(), None);
+        sandpolis_client::sync::subscribe(sandpolis_instance::instance_manager_model_id(), None);
         sandpolis_client::sync::subscribe(
             sandpolis_instance::network::liveness::liveness_model_id(),
             None,
@@ -809,7 +809,7 @@ mod client {
             sandpolis_client::sync::client_database().context("client database unavailable")?;
         let realm = db.realm(RealmName::default())?;
         let r = realm.r_transaction()?;
-        let all: Vec<InstanceLayerData> =
+        let all: Vec<InstanceManagerData> =
             r.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
         // Which of them are up is a separate, server-written model, resolved the

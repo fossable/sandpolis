@@ -35,7 +35,7 @@ use sandpolis_instance::database::{
 use sandpolis_instance::network::stream::{
     StreamId, StreamMessage, StreamRequester, StreamResponder,
 };
-use sandpolis_instance::network::{InstanceConnection, NetworkLayer};
+use sandpolis_instance::network::{InstanceConnection, NetworkManager};
 use sandpolis_macros::{Stream, data};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
@@ -243,7 +243,7 @@ impl Ownership {
 
 /// The instances directly attached to this server, excluding any server peer (a
 /// server owns its own scope and is never owned).
-pub(crate) fn attached_instances(network: &NetworkLayer) -> BTreeSet<InstanceId> {
+pub(crate) fn attached_instances(network: &NetworkManager) -> BTreeSet<InstanceId> {
     network
         .live_inbound()
         .iter()
@@ -260,7 +260,7 @@ pub(crate) fn attached_instances(network: &NetworkLayer) -> BTreeSet<InstanceId>
 /// arrive through [`OwnershipResponder`] instead.
 pub async fn maintain_local_claims(
     ownership: Arc<Ownership>,
-    network: NetworkLayer,
+    network: NetworkManager,
     local_instance: InstanceId,
 ) {
     let notify = Arc::new(Notify::new());
@@ -291,7 +291,7 @@ pub async fn maintain_local_claims(
 mod test_grants {
     use super::*;
     use sandpolis_instance::InstanceType;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::{test_db, test_scoped_db};
 
@@ -307,7 +307,7 @@ mod test_grants {
     /// ownership actually moves, so a repeated claim is free.
     #[tokio::test]
     async fn claim_grants_and_bumps_epochs() -> Result<()> {
-        let db: DatabaseLayer = test_db!(OwnershipData);
+        let db: DatabaseManager = test_db!(OwnershipData);
         let ownership = Ownership::new(&db.realm(RealmName::default())?)?;
 
         let (ls1, ls2, x) = (server(), server(), agent());
@@ -344,7 +344,7 @@ mod test_grants {
     /// an outage.
     #[tokio::test]
     async fn absent_claim_is_not_a_release() -> Result<()> {
-        let db: DatabaseLayer = test_db!(OwnershipData);
+        let db: DatabaseManager = test_db!(OwnershipData);
         let ownership = Ownership::new(&db.realm(RealmName::default())?)?;
 
         let (ls, x) = (server(), agent());
@@ -357,7 +357,7 @@ mod test_grants {
     /// A server never needs a grant for its own scope.
     #[tokio::test]
     async fn self_claims_are_ignored() -> Result<()> {
-        let db: DatabaseLayer = test_db!(OwnershipData);
+        let db: DatabaseManager = test_db!(OwnershipData);
         let ownership = Ownership::new(&db.realm(RealmName::default())?)?;
 
         let ls = server();
@@ -371,7 +371,7 @@ mod test_grants {
     #[tokio::test]
     async fn mirror_survives_restart() -> Result<()> {
         let table = Arc::new(ScopeTable::default());
-        let db: DatabaseLayer = test_scoped_db!(table, OwnershipData);
+        let db: DatabaseManager = test_scoped_db!(table, OwnershipData);
         let realm = db.realm(RealmName::default())?;
 
         let (self_id, x) = (server(), agent());
@@ -672,7 +672,7 @@ impl OwnershipRequester {
 /// reconnecting agent whose scope is still owned resumes syncing immediately —
 /// which is the point of an edge server.
 pub async fn maintain_agent_sync(
-    network: NetworkLayer,
+    network: NetworkManager,
     realm: RealmDatabase,
     table: Arc<ScopeTable>,
     ownership: Arc<Ownership>,

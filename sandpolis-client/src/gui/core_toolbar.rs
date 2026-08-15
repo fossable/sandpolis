@@ -17,12 +17,12 @@ use crate::gui::ui::node_panel::{NodePanel, PanelCtx};
 use crate::gui::ui::theme::Role;
 use crate::gui::ui::widgets::{heading, text};
 use bevy::prelude::*;
-use sandpolis_instance::network::NetworkLayer;
+use sandpolis_instance::network::NetworkManager;
 use sandpolis_instance::{InstanceId, InstanceType};
 
 /// The Network layer's node panel: how this client reaches the node.
 pub struct NetworkPanel {
-    pub network: NetworkLayer,
+    pub network: NetworkManager,
 }
 
 impl NodePanel for NetworkPanel {
@@ -65,7 +65,7 @@ impl NodePanel for NetworkPanel {
 }
 
 /// One line on how (and how much) this client is talking to `instance`.
-fn describe_link(network: &NetworkLayer, instance: InstanceId) -> String {
+fn describe_link(network: &NetworkManager, instance: InstanceId) -> String {
     let mut connections = 0usize;
     let mut read = 0u64;
     let mut written = 0u64;
@@ -108,7 +108,7 @@ fn format_bytes(bytes: u64) -> String {
 
 /// Registers the Network and Server layers' clients.
 pub struct CoreLayerToolbarPlugin {
-    pub network: NetworkLayer,
+    pub network: NetworkManager,
 }
 
 impl Plugin for CoreLayerToolbarPlugin {

@@ -9,7 +9,7 @@ use tokio::time::sleep;
 use tracing::{debug, info, warn};
 
 /// Bring up everything an agent needs and run it: the realm named by its
-/// `.server` file, the database its collectors write into, and the layers over
+/// `.server` file, the database its collectors write into, and the subsystems over
 /// both.
 pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode> {
     let mut options = args.options();
@@ -39,7 +39,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     info!("Starting Sandpolis agent");
 
-    // Every layer's collectors go on one runner, which owns their schedules and
+    // Every subsystem's collectors go on one runner, which owns their schedules and
     // lets a client enable or disable them individually. Their updates land in
     // the local database, which the SyncResponder streams to the server on
     // demand.

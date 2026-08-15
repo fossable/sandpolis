@@ -7,14 +7,14 @@ use native_db::ToKey;
 use native_model::Model;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::{ClientBuilder, Method};
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 use sandpolis_instance::database::Resident;
 use sandpolis_instance::database::ResidentVec;
 use sandpolis_instance::network::{
-    ConnectionData, InstanceConnection, NetworkLayer, collected_responders,
+    ConnectionData, InstanceConnection, NetworkManager, collected_responders,
 };
 use sandpolis_instance::realm::RealmName;
-use sandpolis_instance::realm::Realms;
+use sandpolis_instance::realm::RealmManager;
 
 /// Server URLs are parsed out of certificate common names, so the type lives in
 /// `sandpolis-instance` alongside the realm certificates. Re-exported here
@@ -48,11 +48,11 @@ pub mod user;
 
 #[data]
 #[derive(Default)]
-pub struct ServerLayerData {}
+pub struct ServerManagerData {}
 
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
-pub struct ServerLayer {
+pub struct ServerManager {
     #[cfg(feature = "server")]
     pub banner: Resident<banner::ServerBannerData>,
 
@@ -60,9 +60,9 @@ pub struct ServerLayer {
     /// aren't running a server at all, which is inert since nothing consults it.
     pub stratum: ServerStratum,
 
-    pub network: NetworkLayer,
-    pub realms: Realms,
-    pub database: DatabaseLayer,
+    pub network: NetworkManager,
+    pub realms: RealmManager,
+    pub database: DatabaseManager,
 
     /// What this process is, which decides the certificate it presents when it
     /// dials a server.
@@ -80,11 +80,11 @@ pub struct ServerLayer {
     pub outbound: Arc<RwLock<Vec<Arc<ServerConnection>>>>,
 }
 
-impl ServerLayer {
+impl ServerManager {
     pub async fn new(
-        database: DatabaseLayer,
-        network: NetworkLayer,
-        realms: Realms,
+        database: DatabaseManager,
+        network: NetworkManager,
+        realms: RealmManager,
         stratum: ServerStratum,
         instance_type: InstanceType,
     ) -> Result<Self> {
@@ -306,8 +306,8 @@ impl ServerConnection {
     #[cfg(any(feature = "client", feature = "agent", feature = "server"))]
     pub async fn open_websocket(
         &self,
-        network: &NetworkLayer,
-        instance: &sandpolis_instance::InstanceLayer,
+        network: &NetworkManager,
+        instance: &sandpolis_instance::InstanceManager,
     ) -> Result<Arc<InstanceConnection>> {
         use reqwest_websocket::Upgrade;
 

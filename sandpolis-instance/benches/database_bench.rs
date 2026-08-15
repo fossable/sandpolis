@@ -2,7 +2,7 @@ use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, 
 use native_db::*;
 use native_model::{Model, native_model};
 use sandpolis_instance::database::{
-    Data, DataCondition, DataCreation, DatabaseLayer, Resident, ResidentVec, config,
+    Data, DataCondition, DataCreation, DatabaseManager, Resident, ResidentVec, config,
 };
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
@@ -35,12 +35,12 @@ pub struct BenchTemporalData {
 }
 
 /// Helper to create test database
-fn create_test_db() -> DatabaseLayer {
+fn create_test_db() -> DatabaseManager {
     let models = Box::leak(Box::new(native_db::Models::new()));
     models.define::<BenchData>().unwrap();
     models.define::<BenchTemporalData>().unwrap();
 
-    DatabaseLayer::new(
+    DatabaseManager::new(
         config::DatabaseConfig {
             storage: None,
             key: Default::default(),

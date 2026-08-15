@@ -78,17 +78,17 @@ Sandpolis runs an agent on your devices and allows you to interact with them
 from a client application. A server mediates client/agent communication and
 stores historical data about instances in the network.
 
-## Layers
+## Subsystems
 
-Features are organized into conceptual _layers_ . If you build Sandpolis from
-source, it's easy to pick and choose what layers are included:
+Features are organized into conceptual _subsystems_. If you build Sandpolis from
+source, it's easy to pick and choose what subsystems are included:
 
 ```sh
 # Build the Sandpolis server with remote desktop capabilities ONLY
 cargo build --no-default-features --features server --features desktop
 ```
 
-If you don't build from source, you can still enable/disable layers, but they
+If you don't build from source, you can still enable/disable subsystems, but they
 will still be compiled into the final application. If you want to be paranoid
 and restrict what your Sandpolis network for improved security, make sure you
 build from source.

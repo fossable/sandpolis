@@ -1,12 +1,12 @@
 use anyhow::Result;
-use sandpolis_filesystem::{FilesystemLayer, client::tui::FilesystemViewerWidget};
+use sandpolis_filesystem::{FilesystemManager, client::tui::FilesystemViewerWidget};
 use sandpolis_instance::InstanceId;
 use std::env;
 use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let filesystem = FilesystemLayer::new().await?;
+    let filesystem = FilesystemManager::new().await?;
 
     let initial_path = if let Some(path_arg) = env::args().nth(1) {
         PathBuf::from(path_arg)

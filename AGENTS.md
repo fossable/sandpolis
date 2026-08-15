@@ -17,12 +17,23 @@ All of these applications are built from the main `sandpolis` crate (except for
 the mobile app) with feature flags.
 
 Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
-"layer" that brings some functionality. Layers can depend on each other and some
-are optional (controlled via cargo features).
+_subsystem_ that brings some functionality. Subsystems can depend on each other
+and some are optional (controlled via cargo features).
 
-Most layers implement some functionality for all three instance types. For
+Most subsystems implement some functionality for all three instance types. For
 example, the way to think about the `sandpolis-agent` crate is it "does
 something with agents", not that it "implements what an agent does".
+
+A subsystem's runtime state lives in one or more _managers_ — `ShellManager`,
+`DatabaseManager`, `NetworkManager`, `RealmManager` — which are constructed at
+startup and held together in `InstanceState`.
+
+A subsystem may also provide at most one _layer_, which is strictly a GUI
+concept: the mode the client's layer picker chooses between, which decides node
+visibility, the toolbar, and the node panel body. `LayerName` names it, and
+because the mapping is one-to-one, a layer's name is its subsystem's name.
+Notifications and services are attributed to a layer so the client can group
+them.
 
 #### Instances
 
@@ -120,7 +131,8 @@ estate — the pull subscription is the fence.
 
 #### Notifications
 
-Any layer, on any instance, can tell the user something happened:
+Any subsystem, on any instance, can tell the user something happened. The first
+argument names the layer it's attributed to, which is how the client groups it:
 
 ```rust
 notification::notify(
@@ -196,8 +208,10 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
-- `DatabaseLayer`, `NetworkLayer`, `RealmLayer` should be "Managers"
-  - crates are "subsystems" while layer specifically refers to the UI concept
+- Investigate whether our current organization of subsystems is optimal or are
+  there new subsystems we should create or collapse old subsystems. Previously
+  we had subsystems for database, network, realm that we collapsed into the
+  instance subsystem, which is why `sandpolis-instance` now holds four managers.
 - On desktop, probe, and shell layers: servers are present in the graph (so we
   have links), but they are not interactable. When the server layer is active,
   only servers are shown and they become interactable. Clients are only present
@@ -217,6 +231,7 @@ cd android && ./gradlew assembleDebug
   - LS server must accept a single --server arg
   - Agents must accept a single --server arg
   - Clients must accept a single --server arg
+- Replace `.server` with `.realm.pem`
 
 ## `sandpolis-tunnel`
 
@@ -271,12 +286,12 @@ cd android && ./gradlew assembleDebug
   - Control virtual machines
 - ONVIF probe (`onvif.rs`)
   - View the video stream
-- RDP probe via desktop layer
+- RDP probe via desktop subsystem
   - Implement on top of the IronRDP crates
   - Button on expanded node panel to maximize the RDP session
 - RTSP probe (`rtsp/`)
   - Button on expanded node panel to maximize the video stream
-- SSH probe via shell layer
+- SSH probe via shell subsystem
   - Button on expanded node panel to maximize the terminal
 - VNC probe
   - Button on expanded node panel to maximize the VNC session
@@ -363,4 +378,4 @@ sandpolis shell --instance UUID
     the actual bootloader.
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
-  - Only the following layers are supported by bootagents: shell, snapshot
+  - Only the following subsystems are supported by bootagents: shell, snapshot

@@ -1,6 +1,6 @@
 //! Favicons for account domains.
 //!
-//! The account layer's first scraping service: for every distinct domain across
+//! The account subsystem's first scraping service: for every distinct domain across
 //! all accounts, fetch the site's favicon and store it so clients can show
 //! accounts with the branding of the service they belong to.
 
@@ -349,12 +349,12 @@ mod server {
     mod tests {
         use super::*;
         use crate::AccountId;
-        use sandpolis_instance::database::DatabaseLayer;
+        use sandpolis_instance::database::DatabaseManager;
         use sandpolis_instance::realm::RealmName;
         use sandpolis_instance::test_db;
 
         fn realm() -> Result<RealmDatabase> {
-            let db: DatabaseLayer = test_db!(AccountData, FaviconData);
+            let db: DatabaseManager = test_db!(AccountData, FaviconData);
             db.realm(RealmName::default())
         }
 

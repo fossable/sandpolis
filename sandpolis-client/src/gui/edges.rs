@@ -67,7 +67,7 @@ pub fn update_edges_for_layer(
     mut commands: Commands,
     current_layer: Res<CurrentLayer>,
     edge_query: Query<(Entity, &Edge)>,
-    network_layer: Res<sandpolis_instance::network::NetworkLayer>,
+    network_manager: Res<sandpolis_instance::network::NetworkManager>,
 ) {
     // Only update when layer changes or is first added
     if !current_layer.is_changed() && !current_layer.is_added() {
@@ -83,7 +83,7 @@ pub fn update_edges_for_layer(
     match current_layer.name() {
         "Network" => {
             // Query network topology from database
-            if let Ok(network_edges) = queries::query_network_topology(&network_layer) {
+            if let Ok(network_edges) = queries::query_network_topology(&network_manager) {
                 for net_edge in network_edges {
                     commands.spawn(Edge {
                         from: net_edge.from,

@@ -45,7 +45,7 @@ impl ServiceRunner {
         }
     }
 
-    /// Add a service. Layers call this from their own registration entry point.
+    /// Add a service. Subsystems call this from their own registration entry point.
     pub fn register(&mut self, service: impl Service) -> &mut Self {
         self.services.push(Box::new(service));
         self
@@ -396,14 +396,14 @@ fn update(
 mod tests {
     use super::*;
     use crate::LayerName;
-    use crate::database::DatabaseLayer;
+    use crate::database::DatabaseManager;
     use crate::realm::RealmName;
     use crate::test_db;
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::Duration;
 
     fn realm() -> Result<RealmDatabase> {
-        let db: DatabaseLayer = test_db!(ServiceData);
+        let db: DatabaseManager = test_db!(ServiceData);
         db.realm(RealmName::default())
     }
 

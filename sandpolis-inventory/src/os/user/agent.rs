@@ -74,14 +74,14 @@ impl From<&User> for UserData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
 
     #[tokio::test]
     #[test_log::test]
     async fn test_user_collector() -> Result<()> {
-        let database: DatabaseLayer = test_db!(UserData);
+        let database: DatabaseManager = test_db!(UserData);
 
         let instance_id = InstanceId::new_server();
         let mut collector =

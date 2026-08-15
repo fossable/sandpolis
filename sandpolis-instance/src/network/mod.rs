@@ -1,4 +1,4 @@
-use crate::database::DatabaseLayer;
+use crate::database::DatabaseManager;
 use crate::database::Resident;
 use crate::database::ResidentVec;
 use crate::realm::RealmName;
@@ -18,7 +18,7 @@ pub use stream::{StreamRegistry, StreamRequester, StreamResponder};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace};
 
-/// Trait for layers to register their stream responders on new connections.
+/// Trait for subsystems to register their stream responders on new connections.
 pub trait RegisterResponders: Send + Sync + 'static {
     fn register_responders(&self, registry: &StreamRegistry);
 }
@@ -50,12 +50,12 @@ pub mod sync;
 
 #[data]
 #[derive(Default)]
-pub struct NetworkLayerData {}
+pub struct NetworkManagerData {}
 
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
-pub struct NetworkLayer {
-    data: Resident<NetworkLayerData>,
+pub struct NetworkManager {
+    data: Resident<NetworkManagerData>,
 
     /// Inbound connections
     pub inbound: Arc<RwLock<Vec<Arc<InstanceConnection>>>>,
@@ -71,7 +71,7 @@ pub struct NetworkLayer {
     /// up comes from here, since it holds no connection to any of them.
     pub liveness: ResidentVec<liveness::LivenessData>,
 
-    pub database: DatabaseLayer,
+    pub database: DatabaseManager,
 }
 
 /// How often each side of a websocket sends a keepalive ping.
@@ -85,7 +85,7 @@ pub(crate) const KEEPALIVE_INTERVAL: Duration = Duration::from_secs(30);
 /// Generous relative to the ping interval: a missed pong is not yet a fault.
 pub(crate) const KEEPALIVE_DEADLINE: Duration = Duration::from_secs(90);
 
-impl NetworkLayer {
+impl NetworkManager {
     /// The inbound connections that are still live, i.e. whose socket hasn't
     /// been cancelled.
     ///
@@ -103,8 +103,8 @@ impl NetworkLayer {
             .collect()
     }
 
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
-        debug!("Initializing network layer");
+    pub async fn new(database: DatabaseManager) -> Result<Self> {
+        debug!("Initializing network manager");
 
         let realm = database.realm(RealmName::default())?;
         let inbound = Arc::new(RwLock::new(Vec::new()));

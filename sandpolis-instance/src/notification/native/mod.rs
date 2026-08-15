@@ -1,7 +1,7 @@
 //! Delivery to the operating system's own notification interface.
 //!
 //! One implementation per platform, selected by `target_os` and re-exported
-//! under a single [`deliver`] — the same shape the desktop layer uses for its
+//! under a single [`deliver`] — the same shape the desktop subsystem uses for its
 //! capture and input backends (see `sandpolis-desktop/src/input/mod.rs`).
 //!
 //! Delivery is best effort and never fails loudly. A platform with no backend,

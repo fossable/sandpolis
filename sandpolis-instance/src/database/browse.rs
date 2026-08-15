@@ -181,7 +181,7 @@ pub static BROWSE: LazyLock<BrowseRegistry> = LazyLock::new(|| {
 mod tests {
     use super::*;
     use crate::InstanceId;
-    use crate::database::{DataScope, DatabaseLayer};
+    use crate::database::{DataScope, DatabaseManager};
     use crate::realm::RealmName;
     use crate::test_db;
     use anyhow::Result;
@@ -203,7 +203,7 @@ mod tests {
         let mut reg = BrowseRegistry::new();
         reg.register_scoped::<BrowseTestData>(|d| d._instance_id);
 
-        let db: DatabaseLayer = test_db!(BrowseTestData);
+        let db: DatabaseManager = test_db!(BrowseTestData);
         let realm = db.realm(RealmName::default())?;
         let a = InstanceId::new(crate::InstanceType::Agent);
         let b = InstanceId::new(crate::InstanceType::Agent);

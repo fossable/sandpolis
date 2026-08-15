@@ -17,16 +17,16 @@ use std::path::Path;
 static ASSETS: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 /// The embedded asset directory, for callers that merge multiple sources (e.g.
-/// the GUI bootstrap, which overlays per-layer asset crates on top of this one).
+/// the GUI bootstrap, which overlays per-subsystem asset crates on top of this one).
 pub fn dir() -> &'static Dir<'static> {
     &ASSETS
 }
 
-/// Define a layer crate's embedded asset bundle.
+/// Define a subsystem crate's embedded asset bundle.
 ///
 /// Expands to the `ASSETS` snapshot of that crate's own `assets/` directory
 /// plus the `dir()` accessor the GUI bootstrap overlays onto the client's own
-/// bundle. Every layer that ships assets needs exactly this and nothing else.
+/// bundle. Every subsystem that ships assets needs exactly this and nothing else.
 #[macro_export]
 macro_rules! embedded_assets {
     () => {

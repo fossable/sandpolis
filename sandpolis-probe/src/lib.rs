@@ -1,10 +1,10 @@
-//! Probe layer for monitoring and managing various device types.
+//! Probe subsystem for monitoring and managing various device types.
 //!
 //! Probes are lightweight monitoring endpoints that can be registered on agents
 //! to represent devices such as SSH hosts, IPMI-enabled servers, UPS devices,
 //! cameras, and more.
 
-use config::{DeviceConfig, ProbeLayerConfig};
+use config::{DeviceConfig, ProbeManagerConfig};
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::config::ConfigPersistHook;
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ pub mod client;
 /// Devices registered on this instance (populated from config at startup, kept
 /// in sync over the management stream).
 ///
-/// This is a global because GUI extension trait methods have no access to layer
+/// This is a global because GUI extension trait methods have no access to manager
 /// state when rendering, and the server-side management responder is constructed
 /// by a stateless factory.
 pub static REGISTERED_DEVICES: LazyLock<Arc<RwLock<Vec<RegisteredDevice>>>> =
@@ -41,13 +41,13 @@ pub static REGISTERED_DEVICES: LazyLock<Arc<RwLock<Vec<RegisteredDevice>>>> =
 
 static DEVICE_PERSIST: ConfigPersistHook<RegisteredDevice> = ConfigPersistHook::new("probe");
 
-/// This instance's own id, captured when [`ProbeLayer`] is constructed. Probes are
+/// This instance's own id, captured when [`ProbeManager`] is constructed. Probes are
 /// accessed only from servers, so the server's management responder stamps this as
 /// the gateway of every registered device.
 static GATEWAY: OnceLock<InstanceId> = OnceLock::new();
 
 /// The gateway instance for devices registered on this instance (the server's own
-/// id). `None` before [`ProbeLayer::new`] has run.
+/// id). `None` before [`ProbeManager::new`] has run.
 pub fn gateway() -> Option<InstanceId> {
     GATEWAY.get().copied()
 }
@@ -66,21 +66,21 @@ pub fn persist_devices(devices: &[RegisteredDevice]) {
 }
 
 /// Rebuild the on-disk config from the current device list.
-pub fn devices_to_config(devices: &[RegisteredDevice]) -> ProbeLayerConfig {
-    ProbeLayerConfig {
+pub fn devices_to_config(devices: &[RegisteredDevice]) -> ProbeManagerConfig {
+    ProbeManagerConfig {
         devices: devices.iter().map(|d| d.device.clone()).collect(),
     }
 }
 
-/// The probe layer manages device registrations and streaming state.
+/// Manages device registrations and streaming state.
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
-pub struct ProbeLayer {
+pub struct ProbeManager {
     pub devices: Arc<RwLock<Vec<RegisteredDevice>>>,
 }
 
-impl ProbeLayer {
-    pub fn new(config: ProbeLayerConfig, gateway: InstanceId) -> Self {
+impl ProbeManager {
+    pub fn new(config: ProbeManagerConfig, gateway: InstanceId) -> Self {
         let _ = GATEWAY.set(gateway);
         let devices: Vec<RegisteredDevice> = config
             .devices

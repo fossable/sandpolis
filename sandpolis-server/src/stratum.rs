@@ -14,14 +14,14 @@
 //!   GS so it can reach everything else.
 
 use crate::ownership::{OwnershipRequest, OwnershipRequester, attached_instances};
-use crate::{ServerLayer, ServerStratum};
+use crate::{ServerManager, ServerStratum};
 use anyhow::{Result, anyhow};
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::InstanceLayer;
+use sandpolis_instance::InstanceManager;
 use sandpolis_instance::database::sync::SyncFilter;
 use sandpolis_instance::network::reachability::ReachabilityRequest;
 use sandpolis_instance::network::stream::StreamMessage;
-use sandpolis_instance::network::{InstanceConnection, NetworkLayer, RetryWait};
+use sandpolis_instance::network::{InstanceConnection, NetworkManager, RetryWait};
 use sandpolis_instance::realm::RealmName;
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -86,7 +86,7 @@ pub enum IssueServerCertResponse {
 /// operator approving the request in the GUI — the certificate itself can't
 /// carry that entitlement, since clients and agents hold the same kind.
 pub async fn issue_server_cert(
-    axum::extract::State(server): axum::extract::State<ServerLayer>,
+    axum::extract::State(server): axum::extract::State<ServerManager>,
     axum::extract::Json(request): axum::extract::Json<IssueServerCertRequest>,
 ) -> axum::Json<IssueServerCertResponse> {
     use sandpolis_instance::realm::{RealmCert, RealmCertType};
@@ -147,7 +147,7 @@ pub async fn issue_server_cert(
 /// Must complete before the listener binds, since the certificate is what the
 /// listener presents. Returns immediately if we already hold one (from a
 /// previous run) or if this is the global stratum server.
-pub async fn enroll(server: &ServerLayer, instance: &InstanceLayer) -> Result<()> {
+pub async fn enroll(server: &ServerManager, instance: &InstanceManager) -> Result<()> {
     let ServerStratum::Local { global } = server.stratum.clone() else {
         return Ok(());
     };
@@ -196,8 +196,8 @@ enum EnrollError {
 }
 
 async fn request_cert(
-    server: &ServerLayer,
-    instance: &InstanceLayer,
+    server: &ServerManager,
+    instance: &InstanceManager,
     global: &crate::ServerUrl,
     realm: RealmName,
 ) -> std::result::Result<(), EnrollError> {
@@ -237,9 +237,9 @@ async fn request_cert(
 /// Runs until cancelled, reconnecting whenever the link drops. Returns
 /// immediately (as a no-op) on a global stratum server, which has no upstream.
 pub async fn maintain_upstream(
-    server: ServerLayer,
-    network: NetworkLayer,
-    instance: InstanceLayer,
+    server: ServerManager,
+    network: NetworkManager,
+    instance: InstanceManager,
 ) -> Result<()> {
     let ServerStratum::Local { global } = server.stratum.clone() else {
         return Ok(());
@@ -283,9 +283,9 @@ pub async fn maintain_upstream(
 ///
 /// Returns how long the link stayed up, or an error if it never came up.
 async fn attempt_link(
-    server: &ServerLayer,
-    network: &NetworkLayer,
-    instance: &InstanceLayer,
+    server: &ServerManager,
+    network: &NetworkManager,
+    instance: &InstanceManager,
     global: &crate::ServerUrl,
 ) -> Result<Duration> {
     let upstream = Arc::new(server.connect(global.clone()).await?);
@@ -320,7 +320,7 @@ async fn attempt_link(
 /// Removes a connection from `outbound` however the attempt ends, so a failure
 /// partway through doesn't leave a dead entry behind.
 struct OutboundGuard<'a> {
-    server: &'a ServerLayer,
+    server: &'a ServerManager,
     connection: Arc<crate::ServerConnection>,
 }
 
@@ -336,9 +336,9 @@ impl Drop for OutboundGuard<'_> {
 
 /// Set up everything that rides on one established upstream link.
 async fn run_link(
-    server: &ServerLayer,
+    server: &ServerManager,
     link: &Arc<InstanceConnection>,
-    network: &NetworkLayer,
+    network: &NetworkManager,
 ) -> Result<()> {
     // Anything this server can't resolve locally goes up to the global stratum
     // server, which knows the whole estate. Attaching the relay lets messages

@@ -422,7 +422,7 @@ impl StreamRegistry {
 /// Server-side stream router. Forwards messages between a client connection and a
 /// target agent connection, keyed by stream id.
 pub struct Relay {
-    /// All connections the server holds (shared with `NetworkLayer::inbound`).
+    /// All connections the server holds (shared with `NetworkManager::inbound`).
     connections: Arc<RwLock<Vec<Arc<super::InstanceConnection>>>>,
     /// stream id -> the origin connection's outbound sender (for responses).
     routes: Mutex<HashMap<StreamId, Sender<StreamMessage>>>,

@@ -16,8 +16,8 @@ use crate::gui::ui::theme::{Role, Theme};
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use sandpolis_instance::InstanceLayer;
-use sandpolis_instance::network::{NetworkLayer, liveness};
+use sandpolis_instance::InstanceManager;
+use sandpolis_instance::network::{NetworkManager, liveness};
 
 /// How far the shading disc extends past the node's hitbox.
 const RING_MARGIN: f32 = 5.0;
@@ -199,8 +199,8 @@ pub struct OfflineScrim {
 /// [`liveness::reachable`].
 pub fn update_offline_markers(
     mut commands: Commands,
-    instance_layer: Res<InstanceLayer>,
-    network: Res<NetworkLayer>,
+    instance_manager: Res<InstanceManager>,
+    network: Res<NetworkManager>,
     nodes: Query<(Entity, &NodeEntity, Has<Offline>)>,
 ) {
     let online = liveness::reachable(
@@ -211,7 +211,7 @@ pub fn update_offline_markers(
     for (entity, node, marked) in nodes.iter() {
         // We're never out of touch with ourselves.
         let offline =
-            node.instance_id != instance_layer.instance_id && !online.contains(&node.instance_id);
+            node.instance_id != instance_manager.instance_id && !online.contains(&node.instance_id);
 
         if offline && !marked {
             commands.entity(entity).insert(Offline);

@@ -134,8 +134,8 @@ client = [
   "sandpolis-client/client",
 ]
 server = []
-# VNC probes: the desktop layer can stream a device registered with the probe
-# layer instead of an agent. The codec deps are shared with the agent/client
+# VNC probes: the desktop subsystem can stream a device registered with the probe
+# subsystem instead of an agent. The codec deps are shared with the agent/client
 # encoders, and are listed again so a `server,probe` build (which has no capture
 # backend) stands on its own.
 probe = ["dep:sandpolis-probe", "dep:vnc", "dep:zstd", "dep:tokio"]

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use sandpolis_instance::LayerVersion;
-use sandpolis_instance::database::DatabaseLayer;
-use sandpolis_instance::realm::Realms;
+use sandpolis_instance::database::DatabaseManager;
+use sandpolis_instance::realm::RealmManager;
 use std::collections::HashMap;
 
 #[cfg(feature = "agent")]
@@ -98,8 +98,8 @@ impl RuntimeOptions {
     /// this file format.
     // TODO seed each realm's accounts into that realm's database
     #[cfg(all(feature = "server", feature = "account"))]
-    pub fn merged_account_config(&self) -> sandpolis_account::config::AccountLayerConfig {
-        let mut merged = sandpolis_account::config::AccountLayerConfig::default();
+    pub fn merged_account_config(&self) -> sandpolis_account::config::AccountManagerConfig {
+        let mut merged = sandpolis_account::config::AccountManagerConfig::default();
         for (index, realm) in self.realms.iter().enumerate() {
             if index == 0 {
                 merged.scrape = realm.account.scrape.clone();
@@ -114,8 +114,8 @@ impl RuntimeOptions {
     /// The probe sections of every loaded realm, merged. See
     /// [`merged_account_config`](Self::merged_account_config) for why.
     #[cfg(all(feature = "server", feature = "probe"))]
-    pub fn merged_probe_config(&self) -> sandpolis_probe::config::ProbeLayerConfig {
-        sandpolis_probe::config::ProbeLayerConfig {
+    pub fn merged_probe_config(&self) -> sandpolis_probe::config::ProbeManagerConfig {
+        sandpolis_probe::config::ProbeManagerConfig {
             devices: self
                 .realms
                 .iter()
@@ -159,8 +159,8 @@ pub async fn endpoint_state(
 ) -> Result<InstanceState> {
     use sandpolis_instance::database::WriteAuthority;
 
-    let database = DatabaseLayer::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
-    let realms = Realms::for_endpoint(endpoint_certs, database.clone())?;
+    let database = DatabaseManager::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
+    let realms = RealmManager::for_endpoint(endpoint_certs, database.clone())?;
 
     InstanceState::new(options, database, realms, ServerStratum::Global).await
 }
@@ -200,27 +200,27 @@ pub fn stratum_of(
 #[derive(Clone)]
 pub struct InstanceState {
     #[cfg(feature = "account")]
-    pub account: sandpolis_account::AccountLayer,
-    pub agent: sandpolis_agent::AgentLayer,
+    pub account: sandpolis_account::AccountManager,
+    pub agent: sandpolis_agent::AgentManager,
     #[cfg(feature = "desktop")]
-    pub desktop: sandpolis_desktop::DesktopLayer,
+    pub desktop: sandpolis_desktop::DesktopManager,
     #[cfg(feature = "filesystem")]
-    pub filesystem: sandpolis_filesystem::FilesystemLayer,
+    pub filesystem: sandpolis_filesystem::FilesystemManager,
     #[cfg(feature = "health")]
-    pub health: sandpolis_health::HealthLayer,
-    pub realms: Realms,
-    pub instance: sandpolis_instance::InstanceLayer,
-    pub network: sandpolis_instance::network::NetworkLayer,
+    pub health: sandpolis_health::HealthManager,
+    pub realms: RealmManager,
+    pub instance: sandpolis_instance::InstanceManager,
+    pub network: sandpolis_instance::network::NetworkManager,
     #[cfg(feature = "inventory")]
-    pub inventory: sandpolis_inventory::InventoryLayer,
-    pub server: sandpolis_server::ServerLayer,
+    pub inventory: sandpolis_inventory::InventoryManager,
+    pub server: sandpolis_server::ServerManager,
     #[cfg(feature = "shell")]
-    pub shell: sandpolis_shell::ShellLayer,
+    pub shell: sandpolis_shell::ShellManager,
     #[cfg(feature = "snapshot")]
-    pub snapshot: sandpolis_snapshot::SnapshotLayer,
+    pub snapshot: sandpolis_snapshot::SnapshotManager,
     #[cfg(feature = "probe")]
-    pub probe: sandpolis_probe::ProbeLayer,
-    pub user: sandpolis_server::user::UserLayer,
+    pub probe: sandpolis_probe::ProbeManager,
+    pub user: sandpolis_server::user::UserManager,
 }
 
 impl InstanceState {
@@ -231,18 +231,18 @@ impl InstanceState {
     /// `.realm` and `.server` files this process was given.
     pub async fn new(
         options: &RuntimeOptions,
-        database: DatabaseLayer,
-        realms: Realms,
+        database: DatabaseManager,
+        realms: RealmManager,
         stratum: sandpolis_server::ServerStratum,
     ) -> Result<Self> {
-        // Create all the configured layers, starting with the most foundational
+        // Create all the configured subsystems, starting with the most foundational
 
         let instance =
-            sandpolis_instance::InstanceLayer::new(database.clone(), options.instance_type).await?;
+            sandpolis_instance::InstanceManager::new(database.clone(), options.instance_type).await?;
 
-        let network = sandpolis_instance::network::NetworkLayer::new(database.clone()).await?;
+        let network = sandpolis_instance::network::NetworkManager::new(database.clone()).await?;
 
-        let server = sandpolis_server::ServerLayer::new(
+        let server = sandpolis_server::ServerManager::new(
             database.clone(),
             network.clone(),
             realms.clone(),
@@ -251,7 +251,7 @@ impl InstanceState {
         )
         .await?;
 
-        let user = sandpolis_server::user::UserLayer::new(
+        let user = sandpolis_server::user::UserManager::new(
             instance.clone(),
             database.clone(),
             network.clone(),
@@ -262,7 +262,7 @@ impl InstanceState {
         )
         .await?;
 
-        let agent = sandpolis_agent::AgentLayer::new(database.clone()).await?;
+        let agent = sandpolis_agent::AgentManager::new(database.clone()).await?;
 
         // Deployment mints an agent certificate for whichever realm the new
         // agent will connect to. Its responder is built by the stateless
@@ -273,28 +273,28 @@ impl InstanceState {
 
         #[cfg(feature = "inventory")]
         let inventory =
-            sandpolis_inventory::InventoryLayer::new(database.clone(), instance.clone()).await?;
+            sandpolis_inventory::InventoryManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "health")]
-        let health = sandpolis_health::HealthLayer::new(database.clone(), instance.clone()).await?;
+        let health = sandpolis_health::HealthManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "shell")]
-        let shell = sandpolis_shell::ShellLayer::new(database.clone()).await?;
+        let shell = sandpolis_shell::ShellManager::new(database.clone()).await?;
 
         #[cfg(feature = "filesystem")]
-        let filesystem = sandpolis_filesystem::FilesystemLayer::new().await?;
+        let filesystem = sandpolis_filesystem::FilesystemManager::new().await?;
 
         #[cfg(feature = "desktop")]
-        let desktop = sandpolis_desktop::DesktopLayer::new(database.clone()).await?;
+        let desktop = sandpolis_desktop::DesktopManager::new(database.clone()).await?;
 
         #[cfg(feature = "account")]
-        let account = sandpolis_account::AccountLayer::new(database.clone()).await?;
+        let account = sandpolis_account::AccountManager::new(database.clone()).await?;
 
         #[cfg(feature = "snapshot")]
-        let snapshot = sandpolis_snapshot::SnapshotLayer::new().await?;
+        let snapshot = sandpolis_snapshot::SnapshotManager::new().await?;
 
         #[cfg(feature = "probe")]
-        let probe = sandpolis_probe::ProbeLayer::new(
+        let probe = sandpolis_probe::ProbeManager::new(
             {
                 #[cfg(feature = "server")]
                 {
@@ -358,10 +358,10 @@ pub use sandpolis_instance::database::MODELS;
 mod test_models {
     /// Building the registry is what proves the estate's models agree: every
     /// `#[data]` type registers itself, and `define` rejects a duplicate
-    /// native_model id, so a collision between two layers fails here rather
+    /// native_model id, so a collision between two subsystems fails here rather
     /// than when an instance starts.
     ///
-    /// This binary links every layer, which is what makes the check meaningful.
+    /// This binary links every subsystem, which is what makes the check meaningful.
     #[test]
     fn models_have_no_id_collisions() {
         let _ = &*super::MODELS;

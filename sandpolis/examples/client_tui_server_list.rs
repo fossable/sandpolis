@@ -7,8 +7,8 @@ use sandpolis::{
     InstanceState, MODELS, RuntimeOptions, client::tui::server_list::ServerListWidget,
     server::test_server,
 };
-use sandpolis_instance::database::{DatabaseLayer, WriteAuthority};
-use sandpolis_instance::realm::Realms;
+use sandpolis_instance::database::{DatabaseManager, WriteAuthority};
+use sandpolis_instance::realm::RealmManager;
 use sandpolis_instance::realm::config::ServerCertFile;
 use sandpolis_server::ServerStratum;
 
@@ -25,8 +25,8 @@ async fn main() -> Result<()> {
     // bootstrap a client needs.
     let (cert, _) = ServerCertFile::load(&test_server.endpoint_cert)?;
 
-    let database = DatabaseLayer::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
-    let realms = Realms::for_endpoint(vec![cert], database.clone())?;
+    let database = DatabaseManager::new(options.database.clone(), &MODELS, WriteAuthority::Full)?;
+    let realms = RealmManager::for_endpoint(vec![cert], database.clone())?;
     let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     let widget = ServerListWidget::new(state.server.clone())?;

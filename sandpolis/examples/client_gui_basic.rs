@@ -7,10 +7,10 @@
 /// - Force-directed graph layout
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, RuntimeOptions};
-use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseManager, WriteAuthority, config::DatabaseConfig};
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
-use sandpolis_instance::realm::Realms;
+use sandpolis_instance::realm::RealmManager;
 use sandpolis_instance::{InstanceId, InstanceType};
 use sandpolis_server::ServerStratum;
 
@@ -24,11 +24,11 @@ async fn main() -> Result<()> {
         storage: None,
         key: Default::default(),
     };
-    let database = DatabaseLayer::new(db_config, &*MODELS, WriteAuthority::Full)?;
+    let database = DatabaseManager::new(db_config, &*MODELS, WriteAuthority::Full)?;
 
     // Create instance state
     // The local instance will be spawned automatically
-    let realms = Realms::for_endpoint(Vec::new(), database.clone())?;
+    let realms = RealmManager::for_endpoint(Vec::new(), database.clone())?;
     let state =
         InstanceState::new(&options, database.clone(), realms, ServerStratum::Global).await?;
 

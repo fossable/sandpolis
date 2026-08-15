@@ -1,6 +1,6 @@
-//! User-facing notifications that any layer can raise.
+//! User-facing notifications that any subsystem can raise.
 //!
-//! A layer calls [`notify`] with a [`Notification`]; the process notifier turns
+//! A subsystem calls [`notify`] with a [`Notification`]; the process notifier turns
 //! it into a [`NotificationData`] row owned by this instance. From there the
 //! ordinary replication path takes over — an agent's notification reaches its
 //! owning server, then the global stratum server, then any client subscribed to
@@ -160,7 +160,7 @@ impl Notification {
 }
 
 /// The process notifier. Installed once by
-/// [`InstanceLayer::new`](crate::InstanceLayer::new), which is the first thing
+/// [`InstanceManager::new`](crate::InstanceManager::new), which is the first thing
 /// that knows both the database and this instance's id.
 static NOTIFIER: OnceLock<Notifier> = OnceLock::new();
 
@@ -227,7 +227,7 @@ impl Notifier {
     }
 }
 
-/// Install the process notifier. Idempotent — startup builds an `InstanceLayer`
+/// Install the process notifier. Idempotent — startup builds an `InstanceManager`
 /// more than once, and only the first one takes effect.
 pub fn install(realm: &RealmDatabase, instance_id: InstanceId) {
     if NOTIFIER.get().is_some() {

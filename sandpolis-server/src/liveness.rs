@@ -15,7 +15,7 @@
 use anyhow::Result;
 use chrono::{DateTime, TimeDelta, Utc};
 use cron::Schedule;
-use sandpolis_instance::network::NetworkLayer;
+use sandpolis_instance::network::NetworkManager;
 use sandpolis_instance::network::liveness::{LivenessData, MAX_SCHEDULE_LEN, PollAnnouncement};
 use sandpolis_instance::notification::{Notification, notify};
 use sandpolis_instance::database::ResidentVec;
@@ -56,7 +56,7 @@ pub struct Liveness {
 }
 
 impl Liveness {
-    pub fn new(network: &NetworkLayer, observer: InstanceId) -> Self {
+    pub fn new(network: &NetworkManager, observer: InstanceId) -> Self {
         Self {
             rows: network.liveness.clone(),
             observer,
@@ -224,7 +224,7 @@ fn next_checkin(poll: &PollAnnouncement, from: DateTime<Utc>) -> Option<DateTime
 /// this keeps server peers: a local stratum server going quiet is exactly the
 /// kind of thing the global stratum server should notice. Clients are dropped —
 /// someone opening the GUI is not an event worth a notification.
-fn attached(network: &NetworkLayer) -> BTreeMap<InstanceId, Option<PollAnnouncement>> {
+fn attached(network: &NetworkManager) -> BTreeMap<InstanceId, Option<PollAnnouncement>> {
     network
         .live_inbound()
         .iter()
@@ -238,7 +238,7 @@ fn attached(network: &NetworkLayer) -> BTreeMap<InstanceId, Option<PollAnnouncem
 /// Wakes on connection changes (a socket opening, or a janitor removing the row
 /// of one that died) and on a timer, since a missed check-in deadline passes
 /// with nothing to wake on.
-pub async fn maintain_liveness(network: NetworkLayer, liveness: Arc<Liveness>) {
+pub async fn maintain_liveness(network: NetworkManager, liveness: Arc<Liveness>) {
     let notify = Arc::new(Notify::new());
     {
         let notify = notify.clone();

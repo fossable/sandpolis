@@ -116,7 +116,7 @@ client = [
   "dep:ratatui-image",
   "dep:image",
   "dep:tui-popup",
-  # Propagate to optional layers
+  # Propagate to optional subsystems
   "sandpolis-account?/client",
   "sandpolis-desktop?/client",
   "sandpolis-filesystem?/client",
@@ -126,7 +126,7 @@ client = [
   "sandpolis-shell?/client",
 ]
 
-# Layers
+# Subsystems
 account = ["dep:sandpolis-account"]
 audit = ["dep:sandpolis-audit"]
 desktop = ["dep:sandpolis-desktop"]
@@ -135,8 +135,6 @@ health = ["dep:sandpolis-health"]
 inventory = ["dep:sandpolis-inventory"]
 shell = ["dep:sandpolis-shell"]
 snapshot = ["dep:sandpolis-snapshot"]
-# The weak `?` deps give the shell/desktop layers probe support only when those
-# layers are enabled too, which is the closest cargo gets to "both features on".
 probe = [
   "dep:sandpolis-probe",
   "sandpolis-shell?/probe",
@@ -144,7 +142,6 @@ probe = [
 ]
 tunnel = []
 
-# Enable all layers
 default = [
   "account",
   "audit",
@@ -157,8 +154,6 @@ default = [
   "snapshot",
   "tunnel",
 ]
-
-# client-wayland = ["client", "bevy/wayland"]
 
 [[example]]
 name = "client_tui_server_list"

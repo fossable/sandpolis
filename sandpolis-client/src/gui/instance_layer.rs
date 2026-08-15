@@ -16,16 +16,16 @@ use crate::gui::ui::node_panel::{NodePanel, PanelCtx};
 use crate::gui::ui::theme::Role;
 use crate::gui::ui::widgets::{heading, text};
 use bevy::prelude::*;
-use sandpolis_instance::network::NetworkLayer;
-use sandpolis_instance::{InstanceId, InstanceLayer};
+use sandpolis_instance::network::NetworkManager;
+use sandpolis_instance::{InstanceId, InstanceManager};
 
 /// The debug Instance layer's node panel.
 ///
 /// Holds clones of the layers it reads (the [`NodePanel`] build methods do not
 /// receive resources), matching how other panels carry their own data handles.
 pub struct InstancePanel {
-    pub network: NetworkLayer,
-    pub instance: InstanceLayer,
+    pub network: NetworkManager,
+    pub instance: InstanceManager,
 }
 
 impl NodePanel for InstancePanel {
@@ -116,7 +116,7 @@ impl NodePanel for InstancePanel {
 }
 
 /// How many `ConnectionData` rows reference `instance` as either endpoint.
-fn count_connections(network: &NetworkLayer, instance: InstanceId) -> usize {
+fn count_connections(network: &NetworkManager, instance: InstanceId) -> usize {
     network
         .connections
         .iter()
@@ -129,7 +129,7 @@ fn count_connections(network: &NetworkLayer, instance: InstanceId) -> usize {
 
 /// Summarize every `ConnectionData` row referencing `instance` (as either
 /// endpoint) for the panel's live connection list.
-fn describe_connections(network: &NetworkLayer, instance: InstanceId) -> String {
+fn describe_connections(network: &NetworkManager, instance: InstanceId) -> String {
     let mut lines = Vec::new();
     for connection in network.connections.iter() {
         let cd = connection.read();

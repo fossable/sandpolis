@@ -14,10 +14,10 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 
 /// Bring up everything a server needs and run it: the realms it serves, the
-/// database that holds them, and the layers over both.
+/// database that holds them, and the subsystems over both.
 pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCode> {
-    use sandpolis_instance::database::{DatabaseLayer, ScopeTable, WriteAuthority};
-    use sandpolis_instance::realm::Realms;
+    use sandpolis_instance::database::{DatabaseManager, ScopeTable, WriteAuthority};
+    use sandpolis_instance::realm::RealmManager;
     use sandpolis_instance::realm::config::RealmBootstrap;
 
     let mut options = args.options();
@@ -56,7 +56,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         WriteAuthority::Full
     };
 
-    let database = DatabaseLayer::new(options.database.clone(), &crate::MODELS, authority)?;
+    let database = DatabaseManager::new(options.database.clone(), &crate::MODELS, authority)?;
 
     // Realms are only ever created from files, so this is where the set is
     // fixed for the life of the process.
@@ -71,7 +71,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         }
     }
 
-    let instance = sandpolis_instance::InstanceLayer::new(
+    let instance = sandpolis_instance::InstanceManager::new(
         database.clone(),
         sandpolis_instance::InstanceType::Server,
     )
@@ -82,7 +82,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         endpoint_certs.push(cert);
     }
 
-    let (realms, startup) = Realms::new(
+    let (realms, startup) = RealmManager::new(
         bootstraps,
         endpoint_certs,
         database.clone(),
@@ -222,7 +222,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     // configured domain.
     state.account.seed_accounts(&account_config)?;
 
-    // Every layer's server-side background work goes on one runner, which owns
+    // Every subsystem's server-side background work goes on one runner, which owns
     // the schedules and lets a client enable or disable individual services.
     let mut services = sandpolis_instance::service::ServiceRunner::new(
         state.instance.realm().clone(),
@@ -300,11 +300,11 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     let app: Router<InstanceState> = Router::new();
 
-    // Server layer
+    // Server subsystem
     let app: Router<InstanceState> =
         app.route("/server/banner", get(sandpolis_server::banner::get_banner));
 
-    // User layer
+    // User subsystem
     let app: Router<InstanceState> = app.route(
         "/user/login",
         post(sandpolis_server::login::server::post_login),
@@ -314,7 +314,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     let app: Router<InstanceState> =
         app.route("/connect", get(sandpolis_server::user::server::connect));
 
-    // Realm layer: the global stratum server issues server certificates to
+    // Realm manager: the global stratum server issues server certificates to
     // local stratum servers so the whole network shares one trust root.
     let app: Router<InstanceState> = app.route(
         "/realm/server-cert",
@@ -378,7 +378,7 @@ pub async fn test_server() -> Result<TestServer> {
     options.listen = format!("127.0.0.1:{port}").parse()?;
 
     // Create temporary database
-    let database = sandpolis_instance::database::DatabaseLayer::new(
+    let database = sandpolis_instance::database::DatabaseManager::new(
         options.database.clone(),
         &crate::MODELS,
         sandpolis_instance::database::WriteAuthority::Full,
@@ -395,13 +395,13 @@ pub async fn test_server() -> Result<TestServer> {
         .endpoint_cert(&url)?
         .write_server_file(&endpoint_cert, None)?;
 
-    let instance = sandpolis_instance::InstanceLayer::new(
+    let instance = sandpolis_instance::InstanceManager::new(
         database.clone(),
         sandpolis_instance::InstanceType::Server,
     )
     .await?;
 
-    let (realms, _) = sandpolis_instance::realm::Realms::new(
+    let (realms, _) = sandpolis_instance::realm::RealmManager::new(
         vec![sandpolis_instance::realm::config::RealmBootstrap {
             name: url.realm.clone(),
             ca: Some((

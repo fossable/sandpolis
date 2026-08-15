@@ -15,7 +15,7 @@ pub struct SavedServerData {
     pub user: UserName,
 }
 
-impl super::ServerLayer {
+impl super::ServerManager {
     pub fn save_server(&self, data: SavedServerData) -> Result<()> {
         self.servers.push(data)?;
         Ok(())

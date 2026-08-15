@@ -1,7 +1,7 @@
 use anyhow::Result;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::InstanceLayer;
-use sandpolis_instance::network::NetworkLayer;
+use sandpolis_instance::InstanceManager;
+use sandpolis_instance::network::NetworkManager;
 
 /// Instance metadata returned from database queries
 #[derive(Clone, Debug)]
@@ -31,19 +31,19 @@ pub struct NetworkEdge {
 /// connection rows cover a server that's dialed but whose identity row hasn't
 /// replicated in yet.
 pub fn query_all_instances(
-    instance_layer: &InstanceLayer,
-    network_layer: &NetworkLayer,
+    instance_manager: &InstanceManager,
+    network_manager: &NetworkManager,
 ) -> Result<Vec<InstanceId>> {
-    let mut instance_ids = vec![instance_layer.instance_id];
+    let mut instance_ids = vec![instance_manager.instance_id];
 
-    for instance in instance_layer.instances().iter() {
+    for instance in instance_manager.instances().iter() {
         let id = instance.read()._instance_id;
         if !instance_ids.contains(&id) {
             instance_ids.push(id);
         }
     }
 
-    for connection in network_layer.connections.iter() {
+    for connection in network_manager.connections.iter() {
         let conn = connection.read();
         if !instance_ids.contains(&conn.remote_instance) {
             instance_ids.push(conn.remote_instance);
@@ -72,11 +72,11 @@ pub fn query_instance_metadata(id: InstanceId) -> Result<InstanceMetadata> {
 
 /// Query network topology (edges between instances)
 /// Returns list of connections for the current layer
-pub fn query_network_topology(network_layer: &NetworkLayer) -> Result<Vec<NetworkEdge>> {
+pub fn query_network_topology(network_manager: &NetworkManager) -> Result<Vec<NetworkEdge>> {
     let mut edges = Vec::new();
 
     // Get all connections and build edges
-    for connection in network_layer.connections.iter() {
+    for connection in network_manager.connections.iter() {
         let conn = connection.read();
         // Create edge from local instance to remote instance
         edges.push(NetworkEdge {
@@ -96,7 +96,7 @@ pub struct NetworkStats {
 }
 
 /// Query network stats for a specific instance
-pub fn query_network_stats(_network_layer: &NetworkLayer, _id: InstanceId) -> Result<NetworkStats> {
+pub fn query_network_stats(_network_manager: &NetworkManager, _id: InstanceId) -> Result<NetworkStats> {
     // TODO: Query from network resident
     Ok(NetworkStats {
         latency_ms: None,
@@ -196,13 +196,13 @@ pub struct ShellSession {
 
 /// Query shell sessions for an instance
 pub fn query_shell_sessions(_id: InstanceId) -> Result<Vec<ShellSession>> {
-    // TODO: Query from shell layer
+    // TODO: Query from shell subsystem
     Ok(vec![])
 }
 
 /// Query output for a specific shell session
 pub fn query_session_output(_session_id: &str) -> Result<String> {
-    // TODO: Query from shell layer
+    // TODO: Query from shell subsystem
     Ok(String::new())
 }
 
@@ -220,7 +220,7 @@ pub struct Package {
 
 /// Query packages for an instance
 pub fn query_packages(_id: InstanceId) -> Result<Vec<Package>> {
-    // TODO: Query from package layer
+    // TODO: Query from inventory subsystem
     Ok(vec![])
 }
 
@@ -239,6 +239,6 @@ pub struct FileTransfer {
 
 /// Query active file transfers
 pub fn query_active_transfers() -> Result<Vec<FileTransfer>> {
-    // TODO: Query from filesystem layer
+    // TODO: Query from filesystem subsystem
     Ok(vec![])
 }

@@ -1,6 +1,15 @@
 [profile.release]
 strip = true
 
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.dev.build-override]
+debug = false
+
 [workspace]
 resolver = "2"
 members = [

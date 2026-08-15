@@ -7,5 +7,3 @@ rustflags = ['-C', 'link-arg=-fuse-ld=mold']
 [env]
 # Ring needs optimization for fortify source
 CFLAGS = "-O2"
-# Reduce this to avoid memory exhaustion
-RUST_TEST_THREADS = "4"

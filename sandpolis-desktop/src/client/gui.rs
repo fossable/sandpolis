@@ -315,7 +315,7 @@ fn describe_target(target: PanelTarget) -> String {
 
 /// The probe device behind `target`, if there is one.
 ///
-/// Reads the probe layer's device registry directly rather than going through
+/// Reads the probe subsystem's device registry directly rather than going through
 /// `sandpolis_probe::client::gui`, whose helpers are behind that crate's `client`
 /// feature — depending on them would drag its whole GUI stack in here.
 #[cfg(feature = "probe")]

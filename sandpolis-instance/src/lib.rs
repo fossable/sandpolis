@@ -1,4 +1,4 @@
-use crate::database::{DatabaseLayer, Resident, ResidentVec};
+use crate::database::{DatabaseManager, Resident, ResidentVec};
 use crate::domain::DomainData;
 use crate::realm::RealmName;
 use anyhow::{Result, bail};
@@ -458,7 +458,11 @@ mod test_instance_id {
     }
 }
 
-/// A layer represents a functional area of Sandpolis (e.g., filesystem, shell, network).
+/// Names a _layer_: the GUI face a subsystem presents, which the client's layer
+/// picker chooses between and which notifications and services are attributed
+/// to. A subsystem provides at most one, so the layer's name is the subsystem's
+/// name (e.g. `"Shell"`, `"Inventory"`).
+///
 /// Layers are registered at runtime using the `inventory` crate.
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -519,12 +523,12 @@ impl PartialEq<&str> for LayerName {
     }
 }
 
-// Register Layer with inventory for runtime collection
+// Register LayerName with inventory for runtime collection
 inventory::collect!(LayerName);
 
 #[data]
 #[derive(Default)]
-pub struct InstanceLayerData {
+pub struct InstanceManagerData {
     pub cluster_id: ClusterId,
     /// The instance this row describes — also this row's owning scope, so a
     /// server can own exactly the identity rows of the instances attached to it.
@@ -538,36 +542,36 @@ pub struct InstanceLayerData {
 // instances never replicates at all and every peer looks empty.
 inventory::submit! {
     crate::database::sync::SyncRegistration(
-        |r| r.register_scoped::<InstanceLayerData>(|d| d._instance_id))
+        |r| r.register_scoped::<InstanceManagerData>(|d| d._instance_id))
 }
 
-/// The sync `model_id` for [`InstanceLayerData`], used by clients to subscribe to
+/// The sync `model_id` for [`InstanceManagerData`], used by clients to subscribe to
 /// the set of known instances.
-pub fn instance_layer_model_id() -> u32 {
+pub fn instance_manager_model_id() -> u32 {
     use native_model::Model;
-    <InstanceLayerData as Model>::native_model_id()
+    <InstanceManagerData as Model>::native_model_id()
 }
 
 #[derive(Clone)]
 #[cfg_attr(feature = "client", derive(bevy::prelude::Resource))]
-pub struct InstanceLayer {
+pub struct InstanceManager {
     /// Every domain in the estate. Assigned by the global stratum server and
     /// replicated from there, so this is a read-only view everywhere else.
     domains: ResidentVec<DomainData>,
     /// Every instance in the estate, replicated in. The client's world view is
     /// drawn from this, so it covers instances this one never talks to.
-    instances: ResidentVec<InstanceLayerData>,
+    instances: ResidentVec<InstanceManagerData>,
     /// The default realm, so callers that need one (the service runner, say)
-    /// don't have to be handed the whole [`DatabaseLayer`].
+    /// don't have to be handed the whole [`DatabaseManager`].
     realm: crate::database::RealmDatabase,
     pub instance_id: InstanceId,
     pub cluster_id: ClusterId,
 }
 
-impl InstanceLayer {
+impl InstanceManager {
     /// `instance_type` is what this process was started as, which is what its
     /// identity says about it forever after.
-    pub async fn new(database: DatabaseLayer, instance_type: InstanceType) -> Result<Self> {
+    pub async fn new(database: DatabaseManager, instance_type: InstanceType) -> Result<Self> {
         let realm = database.realm(RealmName::default())?;
 
         // The identity row is generated on first start and reused forever after.
@@ -578,7 +582,7 @@ impl InstanceLayer {
             let r = realm.r_transaction()?;
             let existing = r
                 .scan()
-                .primary::<InstanceLayerData>()?
+                .primary::<InstanceManagerData>()?
                 .all()?
                 .next()
                 .transpose()?;
@@ -586,7 +590,7 @@ impl InstanceLayer {
 
             if existing.is_none() {
                 let rw = realm.local_write()?;
-                rw.insert(InstanceLayerData {
+                rw.insert(InstanceManagerData {
                     _instance_id: InstanceId::new(instance_type),
                     ..Default::default()
                 })?;
@@ -594,7 +598,7 @@ impl InstanceLayer {
             }
         }
 
-        let data: Resident<InstanceLayerData> = realm.resident(())?;
+        let data: Resident<InstanceManagerData> = realm.resident(())?;
 
         let instance_id = data.read()._instance_id;
 
@@ -615,9 +619,9 @@ impl InstanceLayer {
             table.set_self(instance_id);
         }
 
-        // Every layer raises notifications through a process-wide handle, so it
+        // Every subsystem raises notifications through a process-wide handle, so it
         // is installed here — the first point that knows both the database and
-        // this instance's id. Idempotent, since startup builds an `InstanceLayer`
+        // this instance's id. Idempotent, since startup builds an `InstanceManager`
         // more than once.
         crate::notification::install(&realm, instance_id);
 
@@ -665,7 +669,7 @@ impl InstanceLayer {
     ///
     /// A client draws a node per entry, which is how an agent it holds no
     /// connection to shows up at all.
-    pub fn instances(&self) -> &ResidentVec<InstanceLayerData> {
+    pub fn instances(&self) -> &ResidentVec<InstanceManagerData> {
         &self.instances
     }
 

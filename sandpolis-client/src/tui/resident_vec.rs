@@ -19,12 +19,14 @@ use super::{EventHandler, Panel};
 /// rendering and event handling through a builder pattern.
 ///
 /// # Example
-/// ```rust
-/// use sandpolis_client::tui::SyncListWidget;
+/// ```ignore
+/// use ratatui::crossterm::event::{Event, KeyCode};
+/// use ratatui::widgets::ListItem;
+/// use sandpolis_client::tui::resident_vec::ResidentVecWidget;
 /// use sandpolis_instance::database::ResidentVec;
 ///
 /// let resident_vec: ResidentVec<MyData> = db.resident_vec(())?;
-/// let list = SyncListWidget::builder(resident_vec)
+/// let list = ResidentVecWidget::builder(resident_vec)
 ///     .title("My List")
 ///     .item_renderer(|resident| ListItem::new(format!("{}", resident.read().name)))
 ///     .event_handler(|event, list| {
@@ -367,8 +369,10 @@ mod tests {
         pub value: i32,
     }
 
-    #[test]
-    fn test_sync_list_widget_builder() -> Result<()> {
+    // `resident_vec` spawns the watcher task that keeps the widget in sync, so
+    // this needs a runtime.
+    #[tokio::test]
+    async fn test_sync_list_widget_builder() -> Result<()> {
         let database = test_db!(TestItem);
         let db = database.realm(RealmName::default())?;
         let resident_vec: ResidentVec<TestItem> = db.resident_vec(())?;

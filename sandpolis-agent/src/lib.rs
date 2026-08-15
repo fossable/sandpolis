@@ -3,7 +3,7 @@
 // }
 
 use anyhow::Result;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 
 pub mod bootagent;
 #[cfg(feature = "client")]
@@ -12,18 +12,15 @@ pub mod deploy;
 pub mod uefi;
 pub mod wake;
 
-#[derive(Default)]
-pub struct AgentLayerData {}
-
 #[derive(Clone)]
-pub struct AgentLayer {
-    database: DatabaseLayer,
+pub struct AgentManager {
+    database: DatabaseManager,
     #[cfg(feature = "agent")]
     pub scheduler: tokio_cron_scheduler::JobScheduler,
 }
 
-impl AgentLayer {
-    pub async fn new(database: DatabaseLayer) -> Result<Self> {
+impl AgentManager {
+    pub async fn new(database: DatabaseManager) -> Result<Self> {
         Ok(Self {
             database,
             #[cfg(feature = "agent")]
@@ -34,7 +31,7 @@ impl AgentLayer {
 
 /// Polls data periodically.
 ///
-/// A collector doesn't own its schedule. An agent layer wraps each one in a
+/// A collector doesn't own its schedule. The agent subsystem wraps each one in a
 /// [`CollectorService`] and hands it to the service runner, which decides when —
 /// and whether — `refresh` is called.
 pub trait Collector: Send + 'static {
@@ -56,7 +53,7 @@ pub struct CollectorService<C> {
 
 #[cfg(feature = "agent")]
 impl<C: Collector> CollectorService<C> {
-    /// Wrap `collector`, which the layer keeps a handle to, in a service
+    /// Wrap `collector`, which the subsystem keeps a handle to, in a service
     /// belonging to `layer`.
     pub fn new(
         collector: std::sync::Arc<tokio::sync::Mutex<C>>,

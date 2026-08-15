@@ -1,11 +1,11 @@
-use crate::ProbeLayer;
+use crate::ProbeManager;
 use anyhow::Result;
 use sandpolis_client::cli::TargetArgs;
 use std::process::ExitCode;
 
 /// Probe devices. The interactive device-list TUI is not yet built, so this
 /// currently opens a placeholder panel (or reports unimplemented for `--json`).
-pub async fn dispatch(target: TargetArgs, _layer: &ProbeLayer, fps: f32) -> Result<ExitCode> {
+pub async fn dispatch(target: TargetArgs, _layer: &ProbeManager, fps: f32) -> Result<ExitCode> {
     if target.json {
         println!("{{\"status\":\"unimplemented\",\"command\":\"probe\"}}");
         return Ok(ExitCode::FAILURE);

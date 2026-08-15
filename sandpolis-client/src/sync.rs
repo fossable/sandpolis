@@ -6,7 +6,7 @@
 //! so the UI can read them synchronously via [`client_database`].
 
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::DatabaseLayer;
+use sandpolis_instance::database::DatabaseManager;
 use sandpolis_instance::database::sync::{FilterScope, SyncFilter};
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
@@ -18,7 +18,7 @@ use tokio::runtime::Handle;
 use tokio::sync::mpsc::Sender;
 
 static HANDLE: OnceLock<SyncHandle> = OnceLock::new();
-static DATABASE: OnceLock<DatabaseLayer> = OnceLock::new();
+static DATABASE: OnceLock<DatabaseManager> = OnceLock::new();
 
 /// All established server connections, for routing data to the server it's
 /// associated with (e.g. a probe stream to its owning server). The first entry
@@ -140,7 +140,7 @@ pub fn servers() -> Vec<(ServerUrl, InstanceId)> {
 /// subscriptions that were open on the dead one, so the views that want them ask
 /// again. Installing a whole new handle instead would strand every caller that
 /// already holds one.
-pub fn init(connection: Arc<InstanceConnection>, database: DatabaseLayer) {
+pub fn init(connection: Arc<InstanceConnection>, database: DatabaseManager) {
     let _ = DATABASE.set(database.clone());
 
     if let Some(handle) = HANDLE.get() {
@@ -183,13 +183,13 @@ where
 }
 
 /// The client's local database, if initialized. UI query functions read from it.
-pub fn client_database() -> Option<DatabaseLayer> {
+pub fn client_database() -> Option<DatabaseManager> {
     DATABASE.get().cloned()
 }
 
 /// Every record of a model in the client's local (synced) database.
 ///
-/// This is how a layer's client code reads what its subscription replicated
+/// This is how a subsystem's client code reads what its subscription replicated
 /// down. An empty result before the database exists is deliberate: views are
 /// built before the connection is, and a view with nothing to show yet is
 /// correct rather than an error.
@@ -281,7 +281,7 @@ struct SyncHandleInner {
     /// Swapped out on reconnect, so callers that hold the handle keep working
     /// across a server restart.
     connection: RwLock<Arc<InstanceConnection>>,
-    database: DatabaseLayer,
+    database: DatabaseManager,
     subs: Mutex<HashMap<SubKey, SubState>>,
     runtime: Handle,
 }

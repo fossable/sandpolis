@@ -11,7 +11,7 @@
 //! - [`widgets`] / [`gauge`]: themed spawn-helpers built on top of
 //!   `bevy_ui_widgets`.
 //! - [`layer`]: the registry each layer's client plugin registers itself in.
-//! - [`node_panel`]: the panel abstraction layers build their node UI on.
+//! - [`node_panel`]: the panel abstraction subsystems build their node UI on.
 //!
 //! Add [`UiPlugin`] to install everything.
 
@@ -32,7 +32,7 @@ pub mod theme;
 pub mod tooltip;
 pub mod widgets;
 
-/// Re-export of the `bevy_ui_widgets` activation event so layer crates can observe
+/// Re-export of the `bevy_ui_widgets` activation event so subsystem crates can observe
 /// button clicks without depending on `bevy_ui_widgets` directly.
 pub use bevy_ui_widgets::Activate;
 

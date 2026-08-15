@@ -2,7 +2,7 @@
 //! anything to actually go wrong:
 //!
 //! - one notification per severity, raised through the same `notify` call any
-//!   layer would use
+//!   subsystem would use
 //! - toast stacking, the visible cap, and the fade-out
 //! - the focus split: toasts while the window has focus, native OS
 //!   notifications while it doesn't (click away from the window to see it)
@@ -12,9 +12,9 @@
 //! ```
 use anyhow::Result;
 use sandpolis::{InstanceState, MODELS, RuntimeOptions};
-use sandpolis_instance::database::{DatabaseLayer, WriteAuthority, config::DatabaseConfig};
+use sandpolis_instance::database::{DatabaseManager, WriteAuthority, config::DatabaseConfig};
 use sandpolis_instance::notification::{Notification, notify};
-use sandpolis_instance::realm::Realms;
+use sandpolis_instance::realm::RealmManager;
 use sandpolis_server::ServerStratum;
 use std::time::Duration;
 
@@ -26,7 +26,7 @@ const INTERVAL: Duration = Duration::from_secs(4);
 async fn main() -> Result<()> {
     let options = RuntimeOptions::embedded();
 
-    let database = DatabaseLayer::new(
+    let database = DatabaseManager::new(
         DatabaseConfig {
             storage: None,
             key: Default::default(),
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
         WriteAuthority::Full,
     )?;
 
-    let realms = Realms::for_endpoint(Vec::new(), database.clone())?;
+    let realms = RealmManager::for_endpoint(Vec::new(), database.clone())?;
     let state = InstanceState::new(&options, database, realms, ServerStratum::Global).await?;
 
     // The client watches the database from `spawn_client_sync`, which the GUI

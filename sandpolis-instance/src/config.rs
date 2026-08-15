@@ -1,29 +1,29 @@
-//! Writing a layer's runtime state back to the config file.
+//! Writing a subsystem's runtime state back to the config file.
 //!
-//! A layer crate can't reference the main crate's `Configuration` — the
+//! A subsystem crate can't reference the main crate's `Configuration` — the
 //! dependency runs the other way — so the main crate injects a closure that
-//! knows how to persist, and the layer calls it whenever its state changes.
+//! knows how to persist, and the subsystem calls it whenever its state changes.
 
 use anyhow::Result;
 use std::sync::OnceLock;
 
-/// A layer's hook for writing its state back to the realm config.
+/// A subsystem's hook for writing its state back to the realm config.
 ///
-/// Installed once by the top-level `sandpolis` crate (server only). A layer
+/// Installed once by the top-level `sandpolis` crate (server only). A subsystem
 /// with no hook installed simply doesn't persist, which is what agents and
 /// clients want.
 pub struct ConfigPersistHook<T: 'static> {
-    /// The layer this hook belongs to, used only to name it in the warning
+    /// The subsystem this hook belongs to, used only to name it in the warning
     /// logged when persistence fails.
-    layer: &'static str,
+    subsystem: &'static str,
     hook: OnceLock<Box<dyn Fn(&[T]) -> Result<()> + Send + Sync>>,
 }
 
 impl<T: 'static> ConfigPersistHook<T> {
-    /// Declare a layer's hook. Const so it can live in a `static`.
-    pub const fn new(layer: &'static str) -> Self {
+    /// Declare a subsystem's hook. Const so it can live in a `static`.
+    pub const fn new(subsystem: &'static str) -> Self {
         Self {
-            layer,
+            subsystem,
             hook: OnceLock::new(),
         }
     }
@@ -41,7 +41,7 @@ impl<T: 'static> ConfigPersistHook<T> {
         if let Some(f) = self.hook.get()
             && let Err(e) = f(items)
         {
-            tracing::warn!(layer = %self.layer, error = %e, "Failed to persist layer config");
+            tracing::warn!(subsystem = %self.subsystem, error = %e, "Failed to persist subsystem config");
         }
     }
 }

@@ -45,10 +45,10 @@ pub struct RealmConfig {
     pub ca: Option<CaConfig>,
 
     #[cfg(feature = "account")]
-    pub account: sandpolis_account::config::AccountLayerConfig,
+    pub account: sandpolis_account::config::AccountManagerConfig,
 
     #[cfg(feature = "probe")]
-    pub probe: sandpolis_probe::config::ProbeLayerConfig,
+    pub probe: sandpolis_probe::config::ProbeManagerConfig,
 }
 
 impl RealmConfig {
@@ -153,9 +153,9 @@ impl RealmConfig {
         Ok(Some(url))
     }
 
-    /// Turn this into what [`Realms::new`] needs to bring the realm up.
+    /// Turn this into what [`RealmManager::new`] needs to bring the realm up.
     ///
-    /// [`Realms::new`]: sandpolis_instance::realm::Realms::new
+    /// [`RealmManager::new`]: sandpolis_instance::realm::RealmManager::new
     pub fn bootstrap(&self) -> Result<RealmBootstrap> {
         let ca = match self.ca.as_ref() {
             Some(ca) => {
@@ -365,13 +365,13 @@ mod test_realm_config {
     fn every_realm_file_is_loaded_in_order() -> Result<()> {
         let dir = tempfile::tempdir()?;
         std::fs::write(dir.path().join("prod.realm"), "")?;
-        std::fs::write(dir.path().join("dev.realm"), "")?;
+        std::fs::write(dir.path().join("beta.realm"), "")?;
         std::fs::write(dir.path().join("default.db"), "")?;
         std::fs::write(dir.path().join("notes.txt"), "")?;
 
         let realms = RealmConfig::load_dir(dir.path())?;
         let names: Vec<_> = realms.iter().map(|realm| realm.name.to_string()).collect();
-        assert_eq!(names, vec!["dev", "prod"]);
+        assert_eq!(names, vec!["beta", "prod"]);
         Ok(())
     }
 

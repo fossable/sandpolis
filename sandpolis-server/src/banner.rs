@@ -1,6 +1,6 @@
 use crate::ServerBanner;
 #[cfg(feature = "server")]
-use crate::ServerLayer;
+use crate::ServerManager;
 #[cfg(feature = "server")]
 use axum::{Json, extract, extract::State};
 use native_db::ToKey;
@@ -30,7 +30,7 @@ pub struct GetBannerResponse(pub ServerBanner);
 #[cfg(feature = "server")]
 #[axum_macros::debug_handler]
 pub async fn get_banner(
-    state: State<ServerLayer>,
+    state: State<ServerManager>,
     extract::Json(_): extract::Json<GetBannerRequest>,
 ) -> RequestResult<GetBannerResponse> {
     Ok(Json(GetBannerResponse(state.banner.read().inner.clone())))

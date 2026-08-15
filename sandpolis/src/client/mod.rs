@@ -105,7 +105,7 @@ pub fn spawn_client_sync(state: InstanceState) {
                         // things it can only learn by replication — and it needs
                         // them for as long as there's a world view to draw.
                         sandpolis_client::sync::subscribe(
-                            sandpolis_instance::instance_layer_model_id(),
+                            sandpolis_instance::instance_manager_model_id(),
                             None,
                         );
                         sandpolis_client::sync::subscribe(

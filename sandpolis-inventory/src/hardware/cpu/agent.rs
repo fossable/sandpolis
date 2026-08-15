@@ -34,7 +34,7 @@ impl Collector for CpuCollector {
         trace!(cores = self.system.cpus().len(), "Polled CPU info");
 
         // sysinfo reports the model on every core; the first one is the whole
-        // package as far as this layer is concerned.
+        // package as far as this subsystem is concerned.
         if let Some(first) = self.system.cpus().first() {
             let model = first.brand().trim().to_string();
             let vendor = first.vendor_id().trim().to_string();
@@ -94,14 +94,14 @@ impl Collector for CpuCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
 
     #[tokio::test]
     #[test_log::test]
     async fn test_cpu_collector() -> Result<()> {
-        let database: DatabaseLayer = test_db!(CpuData, CpuCoreData);
+        let database: DatabaseManager = test_db!(CpuData, CpuCoreData);
 
         let instance_id = InstanceId::new_server();
         let mut collector = CpuCollector::new(database.realm(RealmName::default())?, instance_id)?;

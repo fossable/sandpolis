@@ -1,4 +1,4 @@
-use crate::ShellLayer;
+use crate::ShellManager;
 use crate::session::{ShellOutput, ShellSessionStreamRequest, ShellSessionStreamRequester};
 use ratatui::buffer::Buffer;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
@@ -17,7 +17,7 @@ use tracing::warn;
 use tui_term::widget::PseudoTerminal;
 
 pub struct ShellTerminalWidget {
-    pub shell: ShellLayer,
+    pub shell: ShellManager,
     /// Target agent this terminal connects to.
     instance: InstanceId,
     /// VT100 screen state. Behind a `Mutex` so async output can be drained
@@ -34,7 +34,7 @@ pub struct ShellTerminalWidget {
 }
 
 impl ShellTerminalWidget {
-    pub fn new(instance: InstanceId, shell: ShellLayer) -> Self {
+    pub fn new(instance: InstanceId, shell: ShellManager) -> Self {
         let mut parser = tui_term::vt100::Parser::new(24, 80, 0);
         // Initialize with a welcome message
         parser.process(b"Shell Terminal - Press Enter to connect\r\n");

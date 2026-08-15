@@ -14,9 +14,9 @@ pub mod server;
 pub(crate) mod messages;
 
 #[derive(Clone)]
-pub struct SnapshotLayer {}
+pub struct SnapshotManager {}
 
-impl SnapshotLayer {
+impl SnapshotManager {
     pub async fn new() -> Result<Self> {
         Ok(Self {})
     }

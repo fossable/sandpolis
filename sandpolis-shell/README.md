@@ -1,6 +1,6 @@
 ## `sandpolis-shell`
 
-This layer integrates with agent shells to provide interactive shell sessions
+This subsystem integrates with agent shells to provide interactive shell sessions
 from client instances.
 
 ### Snippets

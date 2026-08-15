@@ -45,14 +45,14 @@ impl Collector for MemoryMonitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::database::DatabaseLayer;
+    use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
 
     #[tokio::test]
     #[test_log::test]
     async fn test_memory_monitor() -> Result<()> {
-        let database: DatabaseLayer = test_db!(MemoryData);
+        let database: DatabaseManager = test_db!(MemoryData);
 
         let instance_id = InstanceId::new_server();
         let mut monitor =

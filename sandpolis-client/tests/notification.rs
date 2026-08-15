@@ -12,7 +12,7 @@ use chrono::{TimeDelta, Utc};
 use native_db::Models;
 use sandpolis_client::notification::NotificationWatermarkData;
 use sandpolis_instance::database::{
-    DataCreation, DatabaseLayer, WriteAuthority, config::DatabaseConfig,
+    DataCreation, DatabaseManager, WriteAuthority, config::DatabaseConfig,
 };
 use sandpolis_instance::notification::{Notification, NotificationData, install, notify};
 use sandpolis_instance::realm::RealmName;
@@ -29,7 +29,7 @@ static MODELS: LazyLock<Models> = LazyLock::new(|| {
 
 #[tokio::test]
 async fn surfaces_new_notifications_but_not_replayed_history() -> Result<()> {
-    let database = DatabaseLayer::new(
+    let database = DatabaseManager::new(
         DatabaseConfig {
             storage: None,
             key: Default::default(),
