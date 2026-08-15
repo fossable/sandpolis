@@ -14,7 +14,7 @@ clap = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 tokio-cron-scheduler = { version = "0.15.1", optional = true }
-inventory = { workspace = true, optional = true }
+inventory = { workspace = true }
 russh = { workspace = true, optional = true }
 serde_cbor = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -33,7 +33,7 @@ native_db = { workspace = true }
 native_model = { workspace = true }
 
 [features]
-agent = ["dep:tokio-cron-scheduler", "dep:inventory", "sandpolis-instance/agent"]
+agent = ["dep:tokio-cron-scheduler", "sandpolis-instance/agent"]
 client = [
   "sandpolis-instance/client",
   "dep:bevy",
@@ -43,9 +43,7 @@ client = [
   "dep:serde_cbor",
   "sandpolis-client/client",
 ]
-# SSH deployment runs from the server, so russh is a server dependency. The
-# responder registers itself through `inventory` like every other stream.
-server = ["dep:inventory", "dep:russh", "sandpolis-instance/server"]
+server = ["dep:russh", "sandpolis-instance/server"]
 
 [[example]]
 name = "client_tui"
