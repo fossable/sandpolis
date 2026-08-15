@@ -33,7 +33,7 @@ serde_json = { workspace = true, optional = true }
 # Client dependencies
 bevy = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
-inventory = { workspace = true, optional = true }
+inventory = { workspace = true }
 serde_cbor = { workspace = true, optional = true }
 
 # Screen-capture / input backend for X11 & Wayland (Linux).
@@ -92,7 +92,6 @@ agent = [
   "dep:tokio",
   "dep:zstd",
   "dep:image",
-  "dep:inventory",
   "dep:log",
   "dep:lazy_static",
   "dep:cfg-if",
@@ -128,7 +127,6 @@ client = [
   "dep:tokio",
   "dep:serde_cbor",
   "dep:bevy",
-  "dep:inventory",
   "dep:sandpolis-client",
   "dep:ratatui",
   "dep:ratatui-image",
@@ -140,7 +138,7 @@ server = []
 # layer instead of an agent. The codec deps are shared with the agent/client
 # encoders, and are listed again so a `server,probe` build (which has no capture
 # backend) stands on its own.
-probe = ["dep:sandpolis-probe", "dep:vnc", "dep:zstd", "dep:tokio", "dep:inventory"]
+probe = ["dep:sandpolis-probe", "dep:vnc", "dep:zstd", "dep:tokio"]
 
 [dev-dependencies]
 serde_cbor = { workspace = true }
