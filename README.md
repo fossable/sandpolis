@@ -3,13 +3,12 @@
 </p>
 
 ![License](https://img.shields.io/github/license/fossable/sandpolis)
-![GitHub repo size](https://img.shields.io/github/repo-size/fossable/sandpolis)
 ![Stars](https://img.shields.io/github/stars/fossable/sandpolis?style=social)
 
 <hr>
 
-`sandpolis` is a **virtual estate manager** (VEM) for people with too many
-computers.
+`sandpolis` is a **virtual estate manager** which is a tool for controlling
+esoterica like your online accounts, cloud servers, and even physical devices.
 
 <p align="center">
 	<img src="https://raw.githubusercontent.com/fossable/sandpolis/master/.github/images/overview.png" />
@@ -21,8 +20,7 @@ Virtual/digital estate is an encompassing
 [term](https://www.fossable.org/fossable/virtual_estate) that refers to all
 digital assets under your control. Some assets may be entirely virtual and
 mostly controlled by a corporation, like accounts on _github.com_. Others have a
-physical component as well, like a server in your closet, Raspberry Pi, or
-laptop.
+physical component as well, like a Raspberry Pi.
 
 All of these entities are part of your _virtual estate_ and are intricately
 connected in both obvious and unapparent ways.
@@ -45,101 +43,35 @@ that you have a high degree of control over (local machines), and purely digital
 assets that you have very little control over (an online account).
 
 Sandpolis is about mapping out these relations to provide an overall view of
-your entire virtual estate. It can do both micro-level management tasks (like:
-"give me a shell on Machine A") and macro-level tasks (like: "map out the attack
+your entire virtual estate. It can do both microscopic management tasks (like:
+"give me a shell on Machine A") and macroscopic tasks (like: "map out the attack
 surface of my Github repos").
 
-### Security Notice
+### Who cares about virtual estates anyway?
 
-The Sandpolis server is an extremely high-value attack target as it can become a
-_single point of compromise_ over your virtual estate. To compensate, strong
-security measures are available:
+Whatever you call it, non-physical or digital assets have a significant impact
+on our "real" lives. Sandpolis places all of those points on a map so you can
+track them in one place, with the ultimate goal of uncovering who controls what
+parts of your virtual estate.
 
-- All connections to a server use mTLS and require a valid client certificate.
-  The server automatically rotates these certificates periodically, but the
-  initial certificate must be installed out-of-band.
+Not everyone agrees on how much control we should personally have over our
+virtual estates. Some people simply don't care - just put it all in the cloud.
+Others recognize that the "cloud" is just someone else's computer and they're
+effectively sharing control over their digital assets.
 
-- Users can be required to login with two-factor authentication codes.
-
-- User permissions restrict what users are able to do and on what instances.
-
-Even with several layers of strong security, there's always risk that the server
-can be compromised.
-
-You can control how much power Sandpolis has by using _read only_ agents which
-still provides useful monitoring information, but prohibits all write operations
-(including agent updates). Once an agent enters _read only_ mode, it cannot be
-changed back. This can significantly mitigate potential damage in the event of
-server compromise.
+If you're in the first category, then Sandpolis probably doesn't offer much
+value. For the rest of you, Sandpolis is an invaluable tool for shifting control
+of your virtual estate back where it belongs.
 
 ## How it works
 
-Sandpolis runs an agent on your devices and allows you to interact with them
-from a client application. A server mediates client/agent communication and
-stores historical data about instances in the network.
+Sandpolis itself runs as a server that you login to via a GUI/CLI application
+(the client). The server generates a certificate that clients use to
+authenticate with mTLS.
 
-## Subsystems
-
-Features are organized into conceptual _subsystems_. If you build Sandpolis from
-source, it's easy to pick and choose what subsystems are included:
-
-```sh
-# Build the Sandpolis server with remote desktop capabilities ONLY
-cargo build --no-default-features --features server --features desktop
-```
-
-If you don't build from source, you can still enable/disable subsystems, but they
-will still be compiled into the final application. If you want to be paranoid
-and restrict what your Sandpolis network for improved security, make sure you
-build from source.
-
-### Account
-
-Models online/offline accounts and their relationships to agent instances.
-Enables higher-order analysis of virtual estate like attack surface mapping and
-compromise tracing.
-
-### Audit
-
-Triggers user notifications when certain events are detected in the Sandpolis
-network. For example, if a user's status is currently _AWAY_, an unexpected SSH
-login from that user (anywhere in the network) will fire an urgent alert.
-
-### Desktop
-
-Provides access to remote desktop capabilities.
-
-### Filesystem
-
-Provides read/write access to agent filesystems. The Sandpolis client can also
-mount an agent's filesystem with FUSE.
-
-### Inventory
-
-Gather system information. Also integrates with package managers to monitor
-software versions. Monitors systemd services.
-
-### Probe
-
-Probes are managable from the Sandpolis network, but don't run agent software.
-Instead, a "gateway" agent instance connects to probes over a standard protocol
-like SSH, SNMP, Docker, etc.
-
-You can interact with probes almost as if they were regular agents (as long as
-the gateway instance remains online).
-
-### Shell
-
-Provides an interactive remote shell on agents (or SSH probes). Also stores
-customizable shell "snippets" that can be executed on a schedule.
-
-### Tunnel
-
-Establishes a permanent or ephemeral TCP tunnel between arbitrary instances.
-
-### Snapshot
-
-Create and apply _cold snapshots_ via a boot agent.
+You can run the Sandpolis agent on your devices which allows you to interact
+with them from a client. Agents also use the same mTLS certificate that client
+use.
 
 ## Installation
 
@@ -163,7 +95,7 @@ cargo install sandpolis --no-default-features --features desktop
 ```
 
 As a result, your installation artifacts will be smaller and will be unable to
-perform any excluded functionality.
+perform any unwanted functionality.
 
 </details>
 

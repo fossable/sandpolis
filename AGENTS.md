@@ -261,6 +261,7 @@ cd android && ./gradlew assembleDebug
   - Suppose any entity in the network is compromised, what others could be
     affected?
   - Assign a weight on how bad a compromise of an entity would be
+- Search for existing accounts with username,etc
 
 ## `sandpolis-snapshot`
 

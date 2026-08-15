@@ -13,11 +13,12 @@ use super::warn_once;
 use crate::notification::Severity;
 use jni::objects::{JObject, JValue};
 use jni::refs::LoaderContext;
+use jni::strings::JNIStr;
 use jni::vm::JavaVM;
 use jni::{jni_sig, jni_str};
 
 /// Binary name (dots, not slashes) of the app-side helper.
-const HELPER: &str = "org.sandpolis.mobile.Notifications";
+const HELPER: &JNIStr = jni_str!("org.sandpolis.mobile.Notifications");
 
 pub fn show(title: &str, body: Option<&str>, severity: Severity) {
     if let Err(e) = try_show(title, body, severity) {
@@ -42,7 +43,7 @@ fn try_show(title: &str, body: Option<&str>, severity: Severity) -> jni::errors:
         let title = env.new_string(title)?;
         let body = env.new_string(body.unwrap_or(""))?;
 
-        let class = LoaderContext::FromObject(&activity).load_class(env, jni_str!(HELPER), true)?;
+        let class = LoaderContext::FromObject(&activity).load_class(env, HELPER, true)?;
 
         env.call_static_method(
             &class,
