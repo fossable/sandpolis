@@ -266,3 +266,17 @@ impl DeviceConfig {
         self.protocols().first().copied()
     }
 }
+
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(DeviceMgmt), "probe:manage")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(WolStream), "probe:wake")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(RtspSessionStream), "probe:rtsp")
+}

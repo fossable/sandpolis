@@ -200,3 +200,17 @@ mod test_discovered_shell {
 pub struct ShellListResponse {
     pub shells: Vec<DiscoveredShell>,
 }
+
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(ShellExecuteStream), "shell:execute")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(ShellSessionStream), "shell:session")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(SshSessionStream), "shell:ssh")
+}

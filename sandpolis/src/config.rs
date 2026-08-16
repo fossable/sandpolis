@@ -69,6 +69,11 @@ pub struct RealmConfig {
 
     #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::config::ProbeManagerConfig,
+
+    /// User accounts that clients (not agents) login to, and what each is
+    /// allowed to do. Editing this section is the only way accounts are ever
+    /// created, changed, or removed.
+    pub user: sandpolis_server::user::config::UsersConfig,
 }
 
 impl RealmConfig {

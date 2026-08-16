@@ -25,4 +25,41 @@ impl super::ServerManager {
         self.servers.remove(id)?;
         Ok(())
     }
+
+    /// Record a fresh auth token (and the user it belongs to) for a saved
+    /// server, updating the existing entry rather than adding a duplicate.
+    pub fn update_server_token(
+        &self,
+        url: &ServerUrl,
+        user: UserName,
+        token: ClientAuthToken,
+    ) -> Result<()> {
+        for server in self.servers.iter() {
+            if server.read().address == *url {
+                return server.update(|data| {
+                    data.user = user.clone();
+                    data.token = token.clone();
+                    Ok(())
+                });
+            }
+        }
+
+        self.save_server(SavedServerData {
+            address: url.clone(),
+            token,
+            user,
+            _id: DataIdentifier::default(),
+            _revision: sandpolis_instance::database::DataRevision::Latest(0),
+            _creation: sandpolis_instance::database::DataCreation::default(),
+        })
+    }
+
+    /// The saved auth token for a server, if a usable (non-empty, unexpired)
+    /// one is on record.
+    pub fn saved_token(&self, url: &ServerUrl) -> Option<ClientAuthToken> {
+        self.servers.iter().find_map(|server| {
+            let data = server.read();
+            (data.address == *url && data.token.is_usable()).then(|| data.token.clone())
+        })
+    }
 }

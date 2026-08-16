@@ -126,3 +126,13 @@ impl<C: Collector> sandpolis_instance::service::Service for CollectorService<C> 
         Ok(sandpolis_instance::service::ServiceReport::default())
     }
 }
+
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(DeployStream), "agent:deploy")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(WakeStream), "agent:power")
+}

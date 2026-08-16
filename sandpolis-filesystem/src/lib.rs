@@ -1,5 +1,4 @@
 use anyhow::Result;
-use sandpolis_instance::realm::RealmName;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -15,8 +14,8 @@ impl FilesystemManager {
     }
 }
 
-pub enum FilesystemPermission {
-    Read(Vec<RealmName>),
-    Write(Vec<RealmName>),
-    Mount(Vec<RealmName>),
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(FsSessionStream), "filesystem:session")
 }

@@ -1,4 +1,4 @@
-use super::{LoginRequest, LoginResponse};
+use super::{LoginAttemptData, LoginRequest, LoginResponse};
 use crate::user::UserManager;
 use crate::user::server::Claims;
 use aws_lc_rs::pbkdf2;
@@ -7,9 +7,9 @@ use axum::extract::{self, State};
 use axum_extra::TypedHeader;
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use totp_rs::Totp;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use validator::Validate;
 
 #[axum_macros::debug_handler]
@@ -22,19 +22,71 @@ pub async fn post_login(
         .validate()
         .map_err(|_| Json(LoginResponse::Invalid))?;
 
-    let Ok(user) = state.user(&request.username).await else {
+    let Ok(user) = state.user(&realm, &request.username).await else {
         debug!(username = %request.username, "User does not exist");
+        record_attempt(&state, &realm, &request, false);
         return Err(Json(LoginResponse::Denied));
     };
 
-    let Ok(password) = state.password(request.username.clone()).await else {
+    if user
+        .expiration
+        .is_some_and(|expiration| expiration <= chrono::Utc::now().timestamp())
+    {
+        debug!(username = %request.username, "User account is expired");
+        record_attempt(&state, &realm, &request, false);
+        return Err(Json(LoginResponse::Expired));
+    }
+
+    let totp_required = state.totp_required(&realm);
+
+    // Clamp the requested token lifetime to the realm's maximum, which is also
+    // the default when the client requests nothing.
+    let max_lifetime = state.token_lifetime(&realm);
+    let lifetime = request.lifetime.unwrap_or(max_lifetime).min(max_lifetime);
+
+    let Ok(password) = state.password(&realm, request.username.clone()).await else {
         error!("Failed to get user password");
         return Err(Json(LoginResponse::Invalid));
     };
 
-    // Check that requested token lifetime is within valid range
-    // TODO
-    let lifetime = request.lifetime.unwrap_or(Duration::new(1, 0));
+    let password = match password {
+        Some(password) => password,
+        None => {
+            // First login: the config declared the user but nobody has set a
+            // password yet. This is first-come-first-served, gated only by
+            // possession of the realm certificate and the username.
+            if !request.setup {
+                return Ok(Json(LoginResponse::PasswordSetupRequired { totp_required }));
+            }
+
+            let stored = if totp_required {
+                state
+                    .new_password_with_totp(&realm, request.username.clone(), request.password.clone())
+                    .await
+            } else {
+                state
+                    .new_password(&realm, request.username.clone(), request.password.clone())
+                    .await
+            }
+            .map_err(|e| {
+                error!(error = %e, "Failed to store initial password");
+                Json(LoginResponse::Invalid)
+            })?;
+
+            info!(username = %request.username, "Initial password set");
+            match stored.totp_secret {
+                Some(otpauth_url) => {
+                    // The user still has to prove the enrollment by logging in
+                    // with a code, which the client does right after this.
+                    return Ok(Json(LoginResponse::TotpSetupRequired { otpauth_url }));
+                }
+                None => {
+                    record_attempt(&state, &realm, &request, true);
+                    return mint(&state, &realm, user, lifetime);
+                }
+            }
+        }
+    };
 
     // Check TOTP token if there is one
     if let Some(totp_url) = password.totp_secret.as_ref() {
@@ -43,10 +95,11 @@ pub async fn post_login(
             return Err(Json(LoginResponse::Invalid));
         };
         if totp
-            .check_current(&request.totp_token.unwrap_or_default())
+            .check_current(request.totp_token.as_deref().unwrap_or_default())
             .is_none()
         {
             debug!("TOTP check failed");
+            record_attempt(&state, &realm, &request, false);
             return Err(Json(LoginResponse::Denied));
         }
     }
@@ -63,17 +116,42 @@ pub async fn post_login(
     .is_err()
     {
         debug!("Password check failed");
+        record_attempt(&state, &realm, &request, false);
         return Err(Json(LoginResponse::Denied));
     }
 
+    // The account predates the config requiring TOTP, so enroll it now that the
+    // password has been verified.
+    if totp_required && password.totp_secret.is_none() {
+        let enrolled = state.add_totp(&realm, password).await.map_err(|e| {
+            error!(error = %e, "Failed to generate TOTP secret");
+            Json(LoginResponse::Invalid)
+        })?;
+        return Ok(Json(LoginResponse::TotpSetupRequired {
+            otpauth_url: enrolled
+                .totp_secret
+                .expect("add_totp always sets a secret"),
+        }));
+    }
+
+    record_attempt(&state, &realm, &request, true);
+    mint(&state, &realm, user, lifetime)
+}
+
+fn mint(
+    state: &UserManager,
+    realm: &RealmName,
+    user: crate::user::UserData,
+    lifetime: std::time::Duration,
+) -> RequestResult<LoginResponse> {
     let claims = Claims {
         sub: user.username.clone(),
         exp: (SystemTime::now() + lifetime)
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs() as usize,
-        admin: user.admin,
-        realm,
+        perms: user.permissions,
+        realm: realm.clone(),
     };
 
     info!(claims = ?claims, "Login succeeded");
@@ -82,4 +160,27 @@ pub async fn post_login(
             .new_token(claims)
             .map_err(|_| Json(LoginResponse::Denied))?,
     )))
+}
+
+/// Record the attempt for the audit trail. Best-effort: a full audit log must
+/// never be able to lock users out.
+fn record_attempt(state: &UserManager, realm: &RealmName, request: &LoginRequest, allowed: bool) {
+    let result = || -> anyhow::Result<()> {
+        let db = state.database.realm(realm.clone())?;
+        // Attempts against this server are its own bookkeeping, not estate data.
+        let rw = db.local_write()?;
+        rw.insert(LoginAttemptData {
+            timestamp: chrono::Utc::now().timestamp() as u64,
+            username: request.username.clone(),
+            source: None,
+            allowed,
+            ..Default::default()
+        })?;
+        rw.commit()?;
+        Ok(())
+    }();
+
+    if let Err(e) = result {
+        warn!(error = %e, "Failed to record login attempt");
+    }
 }

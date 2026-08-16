@@ -458,6 +458,141 @@ mod test_instance_id {
     }
 }
 
+/// Names a capability a user can be granted, written as `"layer:action"`.
+///
+/// Permissions are granted layer-by-layer: `"shell:session"` allows opening
+/// shell sessions, `"shell:*"` allows everything the shell layer offers, and
+/// the bare wildcard `"*"` grants everything (there is no separate admin flag).
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct Permission {
+    layer: String,
+    action: String,
+}
+
+impl Permission {
+    /// Whether this grant covers the given required permission.
+    pub fn grants(&self, required: &Permission) -> bool {
+        if self.layer == "*" {
+            return true;
+        }
+        self.layer == required.layer && (self.action == "*" || self.action == required.action)
+    }
+
+    pub fn layer(&self) -> &str {
+        &self.layer
+    }
+
+    pub fn action(&self) -> &str {
+        &self.action
+    }
+}
+
+impl FromStr for Permission {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        if s == "*" {
+            return Ok(Self {
+                layer: "*".to_string(),
+                action: "*".to_string(),
+            });
+        }
+
+        let Some((layer, action)) = s.split_once(':') else {
+            bail!("invalid permission {s:?}: expected \"layer:action\" or \"*\"");
+        };
+
+        if layer.is_empty() || !layer.chars().all(|c| c.is_ascii_lowercase()) {
+            bail!("invalid permission layer in {s:?}");
+        }
+        if action.is_empty()
+            || !(action == "*"
+                || action
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c == '_'))
+        {
+            bail!("invalid permission action in {s:?}");
+        }
+
+        Ok(Self {
+            layer: layer.to_string(),
+            action: action.to_string(),
+        })
+    }
+}
+
+impl TryFrom<String> for Permission {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self> {
+        value.parse()
+    }
+}
+
+impl From<Permission> for String {
+    fn from(value: Permission) -> Self {
+        value.to_string()
+    }
+}
+
+impl Display for Permission {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.layer == "*" {
+            f.write_str("*")
+        } else {
+            write!(f, "{}:{}", self.layer, self.action)
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_permission {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        assert!("shell:session".parse::<Permission>().is_ok());
+        assert!("shell:*".parse::<Permission>().is_ok());
+        assert!("*".parse::<Permission>().is_ok());
+        assert!("agent:power_off".parse::<Permission>().is_ok());
+
+        assert!("".parse::<Permission>().is_err());
+        assert!("shell".parse::<Permission>().is_err());
+        assert!("shell:".parse::<Permission>().is_err());
+        assert!(":session".parse::<Permission>().is_err());
+        assert!("Shell:session".parse::<Permission>().is_err());
+        assert!("shell:Session".parse::<Permission>().is_err());
+        assert!("shell:session:extra".parse::<Permission>().is_err());
+        assert!("*:session".parse::<Permission>().is_err());
+    }
+
+    #[test]
+    fn test_grants() {
+        let session: Permission = "shell:session".parse().unwrap();
+        let execute: Permission = "shell:execute".parse().unwrap();
+
+        assert!(session.grants(&session));
+        assert!(!session.grants(&execute));
+
+        let layer: Permission = "shell:*".parse().unwrap();
+        assert!(layer.grants(&session));
+        assert!(layer.grants(&execute));
+        assert!(!layer.grants(&"desktop:session".parse().unwrap()));
+
+        let all: Permission = "*".parse().unwrap();
+        assert!(all.grants(&session));
+        assert!(all.grants(&"desktop:session".parse().unwrap()));
+    }
+
+    #[test]
+    fn test_round_trip() {
+        for s in ["shell:session", "shell:*", "*"] {
+            assert_eq!(s.parse::<Permission>().unwrap().to_string(), s);
+        }
+    }
+}
+
 /// Names a _layer_: the GUI face a subsystem presents, which the client's layer
 /// picker chooses between and which notifications and services are attributed
 /// to. A subsystem provides at most one, so the layer's name is the subsystem's

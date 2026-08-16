@@ -206,6 +206,12 @@ pub struct StreamRegistry {
     /// Per-stream byte counts. Deliberately scoped to this registry rather than
     /// kept globally, since a stream id is only unique within one connection.
     traffic: RwLock<HashMap<StreamId, Arc<StreamCounters>>>,
+
+    /// Authorization gate for streams the peer initiates, by type tag. `None`
+    /// means everything is allowed, which is right for every connection except
+    /// a server's inbound client connections — the server installs a gate built
+    /// from the logged-in user's permissions.
+    gate: RwLock<Option<Arc<dyn Fn(u32) -> bool + Send + Sync>>>,
 }
 
 impl StreamRegistry {
@@ -216,7 +222,15 @@ impl StreamRegistry {
             tx,
             relay: RwLock::new(None),
             traffic: RwLock::new(HashMap::new()),
+            gate: RwLock::new(None),
         }
+    }
+
+    /// Install an authorization gate for peer-initiated streams. Messages for a
+    /// stream this connection doesn't already know are dropped unless the gate
+    /// approves their type tag.
+    pub fn set_gate(&self, gate: Arc<dyn Fn(u32) -> bool + Send + Sync>) {
+        *self.gate.write().unwrap() = Some(gate);
     }
 
     /// Account `bytes` sent for `stream_id`.
@@ -305,6 +319,19 @@ impl StreamRegistry {
 
         if let Some((handler, response_tx)) = handler_opt {
             handler.on_receive_raw(&message.payload, response_tx).await;
+            return;
+        }
+
+        // Everything below acts on a stream the peer initiated (a stream this
+        // instance opened is already registered above), so it is where the
+        // authorization gate applies.
+        if let Some(gate) = self.gate.read().unwrap().clone()
+            && !gate(message.stream_id.tag())
+        {
+            tracing::warn!(
+                tag = message.stream_id.tag(),
+                "Dropping unauthorized stream message"
+            );
             return;
         }
 
@@ -701,6 +728,45 @@ where
             }
         })
     }
+}
+
+/// Declares what a client must be granted to open streams of a given type,
+/// collected with `inventory` from every layer crate. A stream type with no
+/// declaration is denied to clients outright, so anything new fails closed.
+///
+/// The tag comes from `sandpolis_macros::stream_tag!`, invoked in the crate
+/// that derives `Stream` for the type, so the declaration doesn't depend on
+/// the stream type itself being compiled into this build.
+pub struct StreamPermission {
+    pub tag: u32,
+
+    /// The permission required (e.g. `"shell:session"`), or `None` for
+    /// infrastructure every authenticated client may use (sync, ping).
+    pub permission: Option<&'static str>,
+}
+
+impl StreamPermission {
+    pub const fn require(tag: u32, permission: &'static str) -> Self {
+        Self {
+            tag,
+            permission: Some(permission),
+        }
+    }
+
+    pub const fn open(tag: u32) -> Self {
+        Self { tag, permission: None }
+    }
+}
+
+inventory::collect!(StreamPermission);
+
+// Sync subscriptions and pings are how a client is a client at all, so they are
+// open to every authenticated connection.
+inventory::submit! {
+    StreamPermission::open(sandpolis_macros::stream_tag!(Sync))
+}
+inventory::submit! {
+    StreamPermission::open(sandpolis_macros::stream_tag!(PingStream))
 }
 
 #[cfg(test)]

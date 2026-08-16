@@ -301,6 +301,25 @@ fn struct_name_to_id(name: &str) -> u32 {
     (hasher.finish() & 0xFFFF_FFFF) as u32
 }
 
+/// Compute a stream type's tag from its base name (the struct name without the
+/// `Requester`/`Responder` suffix), for code that needs the tag of a stream
+/// type that isn't compiled into the current build — permission declarations,
+/// most notably. Must be invoked in the same crate that derives `Stream` for
+/// the type, since the crate name is part of the hash.
+#[proc_macro]
+pub fn stream_tag(input: TokenStream) -> TokenStream {
+    let ident = parse_macro_input!(input as syn::Ident);
+    // Accept the full struct name too, normalizing it the way the derive does.
+    let base_name = ident
+        .to_string()
+        .trim_end_matches("Requester")
+        .trim_end_matches("Responder")
+        .to_string();
+    let tag = struct_name_to_id(&base_name);
+
+    TokenStream::from(quote! { #tag })
+}
+
 #[proc_macro_derive(Stream)]
 pub fn derive_stream_requester(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

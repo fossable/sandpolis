@@ -3,7 +3,6 @@
 //! This module provides the complete GUI infrastructure for the Sandpolis client,
 //! including layer-agnostic components and Bevy systems.
 
-pub mod about;
 pub mod activity;
 pub mod core_toolbar;
 pub mod assets;

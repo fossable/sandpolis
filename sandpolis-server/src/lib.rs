@@ -179,6 +179,7 @@ impl ServerManager {
             realm: cert.name.clone(),
             cluster_id: cert.cluster_id()?,
             url,
+            token: Arc::new(RwLock::new(None)),
             #[cfg(feature = "server")]
             stratum: (self.instance_type == InstanceType::Server).then(|| self.stratum.clone()),
         })
@@ -241,6 +242,10 @@ pub struct ServerBanner {
     /// Whether users are required to provide a second authentication mechanism
     /// on login
     pub mfa: bool,
+
+    /// Whether the realm has user accounts at all. A realm without users is
+    /// open, and clients skip the login dialog entirely.
+    pub users_configured: bool,
 }
 
 impl Validate for ServerBanner {
@@ -272,6 +277,10 @@ pub struct ServerConnection {
     /// The URL this connection dials, retained so clients can associate data
     /// (e.g. probes) with a particular server.
     pub url: ServerUrl,
+
+    /// Auth token from `/user/login`, presented as a bearer token on every
+    /// request once set. Empty on open realms and before login.
+    pub token: Arc<RwLock<Option<user::ClientAuthToken>>>,
 
     /// The stratum of the server making this connection, announced to the peer
     /// so it can enforce that a network has exactly one global stratum server.
@@ -324,6 +333,11 @@ impl ServerConnection {
                 .header("x-realm", self.realm.to_string())
                 .header("x-instance-id", instance_id.to_string());
 
+            let request = match self.token.read().unwrap().as_ref() {
+                Some(token) => request.bearer_auth(&token.0),
+                None => request,
+            };
+
             // Servers announce their stratum so the peer can enforce the
             // network's shape; agents and clients send nothing here.
             #[cfg(feature = "server")]
@@ -344,6 +358,16 @@ impl ServerConnection {
 
             request.upgrade().send().await?
         };
+
+        // The server refusing the upgrade for authentication means the user has
+        // to log in, which callers must be able to tell apart from the server
+        // being down.
+        if response.status() == reqwest::StatusCode::UNAUTHORIZED
+            || response.status() == reqwest::StatusCode::FORBIDDEN
+        {
+            return Err(AuthRequired.into());
+        }
+
         // The server reports its own instance id in the upgrade response so we can
         // record the real peer instead of a freshly-generated default (which would
         // surface as a phantom graph node, growing on every reconnect).
@@ -460,29 +484,52 @@ impl ServerConnection {
             .as_ref()
             .ok_or_else(|| anyhow!("connection has no http client"))?;
 
-        Ok(client
+        let request = client
             .request(
                 method,
                 format!("https://{}.{}/{endpoint}", self.cluster_id, self.realm),
             )
             .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
-            .header("x-realm", self.realm.to_string())
-            .body(body)
-            .send()
-            .await?
-            .json()
-            .await?)
+            .header("x-realm", self.realm.to_string());
+
+        let request = match self.token.read().unwrap().as_ref() {
+            Some(token) => request.bearer_auth(&token.0),
+            None => request,
+        };
+
+        let response = request.body(body).send().await?;
+
+        if response.status() == reqwest::StatusCode::UNAUTHORIZED
+            || response.status() == reqwest::StatusCode::FORBIDDEN
+        {
+            return Err(AuthRequired.into());
+        }
+
+        Ok(response.json().await?)
     }
 }
 
+/// The server refused the request or websocket upgrade for lack of a valid auth
+/// token: the caller should have the user log in (or log in again) and retry.
+#[derive(Debug)]
+pub struct AuthRequired;
+
+impl Display for AuthRequired {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("authentication required")
+    }
+}
+
+impl std::error::Error for AuthRequired {}
+
 impl ServerConnection {
     pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse> {
-        // TODO span username
         debug!(username = %request.username, "Attempting login");
 
         let result = self.post("user/login", request).await;
-        if let Ok(LoginResponse::Ok(_)) = result {
+        if let Ok(LoginResponse::Ok(token)) = &result {
             info!("Login succeeded");
+            *self.token.write().unwrap() = Some(token.clone());
         }
         result
     }

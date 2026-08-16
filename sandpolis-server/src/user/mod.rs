@@ -1,11 +1,9 @@
-use crate::login::LoginPassword;
 use anyhow::Result;
-use base64::prelude::*;
 use native_db::ToKey;
 use native_model::Model;
 use regex::Regex;
 use sandpolis_instance::InstanceManager;
-use sandpolis_instance::database::ResidentVec;
+use sandpolis_instance::Permission;
 use sandpolis_instance::database::{DatabaseManager, Resident};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
@@ -18,75 +16,11 @@ use std::sync::LazyLock;
 use tracing::debug;
 use validator::{Validate, ValidationErrors};
 
+pub mod config;
 #[cfg(feature = "server")]
 pub mod server;
 
 static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^[a-z0-9]{4,32}$").unwrap());
-
-/// Create a new user account.
-#[derive(Serialize, Deserialize, Validate)]
-pub struct CreateUserRequest {
-    // TODO inline
-    pub data: UserData,
-
-    /// Password as unsalted hash
-    pub password: LoginPassword,
-
-    /// Whether a TOTP secret should be generated
-    pub totp: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum CreateUserResponse {
-    Ok {
-        /// TOTP secret URL
-        totp_secret: Option<String>,
-    },
-    Failed,
-    InvalidUser,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct GetUsersRequest {
-    /// Search by username prefix
-    pub username: Option<UserName>,
-
-    /// Search by email prefix
-    pub email: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum GetUsersResponse {
-    Ok(Vec<UserData>),
-    PermissionDenied,
-}
-
-/// Update an existing user account.
-#[derive(Serialize, Deserialize, Validate)]
-pub struct UpdateUserRequest {
-    /// User to edit
-    pub username: UserName,
-
-    /// New password
-    pub password: Option<String>,
-
-    /// New email
-    pub email: Option<String>,
-
-    /// New phone number
-    pub phone: Option<String>,
-
-    /// New expiration timestamp
-    pub expiration: Option<u64>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum UpdateUserResponse {
-    Ok,
-
-    /// The requested user does not exist
-    NotFound,
-}
 
 /// A user's username is forever unchangable.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -280,11 +214,19 @@ pub struct UserManager {
     pub data: Resident<UserManagerData>,
     pub instance: InstanceManager,
     pub database: DatabaseManager,
+
+    /// Each realm's user accounts, live from that realm's database. Owned by
+    /// the global stratum server and received by replication everywhere else.
     #[cfg(feature = "server")]
-    pub users: ResidentVec<UserData>,
+    pub users: HashMap<RealmName, sandpolis_instance::database::ResidentVec<UserData>>,
 
     #[cfg(feature = "server")]
     pub jwt_keys: HashMap<RealmName, (jsonwebtoken::EncodingKey, jsonwebtoken::DecodingKey)>,
+
+    /// Each realm's `user` config section. Populated only on the global stratum
+    /// server, which is the only instance that reads realm configs.
+    #[cfg(feature = "server")]
+    pub configs: HashMap<RealmName, config::UsersConfig>,
 
     #[cfg(feature = "server")]
     pub network: sandpolis_instance::network::NetworkManager,
@@ -298,13 +240,25 @@ pub struct UserManager {
     /// local stratum servers.
     #[cfg(feature = "server")]
     pub ownership: std::sync::Arc<crate::ownership::Ownership>,
+
+    /// What each peer-initiated stream type requires of a client, keyed by
+    /// stream tag: a permission, or `None` for infrastructure open to every
+    /// authenticated client. Collected from the layer crates' `StreamPermission`
+    /// declarations; a tag not in this map is denied to clients outright.
+    #[cfg(feature = "server")]
+    pub stream_permissions: std::sync::Arc<HashMap<u32, Option<Permission>>>,
 }
 
 impl UserManager {
+    /// `realms` names every realm this instance serves or connects to; `configs`
+    /// carries the `user` section of each realm config, which only the global
+    /// stratum server has.
     pub async fn new(
         instance: InstanceManager,
         database: DatabaseManager,
         network: sandpolis_instance::network::NetworkManager,
+        #[cfg(feature = "server")] realms: Vec<RealmName>,
+        #[cfg(feature = "server")] configs: HashMap<RealmName, config::UsersConfig>,
         #[cfg(feature = "server")] stratum: crate::ServerStratum,
         #[cfg(feature = "server")] ownership: std::sync::Arc<crate::ownership::Ownership>,
     ) -> Result<Self> {
@@ -313,7 +267,13 @@ impl UserManager {
             instance,
             data: database.realm(RealmName::default())?.resident(())?,
             #[cfg(feature = "server")]
-            users: database.realm(RealmName::default())?.resident_vec(())?,
+            users: {
+                let mut users = HashMap::new();
+                for realm in &realms {
+                    users.insert(realm.clone(), database.realm(realm.clone())?.resident_vec(())?);
+                }
+                users
+            },
             #[cfg(feature = "server")]
             network,
             #[cfg(feature = "server")]
@@ -321,48 +281,66 @@ impl UserManager {
             #[cfg(feature = "server")]
             ownership,
             #[cfg(feature = "server")]
+            stream_permissions: {
+                let mut map = HashMap::new();
+                for declared in sandpolis_instance::inventory::iter::<
+                    sandpolis_instance::network::stream::StreamPermission,
+                >() {
+                    let permission = declared
+                        .permission
+                        .map(|permission| permission.parse::<Permission>())
+                        .transpose()?;
+                    map.insert(declared.tag, permission);
+                }
+                std::sync::Arc::new(map)
+            },
+            #[cfg(feature = "server")]
             jwt_keys: {
                 let mut jwt_keys = HashMap::new();
-                // TODO all realms
-                let db = database.realm(RealmName::default())?;
-                // This server's own signing secret is local state; a local
-                // stratum server still needs one to authenticate its clients.
-                let rw = db.local_write()?;
-                let secrets: Vec<server::ServerJwtSecret> =
-                    rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
+                for realm in &realms {
+                    let db = database.realm(realm.clone())?;
+                    // This server's own signing secret is local state; a local
+                    // stratum server still needs one to authenticate its clients.
+                    let rw = db.local_write()?;
+                    let secrets: Vec<server::ServerJwtSecret> =
+                        rw.scan().primary()?.all()?.collect::<Result<Vec<_>, _>>()?;
 
-                assert!(secrets.len() <= 1);
-                let secret = if secrets.is_empty() {
-                    // Time to generate
-                    debug!("Generating new JWT secrets");
+                    assert!(secrets.len() <= 1);
+                    let secret = if secrets.is_empty() {
+                        // Time to generate
+                        debug!(realm = %realm, "Generating new JWT secret");
 
-                    let secret = server::ServerJwtSecret::new();
-                    rw.insert(secret.clone())?;
-                    rw.commit()?;
+                        let secret = server::ServerJwtSecret::new();
+                        rw.insert(secret.clone())?;
+                        rw.commit()?;
 
-                    secret
-                } else {
-                    secrets[0].clone()
-                };
+                        secret
+                    } else {
+                        secrets[0].clone()
+                    };
 
-                jwt_keys.insert(
-                    RealmName::default(),
-                    (
-                        jsonwebtoken::EncodingKey::from_secret(&secret.value),
-                        jsonwebtoken::DecodingKey::from_secret(&secret.value),
-                    ),
-                );
+                    jwt_keys.insert(
+                        realm.clone(),
+                        (
+                            jsonwebtoken::EncodingKey::from_secret(&secret.value),
+                            jsonwebtoken::DecodingKey::from_secret(&secret.value),
+                        ),
+                    );
+                }
 
                 jwt_keys
             },
+            #[cfg(feature = "server")]
+            configs,
             database,
         };
 
-        // Users are estate data owned by the global stratum server; a local
-        // stratum server receives them by replication instead of creating any.
+        // The realm config is the sole authority over user accounts, so it is
+        // reconciled into the database on every start. Only the global stratum
+        // server has configs; everything else receives users by replication.
         #[cfg(feature = "server")]
-        if user_manager.database.authority().is_full() {
-            user_manager.try_create_admin().await?;
+        for (realm, config) in &user_manager.configs {
+            user_manager.sync_users(realm, config).await?;
         }
 
         Ok(user_manager)
@@ -374,8 +352,8 @@ impl UserManager {
 pub struct UserData {
     pub username: UserName,
 
-    /// Whether the user is an admin
-    pub admin: bool,
+    /// What the user is allowed to do; `["*"]` grants everything.
+    pub permissions: Vec<Permission>,
 
     /// Email address
     #[validate(email)]
@@ -384,14 +362,37 @@ pub struct UserData {
     /// Phone number
     pub phone: Option<String>,
 
+    /// Unix timestamp after which logins are refused.
     pub expiration: Option<i64>,
 }
 
-pub enum UserPermission {
-    Create,
-    List,
-    Delete,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
 pub struct ClientAuthToken(pub String);
+
+impl ClientAuthToken {
+    /// Whether the token is worth presenting at all: non-empty and not past its
+    /// own expiration claim. The signature isn't checked — that's the server's
+    /// job — this only saves the client a round trip it knows would fail.
+    pub fn is_usable(&self) -> bool {
+        use base64::prelude::*;
+
+        if self.0.is_empty() {
+            return false;
+        }
+
+        let Some(payload) = self.0.split('.').nth(1) else {
+            return false;
+        };
+        let Ok(payload) = BASE64_URL_SAFE_NO_PAD.decode(payload) else {
+            return false;
+        };
+        let Ok(payload) = serde_json::from_slice::<serde_json::Value>(&payload) else {
+            return false;
+        };
+        let Some(exp) = payload.get("exp").and_then(|exp| exp.as_i64()) else {
+            return false;
+        };
+
+        exp > chrono::Utc::now().timestamp()
+    }
+}

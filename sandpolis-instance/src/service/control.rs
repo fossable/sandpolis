@@ -86,3 +86,9 @@ mod responder {
 
 #[cfg(any(feature = "server", feature = "agent"))]
 pub use responder::ServiceControlResponder;
+
+// What a client must be granted to drive an instance's services.
+inventory::submit! {
+    crate::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(ServiceControl), "service:control")
+}

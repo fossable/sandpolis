@@ -56,6 +56,8 @@ pub struct LoginDialogState {
     pub server_address: String,
     pub username: String,
     pub password: String,
+    /// Second copy of the password when setting one for the first time.
+    pub password_confirm: String,
     pub otp: String,
     pub error_message: Option<String>,
     pub loading: bool,
@@ -68,6 +70,14 @@ pub enum LoginPhase {
     Credentials {
         banner: sandpolis_server::ServerBanner,
     },
+    /// The user exists but has no password yet: choose one (with confirmation).
+    PasswordSetup {
+        banner: sandpolis_server::ServerBanner,
+        totp_required: bool,
+    },
+    /// The realm requires TOTP and a secret was just generated: show it and ask
+    /// for a first code to finish logging in.
+    TotpEnroll { otpauth_url: String },
 }
 
 /// Handle touch input for panning on mobile devices

@@ -1,24 +1,21 @@
-use super::{
-    ClientAuthToken, CreateUserRequest, CreateUserResponse, GetUsersRequest, GetUsersResponse,
-    UserData, UserManager, UserName,
-};
+use super::config::UsersConfig;
+use super::{ClientAuthToken, UserData, UserManager, UserName};
 use crate::login::LoginPassword;
 use anyhow::{Result, anyhow, bail};
 use aws_lc_rs::pbkdf2;
-use axum::extract::{self, FromRequestParts, State, WebSocketUpgrade};
+use axum::extract::{FromRequestParts, State, WebSocketUpgrade};
 use axum::http::{StatusCode, request::Parts};
-use axum::{Json, RequestPartsExt};
+use axum::RequestPartsExt;
 use axum_extra::TypedHeader;
 use axum_extra::headers::{Authorization, authorization::Bearer};
 use jsonwebtoken::{Validation, decode};
 use native_db::ToKey;
 use native_model::Model;
-use passwords::PasswordGenerator;
 use rand::RngExt;
+use sandpolis_instance::Permission;
 use sandpolis_instance::database::DataScope;
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::network::InstanceConnection;
-use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
@@ -29,77 +26,6 @@ use tracing::info;
 use validator::Validate;
 
 const SHA256_OUTPUT_LEN: usize = 32;
-
-/// Create a new user
-#[axum_macros::debug_handler]
-pub async fn create_user(
-    state: State<UserManager>,
-    claims: Claims,
-    extract::Json(request): extract::Json<CreateUserRequest>,
-) -> RequestResult<CreateUserResponse> {
-    request
-        .validate()
-        .map_err(|_| Json(CreateUserResponse::InvalidUser))?;
-
-    // Only admins can create other admins
-    if request.data.admin && !claims.admin {
-        return Err(Json(CreateUserResponse::Failed));
-    }
-
-    // Create new password
-    let password = if request.totp {
-        state
-            .new_password_with_totp(request.data.username.clone(), request.password)
-            .await
-            .map_err(|_| Json(CreateUserResponse::Failed))?
-    } else {
-        state
-            .new_password(request.data.username.clone(), request.password)
-            .await
-            .map_err(|_| Json(CreateUserResponse::Failed))?
-    };
-
-    // Add new user
-    state
-        .users
-        .push(request.data)
-        .map_err(|_| Json(CreateUserResponse::Failed))?;
-
-    Ok(Json(CreateUserResponse::Ok {
-        totp_secret: password.totp_secret,
-    }))
-}
-
-#[axum_macros::debug_handler]
-pub async fn get_users(
-    state: State<UserManager>,
-    claims: Claims,
-    extract::Json(request): extract::Json<GetUsersRequest>,
-) -> RequestResult<GetUsersResponse> {
-    let users: Vec<UserData> = state
-        .users
-        .iter()
-        .map(|user| user.read().clone())
-        // A regular user only ever sees their own account; listing the estate's
-        // users is an admin capability.
-        .filter(|user| claims.admin || user.username == claims.sub)
-        .filter(|user| {
-            request
-                .username
-                .as_ref()
-                .is_none_or(|prefix| user.username.starts_with(prefix.as_str()))
-        })
-        .filter(|user| {
-            request.email.as_ref().is_none_or(|prefix| {
-                user.email
-                    .as_ref()
-                    .is_some_and(|email| email.starts_with(prefix))
-            })
-        })
-        .collect();
-
-    Ok(Json(GetUsersResponse::Ok(users)))
-}
 
 static USER_PASSWORD_HASH_ITERATIONS: NonZeroU32 = NonZeroU32::new(15000).unwrap();
 
@@ -141,9 +67,13 @@ pub struct PasswordData {
 }
 
 impl UserManager {
-    // TODO better users.find
-    pub async fn user(&self, username: &UserName) -> Result<UserData> {
-        for user in self.users.iter() {
+    pub async fn user(&self, realm: &RealmName, username: &UserName) -> Result<UserData> {
+        let users = self
+            .users
+            .get(realm)
+            .ok_or_else(|| anyhow!("Realm not found"))?;
+
+        for user in users.iter() {
             if user.read().username == *username {
                 return Ok(user.read().clone());
             }
@@ -152,58 +82,129 @@ impl UserManager {
         bail!("User not found");
     }
 
-    /// Create an admin user if one doesn't exist already. The password will be
-    /// emitted in the server log if created.
-    pub async fn try_create_admin(&self) -> Result<()> {
-        for user in self.users.iter() {
-            if user.read().admin {
-                return Ok(());
+    /// Whether the realm has any user accounts. A realm without users is open:
+    /// no login is required beyond the realm certificate.
+    pub fn users_configured(&self, realm: &RealmName) -> bool {
+        self.users.get(realm).is_some_and(|users| users.len() > 0)
+    }
+
+    /// Whether the realm config requires every user to enroll a TOTP secret.
+    /// Only the global stratum server knows the config.
+    pub fn totp_required(&self, realm: &RealmName) -> bool {
+        self.configs.get(realm).is_some_and(|config| config.totp)
+    }
+
+    /// The maximum (and default) token lifetime for the realm.
+    pub fn token_lifetime(&self, realm: &RealmName) -> std::time::Duration {
+        self.configs
+            .get(realm)
+            .and_then(|config| config.token_lifetime)
+            .unwrap_or(UsersConfig::DEFAULT_TOKEN_LIFETIME)
+    }
+
+    /// Reconcile the realm config's user list into the realm database, which
+    /// makes the config the sole authority over accounts: users found here and
+    /// not there are created, changed fields are applied, and users removed from
+    /// the config are deleted along with their password hash and TOTP secret —
+    /// so re-adding the name later starts over at the first-login flow.
+    pub async fn sync_users(&self, realm: &RealmName, config: &UsersConfig) -> Result<()> {
+        let users = self
+            .users
+            .get(realm)
+            .ok_or_else(|| anyhow!("Realm not found"))?;
+
+        for user in users.iter() {
+            let data = user.read().clone();
+            if !config
+                .users
+                .iter()
+                .any(|configured| configured.username == data.username)
+            {
+                info!(realm = %realm, username = %data.username, "Removing user absent from realm config");
+                users.remove(data._id)?;
+                self.delete_passwords(realm, &data.username)?;
             }
         }
 
-        self.users.push(UserData {
-            username: "admin".parse()?,
-            admin: true,
-            email: None,
-            phone: None,
-            expiration: None,
-            ..Default::default()
-        })?;
+        // A permission that grants nothing in this build is almost always a
+        // typo, which would otherwise surface as a silently locked-out user.
+        let known: Vec<&Permission> = self.stream_permissions.values().flatten().collect();
 
-        // Generate a default password
-        let password = PasswordGenerator::new()
-            .length(8)
-            .numbers(true)
-            .lowercase_letters(true)
-            .uppercase_letters(true)
-            .symbols(false)
-            .spaces(false)
-            .exclude_similar_characters(true)
-            .strict(false)
-            .generate_one()
-            .unwrap();
+        for configured in &config.users {
+            configured
+                .username
+                .validate()
+                .map_err(|_| anyhow!("Invalid username in realm config: {}", configured.username))?;
 
-        self.new_password(
-            "admin".parse()?,
-            LoginPassword::new(self.instance.cluster_id, &password),
-        )
-        .await?;
-        info!(username = "admin", password = %password, "Created default admin user");
+            for permission in &configured.permissions {
+                if !known.is_empty() && !known.iter().any(|required| permission.grants(required)) {
+                    tracing::warn!(
+                        realm = %realm,
+                        username = %configured.username,
+                        permission = %permission,
+                        "Configured permission matches nothing in this build"
+                    );
+                }
+            }
+
+            let existing = users
+                .iter()
+                .find(|user| user.read().username == configured.username);
+
+            match existing {
+                Some(user) => {
+                    user.update(|data| {
+                        data.email = configured.email.clone();
+                        data.phone = configured.phone.clone();
+                        data.expiration = configured.expiration;
+                        data.permissions = configured.permissions.clone();
+                        Ok(())
+                    })?;
+                }
+                None => {
+                    info!(realm = %realm, username = %configured.username, "Creating user from realm config");
+                    users.push(UserData {
+                        username: configured.username.clone(),
+                        email: configured.email.clone(),
+                        phone: configured.phone.clone(),
+                        expiration: configured.expiration,
+                        permissions: configured.permissions.clone(),
+                        ..Default::default()
+                    })?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Delete every password row belonging to the user, hash and TOTP secret
+    /// included.
+    fn delete_passwords(&self, realm: &RealmName, user: &UserName) -> Result<()> {
+        let db = self.database.realm(realm.clone())?;
+        let rw = db.write(DataScope::Global)?;
+
+        let passwords: Vec<PasswordData> = rw
+            .scan()
+            .secondary(PasswordDataKey::user)?
+            .equal(user.clone())?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        for password in passwords {
+            rw.remove(password)?;
+        }
+        rw.commit()?;
+
         Ok(())
     }
 
     /// Create a new password without a TOTP.
     pub async fn new_password(
         &self,
+        realm: &RealmName,
         user: UserName,
         password: LoginPassword,
     ) -> Result<PasswordData> {
-        // Precondition: user exists
-        // TODO
-
-        // Precondition: no password exists for this user yet
-        // TODO
-
         let salt = rand::rng().random::<[u8; 32]>().to_vec();
         let mut hash = [0u8; SHA256_OUTPUT_LEN];
 
@@ -215,7 +216,7 @@ impl UserManager {
             &mut hash,
         );
 
-        let db = self.database.realm(RealmName::default())?;
+        let db = self.database.realm(realm.clone())?;
         let rw = db.write(DataScope::Global)?;
 
         let password = PasswordData {
@@ -235,15 +236,10 @@ impl UserManager {
     /// Create a new password with a TOTP.
     pub async fn new_password_with_totp(
         &self,
+        realm: &RealmName,
         user: UserName,
         password: LoginPassword,
     ) -> Result<PasswordData> {
-        // Precondition: user exists
-        // TODO
-
-        // Precondition: no password exists for this user yet
-        // TODO
-
         let salt = rand::rng().random::<[u8; 32]>().to_vec();
         let mut hash = [0u8; SHA256_OUTPUT_LEN];
 
@@ -255,7 +251,7 @@ impl UserManager {
             &mut hash,
         );
 
-        let db = self.database.realm(RealmName::default())?;
+        let db = self.database.realm(realm.clone())?;
         let rw = db.write(DataScope::Global)?;
 
         let password = PasswordData {
@@ -283,28 +279,53 @@ impl UserManager {
         Ok(password)
     }
 
-    pub async fn password(&self, user: UserName) -> Result<PasswordData> {
-        let db = self.database.realm(RealmName::default())?;
+    /// Attach a freshly generated TOTP secret to an existing password, for
+    /// accounts that set their password before the realm config began requiring
+    /// TOTP. The hash carries over; only the secret is new.
+    pub async fn add_totp(&self, realm: &RealmName, current: PasswordData) -> Result<PasswordData> {
+        let db = self.database.realm(realm.clone())?;
+        let rw = db.write(DataScope::Global)?;
+
+        let mut password = current;
+        password.totp_secret = Some(
+            Builder::new()
+                .with_algorithm(totp_rs::Algorithm::SHA1)
+                .with_digits(6)
+                .with_skew(1)
+                .with_step_duration(30)
+                .with_secret(Secret::default())
+                .with_issuer(Some("Sandpolis"))
+                .with_account_name(password.user.to_string())
+                .build()?
+                .to_url()?,
+        );
+
+        rw.upsert(password.clone())?;
+        rw.commit()?;
+
+        Ok(password)
+    }
+
+    /// The user's current password, or `None` if one was never set (the
+    /// first-login case).
+    pub async fn password(&self, realm: &RealmName, user: UserName) -> Result<Option<PasswordData>> {
+        use sandpolis_instance::database::DataRevision;
+
+        let db = self.database.realm(realm.clone())?;
         let r = db.r_transaction()?;
 
-        let passwords: Vec<PasswordData> = r
+        let mut passwords: Vec<PasswordData> = r
             .scan()
             .secondary(PasswordDataKey::user)?
             .equal(user)?
-            // .and(
-            //     r.scan()
-            //         .secondary(PasswordDataKey::_revision)?
-            //         .equal(DataRevision::Latest(0))?,
-            // )
             .collect::<Result<Vec<_>, _>>()?;
 
-        if passwords.is_empty() {
-            bail!("Password not found");
-        } else if passwords.len() > 1 {
-            bail!("Too many passwords found");
-        }
+        // Only the latest revision is the password; older rows are history
+        // retained by the temporal machinery.
+        passwords.retain(|password| matches!(password._revision, DataRevision::Latest(_)));
+        passwords.sort_by_key(|password| password._creation.timestamp());
 
-        Ok(passwords[0].to_owned())
+        Ok(passwords.pop())
     }
 
     pub fn new_token(&self, claims: Claims) -> Result<ClientAuthToken> {
@@ -337,8 +358,9 @@ pub struct Claims {
     /// Claim expiration
     pub exp: usize,
 
-    /// Whether the user is an admin
-    pub admin: bool,
+    /// Permissions held when the token was minted. Live checks read the current
+    /// `UserData` instead, so a config change isn't outrun by an old token.
+    pub perms: Vec<Permission>,
 
     /// Realm in which these claims exist
     pub realm: RealmName,
@@ -438,6 +460,61 @@ pub async fn connect(
     let peer_is_server =
         !peer_stratum.is_empty() || remote_instance.is_some_and(|id| id.is_server());
 
+    // Anything that isn't a server or a self-identified agent is treated as a
+    // client, so an unidentified peer lands on the most restricted path. (The
+    // id is self-reported; tying it to the connection's certificate is the
+    // standing TODO above.)
+    let peer_is_client = !peer_is_server && !remote_instance.is_some_and(|id| id.is_agent());
+
+    // When the realm has user accounts, a client connection must carry a token
+    // from `/user/login`; its user decides which streams the connection may
+    // open. A realm with no users is open, preserving the zero-setup workflow.
+    let user_gate = if peer_is_client && state.users_configured(&realm) {
+        let token = headers
+            .get(axum::http::header::AUTHORIZATION)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.strip_prefix("Bearer "));
+
+        let claims = token
+            .zip(state.jwt_keys.get(&realm))
+            .and_then(|(token, (_, decoding))| {
+                decode::<Claims>(token, decoding, &Validation::default()).ok()
+            })
+            .map(|data| data.claims);
+
+        let Some(claims) = claims else {
+            return (StatusCode::UNAUTHORIZED, "login required").into_response();
+        };
+
+        // The gate reads the live user record on every check rather than the
+        // token's snapshot, so a config change is not outrun by an old token.
+        let username = claims.sub;
+        let users = state.users.get(&realm).cloned();
+        let stream_permissions = state.stream_permissions.clone();
+        Some(std::sync::Arc::new(move |tag: u32| {
+            // A stream type no layer declared is closed to clients entirely.
+            let Some(requirement) = stream_permissions.get(&tag) else {
+                return false;
+            };
+            // Declared with no permission: infrastructure (sync, ping).
+            let Some(required) = requirement else {
+                return true;
+            };
+            users.as_ref().is_some_and(|users| {
+                users.iter().any(|user| {
+                    let user = user.read();
+                    user.username == username
+                        && user
+                            .permissions
+                            .iter()
+                            .any(|granted| granted.grants(required))
+                })
+            })
+        }) as std::sync::Arc<dyn Fn(u32) -> bool + Send + Sync>)
+    } else {
+        None
+    };
+
     // A network has exactly one global stratum server, so another one announcing
     // itself is a misconfiguration rather than a topology to accommodate.
     if peer_stratum == "global" {
@@ -492,6 +569,12 @@ pub async fn connect(
         connection
             .streams
             .set_relay(std::sync::Arc::downgrade(&network.relay));
+
+        // Streams this client opens (relayed or answered here) are checked
+        // against its user's permissions.
+        if let Some(gate) = user_gate {
+            connection.streams.set_gate(gate);
+        }
 
         // Likewise server-only: advertising lets a peer claim to carry traffic
         // for other instances, and an ownership claim carries the right to

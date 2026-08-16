@@ -1,12 +1,11 @@
 //! Layer indicator: a small always-on chrome element (bottom-right, above the
 //! minimap) showing the active layer's icon + name. Clicking it opens the layer
-//! picker; triple-clicking is the About easter egg.
+//! picker.
 //!
 //! This is native `bevy_ui` (migrated off egui). It is spawned once and updated
 //! by systems: the label/icon change when the active layer changes, and the whole
 //! element fades in on a layer change.
 
-use crate::gui::about::{AboutScreenState, register_logo_click};
 use crate::gui::input::CurrentLayer;
 use crate::gui::layer_picker::LayerPickerState;
 use crate::gui::layer_toolbar::LayerToolbarRoot;
@@ -159,13 +158,8 @@ pub fn spawn_layer_indicator(
         });
 }
 
-/// Open the layer picker on click (and register an About easter-egg click).
-fn on_indicator_click(
-    _activate: On<Activate>,
-    mut picker: ResMut<LayerPickerState>,
-    mut about: ResMut<AboutScreenState>,
-) {
-    register_logo_click(&mut about);
+/// Open the layer picker on click.
+fn on_indicator_click(_activate: On<Activate>, mut picker: ResMut<LayerPickerState>) {
     picker.show = !picker.show;
 }
 

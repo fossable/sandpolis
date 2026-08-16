@@ -52,14 +52,3 @@ struct SnapshotOperation {
     transfer_rate: u32,
     error: Option<String>,
 }
-
-pub enum SnapshotPermission {
-    /// Right to create new snapshots of agent partitions
-    Create,
-
-    /// Right to apply existing snapshots to agent partitions
-    Apply,
-
-    /// Right to view metadata about snapshots on a server
-    List,
-}

@@ -123,3 +123,17 @@ impl sandpolis_instance::network::RegisterResponders for DesktopProbeResponderRe
 inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &DesktopProbeResponderRegistration
 ));
+
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(DesktopStream), "desktop:session")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(DesktopScreenshot), "desktop:screenshot")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(VncStream), "desktop:vnc")
+}

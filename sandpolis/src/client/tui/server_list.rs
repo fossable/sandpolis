@@ -322,12 +322,14 @@ impl EventHandler for ServerListWidget {
 
                                 tokio::spawn(async move {
                                     match server_manager.connect(server_data.address.clone()).await {
-                                        Ok(_connection) => {
-                                            debug!(
-                                                "Connected successfully, attempting authentication with saved token"
-                                            );
-                                            // TODO: Use the saved token to authenticate
-                                            // For now, just transition to Connected state
+                                        Ok(connection) => {
+                                            // Requests on this connection carry
+                                            // the saved token from the last login.
+                                            if server_data.token.is_usable() {
+                                                *connection.token.write().unwrap() =
+                                                    Some(server_data.token.clone());
+                                            }
+                                            debug!("Connected successfully");
                                             state_clone.write().unwrap().mode =
                                                 ServerListWidgetMode::Connected;
                                         }
@@ -396,8 +398,9 @@ impl EventHandler for ServerListWidget {
                                                     connection.cluster_id,
                                                     &form_data.password,
                                                 ),
+                                                setup: false,
                                                 totp_token: form_data.totp,
-                                                lifetime: Some(Duration::new(1, 0)),
+                                                lifetime: None,
                                             })
                                             .await
                                         {

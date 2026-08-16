@@ -281,6 +281,14 @@ impl InstanceState {
             database.clone(),
             network.clone(),
             #[cfg(feature = "server")]
+            realms.iter().map(|realm| realm.name.clone()).collect(),
+            #[cfg(feature = "server")]
+            options
+                .realms
+                .iter()
+                .map(|realm| (realm.name.clone(), realm.user.clone()))
+                .collect(),
+            #[cfg(feature = "server")]
             server.stratum.clone(),
             #[cfg(feature = "server")]
             server.ownership.clone(),
@@ -358,16 +366,6 @@ impl InstanceState {
             instance,
         })
     }
-}
-
-/// All user accounts are subject to a set of permissions controlling what
-/// server operations are authorized. The inital admin user has complete and
-/// irrevocable permissions. By default, additional user accounts are created
-/// without permissions and consequently are allowed to do almost nothing.
-pub enum InstancePermission {
-    Wake(sandpolis_agent::wake::WakePermission),
-    #[cfg(feature = "filesystem")]
-    Filesystem(sandpolis_filesystem::FilesystemPermission),
 }
 
 // TODO inventory crate

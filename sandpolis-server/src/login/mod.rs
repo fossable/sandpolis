@@ -28,6 +28,12 @@ pub struct LoginRequest {
     /// Pre-hashed password
     pub password: LoginPassword,
 
+    /// True when the client is knowingly setting the user's initial password:
+    /// it already saw [`LoginResponse::PasswordSetupRequired`] and had the user
+    /// confirm the password.
+    #[serde(default)]
+    pub setup: bool,
+
     /// Time-based One-Time Password token
     pub totp_token: Option<String>,
 
@@ -35,10 +41,23 @@ pub struct LoginRequest {
     pub lifetime: Option<Duration>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum LoginResponse {
     /// The login was successful and returned a session token
     Ok(ClientAuthToken),
+
+    /// The user exists but has no password yet. The client shows a set-password
+    /// dialog (with confirmation) and retries with `setup: true`.
+    PasswordSetupRequired {
+        /// Whether the realm requires TOTP enrollment, so the client can warn
+        /// the user before the enrollment response arrives.
+        totp_required: bool,
+    },
+
+    /// The password was stored and a TOTP secret was generated. The client
+    /// displays the otpauth URL for the user to enroll, then retries the login
+    /// with a code.
+    TotpSetupRequired { otpauth_url: String },
 
     /// The request was invalid
     Invalid,
@@ -79,6 +98,7 @@ impl LoginPassword {
 }
 
 #[data]
+#[derive(Default)]
 pub struct LoginAttemptData {
     /// When the login attempt occurred
     pub timestamp: u64,

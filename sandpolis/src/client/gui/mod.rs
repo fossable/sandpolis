@@ -22,10 +22,6 @@ use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
 use sandpolis_instance::{InstanceType, LayerName};
 
 // Import GUI types from sandpolis-client submodules
-use sandpolis_client::gui::about::{
-    AboutScreenState, handle_about_easter_egg, manage_about_panel, rotate_about_logo,
-    spawn_about_logo,
-};
 use sandpolis_client::gui::activity::{
     animate_activity_lines, cleanup_layer_activity_lines, despawn_completed_activity_lines,
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
@@ -65,7 +61,8 @@ use sandpolis_client::gui::listeners::{
 };
 use sandpolis_client::gui::login::{
     LoginOperation, check_saved_servers, focus_login_input, handle_login_phase1,
-    handle_login_phase2, manage_login, sync_login_inputs, update_login_error,
+    handle_login_phase2, manage_login, prompt_login_on_connect, rotate_login_logo,
+    spawn_login_logo, sync_login_inputs, update_login_error,
 };
 use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_minimap};
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
@@ -173,7 +170,6 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .insert_resource(LoginDialogState::default())
     .insert_resource(LoginOperation::default())
     .insert_resource(SelectionSet::default())
-    .insert_resource(AboutScreenState::default())
     .insert_resource(ThemePickerState::default())
     .insert_resource(TerrainMembersDirty::default())
     .insert_resource(state.instance.clone())
@@ -206,12 +202,11 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                 manage_theme_picker,
                 update_theme_rows,
             ),
-            // Help / about / login modals (native)
+            // Help / login modals (native)
             (
                 toggle_help,
                 toggle_diagnostics_overlay,
                 manage_help_panel,
-                manage_about_panel,
                 manage_login,
                 focus_login_input,
                 sync_login_inputs,
@@ -240,12 +235,11 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             update_responsive_ui,
             // Login systems
             check_saved_servers,
+            prompt_login_on_connect,
             handle_login_phase1,
             handle_login_phase2,
-            // About screen systems
-            handle_about_easter_egg,
-            spawn_about_logo,
-            rotate_about_logo,
+            spawn_login_logo,
+            rotate_login_logo,
         ),
     )
     .add_systems(
@@ -375,7 +369,7 @@ fn setup(
     }
 
     // Spawn main camera with WorldView marker. Mark it as the default UI camera so
-    // native bevy_ui always targets it (the About easter egg spawns a second,
+    // native bevy_ui always targets it (the login dialog's logo spawns a second,
     // higher-order camera that would otherwise capture the UI).
     commands.spawn((
         Camera2d,

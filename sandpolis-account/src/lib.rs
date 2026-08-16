@@ -286,3 +286,9 @@ impl AccountLinkType {
         }
     }
 }
+
+// What a client must be granted to open this layer's streams.
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(AccountMgmt), "account:manage")
+}

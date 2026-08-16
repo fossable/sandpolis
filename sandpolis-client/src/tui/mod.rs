@@ -8,6 +8,7 @@ use tokio_stream::StreamExt;
 
 pub mod help;
 pub mod loading;
+pub mod login;
 pub mod resident_vec;
 
 /// Run a full-screen TUI driven by a single root widget until the user quits
@@ -46,6 +47,42 @@ where
     }
     ratatui::restore();
     Ok(())
+}
+
+/// Like [`run_tui`] but also ends as soon as `done` reports true, for widgets
+/// that complete on their own (a login prompt) rather than when the user quits.
+pub async fn run_tui_until<W, F>(fps: f32, mut root: W, done: F) -> anyhow::Result<W>
+where
+    W: WidgetRef + EventHandler,
+    F: Fn(&W) -> bool,
+{
+    let mut terminal = ratatui::init();
+    let mut should_quit = false;
+    let period = Duration::from_secs_f32(1.0 / fps.max(1.0));
+    let mut interval = tokio::time::interval(period);
+    let mut events = EventStream::new();
+
+    while !should_quit && !done(&root) {
+        tokio::select! {
+            _ = interval.tick() => {
+                terminal.draw(|frame| root.render_ref(frame.area(), frame.buffer_mut()))?;
+            }
+            Some(Ok(event)) = events.next() => {
+                if let Some(Event::Key(key)) = root.handle_event(event)
+                    && key.kind == KeyEventKind::Press {
+                        match key.code {
+                            KeyCode::Char('q') => should_quit = true,
+                            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                                should_quit = true;
+                            }
+                            _ => {}
+                        }
+                    }
+            }
+        }
+    }
+    ratatui::restore();
+    Ok(root)
 }
 
 /// A minimal full-screen panel for not-yet-implemented subcommands. Renders a

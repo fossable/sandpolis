@@ -39,8 +39,79 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
         return Ok(std::process::ExitCode::SUCCESS);
     }
 
+    // A subcommand against a realm with user accounts needs a login before it
+    // can do anything, so the prompt comes up front rather than mid-command.
+    ensure_authenticated(&state, options.fps as f32).await?;
+
     spawn_client_sync(state.clone());
     command.dispatch_client(&options, &state).await
+}
+
+/// Make sure every connected server that requires a login holds a usable auth
+/// token, opening an interactive login prompt when one is missing. Realms
+/// without users and servers with a cached token pass straight through;
+/// non-interactive runs fail with instructions instead of hanging on a prompt.
+pub async fn ensure_authenticated(state: &InstanceState, fps: f32) -> anyhow::Result<()> {
+    use sandpolis_client::tui::login::{LoginOutcome, LoginPromptWidget};
+    use std::io::IsTerminal;
+
+    // Connections come up in the background; give them a moment to appear so a
+    // subcommand run right after startup still gets its login prompt.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while state.server.server_connections().is_empty() && std::time::Instant::now() < deadline {
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
+    for connection in state.server.server_connections() {
+        if !connection.banner.users_configured {
+            continue;
+        }
+
+        if let Some(token) = state.server.saved_token(&connection.url) {
+            *connection.token.write().unwrap() = Some(token);
+        }
+        if connection
+            .token
+            .read()
+            .unwrap()
+            .as_ref()
+            .is_some_and(|token| token.is_usable())
+        {
+            continue;
+        }
+
+        if !std::io::stdout().is_terminal() {
+            anyhow::bail!(
+                "authentication required for {}: run `sandpolis server list` to log in",
+                connection.url
+            );
+        }
+
+        let saved_user = state.server.servers.iter().find_map(|server| {
+            let server = server.read();
+            (server.address == connection.url && !server.user.is_empty())
+                .then(|| server.user.clone())
+        });
+
+        // The clone shares the connection's token slot, so a successful login
+        // lands on the retained connection too.
+        let widget = LoginPromptWidget::new((*connection).clone(), saved_user);
+        let widget =
+            sandpolis_client::tui::run_tui_until(fps, widget, |widget| widget.finished()).await?;
+
+        match widget.outcome() {
+            Some(LoginOutcome::Success { username }) => {
+                if let Some(token) = connection.token.read().unwrap().clone() {
+                    state
+                        .server
+                        .update_server_token(&connection.url, username, token)?;
+                }
+            }
+            _ => anyhow::bail!("login cancelled"),
+        }
+    }
+
+    Ok(())
 }
 
 /// Establish the websocket to the first available server and install it for DB
@@ -113,6 +184,11 @@ pub fn spawn_client_sync(state: InstanceState) {
                             None,
                         );
                     }
+                    Err(e) if e.is::<sandpolis_server::AuthRequired>() => {
+                        // The user hasn't logged in yet; the login dialog is
+                        // (or will be) up, and this loop retries after it.
+                        tracing::debug!("Sync websocket awaiting login");
+                    }
                     Err(e) => {
                         tracing::info!(error = %e, "Failed to open sync websocket");
                     }
@@ -156,6 +232,12 @@ fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUr
             tracing::debug!(%url, "Attempting server connection");
             match server.connect(url.clone()).await {
                 Ok(connection) => {
+                    // A token from an earlier login lets this connection skip
+                    // the login dialog entirely.
+                    if let Some(token) = server.saved_token(&url) {
+                        *connection.token.write().unwrap() = Some(token);
+                    }
+
                     server
                         .outbound
                         .write()

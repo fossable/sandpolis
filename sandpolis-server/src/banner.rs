@@ -2,11 +2,17 @@ use crate::ServerBanner;
 #[cfg(feature = "server")]
 use crate::ServerManager;
 #[cfg(feature = "server")]
+use crate::user::UserManager;
+#[cfg(feature = "server")]
 use axum::{Json, extract, extract::State};
+#[cfg(feature = "server")]
+use axum_extra::TypedHeader;
 use native_db::ToKey;
 use native_model::Model;
 #[cfg(feature = "server")]
 use sandpolis_instance::network::RequestResult;
+#[cfg(feature = "server")]
+use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
 use serde::Deserialize;
 use serde::Serialize;
@@ -28,10 +34,22 @@ pub struct GetBannerResponse(pub ServerBanner);
 
 /// Return a "banner" containing server metadata.
 #[cfg(feature = "server")]
-#[axum_macros::debug_handler]
 pub async fn get_banner(
     state: State<ServerManager>,
-    extract::Json(_): extract::Json<GetBannerRequest>,
+    users: State<UserManager>,
+    TypedHeader(realm): TypedHeader<RealmName>,
+    extract::Json(request): extract::Json<GetBannerRequest>,
 ) -> RequestResult<GetBannerResponse> {
-    Ok(Json(GetBannerResponse(state.banner.read().inner.clone())))
+    let mut banner = state.banner.read().inner.clone();
+
+    // Whether a login is needed (and how) is the realm's live state, not
+    // something stored on the banner row.
+    banner.users_configured = users.users_configured(&realm);
+    banner.mfa = users.totp_required(&realm);
+
+    if !request.include_image {
+        banner.image = None;
+    }
+
+    Ok(Json(GetBannerResponse(banner)))
 }
