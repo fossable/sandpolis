@@ -10,6 +10,7 @@ use tracing::{debug, info, warn};
 
 /// Bring up everything an agent needs and run it: the realm named by its realm
 /// cert, the database its collectors write into, and the subsystems over both.
+#[cfg(not(target_os = "android"))]
 pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode> {
     let mut options = args.options();
 

@@ -197,6 +197,30 @@ sandpolis agent  --realm /tmp/default.realm.pem   # terminal 2
 sandpolis client --realm /tmp/default.realm.pem   # terminal 3
 ```
 
+#### Containers
+
+Every image comes out of `sandpolis/Dockerfile`, built with the repository root
+as the context because `build.rs` walks the whole workspace:
+
+```sh
+docker build --target server -f sandpolis/Dockerfile -t sandpolis/server .
+docker build --target demo   -f sandpolis/Dockerfile -t sandpolis/demo   .
+```
+
+The `server`, `agent` and `client` targets each carry one instance. `demo`
+carries all three around a single `--all-features` binary: its entrypoint starts
+a server, waits for the realm cert, attaches an agent, and opens the GUI client
+if a wayland socket or `$DISPLAY` was handed in. Without one it drops into a
+shell with `$S7S_REALM` and `$S7S_DATA` already pointed at the running demo, so
+the client subcommands work without flags.
+
+Both stages are nix. The build runs inside `nix-shell shell.nix`, and the
+runtime image is the closure of a `buildEnv` from the same package lists
+(`nix/deps.nix`, shared with the dev shell) unioned with every store path the
+binary itself names — so a library the dev loop needs can't go missing from an
+image. `nix/nixpkgs.nix` pins nixpkgs for both, which is what makes the runtime
+closure match the glibc the binary was linked against.
+
 ## Mobile App
 
 The `sandpolis-mobile` crate wraps the main `sandpolis` crate.
@@ -226,6 +250,7 @@ cd android && ./gradlew assembleDebug
 - The node panel framework needs more shared controls. It has buttons, text and
   gauges today (`sandpolis-client/src/gui/ui/{widgets,gauge}.rs`); charts and
   tables are the obvious gaps, and every layer currently rolls its own list.
+  - CPU and memory usage line graphs with historical data
 - Notifications currently only reach the user as a toast or an OS notification.
   Add a notification center in the GUI (history, per-layer muting). When the
   client is running in the foreground, show in-app toasts and no OS-native
@@ -261,7 +286,7 @@ cd android && ./gradlew assembleDebug
   - Suppose any entity in the network is compromised, what others could be
     affected?
   - Assign a weight on how bad a compromise of an entity would be
-- Search for existing accounts with username,etc
+- Search for existing accounts with adler
 
 ## `sandpolis-snapshot`
 
@@ -385,6 +410,31 @@ sandpolis shell --instance UUID
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following subsystems are supported by bootagents: shell, snapshot
-- Convert all Dockerfiles to use nix base image
-- The node panel icons for instances should always follow the type - not the
-  layer icon
+- The node panel icons for instances should always follow the instance type -
+  not the layer icon
+  - For non-instances, use the layer icon
+  - We have icons for these under sandpolis-client/assets/network/.
+  - See if we can generate better, more cohesive icons
+- Implement user account and permissions system
+  - The realm config configures user accounts which clients login to (not
+    agents)
+    - The TOTP should be enabled/enforced in the config
+    - Permissions are set for the user in the realm config - we want granular
+      control over what the user can do on a layer-by-layer basis (things like
+      opening shell sessions, interacting with probes, etc)
+    - Users can only be added or modified or granted new permissions by editing
+      the realm config
+  - The TOTP and password hash should be stored in the realm db
+    - Use the LoginPassword and JWT machinery we already have
+  - If a user is configured and doesn't have a password hash, request one from
+    the user on first login
+  - When a client connects and the server has users configured and we don't have
+    a stored JWT, a login dialog must be presented. If a CLI command was issued
+    that requires authentication, open an interactive login dialog before
+    executing the command (we used to have a ratatui login dialog - see if you
+    can find it).
+    - For the GUI login, move the rotating mesh from the About page to the login
+      dialog. Remove the about page altogether.
+  - When a client connects and the server doesn't have users configured or the
+    client has a cached JWT token in the realm database, then we can skip the
+    login dialog.

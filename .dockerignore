@@ -1,1 +1,7 @@
 target
+data
+vendor
+.git
+*.log
+result*
+sandpolis-mobile/android/build

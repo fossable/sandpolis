@@ -1,17 +1,20 @@
 //! JNI bridge to the Android main service that produces screen frames and
 //! accepts injected input events.
 
+use jni::Env;
+use jni::EnvUnowned;
+use jni::JNIVersion;
+use jni::errors::LogErrorAndDefault;
+use jni::errors::{Error as JniError, Result as JniResult};
 use jni::objects::JByteBuffer;
 use jni::objects::JString;
 use jni::objects::JValue;
+use jni::objects::{JClass, JObject};
+use jni::refs::Global;
 use jni::sys::jboolean;
-use jni::JNIEnv;
-use jni::{
-    objects::{GlobalRef, JClass, JObject},
-    JavaVM,
-};
+use jni::vm::JavaVM;
+use jni::{jni_sig, jni_str};
 
-use jni::errors::{Error as JniError, Result as JniResult};
 use lazy_static::lazy_static;
 use std::ops::Not;
 use std::os::raw::c_void;
@@ -19,10 +22,14 @@ use std::sync::atomic::{AtomicPtr, Ordering::SeqCst};
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
+/// A global reference to a plain Java object, which is what both contexts below
+/// are held as.
+type GlobalObject = Global<JObject<'static>>;
+
 lazy_static! {
     static ref JVM: RwLock<Option<JavaVM>> = RwLock::new(None);
-    static ref MAIN_SERVICE_CTX: RwLock<Option<GlobalRef>> = RwLock::new(None); // MainService -> video service / info
-    static ref APPLICATION_CONTEXT: RwLock<Option<GlobalRef>> = RwLock::new(None);
+    static ref MAIN_SERVICE_CTX: RwLock<Option<GlobalObject>> = RwLock::new(None); // MainService -> video service / info
+    static ref APPLICATION_CONTEXT: RwLock<Option<GlobalObject>> = RwLock::new(None);
     static ref VIDEO_RAW: Mutex<FrameRaw> = Mutex::new(FrameRaw::new("video", MAX_VIDEO_FRAME_TIMEOUT));
     static ref NDK_CONTEXT_INITED: Mutex<bool> = Default::default();
 }
@@ -104,66 +111,83 @@ pub fn get_video_raw<'a>(dst: &mut Vec<u8>, last: &mut Vec<u8>) -> Option<()> {
     VIDEO_RAW.lock().ok()?.take(dst, last)
 }
 
-#[no_mangle]
-pub extern "system" fn Java_ffi_FFI_onVideoFrameUpdate(
-    env: JNIEnv,
-    _class: JClass,
-    buffer: JObject,
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_ffi_FFI_onVideoFrameUpdate<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    buffer: JByteBuffer<'local>,
 ) {
-    let jb = JByteBuffer::from(buffer);
-    if let Ok(data) = env.get_direct_buffer_address(&jb) {
-        if let Ok(len) = env.get_direct_buffer_capacity(&jb) {
-            VIDEO_RAW.lock().unwrap().update(data, len);
-        }
-    }
+    env.with_env(|env| -> JniResult<()> {
+        let data = env.get_direct_buffer_address(&buffer)?;
+        let len = env.get_direct_buffer_capacity(&buffer)?;
+        VIDEO_RAW.lock().unwrap().update(data, len);
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_ffi_FFI_setFrameRawEnable(
-    env: JNIEnv,
-    _class: JClass,
-    name: JString,
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_ffi_FFI_setFrameRawEnable<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    name: JString<'local>,
     value: jboolean,
 ) {
-    let mut env = env;
-    if let Ok(name) = env.get_string(&name) {
-        let name: String = name.into();
-        let value = value.eq(&1);
-        if name.eq("video") {
+    env.with_env(|env| -> JniResult<()> {
+        if name.try_to_string(env)? == "video" {
             VIDEO_RAW.lock().unwrap().set_enable(value);
         }
-    };
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_ffi_FFI_init(env: JNIEnv, _class: JClass, ctx: JObject) {
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_ffi_FFI_init<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    ctx: JObject<'local>,
+) {
     log::debug!("MainService init from java");
-    if let Ok(jvm) = env.get_java_vm() {
-        let java_vm = jvm.get_java_vm_pointer() as *mut c_void;
+    env.with_env(|env| -> JniResult<()> {
+        let jvm = env.get_java_vm()?;
+        let java_vm = jvm.get_raw() as *mut c_void;
+
         let mut jvm_lock = JVM.write().unwrap();
         if jvm_lock.is_none() {
             *jvm_lock = Some(jvm);
         }
         drop(jvm_lock);
-        if let Ok(context) = env.new_global_ref(ctx) {
-            let context_jobject = context.as_obj().as_raw() as *mut c_void;
-            *MAIN_SERVICE_CTX.write().unwrap() = Some(context);
-            init_ndk_context(java_vm, context_jobject);
-        }
-    }
+
+        let context = env.new_global_ref(&ctx)?;
+        let context_jobject = context.as_raw() as *mut c_void;
+        *MAIN_SERVICE_CTX.write().unwrap() = Some(context);
+        init_ndk_context(java_vm, context_jobject);
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>()
+}
+
+/// Attach the calling thread and run `f` against the `MainService` context, if
+/// the service has called into [`Java_ffi_FFI_init`] already.
+fn with_main_service<T>(f: impl FnOnce(&mut Env, &JObject<'static>) -> JniResult<T>) -> JniResult<T> {
+    let jvm = JVM.read().unwrap();
+    let ctx = MAIN_SERVICE_CTX.read().unwrap();
+
+    let (Some(jvm), Some(ctx)) = (jvm.as_ref(), ctx.as_ref()) else {
+        return Err(JniError::NullPtr("MainService context is not initialized"));
+    };
+
+    jvm.attach_current_thread(|env| f(env, ctx))
 }
 
 pub fn call_main_service_pointer_input(kind: &str, mask: i32, x: i32, y: i32) -> JniResult<()> {
-    if let (Some(jvm), Some(ctx)) = (
-        JVM.read().unwrap().as_ref(),
-        MAIN_SERVICE_CTX.read().unwrap().as_ref(),
-    ) {
-        let mut env = jvm.attach_current_thread_as_daemon()?;
-        let kind = if kind == "touch" { 0 } else { 1 };
+    let kind = if kind == "touch" { 0 } else { 1 };
+    with_main_service(|env, ctx| {
         env.call_method(
             ctx,
-            "rustPointerInput",
-            "(IIII)V",
+            jni_str!("rustPointerInput"),
+            jni_sig!((int, int, int, int) -> void),
             &[
                 JValue::Int(kind),
                 JValue::Int(mask),
@@ -171,57 +195,37 @@ pub fn call_main_service_pointer_input(kind: &str, mask: i32, x: i32, y: i32) ->
                 JValue::Int(y),
             ],
         )?;
-        return Ok(());
-    } else {
-        return Err(JniError::ThrowFailed(-1));
-    }
+        Ok(())
+    })
 }
 
 pub fn call_main_service_key_event(data: &[u8]) -> JniResult<()> {
-    if let (Some(jvm), Some(ctx)) = (
-        JVM.read().unwrap().as_ref(),
-        MAIN_SERVICE_CTX.read().unwrap().as_ref(),
-    ) {
-        let mut env = jvm.attach_current_thread_as_daemon()?;
+    with_main_service(|env, ctx| {
         let data = env.byte_array_from_slice(data)?;
-
         env.call_method(
             ctx,
-            "rustKeyEventInput",
-            "([B)V",
-            &[JValue::Object(&JObject::from(data))],
+            jni_str!("rustKeyEventInput"),
+            jni_sig!((byte[]) -> void),
+            &[JValue::Object(&data)],
         )?;
-        return Ok(());
-    } else {
-        return Err(JniError::ThrowFailed(-1));
-    }
+        Ok(())
+    })
 }
 
 pub fn call_main_service_get_by_name(name: &str) -> JniResult<String> {
-    if let (Some(jvm), Some(ctx)) = (
-        JVM.read().unwrap().as_ref(),
-        MAIN_SERVICE_CTX.read().unwrap().as_ref(),
-    ) {
-        let mut env = jvm.attach_current_thread_as_daemon()?;
-        let res = env.with_local_frame(10, |env| -> JniResult<String> {
-            let name = env.new_string(name)?;
-            let res = env
-                .call_method(
-                    ctx,
-                    "rustGetByName",
-                    "(Ljava/lang/String;)Ljava/lang/String;",
-                    &[JValue::Object(&JObject::from(name))],
-                )?
-                .l()?;
-            let res = JString::from(res);
-            let res = env.get_string(&res)?;
-            let res = res.to_string_lossy().to_string();
-            Ok(res)
-        })?;
-        Ok(res)
-    } else {
-        return Err(JniError::ThrowFailed(-1));
-    }
+    with_main_service(|env, ctx| {
+        let name = env.new_string(name)?;
+        let res = env
+            .call_method(
+                ctx,
+                jni_str!("rustGetByName"),
+                jni_sig!((java.lang.String) -> java.lang.String),
+                &[JValue::Object(&name)],
+            )?
+            .l()?;
+        let res = env.cast_local::<JString>(res)?;
+        res.try_to_string(env)
+    })
 }
 
 pub fn call_main_service_set_by_name(
@@ -229,32 +233,23 @@ pub fn call_main_service_set_by_name(
     arg1: Option<&str>,
     arg2: Option<&str>,
 ) -> JniResult<()> {
-    if let (Some(jvm), Some(ctx)) = (
-        JVM.read().unwrap().as_ref(),
-        MAIN_SERVICE_CTX.read().unwrap().as_ref(),
-    ) {
-        let mut env = jvm.attach_current_thread_as_daemon()?;
-        env.with_local_frame(10, |env| -> JniResult<()> {
-            let name = env.new_string(name)?;
-            let arg1 = env.new_string(arg1.unwrap_or(""))?;
-            let arg2 = env.new_string(arg2.unwrap_or(""))?;
+    with_main_service(|env, ctx| {
+        let name = env.new_string(name)?;
+        let arg1 = env.new_string(arg1.unwrap_or(""))?;
+        let arg2 = env.new_string(arg2.unwrap_or(""))?;
 
-            env.call_method(
-                ctx,
-                "rustSetByName",
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
-                &[
-                    JValue::Object(&JObject::from(name)),
-                    JValue::Object(&JObject::from(arg1)),
-                    JValue::Object(&JObject::from(arg2)),
-                ],
-            )?;
-            Ok(())
-        })?;
-        return Ok(());
-    } else {
-        return Err(JniError::ThrowFailed(-1));
-    }
+        env.call_method(
+            ctx,
+            jni_str!("rustSetByName"),
+            jni_sig!((java.lang.String, java.lang.String, java.lang.String) -> void),
+            &[
+                JValue::Object(&name),
+                JValue::Object(&arg1),
+                JValue::Object(&arg2),
+            ],
+        )?;
+        Ok(())
+    })
 }
 
 // Difference between MainService, MainActivity, JNI_OnLoad:
@@ -278,28 +273,32 @@ fn init_ndk_context(java_vm: *mut c_void, context_jobject: *mut c_void) {
 }
 
 // https://cjycode.com/flutter_rust_bridge/guides/how-to/ndk-init
-#[no_mangle]
-pub extern "C" fn JNI_OnLoad(vm: jni::JavaVM, res: *mut std::os::raw::c_void) -> jni::sys::jint {
-    if vm.get_env().is_ok() {
-        let vm = vm.get_java_vm_pointer() as *mut std::os::raw::c_void;
-        init_ndk_context(vm, res);
-    }
-    jni::JNIVersion::V6.into()
+#[unsafe(no_mangle)]
+pub extern "C" fn JNI_OnLoad(vm: *mut jni::sys::JavaVM, res: *mut c_void) -> jni::sys::jint {
+    // SAFETY: the JVM always passes a valid `JavaVM` pointer to `JNI_OnLoad`.
+    let vm = unsafe { JavaVM::from_raw(vm) };
+    init_ndk_context(vm.get_raw() as *mut c_void, res);
+    JNIVersion::V1_6.into()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_ffi_FFI_onAppStart(mut env: JNIEnv, _class: JClass, ctx: JObject) {
-    if ctx.is_null() {
-        log::error!("application context is null");
-        return;
-    }
-    if APPLICATION_CONTEXT.read().unwrap().is_some() {
-        log::info!("application context already initialized");
-        return;
-    }
-    if env.get_java_vm().is_ok() {
-        if let Ok(context) = env.new_global_ref(ctx) {
-            *APPLICATION_CONTEXT.write().unwrap() = Some(context);
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_ffi_FFI_onAppStart<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    ctx: JObject<'local>,
+) {
+    env.with_env(|env| -> JniResult<()> {
+        if ctx.is_null() {
+            log::error!("application context is null");
+            return Ok(());
         }
-    }
+        if APPLICATION_CONTEXT.read().unwrap().is_some() {
+            log::info!("application context already initialized");
+            return Ok(());
+        }
+        let context = env.new_global_ref(&ctx)?;
+        *APPLICATION_CONTEXT.write().unwrap() = Some(context);
+        Ok(())
+    })
+    .resolve::<LogErrorAndDefault>()
 }

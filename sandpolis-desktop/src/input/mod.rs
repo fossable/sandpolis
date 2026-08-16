@@ -489,7 +489,80 @@ pub trait KeyboardControllable {
 }
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
-struct Enigo;
+pub struct Enigo;
+
+/// Input injection on mobile has to go through the platform's accessibility
+/// service, which this crate doesn't drive yet, so every event is dropped with
+/// a warning rather than silently pretending to have been delivered.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+impl MouseControllable for Enigo {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn mouse_move_to(&mut self, _x: i32, _y: i32) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+
+    fn mouse_move_relative(&mut self, _x: i32, _y: i32) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+
+    fn mouse_down(&mut self, _button: MouseButton) -> ResultType {
+        Err("Mouse input is not supported on this platform".into())
+    }
+
+    fn mouse_up(&mut self, _button: MouseButton) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+
+    fn mouse_click(&mut self, _button: MouseButton) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+
+    fn mouse_scroll_x(&mut self, _length: i32) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+
+    fn mouse_scroll_y(&mut self, _length: i32) {
+        log::warn!("Mouse input is not supported on this platform");
+    }
+}
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+impl KeyboardControllable for Enigo {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_mut_any(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn key_sequence(&mut self, _sequence: &str) {
+        log::warn!("Keyboard input is not supported on this platform");
+    }
+
+    fn key_down(&mut self, _key: Key) -> ResultType {
+        Err("Keyboard input is not supported on this platform".into())
+    }
+
+    fn key_up(&mut self, _key: Key) {
+        log::warn!("Keyboard input is not supported on this platform");
+    }
+
+    fn key_click(&mut self, _key: Key) {
+        log::warn!("Keyboard input is not supported on this platform");
+    }
+
+    fn get_key_state(&mut self, _key: Key) -> bool {
+        false
+    }
+}
 
 impl Enigo {
     /// Constructs a new `Enigo` instance.

@@ -95,6 +95,7 @@ jobs:
           - server
           - agent
           - client
+          - demo
     steps:
       - uses: actions/checkout@v4
         with:
@@ -118,10 +119,15 @@ jobs:
 
       - uses: docker/build-push-action@v5
         with:
-          file: sandpolis/${{ matrix.instance }}.Dockerfile
+          file: sandpolis/Dockerfile
+          target: ${{ matrix.instance }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: sandpolis/${{ matrix.instance }}:nightly
+          # Each run gets a fresh builder, so this cache is the only thing that
+          # carries the nix toolchain layer between runs.
+          cache-from: type=gha,scope=${{ matrix.instance }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.instance }}
 
       # - uses: peter-evans/dockerhub-description@v4
       #   with:

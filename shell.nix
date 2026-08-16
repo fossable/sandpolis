@@ -1,43 +1,15 @@
-{ pkgs ? import (fetchTarball
-  "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") { } }:
+# The dev shell. Its package lists live in nix/deps.nix so the container images
+# in sandpolis/Dockerfile build against exactly what this shell provides. Pass
+# `--arg pkgs 'import <nixpkgs> { }'` to escape the pin in nix/nixpkgs.nix.
+{ pkgs ? import ./nix/nixpkgs.nix { } }:
 
 with pkgs;
 
-mkShell rec {
-  nativeBuildInputs =
-    [ pkg-config cargo rustc rust-analyzer rustfmt clippy mold ];
-  buildInputs = [
-    udev
-    cmake
-    alsa-lib
-    vulkan-loader
-    libyuv
-    libvpx
-    libaom
-    libclang
-    libgcc
-    libx11
-    libxcursor
-    libxi
-    libxrandr
-    libxkbcommon
-    libGL
-    wayland
-    fuse3
-    systemd
-    openssl
-    # Required by rustdesk's scrap (X11 screen capture) and enigo (input)
-    libxcb
-    libxtst
-    xdotool
-    # Required by scrap's `wayland` feature (GStreamer-based capture)
-    glib
-    dbus
-    gst_all_1.gstreamer
-    gst_all_1.gst-plugins-base
-    # Kernel uapi headers for v4l2-sys (pulled in by scrap via nokhwa)
-    linuxHeaders
-  ];
+let deps = import ./nix/deps.nix { inherit pkgs; };
+
+in mkShell rec {
+  inherit (deps) nativeBuildInputs buildInputs;
+
   LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
   LIBCLANG_PATH = "${libclang.lib}/lib";
   # libwebm (pulled in by rustdesk's scrap via rust-webm) predates the

@@ -384,7 +384,7 @@ fn setup(
         // MSAA makes some Android devices panic, this is under investigation
         // https://github.com/bevyengine/bevy/issues/8229
         #[cfg(target_os = "android")]
-        Msaa::Off,
+        bevy::render::view::Msaa::Off,
     ));
 
     // Query database for initial instances and spawn nodes

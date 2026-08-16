@@ -127,9 +127,7 @@ impl RealmConfig {
             .map(|entry| entry.map(|entry| entry.path()))
             .collect::<std::io::Result<Vec<_>>>()?;
 
-        // A directory left over from the old naming matches nothing below, so
-        // without this the server would mint a second CA and quietly orphan the
-        // realm those files describe.
+        // TODO remove legacy detection
         let legacy: Vec<String> = entries
             .iter()
             .filter(|path| {

@@ -126,4 +126,28 @@ services:
 alias sandpolis-client="docker run --rm sandpolis/client"
 ```
 
+#### Try the whole thing at once
+
+![Docker Image Size](https://img.shields.io/docker/image-size/sandpolis/demo)
+
+The demo image runs a server, an agent and the GUI client together in one
+container:
+
+```sh
+docker run --rm -it \
+  -e XDG_RUNTIME_DIR=/run/user/1000 \
+  -e WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+  -v "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY":/run/user/1000/"$WAYLAND_DISPLAY" \
+  --device /dev/dri \
+  -v sandpolis-demo:/data \
+  sandpolis/demo
+```
+
+Without a compositor handed in, the server and agent still come up and you get a
+shell aimed at them instead of the GUI:
+
+```console
+[sandpolis demo] /data $ sandpolis agent list
+```
+
 </details>

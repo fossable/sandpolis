@@ -146,6 +146,13 @@ impl Display {
         self.default
     }
 
+    pub fn scale(&self) -> f64 {
+        match SCREEN_SIZE.lock().unwrap().2 {
+            0 => 1.0,
+            scale => scale as f64,
+        }
+    }
+
     pub fn name(&self) -> String {
         "Android".into()
     }
