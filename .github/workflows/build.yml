@@ -38,7 +38,7 @@ jobs:
           command: build
           args: --bin sandpolis --target ${{ matrix.target }} --all-features --release
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux_artifacts
           path: target/${{ matrix.target }}/debug/sandpolis
@@ -80,7 +80,7 @@ jobs:
         run: |
           ./gradlew build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android_artifacts
           path: sandpolis-mobile/android/app/build/outputs/apk/debug/*.apk
