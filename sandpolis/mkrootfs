@@ -1,0 +1,50 @@
+#!/bin/sh
+# Assemble the rootfs of one instance's image. Written once here rather than
+# repeated per instance in the Dockerfile.
+set -eu
+
+instance="${1:?usage: mkrootfs <instance>}"
+binary=/out/bin/sandpolis
+
+env_path="$(nix-build --no-out-link /work/nix/runtime.nix -A "$instance")"
+
+# The binary names absolute store paths — its ELF interpreter and every RUNPATH
+# entry — so those have to come along or it cannot exec at all. Scanning it is
+# what keeps this honest as dependencies change. mkShell's own outputs are named
+# in RUNPATH too but never realized, hence the existence test.
+linked=""
+for path in $(grep -aoE '/nix/store/[a-z0-9]{32}-[+._?=a-zA-Z0-9-]+' "$binary" | sort -u); do
+    if [ -e "$path" ]; then
+        linked="$linked $path"
+    fi
+done
+
+# The env's own closure covers what scanning cannot see: libraries opened with
+# dlopen (vulkan, GL, the X11 libraries, libxdo) and data files (vulkan ICD
+# manifests, xkb keymaps, gstreamer plugins, the CA bundle).
+mkdir -p /rootfs/nix/store
+nix-store -qR $linked "$env_path" >/tmp/closure
+while read -r path; do
+    cp -a --parents -t /rootfs "$path"
+done </tmp/closure
+ln -s "$env_path" /rootfs/runtime
+
+install -Dm755 "$binary" /rootfs/bin/sandpolis
+ln -s /runtime/bin/bash /rootfs/bin/sh
+
+mkdir -p /rootfs/etc/ssl/certs /rootfs/data
+mkdir -m 1777 -p /rootfs/tmp
+ln -s /runtime/etc/ssl/certs/ca-bundle.crt /rootfs/etc/ssl/certs/ca-certificates.crt
+printf 'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/:/bin/sh\n' >/rootfs/etc/passwd
+printf 'root:x:0:\nnogroup:x:65534:\n' >/rootfs/etc/group
+printf 'hosts: files dns\n' >/rootfs/etc/nsswitch.conf
+printf 'NAME="Sandpolis"\nID=sandpolis\nPRETTY_NAME="Sandpolis Container"\n' >/rootfs/etc/os-release
+
+# Bind mountpoints the runtime fills in.
+: >/rootfs/etc/hosts
+: >/rootfs/etc/resolv.conf
+: >/rootfs/etc/hostname
+
+# Fail the build rather than ship an image that cannot start: this is the whole
+# rootfs, so if the binary runs here it runs in the image.
+chroot /rootfs /bin/sandpolis --version

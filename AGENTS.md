@@ -20,9 +20,11 @@ Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
 _subsystem_ that brings some functionality. Subsystems can depend on each other
 and some are optional (controlled via cargo features).
 
-Most subsystems implement some functionality for all three instance types. For
-example, the way to think about the `sandpolis-agent` crate is it "does
-something with agents", not that it "implements what an agent does".
+Most subsystems implement functionality for all three instance types. For
+example, the way to think about the `sandpolis-server` crate is it "implements
+server-related functionality", not that it is itself the server. Therefore, it's
+OK for the `sandpolis-client` crate to depend on `sandpolis-server` to get
+shared types (just not with the `server` feature enabled).
 
 A subsystem's runtime state lives in one or more _managers_ — `ShellManager`,
 `DatabaseManager`, `NetworkManager`, `RealmManager` — which are constructed at
@@ -228,7 +230,7 @@ The `sandpolis-mobile` crate wraps the main `sandpolis` crate.
 Build instructions for Android:
 
 ```sh
-cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --link-libcxx-shared
+cargo ndk -t arm64-v8a -p 31 -o android/app/src/main/jniLibs build --link-libcxx-shared
 cd android && ./gradlew assembleDebug
 ```
 
@@ -257,17 +259,13 @@ cd android && ./gradlew assembleDebug
   notification. If the client is not running in the foreground, only show
   OS-native notifcations.
   - Notification on errors
-- Ensure the following constraints:
-  - GS servers must serve every .realm.ron file in their --data directory
-  - LS server must accept a single --realm arg
-  - Agents must accept a single --realm arg
-  - Clients must accept a single --realm arg
 
 ## `sandpolis-tunnel`
 
-- Application-level tunnel (traffic to client port gets tunneled to port on
-  device in agent/server's network)
+- Application-level tunnel (between two agents or between an agent and a client)
   - Implement as stream
+  - Configured in realm config, using syntax similar to SSH local/reverse
+    tunnels
 
 ## `sandpolis-agent`
 
@@ -287,6 +285,11 @@ cd android && ./gradlew assembleDebug
     affected?
   - Assign a weight on how bad a compromise of an entity would be
 - Search for existing accounts with adler
+  - Also augment with publically available information like account creation
+    dates
+- Service that checks accounts with haveibeenpwned API
+- Service that consumes CVE data and alerts if software versions are found
+  - depend on inventory subsystem
 
 ## `sandpolis-snapshot`
 
@@ -312,23 +315,39 @@ cd android && ./gradlew assembleDebug
 
 - Docker probe (`docker.rs`)
   - Control the docker daemon by starting/stopping containers, etc
+  - Drive from health layer
 - HTTP probe (`http.rs`)
+  - Drive from health layer?
 - libvirt probe (`libvirt.rs`)
   - Control virtual machines
+  - Drive from health layer
 - ONVIF probe (`onvif.rs`)
   - View the video stream
+  - Driven from the desktop layer?
 - RDP probe via desktop subsystem
   - Implement on top of the IronRDP crates
-  - Button on expanded node panel to maximize the RDP session
+  - Driven from the desktop layer
 - RTSP probe (`rtsp/`)
   - Button on expanded node panel to maximize the video stream
+  - Driven from the desktop layer?
 - SSH probe via shell subsystem
-  - Button on expanded node panel to maximize the terminal
+  - Driven from the shell layer
 - VNC probe
-  - Button on expanded node panel to maximize the VNC session
+  - Driven from the desktop layer
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
+  - Drive from inventory layer?
 - SNMP probe — partial, needs MIB-driven discovery
+  - Drive from inventory layer?
 - ARP probe (`arp/`) — verify completeness
+- NFS probe
+  - Drive from filesystem layer
+  - https://github.com/Vaiz/nfs3
+- SMB probe
+  - Drive from filesystem layer
+  - https://github.com/afiffon/smb-rs
+- Node panels on probes in probe layer just show what protocols are supported -
+  to interact with probes, you use a more specific layer like desktop,
+  filesystem, etc.
 
 ## `sandpolis-filesystem`
 
@@ -342,6 +361,7 @@ cd android && ./gradlew assembleDebug
   a node and a placeholder controller; they need an IronRDP backend.
 - `DesktopStreamInputEvent` only carries `Option<char>`, so
   Enter/Backspace/arrows reach neither agents nor VNC probes
+- Button on expanded node panel to maximize the desktop session
 
 ## `sandpolis-instance`
 
@@ -350,7 +370,6 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-shell`
 
-- GUI: fully featured shell depending on `alacritty_terminal`
 - SSH probes open a terminal here like agents (`ssh.rs`, `probe` feature).
   Telnet probes aren't modelled yet.
 - The CLI/TUI (`sandpolis shell --instance`) can't target a probe; it would need
@@ -361,40 +380,12 @@ cd android && ./gradlew assembleDebug
 - Manage firmware updates
 - Inspect nixpkgs package versions
 
+## `sandpolis-client`
+
+- Build a reusable 2-column table that can render lists of data
+  - It should support vertical scrolling only
+
 ## `sandpolis` (main crate)
-
-- Banner image display in login input dialog
-  - Fetched once a valid server URL is entered
-- TUI interface redesign
-  - Instead of a unified TUI, we need a CLI that optionally opens a TUI for
-    specific features. The CLI is also usable noninteractively in scripts. For
-    example:
-
-```sh
-# Open interactive TUI with agent list. Choose one to restart.
-sandpolis agent restart
-
-# Noninteractive version of the above that responds with json
-sandpolis agent restart --json --instance UUID
-
-# Open interactive TUI with server list
-sandpolis server list
-
-# Open interactive TUI
-sandpolis probe
-
-# Open interactive TUI
-sandpolis desktop
-
-# Noninteractive screenshot
-sandpolis desktop screenshot --instance UUID
-
-# Interactive shell (TUI)
-sandpolis shell
-
-# Interactive shell (non-TUI)
-sandpolis shell --instance UUID
-```
 
 - Remove `--blocked-ips` and just store IP block list in realm database
   - Add/remove from the GUI in the server layer
@@ -410,8 +401,8 @@ sandpolis shell --instance UUID
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following subsystems are supported by bootagents: shell, snapshot
-- The node panel icons for instances should always follow the instance type -
-  not the layer icon
+- The node panel icons for instances should always follow the instance type (not
+  the layer icon like it currently does)
   - For non-instances, use the layer icon
   - We have icons for these under sandpolis-client/assets/network/.
   - See if we can generate better, more cohesive icons
