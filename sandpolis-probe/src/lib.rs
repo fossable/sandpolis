@@ -12,13 +12,16 @@ use std::sync::{Arc, LazyLock, OnceLock, RwLock};
 
 pub mod config;
 pub mod docker;
+pub mod filesystem;
 pub mod http;
 pub mod ipmi;
 pub mod libvirt;
 pub mod management;
+pub mod nfs;
 pub mod onvif;
 pub mod rdp;
 pub mod rtsp;
+pub mod smb;
 pub mod snmp;
 pub mod ssh;
 pub mod ups;
@@ -129,6 +132,10 @@ pub enum ProbeType {
     Docker,
     /// libvirt virtualization
     Libvirt,
+    /// Network File System (v3)
+    Nfs,
+    /// Server Message Block / CIFS
+    Smb,
 }
 
 impl ProbeType {
@@ -147,6 +154,8 @@ impl ProbeType {
             ProbeType::Onvif => "ONVIF",
             ProbeType::Docker => "Docker",
             ProbeType::Libvirt => "libvirt",
+            ProbeType::Nfs => "NFS",
+            ProbeType::Smb => "SMB",
         }
     }
 
@@ -165,6 +174,8 @@ impl ProbeType {
             ProbeType::Onvif => "ONVIF-compatible IP camera",
             ProbeType::Docker => "Docker container engine",
             ProbeType::Libvirt => "libvirt virtualization host",
+            ProbeType::Nfs => "NFSv3 file server",
+            ProbeType::Smb => "SMB/CIFS file server",
         }
     }
 
@@ -183,7 +194,15 @@ impl ProbeType {
             ProbeType::Onvif,
             ProbeType::Docker,
             ProbeType::Libvirt,
+            ProbeType::Nfs,
+            ProbeType::Smb,
         ]
+    }
+
+    /// Whether this protocol exposes a filesystem, and so can back the
+    /// filesystem subsystem via [`crate::filesystem`].
+    pub fn is_filesystem(&self) -> bool {
+        matches!(self, ProbeType::Nfs | ProbeType::Smb)
     }
 }
 
@@ -237,6 +256,12 @@ impl DeviceConfig {
         if self.ssh.is_some() {
             out.push(ProbeType::Ssh);
         }
+        if self.nfs.is_some() {
+            out.push(ProbeType::Nfs);
+        }
+        if self.smb.is_some() {
+            out.push(ProbeType::Smb);
+        }
         if self.http.is_some() {
             out.push(ProbeType::Http);
         }
@@ -265,6 +290,15 @@ impl DeviceConfig {
     pub fn primary(&self) -> Option<ProbeType> {
         self.protocols().first().copied()
     }
+
+    /// The subset of [`protocols`](Self::protocols) that expose a filesystem.
+    /// This is what the filesystem subsystem offers to browse.
+    pub fn filesystem_protocols(&self) -> Vec<ProbeType> {
+        self.protocols()
+            .into_iter()
+            .filter(ProbeType::is_filesystem)
+            .collect()
+    }
 }
 
 // What a client must be granted to open this layer's streams.
@@ -279,4 +313,8 @@ inventory::submit! {
 inventory::submit! {
     sandpolis_instance::network::stream::StreamPermission::require(
         sandpolis_macros::stream_tag!(RtspSessionStream), "probe:rtsp")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(ProbeFsStream), "probe:filesystem")
 }

@@ -15,7 +15,10 @@
 use crate::gui::drag::SelectionSet;
 use crate::gui::input::{CurrentLayer, ZoomLevel};
 use crate::gui::layer_ui::layer_icon_path;
-use crate::gui::node::{NodeEntity, NodeHitbox, NodeIdentity, PanelIcon, PanelPinned, Selected, SubNode};
+use crate::gui::node::{
+    NodeEntity, NodeHitbox, NodeIdentity, PanelIcon, PanelPinned, Selected, SubNode,
+    instance_icon_path,
+};
 use crate::gui::queries;
 use crate::gui::ui::Activate;
 use crate::gui::ui::anchored::{WorldAnchored, anchored_card, card_icon};
@@ -255,6 +258,29 @@ fn panel_state(
     Some(PanelState::Collapsed(verbosity))
 }
 
+/// The icon a node's panel shows when the node doesn't override it with
+/// [`PanelIcon`].
+///
+/// An instance is worth naming by *what it is* — a server, an agent, a client —
+/// which tells the user more than the active layer's icon, already shown by the
+/// layer indicator. Nodes standing in for something finer-grained than an
+/// instance (a probe device, an account) have no instance type of their own, so
+/// they keep the layer icon. A probe device borrows its gateway's `InstanceId`,
+/// which is why the `SubNode` check has to come before the id is consulted.
+fn fallback_icon_path(
+    instance: Option<&NodeEntity>,
+    sub: Option<&SubNode>,
+    layer: &LayerName,
+) -> &'static str {
+    match instance
+        .filter(|_| sub.is_none())
+        .and_then(|i| i.instance_id.instance_type())
+    {
+        Some(instance_type) => instance_icon_path(instance_type),
+        None => layer_icon_path(layer),
+    }
+}
+
 /// Spawn, rebuild and despawn node panels to match the world.
 #[allow(clippy::too_many_arguments)]
 pub fn manage_node_panels(
@@ -349,8 +375,11 @@ pub fn manage_node_panels(
         // `update_panel_icons`, because a node's name and a domain's favicon both
         // arrive after the node does — a value baked in here would be whatever
         // was known on the frame the panel happened to be spawned.
-        let fallback_icon =
-            icon_cache.get_or_rasterize(&mut images, layer_icon_path(&current_layer), icon_px);
+        let fallback_icon = icon_cache.get_or_rasterize(
+            &mut images,
+            fallback_icon_path(instance, sub, &current_layer),
+            icon_px,
+        );
         let icon = icon.map(|i| i.0.clone()).unwrap_or_else(|| fallback_icon.clone());
         let identity = identity.map(|i| i.0.clone()).unwrap_or_default();
 
@@ -774,6 +803,7 @@ fn header_button(theme: &Theme, label: &str) -> impl Bundle {
 #[cfg(test)]
 mod test_node_panel {
     use super::*;
+    use sandpolis_instance::InstanceType;
 
     #[test]
     fn verbosity_follows_zoom() {
@@ -830,6 +860,63 @@ mod test_node_panel {
         assert_eq!(
             panel_state(false, false, true, true, Verbosity::Detailed),
             Some(PanelState::Collapsed(Verbosity::Detailed))
+        );
+    }
+
+    /// A node standing in for an instance of the given type.
+    fn instance_node(instance_type: InstanceType) -> NodeEntity {
+        NodeEntity {
+            instance_id: InstanceId::new(instance_type),
+        }
+    }
+
+    #[test]
+    fn instances_are_iconed_by_type_whatever_the_layer() {
+        for layer in ["Network", "Shell", "Filesystem"] {
+            let layer = LayerName(layer.to_string());
+            for (instance_type, want) in [
+                (InstanceType::Agent, "network/agent.svg"),
+                (InstanceType::Client, "network/client.svg"),
+                (InstanceType::Server, "network/server.svg"),
+            ] {
+                assert_eq!(
+                    fallback_icon_path(Some(&instance_node(instance_type)), None, &layer),
+                    want
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn sub_nodes_keep_the_layer_icon() {
+        let layer = LayerName("Probe".to_string());
+
+        // A probe device carries its gateway's `InstanceId`, so keying on the id
+        // alone would give every device on a server the server's icon.
+        assert_eq!(
+            fallback_icon_path(
+                Some(&instance_node(InstanceType::Server)),
+                Some(&SubNode(7)),
+                &layer
+            ),
+            "layer/Probe.svg"
+        );
+
+        // An account node has no instance at all.
+        assert_eq!(
+            fallback_icon_path(None, Some(&SubNode(7)), &LayerName("Account".to_string())),
+            "layer/Account.svg"
+        );
+    }
+
+    #[test]
+    fn a_typeless_id_falls_back_to_the_layer_icon() {
+        let node = NodeEntity {
+            instance_id: InstanceId::default(),
+        };
+        assert_eq!(
+            fallback_icon_path(Some(&node), None, &LayerName("Shell".to_string())),
+            "layer/Shell.svg"
         );
     }
 }

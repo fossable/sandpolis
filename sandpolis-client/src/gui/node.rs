@@ -4,7 +4,7 @@ use bevy_rapier2d::{
     geometry::{Collider, Restitution},
 };
 use bevy_svg::prelude::{Origin, Svg, Svg2d};
-use sandpolis_instance::InstanceId;
+use sandpolis_instance::{InstanceId, InstanceType};
 
 /// Marker component for the main world view camera.
 #[derive(Component)]
@@ -160,6 +160,15 @@ pub fn spawn_node(
             NeedsScaling,
         ));
     });
+}
+
+/// SVG asset path for an instance's type icon.
+pub fn instance_icon_path(instance_type: InstanceType) -> &'static str {
+    match instance_type {
+        InstanceType::Agent => "network/agent.svg",
+        InstanceType::Client => "network/client.svg",
+        InstanceType::Server => "network/server.svg",
+    }
 }
 
 pub fn get_os_image(os_type: os_info::Type) -> &'static str {

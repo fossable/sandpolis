@@ -736,7 +736,7 @@ impl Plugin for DesktopClientPlugin {
                     "Remote desktop viewing and control",
                 )
                 .with_panel(DesktopPanel)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                .with_visible_instance_types(&[InstanceType::Agent])
                 // TODO: pick per desktop environment once agents report one
                 .with_node_icon(|_| "desktop/generic.svg")
                 // VNC probes stream just like agents do; RDP ones are shown but

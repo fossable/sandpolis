@@ -299,7 +299,7 @@ impl Plugin for InventoryClientPlugin {
                 "Hardware and software inventory",
             )
             .with_panel(InventoryPanel)
-            .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+            .with_visible_instance_types(&[InstanceType::Agent])
             .with_node_icon(node_icon)
             .with_node_tint(node_tint)
             .with_services(),

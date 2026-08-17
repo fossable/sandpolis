@@ -17,6 +17,7 @@ use sandpolis_instance::LayerName;
 
 /// Layer picker state.
 #[derive(Resource)]
+#[derive(Default)]
 pub struct LayerPickerState {
     pub show: bool,
     pub available_layers: Vec<LayerName>,
@@ -25,16 +26,6 @@ pub struct LayerPickerState {
     pub selected_index: usize,
 }
 
-impl Default for LayerPickerState {
-    fn default() -> Self {
-        Self {
-            show: false,
-            available_layers: core_layers(),
-            search_query: String::new(),
-            selected_index: 0,
-        }
-    }
-}
 
 /// Modal root marker.
 #[derive(Component)]
@@ -54,39 +45,17 @@ pub struct LayerRow {
     layer: LayerName,
 }
 
-/// The always-present core layers (those without a registered `LayerClientPlugin`).
-fn core_layers() -> Vec<LayerName> {
-    vec![
-        LayerName::from("Agent"),
-        LayerName::from("Client"),
-        LayerName::from("Network"),
-        LayerName::from("Server"),
-    ]
-}
-
-/// Discover available layers (core layers plus those with a registered client).
+/// The layers this build has, in the registry's canonical order.
 fn available_layers(registry: &LayerRegistry) -> Vec<LayerName> {
-    let mut layers = core_layers();
-    for info in registry.iter() {
-        if !layers.contains(&info.layer) {
-            layers.push(info.layer.clone());
-        }
-    }
-    layers
+    registry.iter().map(|info| info.layer.clone()).collect()
 }
 
-/// Description for a layer (from its registered client, with core fallbacks).
+/// Description for a layer, from its registered client.
 fn get_layer_description(registry: &LayerRegistry, layer: &LayerName) -> &'static str {
-    if let Some(info) = registry.get(layer) {
-        return info.description;
-    }
-    match layer.name() {
-        "Agent" => "Managed instances running the agent",
-        "Client" => "Connected client applications",
-        "Network" => "Network topology and connections",
-        "Server" => "Server instances in the cluster",
-        _ => "No description available",
-    }
+    registry
+        .get(layer)
+        .map(|info| info.description)
+        .unwrap_or("No description available")
 }
 
 /// Layers matching the current search query.

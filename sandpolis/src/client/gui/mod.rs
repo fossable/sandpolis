@@ -107,6 +107,10 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     // asset source. Must be registered before `AssetPlugin` (part of
     // `DefaultPlugins`) is built.
     let mut asset_dirs = vec![sandpolis_client::gui::assets::dir()];
+    #[cfg(feature = "desktop")]
+    asset_dirs.push(sandpolis_desktop::client::assets::dir());
+    #[cfg(feature = "inventory")]
+    asset_dirs.push(sandpolis_inventory::client::assets::dir());
     #[cfg(feature = "probe")]
     asset_dirs.push(sandpolis_probe::client::assets::dir());
     #[cfg(feature = "shell")]

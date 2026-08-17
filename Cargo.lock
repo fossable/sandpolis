@@ -7295,6 +7295,49 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
+name = "nfs3_client"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ac227029a6127f3474b4fb61cbf2d3dddbe9424ad50c24fada68b633687a532"
+dependencies = [
+ "fastrand",
+ "nfs3_types",
+ "tokio",
+]
+
+[[package]]
+name = "nfs3_macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06d8fb377e6efeb91911a8ed962a69615535e167e675025a2be8fa109751426a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "nfs3_server"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96d135ac708765b71461a1465cf4a25f009a44d33d9d15ab07e0c00d446d4a0c"
+dependencies = [
+ "anyhow",
+ "nfs3_types",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "nfs3_types"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5d5ab1a9fdfeab2f03b36b6300dea4ea3806e6a057cb479628b41d65e356b94"
+dependencies = [
+ "nfs3_macros",
+]
+
+[[package]]
 name = "nix"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10616,6 +10659,7 @@ dependencies = [
  "gstreamer-app",
  "gstreamer-video",
  "image",
+ "include_dir",
  "inventory",
  "jni 0.22.4",
  "lazy_static",
@@ -10665,6 +10709,7 @@ dependencies = [
  "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
+ "sandpolis-probe",
  "serde",
  "tokio",
  "tracing",
@@ -10755,6 +10800,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bevy",
+ "include_dir",
  "inventory",
  "native_db",
  "native_model",
@@ -10810,6 +10856,8 @@ dependencies = [
  "inventory",
  "ipmi-rs",
  "macaddr",
+ "nfs3_client",
+ "nfs3_server",
  "openh264",
  "rasn-snmp",
  "ratatui",

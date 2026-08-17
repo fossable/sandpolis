@@ -5,7 +5,7 @@ use anyhow::{Result, bail};
 use native_db::ToKey;
 use native_model::Model;
 use sandpolis_macros::data;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Display, Write};
 use std::str::FromStr;

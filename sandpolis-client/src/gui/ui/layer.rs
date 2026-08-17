@@ -10,6 +10,33 @@ use bevy::prelude::*;
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
 use std::sync::Arc;
 
+/// The order layers appear in the picker, broadest first: the topology layer,
+/// then the instance-type layers, then the ones that drive a particular
+/// subsystem.
+pub const LAYER_ORDER: &[&str] = &[
+    "Network",
+    "Server",
+    "Client",
+    "Agent",
+    "Probe",
+    "Account",
+    "Filesystem",
+    "Instance",
+    "Desktop",
+    "Health",
+    "Shell",
+    "Inventory",
+];
+
+/// A layer's position in [`LAYER_ORDER`]. Layers missing from it sort last, in
+/// registration order.
+pub fn layer_rank(layer: &LayerName) -> usize {
+    LAYER_ORDER
+        .iter()
+        .position(|name| *name == layer.name())
+        .unwrap_or(LAYER_ORDER.len())
+}
+
 /// Callback run when a layer toolbar button is clicked. It receives `Commands`
 /// so it can queue work (e.g. open a dialog) without the registry needing to know
 /// any layer-specific resource types.
@@ -171,8 +198,9 @@ impl LayerClientInfo {
         self
     }
 
-    /// Show every probe node while this layer is active. The layer that does
-    /// this also owns probe lifecycle (deletion).
+    /// Show every probe node while this layer is active. Probe lifecycle
+    /// (registration, deletion) stays with the Probe layer's toolbar; this only
+    /// decides what's on screen.
     pub fn showing_probe_nodes(mut self) -> Self {
         self.show_probe_nodes = true;
         self
@@ -188,7 +216,8 @@ impl LayerClientInfo {
 }
 
 /// Registry of all layers' client info. Populated at app build time by each
-/// `LayerClientPlugin` via [`RegisterLayerClient`].
+/// `LayerClientPlugin` via [`RegisterLayerClient`], and kept in [`LAYER_ORDER`]
+/// so consumers (the picker above all) needn't sort it themselves.
 #[derive(Resource, Default)]
 pub struct LayerRegistry {
     layers: Vec<LayerClientInfo>,
@@ -200,7 +229,7 @@ impl LayerRegistry {
         self.layers.iter().find(|info| &info.layer == layer)
     }
 
-    /// Iterate over all registered layers.
+    /// Iterate over all registered layers, in [`LAYER_ORDER`].
     pub fn iter(&self) -> impl Iterator<Item = &LayerClientInfo> {
         self.layers.iter()
     }
@@ -234,10 +263,17 @@ pub trait RegisterLayerClient {
 impl RegisterLayerClient for App {
     fn register_layer_client(&mut self, info: LayerClientInfo) -> &mut Self {
         self.init_resource::<LayerRegistry>();
-        self.world_mut()
-            .resource_mut::<LayerRegistry>()
+        let mut registry = self.world_mut().resource_mut::<LayerRegistry>();
+        // Insert in [`LAYER_ORDER`] rather than pushing: plugins register in
+        // whatever order the app assembles them, and which layers register at
+        // all depends on the build's features.
+        let rank = layer_rank(&info.layer);
+        let index = registry
             .layers
-            .push(info);
+            .iter()
+            .position(|existing| layer_rank(&existing.layer) > rank)
+            .unwrap_or(registry.layers.len());
+        registry.layers.insert(index, info);
         self
     }
 }

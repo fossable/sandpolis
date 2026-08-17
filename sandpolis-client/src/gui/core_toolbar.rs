@@ -1,9 +1,10 @@
 //! Core layer registration.
 //!
-//! The Network and Server layers have no layer crate of their own, so they're
-//! registered here. Server gets a toolbar button that opens the existing login
-//! dialog; Network is the default layer and needs a registry entry so the layer
-//! picker, the node visibility filter and the node panel host all see it.
+//! The Network, Server and Client layers have no layer crate of their own, so
+//! they're registered here. Server gets a toolbar button that opens the existing
+//! login dialog; Network is the default layer and the only one showing every
+//! kind of node at once. All three need a registry entry so the layer picker,
+//! the node visibility filter and the node panel host see them.
 //!
 //! The Agent layer is registered by `sandpolis_agent::client::gui::AgentClientPlugin`,
 //! which owns the deploy dialog and the stream behind it — neither of which this
@@ -30,13 +31,16 @@ impl NodePanel for NetworkPanel {
         let Some(instance) = ctx.target.instance else {
             return;
         };
+        // A probe borrows its gateway server's id, so the link described here is
+        // the route to the device rather than the device's own connection.
+        let via_gateway = ctx.target.sub.is_some();
         let network = self.network.clone();
         let theme = ctx.theme;
 
         ctx.children(|p| {
             p.spawn((
                 text(theme, "", theme.metrics.font_sm, Role::TextMuted),
-                bind_text(move || describe_link(&network, instance)),
+                bind_text(move || describe_route(&network, instance, via_gateway)),
             ));
         });
     }
@@ -45,6 +49,7 @@ impl NodePanel for NetworkPanel {
         let Some(instance) = ctx.target.instance else {
             return;
         };
+        let via_gateway = ctx.target.sub.is_some();
         let network = self.network.clone();
         let theme = ctx.theme;
 
@@ -52,15 +57,29 @@ impl NodePanel for NetworkPanel {
             p.spawn(heading(theme, "Connectivity"));
             p.spawn((
                 text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || describe_link(&network, instance)),
+                bind_text(move || describe_route(&network, instance, via_gateway)),
             ));
             p.spawn(text(
                 theme,
-                format!("Instance: {instance}"),
+                if via_gateway {
+                    format!("Gateway: {instance}")
+                } else {
+                    format!("Instance: {instance}")
+                },
                 theme.metrics.font_sm,
                 Role::TextMuted,
             ));
         });
+    }
+}
+
+/// [`describe_link`], labelled for whichever kind of node is being shown.
+fn describe_route(network: &NetworkManager, instance: InstanceId, via_gateway: bool) -> String {
+    let link = describe_link(network, instance);
+    if via_gateway {
+        format!("Via gateway — {link}")
+    } else {
+        link
     }
 }
 
@@ -114,11 +133,23 @@ pub struct CoreLayerToolbarPlugin {
 impl Plugin for CoreLayerToolbarPlugin {
     fn build(&self, app: &mut App) {
         app.register_layer_client(
-            LayerClientInfo::new("Network", "How instances reach each other").with_panel(
-                NetworkPanel {
+            LayerClientInfo::new("Network", "How instances reach each other")
+                .with_panel(NetworkPanel {
                     network: self.network.clone(),
-                },
-            ),
+                })
+                // The topology layer: everything on the canvas at once, which
+                // makes it the one place a probe is drawn beside the gateway
+                // server that reaches it.
+                .with_visible_instance_types(&[
+                    InstanceType::Server,
+                    InstanceType::Agent,
+                    InstanceType::Client,
+                ])
+                .showing_probe_nodes(),
+        );
+        app.register_layer_client(
+            LayerClientInfo::new("Client", "Connected client applications")
+                .with_visible_instance_types(&[InstanceType::Client]),
         );
         app.register_layer_client(
             LayerClientInfo::new("Server", "Server instances in the cluster")

@@ -136,11 +136,10 @@ where
             _ = interval.tick() => { terminal.draw(|frame| widget.render_ref(frame.area(), frame.buffer_mut()))?; },
             Some(Ok(event)) = events.next() => {
                 if let Event::Key(key) = event
-                    && key.kind == KeyEventKind::Press {
-                        if key.code == KeyCode::Esc {
+                    && key.kind == KeyEventKind::Press
+                        && key.code == KeyCode::Esc {
                             should_quit = true;
                         }
-                    }
                 widget.handle_event(event); },
         }
     }

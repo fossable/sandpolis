@@ -577,7 +577,7 @@ impl Plugin for ShellClientPlugin {
                     "Remote shell access and command execution",
                 )
                 .with_panel(ShellPanel)
-                .with_visible_instance_types(&[InstanceType::Server, InstanceType::Agent])
+                .with_visible_instance_types(&[InstanceType::Agent])
                 .with_node_icon(|_| "shell/terminal.svg")
                 // SSH probes get a terminal just like agents do. Devices that
                 // expose nothing this layer can drive stay hidden.

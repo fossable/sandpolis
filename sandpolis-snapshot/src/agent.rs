@@ -14,7 +14,7 @@ where
     let mut file = File::create(&path).await?;
     let zero = [0u8; 4096];
 
-    if let Ok(_) = file.write_all(&zero).await {}
+    if file.write_all(&zero).await.is_ok() {}
 
     tokio::fs::remove_file(&path).await?;
     Ok(())

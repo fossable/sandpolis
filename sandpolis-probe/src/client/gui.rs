@@ -370,6 +370,8 @@ pub fn get_probe_svg(probe_type: ProbeType) -> &'static str {
         ProbeType::Onvif => "probe/onvif.svg",
         ProbeType::Docker => "probe/docker.svg",
         ProbeType::Libvirt => "probe/libvirt.svg",
+        ProbeType::Nfs => "probe/nfs.svg",
+        ProbeType::Smb => "probe/smb.svg",
     }
 }
 
@@ -472,6 +474,46 @@ struct RtspStreamView {
 #[derive(Component)]
 struct RtspStatusText {
     device_id: u64,
+}
+
+/// The exports/shares label in a filesystem protocol tab.
+#[derive(Component)]
+struct ShareList {
+    device_id: u64,
+    protocol: ProbeType,
+}
+
+/// Devices whose exports/shares have already been asked for, so the auto-query
+/// below doesn't fire again every frame.
+#[derive(Resource, Default)]
+struct QueriedShares(HashSet<(u64, ProbeType)>);
+
+/// Ask for the exports/shares behind any filesystem tab that hasn't been asked
+/// yet.
+///
+/// Checked every frame rather than on `Added` so a query that couldn't happen yet
+/// (no connection) is retried until it can.
+fn start_pending_share_queries(
+    mut queried: ResMut<QueriedShares>,
+    lists: Query<&ShareList>,
+    mut open: Local<HashSet<(u64, ProbeType)>>,
+) {
+    open.clear();
+    for list in &lists {
+        let key = (list.device_id, list.protocol);
+        open.insert(key);
+        if queried.0.contains(&key) {
+            continue;
+        }
+        if crate::filesystem::client::connection_for(list.device_id).is_none() {
+            continue;
+        }
+        crate::filesystem::client::enumerate(list.device_id, list.protocol);
+        queried.0.insert(key);
+    }
+    // Forget tabs that have closed, so reopening the panel re-queries — which is
+    // how a file server that was unreachable gets retried.
+    queried.0.retain(|key| open.contains(key));
 }
 
 /// The set of currently selected device nodes (by id).
@@ -754,6 +796,7 @@ fn build_tab_content(
                     });
             }
         }
+        ProbeType::Nfs | ProbeType::Smb => build_filesystem_tab(content, theme, device, proto),
         other => {
             content.spawn(muted(
                 theme,
@@ -765,6 +808,95 @@ fn build_tab_content(
             ));
         }
     }
+}
+
+/// Build the tab for a filesystem protocol.
+///
+/// The probe layer's job here is only to report what the device serves — its
+/// exports or shares. Browsing them is the filesystem layer's job, which reaches
+/// the same device through [`crate::filesystem`].
+fn build_filesystem_tab(
+    content: &mut ChildSpawnerCommands,
+    theme: &Theme,
+    device: &RegisteredDevice,
+    proto: ProbeType,
+) {
+    let device_id = device.id;
+
+    // What's configured, so a misconfigured device is obvious next to what the
+    // server actually reports.
+    let configured = match proto {
+        ProbeType::Nfs => device
+            .device
+            .nfs
+            .as_ref()
+            .map(|nfs| format!("{}:{}", device.device.ip, nfs.export)),
+        _ => device
+            .device
+            .smb
+            .as_ref()
+            .map(|smb| format!("\\\\{}\\{}", device.device.ip, smb.share)),
+    };
+    if let Some(configured) = configured {
+        content.spawn(text(theme, configured, theme.metrics.font_sm, Role::Text));
+    }
+
+    let label = if proto == ProbeType::Nfs {
+        "Exports"
+    } else {
+        "Shares"
+    };
+    content.spawn(muted(theme, label, theme.metrics.font_sm));
+    content.spawn((
+        // No "Query" button for the first load: opening a file server's panel is
+        // the request to see what it serves (see `start_pending_share_queries`).
+        ShareList {
+            device_id,
+            protocol: proto,
+        },
+        text(theme, "", theme.metrics.font_sm, Role::TextMuted),
+        bind_text(move || match crate::filesystem::client::view(device_id) {
+            Some(view) => {
+                if let Some(error) = view.error {
+                    error
+                } else if let Some(shares) = view.shares {
+                    if shares.is_empty() {
+                        "None reported".to_string()
+                    } else {
+                        shares
+                            .iter()
+                            .map(|share| match &share.comment {
+                                Some(comment) => format!("{}  ({comment})", share.name),
+                                None => share.name.clone(),
+                            })
+                            .collect::<Vec<_>>()
+                            .join("\n")
+                    }
+                } else if view.busy {
+                    "Querying…".to_string()
+                } else {
+                    "Not queried yet".to_string()
+                }
+            }
+            None => "Not queried yet".to_string(),
+        }),
+    ));
+
+    content
+        .spawn(row(theme.metrics.space_sm))
+        .with_children(|controls| {
+            controls.spawn(button(theme, "Refresh")).observe(
+                move |_: On<Activate>| {
+                    crate::filesystem::client::enumerate(device_id, proto);
+                },
+            );
+        });
+
+    content.spawn(muted(
+        theme,
+        "Browse files from the Filesystem layer.",
+        theme.metrics.font_sm,
+    ));
 }
 
 /// Stop `device_id`'s stream, blank its view, and drop its node thumbnail.
@@ -1462,6 +1594,7 @@ impl Plugin for ProbeClientPlugin {
         app.init_resource::<ProbeStreams>();
         app.init_resource::<ProbeThumbnails>();
         app.init_resource::<DeviceSelectionSet>();
+        app.init_resource::<QueriedShares>();
         app.init_resource::<super::link::ProbeLinkTraffic>();
         app.add_systems(
             Update,
@@ -1473,6 +1606,7 @@ impl Plugin for ProbeClientPlugin {
                 focus_register_probe_input,
                 sync_register_probe_inputs,
                 start_pending_rtsp_streams,
+                start_pending_share_queries,
                 launch_pending_streams,
                 drive_probe_streams,
                 update_rtsp_status.after(drive_probe_streams),
@@ -1497,10 +1631,10 @@ impl Plugin for ProbeClientPlugin {
         app.register_layer_client(
             LayerClientInfo::new(LayerName::from("Probe"), "Device monitoring probes")
                 .with_panel(ProbePanel)
-                // Probes are reachable only from servers (`management.rs` stamps
-                // the serving server's own id as the gateway), so agent nodes
-                // would just be clutter here.
-                .with_visible_instance_types(&[InstanceType::Server])
+                // Devices get the whole canvas: this is the layer for surveying
+                // what's registered, and the gateway servers they hang off are
+                // the Network layer's business.
+                .with_visible_instance_types(&[])
                 .showing_probe_nodes()
                 .with_toolbar_action("Register probe", "toolbar/register_probe.svg", |commands| {
                     commands.queue(|world: &mut World| {

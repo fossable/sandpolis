@@ -32,6 +32,7 @@ serde_json = { workspace = true, optional = true }
 
 # Client dependencies
 bevy = { workspace = true, optional = true }
+include_dir = { workspace = true, optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 inventory = { workspace = true }
 serde_cbor = { workspace = true, optional = true }
@@ -127,6 +128,7 @@ client = [
   "dep:tokio",
   "dep:serde_cbor",
   "dep:bevy",
+  "dep:include_dir",
   "dep:sandpolis-client",
   "dep:ratatui",
   "dep:ratatui-image",

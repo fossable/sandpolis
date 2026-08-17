@@ -23,7 +23,7 @@ use sandpolis_client::gui::ui::panel::modal_scrim;
 use sandpolis_client::gui::ui::text_input::text_input;
 use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, text};
-use sandpolis_instance::LayerName;
+use sandpolis_instance::{InstanceType, LayerName};
 use sandpolis_instance::network::stream::StreamMessage;
 use sandpolis_instance::notification::{Notification, notify};
 use tokio::sync::mpsc::UnboundedReceiver;
@@ -51,6 +51,7 @@ impl Plugin for AgentClientPlugin {
                     LayerName::from("Agent"),
                     "Managed instances running the agent",
                 )
+                .with_visible_instance_types(&[InstanceType::Agent])
                 .with_toolbar_action("Deploy agent", "toolbar/add_agent.svg", |commands| {
                     commands.queue(|world: &mut World| {
                         if let Some(mut state) = world.get_resource_mut::<DeployDialogState>() {

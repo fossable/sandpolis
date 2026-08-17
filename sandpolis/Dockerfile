@@ -36,7 +36,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,id=sandpolis-registry-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/registry \
     --mount=type=cache,id=sandpolis-git-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/git \
     --mount=type=cache,id=sandpolis-target-server-${TARGETPLATFORM},sharing=locked,target=/build/target \
-    nix-shell shell.nix --run "cargo build --release --bin sandpolis --features server" \
+    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --features server" \
     && install -Dm755 target/release/sandpolis /out/bin/sandpolis
 
 FROM deps AS build-agent
@@ -45,7 +45,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,id=sandpolis-registry-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/registry \
     --mount=type=cache,id=sandpolis-git-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/git \
     --mount=type=cache,id=sandpolis-target-agent-${TARGETPLATFORM},sharing=locked,target=/build/target \
-    nix-shell shell.nix --run "cargo build --release --bin sandpolis --features agent" \
+    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --features agent" \
     && install -Dm755 target/release/sandpolis /out/bin/sandpolis
 
 FROM deps AS build-client
@@ -54,7 +54,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,id=sandpolis-registry-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/registry \
     --mount=type=cache,id=sandpolis-git-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/git \
     --mount=type=cache,id=sandpolis-target-client-${TARGETPLATFORM},sharing=locked,target=/build/target \
-    nix-shell shell.nix --run "cargo build --release --bin sandpolis --features client" \
+    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --features client" \
     && install -Dm755 target/release/sandpolis /out/bin/sandpolis
 
 # One binary that can be started as any of the three.
@@ -64,7 +64,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,id=sandpolis-registry-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/registry \
     --mount=type=cache,id=sandpolis-git-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/git \
     --mount=type=cache,id=sandpolis-target-demo-${TARGETPLATFORM},sharing=locked,target=/build/target \
-    nix-shell shell.nix --run "cargo build --release --bin sandpolis --all-features" \
+    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --all-features" \
     && install -Dm755 target/release/sandpolis /out/bin/sandpolis
 
 # Kept separate from `deps` so that editing mkrootfs doesn't invalidate the

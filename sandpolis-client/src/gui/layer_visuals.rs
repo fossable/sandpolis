@@ -211,46 +211,20 @@ pub fn update_node_visibility_for_layer(
 
 /// Get the visible instance types for a layer.
 ///
-/// This checks if there's a registered `LayerClientInfo` for the layer and uses
-/// its `visible_instance_types`. If none exists, falls back to default behavior
-/// based on layer name.
+/// Every layer declares this on its registered [`LayerClientInfo`]. A layer with
+/// no registration at all can only be reached by setting [`CurrentLayer`] by
+/// hand, so it falls back to showing everything rather than to a second copy of
+/// the per-layer policy.
 fn get_visible_instance_types_for_layer(
     registry: &LayerRegistry,
     layer: &LayerName,
 ) -> &'static [InstanceType] {
-    // First, check if there's a registered client for this layer
-    if let Some(info) = registry.get(layer) {
-        return info.visible_instance_types;
-    }
-
-    // Fall back to default behavior based on layer name
-    match layer.name() {
-        // Network layer shows all instance types
-        "Network" => &[
+    registry
+        .get(layer)
+        .map(|info| info.visible_instance_types)
+        .unwrap_or(&[
             InstanceType::Server,
             InstanceType::Agent,
             InstanceType::Client,
-        ],
-
-        // Agent-focused layers only show servers and agents
-        "Inventory" | "Filesystem" | "Shell" | "Desktop" | "Probe" => {
-            &[InstanceType::Server, InstanceType::Agent]
-        }
-
-        // Client layer only shows servers and clients
-        "Client" => &[InstanceType::Server, InstanceType::Client],
-
-        // Server layer only shows servers
-        "Server" => &[InstanceType::Server],
-
-        // Agent layer only shows servers and agents
-        "Agent" => &[InstanceType::Server, InstanceType::Agent],
-
-        // Default: show all
-        _ => &[
-            InstanceType::Server,
-            InstanceType::Agent,
-            InstanceType::Client,
-        ],
-    }
+        ])
 }

@@ -139,6 +139,7 @@ probe = [
   "dep:sandpolis-probe",
   "sandpolis-shell?/probe",
   "sandpolis-desktop?/probe",
+  "sandpolis-filesystem?/probe",
 ]
 tunnel = []
 

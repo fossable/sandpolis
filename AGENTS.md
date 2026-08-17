@@ -230,7 +230,7 @@ The `sandpolis-mobile` crate wraps the main `sandpolis` crate.
 Build instructions for Android:
 
 ```sh
-cargo ndk -t arm64-v8a -p 31 -o android/app/src/main/jniLibs build --link-libcxx-shared
+cargo ndk -t arm64-v8a --platform 31 -o android/app/src/main/jniLibs build --link-libcxx-shared
 cd android && ./gradlew assembleDebug
 ```
 
@@ -339,12 +339,17 @@ cd android && ./gradlew assembleDebug
 - SNMP probe — partial, needs MIB-driven discovery
   - Drive from inventory layer?
 - ARP probe (`arp/`) — verify completeness
-- NFS probe
-  - Drive from filesystem layer
-  - https://github.com/Vaiz/nfs3
-- SMB probe
-  - Drive from filesystem layer
-  - https://github.com/afiffon/smb-rs
+- SMB probe (`smb.rs`) — modelled end to end (config, type, icon, panel tab,
+  filesystem-layer visibility) but has no backend, because no SMB client crate
+  links into this workspace today:
+  - `smb` pins `sspi =0.18.7` → `crypto-bigint =0.7.0-rc.8`, while `russh` needs
+    `^0.7.3`. Moving to `sspi 0.21` (which relaxes it) cascades into `smb`'s
+    other RustCrypto RC pins (`cmac`, `kbkdf` stop compiling), so it would mean
+    forking that crate's whole crypto stack.
+  - `pavao` sidesteps it by binding to Samba's `libsmbclient`, at the cost of a
+    native dependency in `shell.nix` and the server image.
+  - When one is resolved, add `SmbFs` with the same methods as `NfsFs` plus the
+    `ProbeFs::Smb` arm; nothing outside `smb.rs`/`filesystem.rs` changes.
 - Node panels on probes in probe layer just show what protocols are supported -
   to interact with probes, you use a more specific layer like desktop,
   filesystem, etc.
@@ -353,6 +358,14 @@ cd android && ./gradlew assembleDebug
 
 - GUI: delete, create folder, upload/download
 - Client can mount remote filesystems via FUSE
+- Probe devices are browsed through `sandpolis_probe::filesystem`, a
+  protocol-agnostic interface (list/stat/read/write/create_dir/remove/rename/
+  statfs) that the probe subsystem implements per protocol. This layer never
+  sees NFS or SMB. The panel currently drives only list/stat/statfs; the
+  mutating operations are already on the interface for the TODOs above.
+- The agent-side browser is still stubbed (`query_directory_contents`,
+  `query_filesystem_usage` return empty), and `FsSessionRequest` has no
+  responder, so only probe devices show live data today.
 
 ## `sandpolis-desktop`
 
@@ -401,9 +414,17 @@ cd android && ./gradlew assembleDebug
   - Also configured as fallback in case the primary OS fails to boot which the
     UKI detects
   - Only the following subsystems are supported by bootagents: shell, snapshot
-- The node panel icons for instances should always follow the instance type (not
-  the layer icon like it currently does)
-  - For non-instances, use the layer icon
-  - We have icons for these under sandpolis-client/assets/network/.
-  - See if we can generate better, more cohesive icons
+- See if we can generate better, more cohesive instance type icons under
+  sandpolis-client/assets/network/ (these are what node panels show for
+  instances)
 - Implement db sync permissions
+- Which nodes each layer shows, and the order they appear in the picker, are
+  declared on each layer's `LayerClientInfo` and by `LAYER_ORDER` in
+  `sandpolis-client/src/gui/ui/layer.rs`. Two probe filters are still missing:
+  - The health layer should show probes that support docker/libvirt/ssh
+  - The inventory layer should show probes that support ipmi/snmp
+  - Both are blocked on their panels, which read `ctx.target.instance`. For a
+    probe node that's the gateway server's id, so they'd report the server's
+    health/inventory as the device's. Shell, desktop and filesystem discriminate
+    on `ctx.target.sub` and route probe targets to per-protocol code; health and
+    inventory need the same before their nodes can appear.

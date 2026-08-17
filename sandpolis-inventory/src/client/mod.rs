@@ -13,6 +13,9 @@ use native_model::Model;
 use sandpolis_instance::InstanceId;
 
 #[cfg(feature = "client")]
+pub mod assets;
+
+#[cfg(feature = "client")]
 pub mod gui;
 
 /// Subscribe to live inventory updates for an instance (call when a view opens).

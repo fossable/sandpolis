@@ -129,7 +129,7 @@ pub(crate) fn render_probe_links(
     current_layer: Res<CurrentLayer>,
     traffic: Res<ProbeLinkTraffic>,
     probes: Query<(&Transform, &ProbeNode, Option<&Visibility>)>,
-    gateways: Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
+    gateways: Query<(&Transform, &NodeEntity, Option<&Visibility>), Without<ProbeNode>>,
 ) {
     if !registry.show_probe_nodes(&current_layer) {
         return;
@@ -179,7 +179,7 @@ pub(crate) fn hover_probe_links(
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<WorldView>>,
     probes: Query<(&Transform, &ProbeNode, Option<&Visibility>)>,
-    gateways: Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
+    gateways: Query<(&Transform, &NodeEntity, Option<&Visibility>), Without<ProbeNode>>,
     mut tooltip: ResMut<WorldTooltip>,
     // Whether the tooltip currently showing is ours, so ending a hover can't
     // clear one another layer put there.
@@ -213,13 +213,20 @@ pub(crate) fn hover_probe_links(
     }
 }
 
-/// Where every non-probe node sits, keyed by the instance it represents.
+/// Where every *visible* non-probe node sits, keyed by the instance it
+/// represents.
+///
+/// Hidden gateways are dropped so their probes' links vanish with them: most
+/// layers showing probe nodes hide server nodes, and a link drawn to one would
+/// run off into empty canvas. In practice that leaves these links to the Network
+/// layer, the only one showing servers and probes together.
 fn gateway_positions(
-    gateways: &Query<(&Transform, &NodeEntity), Without<ProbeNode>>,
+    gateways: &Query<(&Transform, &NodeEntity, Option<&Visibility>), Without<ProbeNode>>,
 ) -> HashMap<InstanceId, Vec2> {
     gateways
         .iter()
-        .map(|(transform, node)| (node.instance_id, transform.translation.truncate()))
+        .filter(|(_, _, visibility)| is_visible(*visibility))
+        .map(|(transform, node, _)| (node.instance_id, transform.translation.truncate()))
         .collect()
 }
 

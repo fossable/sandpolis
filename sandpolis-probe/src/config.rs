@@ -38,6 +38,8 @@ pub struct DeviceConfig {
     pub docker: Option<DockerProbeConfig>,
     pub libvirt: Option<LibvirtProbeConfig>,
     pub ups: Option<UpsProbeConfig>,
+    pub nfs: Option<NfsProbeConfig>,
+    pub smb: Option<SmbProbeConfig>,
 }
 
 impl Default for DeviceConfig {
@@ -58,6 +60,8 @@ impl Default for DeviceConfig {
             docker: None,
             libvirt: None,
             ups: None,
+            nfs: None,
+            smb: None,
         }
     }
 }
@@ -246,6 +250,44 @@ pub struct DockerProbeConfig {
     pub tls_verify: Option<bool>,
 }
 
+/// NFS probe configuration. The host comes from the device's
+/// [`ip`](DeviceConfig::ip); the mount and NFS ports are resolved from the
+/// device's portmapper unless pinned here.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct NfsProbeConfig {
+    /// Exported path to mount (e.g. `/export/media`).
+    pub export: String,
+    /// Portmapper port (default: 111).
+    pub portmapper_port: Option<u16>,
+    /// Mount service port. Resolved via the portmapper when absent.
+    pub mount_port: Option<u16>,
+    /// NFS service port (default: 2049 once resolved via the portmapper).
+    pub nfs_port: Option<u16>,
+    /// UID presented in the AUTH_UNIX credential (default: 0).
+    pub uid: Option<u32>,
+    /// GID presented in the AUTH_UNIX credential (default: 0).
+    pub gid: Option<u32>,
+    /// Connect from a privileged source port, which Linux `nfsd` requires by
+    /// default (default: true).
+    pub privileged_port: Option<bool>,
+}
+
+/// SMB probe configuration. The host comes from the device's
+/// [`ip`](DeviceConfig::ip).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct SmbProbeConfig {
+    /// Share name to connect to (e.g. `media`).
+    pub share: String,
+    /// SMB port (default: 445).
+    pub port: Option<u16>,
+    /// Username for authentication.
+    pub username: Option<String>,
+    /// Password for authentication.
+    pub password: Option<String>,
+    /// Workgroup or domain for authentication.
+    pub domain: Option<String>,
+}
+
 /// libvirt probe configuration.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LibvirtProbeConfig {
@@ -289,6 +331,24 @@ mod tests {
                         host: "10.0.0.2".into(),
                         port: Some(22),
                         username: Some("root".into()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                },
+                DeviceConfig {
+                    name: Some("File server".into()),
+                    ip: "10.0.0.30".parse().unwrap(),
+                    nfs: Some(NfsProbeConfig {
+                        export: "/export/media".into(),
+                        uid: Some(1000),
+                        gid: Some(1000),
+                        ..Default::default()
+                    }),
+                    smb: Some(SmbProbeConfig {
+                        share: "media".into(),
+                        username: Some("probe".into()),
+                        password: Some("hunter2".into()),
+                        domain: Some("WORKGROUP".into()),
                         ..Default::default()
                     }),
                     ..Default::default()

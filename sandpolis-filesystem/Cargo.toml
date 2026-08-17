@@ -15,6 +15,7 @@ inventory = { workspace = true }
 notify = { version = "8.0.0", optional = true }
 sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
+sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 serde = { workspace = true }
 tokio = { workspace = true, optional = true }
@@ -30,6 +31,9 @@ color-eyre = { version = "0.6.3", optional = true }
 
 [features]
 agent = ["dep:notify"]
+# Browse probe devices that expose a filesystem (NFS, SMB). All protocol
+# handling lives in the probe subsystem behind `sandpolis_probe::filesystem`.
+probe = ["dep:sandpolis-probe"]
 client = [
   "dep:fuser",
   "dep:bevy",
@@ -39,6 +43,9 @@ client = [
   "dep:tokio",
   "dep:color-eyre",
   "sandpolis-client/client",
+  # The probe browser reads `sandpolis_probe::filesystem::client`, which only
+  # exists with the probe subsystem's own client feature on.
+  "sandpolis-probe?/client",
 ]
 server = []
 
