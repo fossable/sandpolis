@@ -339,17 +339,21 @@ cd android && ./gradlew assembleDebug
 - SNMP probe — partial, needs MIB-driven discovery
   - Drive from inventory layer?
 - ARP probe (`arp/`) — verify completeness
-- SMB probe (`smb.rs`) — modelled end to end (config, type, icon, panel tab,
-  filesystem-layer visibility) but has no backend, because no SMB client crate
-  links into this workspace today:
-  - `smb` pins `sspi =0.18.7` → `crypto-bigint =0.7.0-rc.8`, while `russh` needs
-    `^0.7.3`. Moving to `sspi 0.21` (which relaxes it) cascades into `smb`'s
-    other RustCrypto RC pins (`cmac`, `kbkdf` stop compiling), so it would mean
-    forking that crate's whole crypto stack.
-  - `pavao` sidesteps it by binding to Samba's `libsmbclient`, at the cost of a
-    native dependency in `shell.nix` and the server image.
-  - When one is resolved, add `SmbFs` with the same methods as `NfsFs` plus the
-    `ProbeFs::Smb` arm; nothing outside `smb.rs`/`filesystem.rs` changes.
+- SMB probe (`smb.rs`) — `SmbFs` behind `crate::filesystem`, mirroring `NfsFs`.
+  Its dependencies are pinned in two places, both worth understanding before
+  touching them:
+  - `smb` comes from a fork rev (`chdalski/fork-smb-rs`) that moves the crate
+    onto `sspi 0.21`, so its crypto stack unifies with `russh`'s. Keep the
+    `kerberos` feature off: it routes NTLM through SPNEGO, which Samba rejects,
+    and the fork's other commit depends on that path being unused.
+  - `[patch.crates-io] sspi` points at an upstream commit ahead of the 0.21.4
+    release. Published 0.21.x pins exact release candidates of
+    `curve25519-dalek`/`ed25519-dalek`/`p256` that no published `russh` agrees
+    with — cargo cannot resolve both. Those pins are macOS/iOS-only and upstream
+    has dropped them; delete the patch once 0.21.4 is out.
+  - Only the mapping helpers are unit-tested. There is no pure-Rust SMB server to
+    run in-process the way `tests/nfs.rs` runs `nfs3_server`, so the wire
+    protocol is verified by hand against a real server.
 - Node panels on probes in probe layer just show what protocols are supported -
   to interact with probes, you use a more specific layer like desktop,
   filesystem, etc.

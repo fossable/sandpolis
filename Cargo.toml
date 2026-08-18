@@ -67,6 +67,20 @@ rustls = { version = "0.23.36", default-features = false, features = [
   "aws_lc_rs",
 ] }
 serde_bytes = "0.11.15"
+# Pinned to a rev of a fork that moves the crate onto `sspi 0.21`, so its crypto
+# stack unifies with `russh`'s (`crypto-bigint 0.7`, `hmac 0.13`, `sha2 0.11`)
+# instead of demanding an older release-candidate generation. Exactly one
+# threading model may be enabled, and `kerberos` must stay off: it routes NTLM
+# through SPNEGO, which Samba rejects.
+smb = { git = "https://github.com/chdalski/fork-smb-rs", rev = "d1f8ba9ae9bcdb27e75a3f50fcf83b6940e836ff", default-features = false, features = [
+  "async",
+  "sign",
+  "encrypt",
+  "compress",
+] }
+# Share enumeration goes over MS-SRVS, and `smb` doesn't re-export the types its
+# own `list_shares` returns.
+smb-rpc = { git = "https://github.com/chdalski/fork-smb-rs", rev = "d1f8ba9ae9bcdb27e75a3f50fcf83b6940e836ff" }
 serde_cbor = "0.11.2"
 serde_json = "1.0.134"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -112,3 +126,11 @@ bevy_rapier2d = "0.36.0"
 bevy_ui_widgets = { version = "0.19.0" }
 resvg = { version = "0.48.1" }
 include_dir = { version = "0.7" }
+
+# `smb` needs `sspi`, whose published releases pin exact release candidates of
+# `curve25519-dalek`, `ed25519-dalek`, and the `p*` curves — versions no
+# published `russh` agrees with, so cargo cannot resolve both. Those pins are
+# macOS/iOS-only and upstream has already dropped them; this is that commit,
+# ahead of the 0.21.4 release. Remove once 0.21.4 is published.
+[patch.crates-io]
+sspi = { git = "https://github.com/Devolutions/sspi-rs", rev = "a9dfaec9b04ce06a487f6091890f9a1baf620005" }

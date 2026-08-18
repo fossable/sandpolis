@@ -71,6 +71,10 @@ use sandpolis_client::gui::node_picker::{
     node_picker_keys, rebuild_node_rows, sync_node_search,
 };
 use sandpolis_client::gui::queries::{query_all_instances, query_instance_metadata};
+use sandpolis_client::gui::realm_select::{
+    RealmCertDir, RealmSelectOperation, RealmSelectState, drive_realm_connect, drive_realm_pick,
+    manage_realm_select, prompt_realm_select_on_start, update_realm_select_error,
+};
 use sandpolis_client::gui::responsive::update_responsive_ui;
 use sandpolis_client::gui::terrain::{
     TerrainConfig, TerrainMembersDirty, rebuild_terrains, sync_instance_terrain_members,
@@ -98,6 +102,15 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     tokio::spawn(async move {
         setup_all_listeners(network, instance, db_update_tx_clone).await;
     });
+
+    // Where a cert imported through the realm-selection dialog is persisted:
+    // the data directory when there is one, otherwise the default cert dir the
+    // startup scan also reads (on Android the data directory always exists).
+    #[cfg(not(target_os = "android"))]
+    let fallback_cert_dir = crate::client::default_realm_cert_dir();
+    #[cfg(target_os = "android")]
+    let fallback_cert_dir = None;
+    let realm_cert_dir = RealmCertDir(options.database.storage.clone().or(fallback_cert_dir));
 
     let mut app = App::new();
 
@@ -173,6 +186,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     .insert_resource(HelpScreenState::default())
     .insert_resource(LoginDialogState::default())
     .insert_resource(LoginOperation::default())
+    .insert_resource(RealmSelectState::default())
+    .insert_resource(RealmSelectOperation::default())
+    .insert_resource(realm_cert_dir)
     .insert_resource(SelectionSet::default())
     .insert_resource(ThemePickerState::default())
     .insert_resource(TerrainMembersDirty::default())
@@ -215,6 +231,8 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                 focus_login_input,
                 sync_login_inputs,
                 update_login_error,
+                manage_realm_select,
+                update_realm_select_error,
             ),
         ),
     )
@@ -237,6 +255,11 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             handle_lifetime,
             // Responsive UI updates
             update_responsive_ui,
+            // Realm selection comes before login, since without a realm cert
+            // there is no server to log into.
+            prompt_realm_select_on_start,
+            drive_realm_pick,
+            drive_realm_connect,
             // Login systems
             check_saved_servers,
             prompt_login_on_connect,

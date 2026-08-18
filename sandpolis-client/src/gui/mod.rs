@@ -24,6 +24,7 @@ pub mod node_effects;
 pub mod node_panel;
 pub mod node_picker;
 pub mod queries;
+pub mod realm_select;
 pub mod responsive;
 pub mod services_panel;
 pub mod terrain;

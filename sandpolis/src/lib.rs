@@ -1,4 +1,3 @@
-use anyhow::Context;
 use anyhow::Result;
 use sandpolis_instance::LayerVersion;
 use sandpolis_instance::database::DatabaseManager;
@@ -148,32 +147,7 @@ pub fn load_realm_cert(
 pub fn load_realm_certs_dir(
     dir: &std::path::Path,
 ) -> Result<Vec<sandpolis_instance::realm::RealmCert>> {
-    use sandpolis_instance::realm::config::REALM_CERT_SUFFIX;
-
-    if !dir.is_dir() {
-        return Ok(Vec::new());
-    }
-
-    let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(dir)
-        .with_context(|| format!("Reading {}", dir.display()))?
-        .map(|entry| entry.map(|entry| entry.path()))
-        .collect::<std::io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.ends_with(REALM_CERT_SUFFIX))
-        })
-        .collect();
-
-    // Sorted so the first cert — the one the primary connection is made to — is
-    // the same on every start.
-    paths.sort();
-
-    paths
-        .iter()
-        .map(sandpolis_instance::realm::RealmCert::read_pem)
-        .collect()
+    sandpolis_instance::realm::load_realm_certs_dir(dir)
 }
 
 /// Bring up the state an endpoint instance — an agent or a client — runs on.

@@ -204,15 +204,18 @@ pub struct RealmStartupOutput {
 
 /// Every realm known to this instance.
 ///
-/// The set is frozen at startup: realms only ever come from realm configs
-/// (server) or from the endpoint certificates this instance holds (client and
-/// agent), so nothing creates one at runtime.
+/// Server-side realms are frozen at startup: they only ever come from realm
+/// configs. Endpoint realms can also be added at runtime via
+/// [`add_endpoint_cert`](Self::add_endpoint_cert), which is how a client that
+/// started without a certificate attaches to a realm the user picks in the
+/// GUI. Both maps are shared across clones so an addition is visible
+/// everywhere.
 #[derive(Clone)]
 pub struct RealmManager {
     database: DatabaseManager,
 
     /// The realms themselves, keyed by name.
-    inner: Arc<BTreeMap<RealmName, Realm>>,
+    inner: Arc<std::sync::RwLock<BTreeMap<RealmName, Realm>>>,
 
     /// Registry rows, which live in the default realm's database so an instance
     /// knows what other realms exist.
@@ -224,7 +227,7 @@ pub struct RealmManager {
     /// stratum server authenticating to its global stratum server — there is no
     /// separate server-to-server certificate type.
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-    endpoint_certs: Vec<RealmCert>,
+    endpoint_certs: Arc<std::sync::RwLock<Vec<RealmCert>>>,
 }
 
 impl RealmManager {
@@ -395,10 +398,10 @@ impl RealmManager {
         Ok((
             Self {
                 database,
-                inner: Arc::new(inner),
+                inner: Arc::new(std::sync::RwLock::new(inner)),
                 realms: registry,
                 #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-                endpoint_certs,
+                endpoint_certs: Arc::new(std::sync::RwLock::new(endpoint_certs)),
             },
             output,
         ))
@@ -418,29 +421,70 @@ impl RealmManager {
 
         Ok(Self {
             database,
-            inner: Arc::new(inner),
+            inner: Arc::new(std::sync::RwLock::new(inner)),
             realms: registry,
             #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
-            endpoint_certs,
+            endpoint_certs: Arc::new(std::sync::RwLock::new(endpoint_certs)),
         })
     }
 
     /// The realm called `name`, or `None` if this instance doesn't know it.
-    pub fn get(&self, name: &RealmName) -> Option<&Realm> {
-        self.inner.get(name)
+    pub fn get(&self, name: &RealmName) -> Option<Realm> {
+        self.inner.read().unwrap().get(name).cloned()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Realm> {
-        self.inner.values()
+    /// Every known realm. Owned snapshots, since the underlying map is shared
+    /// and can grow at runtime.
+    pub fn iter(&self) -> impl Iterator<Item = Realm> {
+        self.inner
+            .read()
+            .unwrap()
+            .values()
+            .cloned()
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 
-    /// The database for `name`. Realms are never created on the fly, so an
-    /// unknown name is an error rather than a new realm.
+    /// The database for `name`. Server-side realms are never created on the
+    /// fly, so an unknown name is an error rather than a new realm.
     pub fn realm(&self, name: RealmName) -> Result<RealmDatabase> {
-        match self.inner.get(&name) {
+        match self.inner.read().unwrap().get(&name) {
             Some(realm) => Ok(realm.database.clone()),
             None => bail!("Realm does not exist: {name}"),
         }
+    }
+
+    /// Attach to the realm named by `cert` at runtime: create or open the
+    /// realm's database, register it, and make the certificate available to
+    /// [`find_endpoint_cert`](Self::find_endpoint_cert). Replaces any
+    /// previously loaded certificate for the same realm.
+    ///
+    /// This is how a client that started with no certificate attaches to a
+    /// realm the user picks in the GUI without a restart.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    pub fn add_endpoint_cert(&self, cert: RealmCert) -> Result<()> {
+        {
+            let mut inner = self.inner.write().unwrap();
+            insert_endpoint_realms(
+                &mut inner,
+                &self.realms,
+                &self.database,
+                std::slice::from_ref(&cert),
+            )?;
+        }
+
+        let mut certs = self.endpoint_certs.write().unwrap();
+        certs.retain(|existing| existing.name != cert.name);
+        certs.push(cert);
+        Ok(())
+    }
+
+    /// Whether any endpoint certificate is loaded. A client without one has no
+    /// server it could ever connect to, which is what prompts the realm
+    /// selection dialog.
+    #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
+    pub fn has_endpoint_certs(&self) -> bool {
+        !self.endpoint_certs.read().unwrap().is_empty()
     }
 
     /// Whether this instance already holds the certificates it needs to serve
@@ -529,7 +573,7 @@ impl RealmManager {
     /// doesn't come into it — only which realm it's dialing.
     #[cfg(any(feature = "agent", feature = "client", feature = "server"))]
     pub fn find_endpoint_cert(&self, realm: RealmName) -> Result<RealmCert> {
-        for cert in &self.endpoint_certs {
+        for cert in self.endpoint_certs.read().unwrap().iter() {
             if cert.name == realm {
                 return Ok(cert.clone());
             }
@@ -537,6 +581,37 @@ impl RealmManager {
 
         bail!("No realm certificate loaded for realm: {realm}");
     }
+}
+
+/// Every realm cert in `dir` (`*.realm.pem`), which is how an instance is
+/// attached without naming a file on the command line.
+///
+/// A directory that holds none is not an error — a client with nowhere to
+/// connect starts at its realm selection dialog.
+pub fn load_realm_certs_dir(dir: &Path) -> Result<Vec<RealmCert>> {
+    use crate::realm::config::REALM_CERT_SUFFIX;
+
+    if !dir.is_dir() {
+        return Ok(Vec::new());
+    }
+
+    let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(dir)
+        .with_context(|| format!("Reading {}", dir.display()))?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<std::io::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(REALM_CERT_SUFFIX))
+        })
+        .collect();
+
+    // Sorted so the first cert — the one the primary connection is made to — is
+    // the same on every start.
+    paths.sort();
+
+    paths.iter().map(RealmCert::read_pem).collect()
 }
 
 /// A realm is a set of clients and agents that can interact. Each realm has a
@@ -920,6 +995,29 @@ mod test_enrollment {
                 .count(),
             1
         );
+        Ok(())
+    }
+
+    /// A certificate imported at runtime (the GUI realm-selection dialog) is
+    /// visible through clones taken before the import, since the GUI and the
+    /// connection layer each hold their own clone of the manager.
+    #[tokio::test]
+    async fn add_endpoint_cert_reaches_earlier_clones() -> Result<()> {
+        let realms = manager(replica()?);
+        let clone = realms.clone();
+
+        let name: RealmName = "myrealm".parse()?;
+        assert!(!clone.has_endpoint_certs());
+        assert!(clone.find_endpoint_cert(name.clone()).is_err());
+        assert!(clone.realm(name.clone()).is_err());
+
+        let ca = RealmCert::new_cluster(crate::ClusterId::default(), name.clone())?;
+        let cert = ca.endpoint_cert(&"gs.example.com:9000/myrealm".parse::<ServerUrl>()?)?;
+        realms.add_endpoint_cert(cert)?;
+
+        assert!(clone.has_endpoint_certs());
+        assert!(clone.find_endpoint_cert(name.clone()).is_ok());
+        assert!(clone.realm(name).is_ok());
         Ok(())
     }
 

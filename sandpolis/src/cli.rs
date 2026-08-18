@@ -106,8 +106,9 @@ pub struct ClientArgs {
     /// ($S7S_REALM).
     ///
     /// It carries the realm CA and this client's own certificate, whose common
-    /// name is the server's address. Without it — and without a realm cert in
-    /// `--data` — the GUI asks for a server to log into.
+    /// name is the server's address. Without it, realm certs are read from
+    /// `--data` (or the default state directory), and if none are found there
+    /// either, the GUI asks for one to be picked interactively.
     #[clap(long, value_name = "PATH", env = "S7S_REALM")]
     pub realm: Option<PathBuf>,
 

@@ -54,11 +54,25 @@ pub fn main() {
             )
             .unwrap();
 
-            // The app holds no realm certificate until the user logs in, so it
-            // starts with just the default realm its own data lives in.
-            let realms =
-                sandpolis_instance::realm::RealmManager::for_endpoint(Vec::new(), database.clone())
-                    .unwrap();
+            // Realm certs imported through the GUI are saved into the files
+            // dir, so a fresh install holds none and the realm-selection
+            // dialog prompts for one; later starts pick up where it left off.
+            // A cert that no longer loads is skipped rather than fatal — the
+            // user has no shell here, and the dialog is the recovery path.
+            let endpoint_certs = match &options.database.storage {
+                Some(dir) => sandpolis_instance::realm::load_realm_certs_dir(dir)
+                    .unwrap_or_else(|e| {
+                        eprintln!("Ignoring saved realm certs: {}", e);
+                        Vec::new()
+                    }),
+                None => Vec::new(),
+            };
+
+            let realms = sandpolis_instance::realm::RealmManager::for_endpoint(
+                endpoint_certs.clone(),
+                database.clone(),
+            )
+            .unwrap();
 
             let state = InstanceState::new(
                 &options,
@@ -68,6 +82,13 @@ pub fn main() {
             )
             .await
             .unwrap();
+
+            for cert in &endpoint_certs {
+                match cert.url() {
+                    Ok(url) => sandpolis::client::spawn_server_connection(state.clone(), url),
+                    Err(e) => eprintln!("Ignoring saved realm cert: {}", e),
+                }
+            }
 
             sandpolis::client::gui::main(options, state).await.unwrap();
         });

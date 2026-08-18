@@ -651,20 +651,23 @@ pub struct LoginLogo;
 #[derive(Component)]
 pub struct LoginLogoCamera;
 
-/// Spawn/despawn the rotating 3D logo with the login dialog.
+/// Spawn/despawn the rotating 3D logo with the login dialog. The realm
+/// selection dialog shares the backdrop, so the handoff from one to the other
+/// keeps the same scene behind it.
 pub fn spawn_login_logo(
     mut commands: Commands,
     login_state: Res<LoginDialogState>,
+    realm_state: Res<crate::gui::realm_select::RealmSelectState>,
     logo_query: Query<Entity, With<LoginLogo>>,
     camera_query: Query<Entity, With<LoginLogoCamera>>,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    if !login_state.is_changed() {
+    if !login_state.is_changed() && !realm_state.is_changed() {
         return;
     }
 
-    if login_state.show {
+    if login_state.show || realm_state.show {
         if logo_query.is_empty() {
             // Load the logo mesh from the glTF primitive; we apply our own
             // material below, so only the mesh is needed.

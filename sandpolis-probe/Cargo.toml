@@ -23,6 +23,8 @@ sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1" }
 serde_cbor = { workspace = true, optional = true }
 serde = { workspace = true }
+smb = { workspace = true, optional = true }
+smb-rpc = { workspace = true, optional = true }
 tokio-util = { workspace = true, optional = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
@@ -45,6 +47,8 @@ ratatui = { workspace = true, optional = true }
 # is tested against a real server rather than mocks.
 nfs3_server = { version = "0.11", features = ["memfs"] }
 ron = { workspace = true }
+# SMB timestamps are `time` values; the unit tests build them directly.
+time = { workspace = true, features = ["macros"] }
 
 [[test]]
 name = "nfs"
@@ -63,6 +67,8 @@ agent = [
 # and not in `agent`.
 server = [
   "dep:nfs3_client",
+  "dep:smb",
+  "dep:smb-rpc",
   "dep:rups",
   "dep:vnc",
   "dep:russh",

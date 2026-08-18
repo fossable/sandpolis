@@ -16,12 +16,17 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
     // Clients read no config file, so a realm cert is the only way to point one
     // at a server without going through the GUI login dialog. Naming one
     // outright wins; otherwise every cert in the data directory attaches, which
-    // is how a client installed by a package manager is configured.
+    // is how a client installed by a package manager is configured. An
+    // ephemeral client falls back to the default cert dir, which is where the
+    // GUI realm-selection dialog saves an imported cert.
     let endpoint_certs = match args.realm.as_deref() {
         Some(path) => crate::load_realm_cert(Some(path))?.into_iter().collect(),
         None => match args.data.as_deref() {
             Some(dir) => crate::load_realm_certs_dir(dir)?,
-            None => Vec::new(),
+            None => match default_realm_cert_dir() {
+                Some(dir) => crate::load_realm_certs_dir(&dir)?,
+                None => Vec::new(),
+            },
         },
     };
 
@@ -51,6 +56,7 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
 /// token, opening an interactive login prompt when one is missing. Realms
 /// without users and servers with a cached token pass straight through;
 /// non-interactive runs fail with instructions instead of hanging on a prompt.
+#[cfg(not(target_os = "android"))]
 pub async fn ensure_authenticated(state: &InstanceState, fps: f32) -> anyhow::Result<()> {
     use sandpolis_client::tui::login::{LoginOutcome, LoginPromptWidget};
     use std::io::IsTerminal;
@@ -199,13 +205,22 @@ pub fn spawn_client_sync(state: InstanceState) {
     });
 }
 
+/// Where a client without `--data` keeps its realm certs, so a cert imported
+/// through the GUI survives ephemeral runs.
+#[cfg(not(target_os = "android"))]
+pub fn default_realm_cert_dir() -> Option<std::path::PathBuf> {
+    dirs::state_dir()
+        .or_else(dirs::data_dir)
+        .map(|dir| dir.join("sandpolis"))
+}
+
 /// Open (and retain) a connection to `url`, retrying until it succeeds.
 ///
 /// Clients read no config file, so a realm cert is how a standalone client is
 /// pointed at a server without going through the GUI login dialog. Either
 /// stratum works — the client addresses agents by id and the servers route to
 /// them.
-fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUrl) {
+pub fn spawn_server_connection(state: InstanceState, url: sandpolis_server::ServerUrl) {
     let server = state.server.clone();
 
     // Surface the server in the (database-backed) saved server list so it

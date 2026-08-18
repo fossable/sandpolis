@@ -151,54 +151,63 @@ mod server {
     /// arm below; nothing outside this module changes.
     pub enum ProbeFs {
         Nfs(crate::nfs::NfsFs),
+        Smb(crate::smb::SmbFs),
     }
 
     impl ProbeFs {
         pub async fn list(&self, path: &std::path::Path) -> Result<Vec<DirEntry>> {
             match self {
                 ProbeFs::Nfs(fs) => fs.list(path).await,
+                ProbeFs::Smb(fs) => fs.list(path).await,
             }
         }
 
         pub async fn stat(&self, path: &std::path::Path) -> Result<FileAttr> {
             match self {
                 ProbeFs::Nfs(fs) => fs.stat(path).await,
+                ProbeFs::Smb(fs) => fs.stat(path).await,
             }
         }
 
         pub async fn read(&self, path: &std::path::Path, offset: u64, len: u32) -> Result<Vec<u8>> {
             match self {
                 ProbeFs::Nfs(fs) => fs.read(path, offset, len).await,
+                ProbeFs::Smb(fs) => fs.read(path, offset, len).await,
             }
         }
 
         pub async fn write(&self, path: &std::path::Path, offset: u64, data: &[u8]) -> Result<u32> {
             match self {
                 ProbeFs::Nfs(fs) => fs.write(path, offset, data).await,
+                ProbeFs::Smb(fs) => fs.write(path, offset, data).await,
             }
         }
 
         pub async fn create_dir(&self, path: &std::path::Path) -> Result<()> {
             match self {
                 ProbeFs::Nfs(fs) => fs.create_dir(path).await,
+                ProbeFs::Smb(fs) => fs.create_dir(path).await,
             }
         }
 
         pub async fn remove(&self, path: &std::path::Path, recursive: bool) -> Result<()> {
             match self {
                 ProbeFs::Nfs(fs) => fs.remove(path, recursive).await,
+                ProbeFs::Smb(fs) => fs.remove(path, recursive).await,
             }
         }
 
         pub async fn rename(&self, from: &std::path::Path, to: &std::path::Path) -> Result<()> {
             match self {
                 ProbeFs::Nfs(fs) => fs.rename(from, to).await,
+                ProbeFs::Smb(fs) => fs.rename(from, to).await,
             }
         }
 
         pub async fn statfs(&self) -> Result<FsUsage> {
             match self {
                 ProbeFs::Nfs(fs) => fs.statfs().await,
+                ProbeFs::Smb(fs) => fs.statfs().await,
             }
         }
     }
@@ -237,7 +246,14 @@ mod server {
                     .ok_or_else(|| anyhow::anyhow!("device has no NFS configuration"))?;
                 ProbeFs::Nfs(crate::nfs::NfsFs::mount(device.device.ip, &config).await?)
             }
-            ProbeType::Smb => bail!(crate::smb::UNSUPPORTED),
+            ProbeType::Smb => {
+                let config = device
+                    .device
+                    .smb
+                    .clone()
+                    .ok_or_else(|| anyhow::anyhow!("device has no SMB configuration"))?;
+                ProbeFs::Smb(crate::smb::SmbFs::mount(device.device.ip, &config).await?)
+            }
             other => bail!("{} is not a filesystem protocol", other.display_name()),
         });
 
@@ -257,7 +273,9 @@ mod server {
             ProbeType::Nfs => {
                 crate::nfs::enumerate(device.device.ip, device.device.nfs.as_ref()).await
             }
-            ProbeType::Smb => bail!(crate::smb::UNSUPPORTED),
+            ProbeType::Smb => {
+                crate::smb::enumerate(device.device.ip, device.device.smb.as_ref()).await
+            }
             other => bail!("{} is not a filesystem protocol", other.display_name()),
         }
     }
