@@ -2,6 +2,7 @@ use anyhow::Result;
 use native_db::*;
 use native_model::Model;
 use sandpolis_instance::InstanceId;
+use sandpolis_instance::InstanceManager;
 use sandpolis_instance::database::DatabaseManager;
 use sandpolis_macros::data;
 
@@ -10,6 +11,9 @@ pub mod session;
 
 #[cfg(feature = "probe")]
 pub mod vnc;
+
+#[cfg(feature = "probe")]
+pub mod rdp;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -59,32 +63,42 @@ pub struct DesktopData {
 pub struct DesktopManager {
     #[allow(dead_code)]
     database: DatabaseManager,
+    #[allow(dead_code)]
+    pub instance_id: InstanceId,
+
+    /// Agent-side display collector.
     #[cfg(feature = "agent")]
-    pub displays: std::sync::Arc<agent::DesktopDisplayCollector>,
+    pub displays: std::sync::Arc<tokio::sync::Mutex<agent::DesktopDisplayCollector>>,
 }
 
 impl DesktopManager {
-    pub async fn new(database: DatabaseManager) -> Result<Self> {
-        #[cfg(feature = "agent")]
-        let displays = {
-            use sandpolis_agent::Collector;
-            use sandpolis_instance::realm::RealmName;
-
-            let mut collector =
-                agent::DesktopDisplayCollector::new(database.realm(RealmName::default())?)?;
-            // Enumerate displays once at startup; periodic refresh follows the
-            // broader (incomplete) collector scheduling convention.
-            if let Err(e) = collector.refresh().await {
-                tracing::warn!(error = %e, "Failed to enumerate desktops");
-            }
-            std::sync::Arc::new(collector)
-        };
-
+    pub async fn new(database: DatabaseManager, instance: InstanceManager) -> Result<Self> {
         Ok(Self {
-            database,
             #[cfg(feature = "agent")]
-            displays,
+            displays: std::sync::Arc::new(tokio::sync::Mutex::new(
+                agent::DesktopDisplayCollector::new(
+                    database.realm(sandpolis_instance::realm::RealmName::default())?,
+                    instance.instance_id,
+                )?,
+            )),
+            instance_id: instance.instance_id,
+            database,
         })
+    }
+
+    /// Add the subsystem's background services to the agent's runner.
+    ///
+    /// Only an agent has a local desktop to enumerate, so this is where display
+    /// scanning happens; a server or client never touches the display server.
+    #[cfg(feature = "agent")]
+    pub fn register_services(&self, runner: &mut sandpolis_instance::service::ServiceRunner) {
+        runner.register(sandpolis_agent::CollectorService::new(
+            self.displays.clone(),
+            "Desktop",
+            "displays",
+            "Enumerates the host's capturable displays",
+            std::time::Duration::from_secs(60),
+        ));
     }
 }
 
@@ -116,6 +130,7 @@ pub struct DesktopProbeResponderRegistration;
 impl sandpolis_instance::network::RegisterResponders for DesktopProbeResponderRegistration {
     fn register_responders(&self, registry: &sandpolis_instance::network::StreamRegistry) {
         registry.register_responder(vnc::VncStreamResponder::default);
+        registry.register_responder(rdp::RdpStreamResponder::default);
     }
 }
 
@@ -136,4 +151,8 @@ inventory::submit! {
 inventory::submit! {
     sandpolis_instance::network::stream::StreamPermission::require(
         sandpolis_macros::stream_tag!(VncStream), "desktop:vnc")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(RdpStream), "desktop:rdp")
 }

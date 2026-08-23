@@ -292,7 +292,8 @@ impl InstanceState {
         let filesystem = sandpolis_filesystem::FilesystemManager::new().await?;
 
         #[cfg(feature = "desktop")]
-        let desktop = sandpolis_desktop::DesktopManager::new(database.clone()).await?;
+        let desktop =
+            sandpolis_desktop::DesktopManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "account")]
         let account = sandpolis_account::AccountManager::new(database.clone()).await?;

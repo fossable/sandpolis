@@ -16,7 +16,7 @@ use std::{cmp::min, net::SocketAddr, sync::Arc, time::Duration};
 use stream::{StreamId, StreamMessage};
 pub use stream::{StreamRegistry, StreamRequester, StreamResponder};
 use tokio_util::sync::CancellationToken;
-use tracing::{debug, trace};
+use tracing::{debug, info, trace};
 
 /// Trait for subsystems to register their stream responders on new connections.
 pub trait RegisterResponders: Send + Sync + 'static {
@@ -129,8 +129,22 @@ impl NetworkManager {
     /// reconcilers, liveness) wakes without polling.
     pub fn track_inbound(&self, connection: Arc<InstanceConnection>) {
         let cancel = connection.cancel.clone();
-        let row = connection.data.read()._id;
+        let (row, instance) = {
+            let data = connection.data.read();
+            (data._id, data.remote_instance)
+        };
+        let realm = connection.realm.clone();
         let weak = Arc::downgrade(&connection);
+
+        // Same classification the connect handler logs: a peer that identified
+        // itself as neither a server nor an agent was served as a client.
+        let kind = if instance.is_server() {
+            "server"
+        } else if instance.is_agent() {
+            "agent"
+        } else {
+            "client"
+        };
 
         self.inbound.write().unwrap().push(connection);
 
@@ -151,6 +165,8 @@ impl NetworkManager {
             if let Err(e) = connections.remove_local(row) {
                 debug!(error = %e, "Failed to remove a closed connection");
             }
+
+            info!(kind, %instance, realm = %realm, "Instance disconnected");
         });
     }
 }

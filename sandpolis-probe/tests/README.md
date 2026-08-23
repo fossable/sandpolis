@@ -28,6 +28,29 @@ docker run --rm \
   -p 3493:3493 -p 5900:5900 sandpolis/test-probe
 ```
 
+### Rootless Docker and Podman
+
+Binding a port below 1024 needs `CAP_NET_BIND_SERVICE`, which a rootless
+container doesn't have while it shares the host's network namespace: with
+`--network host` every daemon on a standard port — SSH, HTTP, SMB, RTSP, SNMP,
+IPMI, and the portmapper — fails to bind. The entrypoint checks for this at
+startup and moves those daemons out of the way rather than serving nothing:
+
+| Standard | Moved to | Standard | Moved to |
+|----------|----------|----------|----------|
+| 22       | 2222     | 554      | 8554     |
+| 80       | 8080     | 623      | 1623     |
+| 445      | 4445     | 161      | 1161     |
+
+It says so in the log, and the listening-port summary it prints at the end has
+the final word. The portmapper is pinned to 111 by the RPC protocol, so it has
+nowhere to move: it stays off, and NFS is served without it (the probe's
+GETPORT path can't be exercised in that mode, but its pinned ports still work).
+
+Publishing ports instead keeps the standard numbers, because the container then
+gets a network namespace of its own — only the host side of each mapping has to
+be unprivileged (`-p 2222:22`).
+
 ## What it serves
 
 | Port | Protocol | Daemon | Probe |
@@ -46,9 +69,16 @@ docker run --rm \
 
 `Xvnc` is both the X server for `:0` and its VNC server, and
 `freerdp-shadow-cli` mirrors that same display — so VNC and RDP show the same
-desktop, and an RDP-only run still listens on 5900. RDP negotiates TLS security
-(not NLA/CredSSP) with a self-signed certificate, which matches the RDP probe's
-first-cut behavior.
+desktop, and an RDP-only run still listens on 5900. That display is a virtual
+framebuffer inside the container, never a host screen: it runs an Openbox
+session with a terminal ticking a UTC clock, so a capture is visibly live. RDP
+negotiates TLS security (not NLA/CredSSP) with a self-signed certificate, which
+matches the RDP probe's first-cut behavior.
+
+A syslog sink relays every daemon's log messages to the container's stdout: a
+container has no `/dev/log`, and `rpcbind` in particular reports even a fatal
+startup failure only over syslog, so without it a dead daemon leaves no trace in
+`docker logs`.
 
 HTTP, SNMP, and IPMI are served for probes that are still stubs, so there is
 something to develop against. Wake-on-LAN, ONVIF, Docker, and libvirt get no
@@ -62,10 +92,22 @@ Defaults, overridable with `-e` on `docker run`:
 |------------------|--------------------------------------------------|--------------------------------|
 | `SERVICES`       | `vnc rdp nfs smb rtsp ups ssh http snmp ipmi`    | which daemons start            |
 | `VNC_PASSWORD`   | `password`                                       | VNC auth (8 chars max)         |
-| `RDP_PORT`       | `3389`                                           | RDP listen port                |
 | `GEOMETRY`       | `1280x720`                                       | desktop size                   |
 | `PROBE_USER`     | `probe`                                          | SMB, SSH, NUT, and IPMI login  |
 | `PROBE_PASSWORD` | `password`                                       | the same accounts' password    |
+| `VNC_PORT`       | `5900`                                           | VNC listen port                |
+| `RDP_PORT`       | `3389`                                           | RDP listen port                |
+| `SSH_PORT`       | `22`                                             | SSH listen port                |
+| `HTTP_PORT`      | `80`                                             | HTTP listen port               |
+| `SMB_PORT`       | `445`                                            | SMB listen port                |
+| `RTSP_PORT`      | `554`                                            | RTSP listen port               |
+| `SNMP_PORT`      | `161`                                            | SNMP listen port (udp)         |
+| `IPMI_PORT`      | `623`                                            | IPMI listen port (udp)         |
+| `NFS_PORT`       | `2049`                                           | NFS listen port                |
+| `MOUNT_PORT`     | `2050`                                           | NFS mount service port         |
+| `NUT_PORT`       | `3493`                                           | NUT listen port                |
+
+A port set explicitly is left alone by the unprivileged-port fallback above.
 
 `SERVICES` takes a space-separated subset, so a single probe can be worked on
 without the rest: `-e SERVICES="nfs smb"`.

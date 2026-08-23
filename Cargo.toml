@@ -54,6 +54,7 @@ native_db = { git = "https://github.com/vincent-herlemont/native_db", features =
   "tokio",
 ] }
 native_model = "0.6.1"
+notify = "8.2"
 os_info = "3.8.2"
 passwords = { version = "3.1.16" }
 pem = "4.0.0"
@@ -132,5 +133,22 @@ include_dir = { version = "0.7" }
 # published `russh` agrees with, so cargo cannot resolve both. Those pins are
 # macOS/iOS-only and upstream has already dropped them; this is that commit,
 # ahead of the 0.21.4 release. Remove once 0.21.4 is published.
+# The published `ironrdp-connector` 0.10.0 pins `picky = "=7.0.0-rc.25"`, but
+# the `sspi` rev above moved to `=7.0.0-rc.26` in the same commit that dropped the
+# dalek pins — so the two exact pins can't coexist — and also made
+# `TsRequest::buffer_len` fallible. This fork branches from the connector 0.10.0
+# release commit (where every ironrdp crate is at its published version) with
+# those two one-line fixes; the whole family is patched to the same rev so their
+# shared types stay unified. Drop once IronRDP releases against the new sspi.
 [patch.crates-io]
 sspi = { git = "https://github.com/Devolutions/sspi-rs", rev = "a9dfaec9b04ce06a487f6091890f9a1baf620005" }
+ironrdp-connector = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-session = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-graphics = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-pdu = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-svc = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-core = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-input = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-async = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-tokio = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }
+ironrdp-tls = { git = "https://github.com/cilki/IronRDP", rev = "4c776f6b49c125ddcb326261482540e7bfea90a9" }

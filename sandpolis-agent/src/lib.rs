@@ -40,17 +40,11 @@ impl PollConfig {
 #[derive(Clone)]
 pub struct AgentManager {
     database: DatabaseManager,
-    #[cfg(feature = "agent")]
-    pub scheduler: tokio_cron_scheduler::JobScheduler,
 }
 
 impl AgentManager {
     pub async fn new(database: DatabaseManager) -> Result<Self> {
-        Ok(Self {
-            database,
-            #[cfg(feature = "agent")]
-            scheduler: tokio_cron_scheduler::JobScheduler::new().await?,
-        })
+        Ok(Self { database })
     }
 }
 

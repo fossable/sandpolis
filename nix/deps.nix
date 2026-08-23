@@ -26,6 +26,10 @@ rec {
     libxrandr
     libxkbcommon
     libGL
+    # The dev shell needs mesa for the same reason `runtimeClient` does: the
+    # vulkan loader is only a loader, and the ICD manifests that point it at a
+    # real driver come from mesa.
+    mesa
     wayland
     fuse3
     systemd

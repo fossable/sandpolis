@@ -3,7 +3,7 @@
 randomPort() {
 	local port
 	while true; do
-		port=$(( (RANDOM % 64512) + 1024 ))
+		port=$(((RANDOM % 64512) + 1024))
 		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
 			echo "${port}"
 			return
@@ -16,7 +16,12 @@ randomPort() {
 testClientConnect() {
 	port=$(randomPort)
 
-	sandpolis server --listen 127.0.0.1:${port} --data . &
+	sandpolis server --listen "127.0.0.1:${port}" --data . &
 
-	sandpolis --realm ./default.realm.pem server list
+	# The server writes the realm cert once it's up
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+
+	sandpolis server list --json --realm ./default.realm.pem
 }

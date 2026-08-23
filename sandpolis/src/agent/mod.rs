@@ -53,6 +53,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     #[cfg(feature = "inventory")]
     state.inventory.register_services(&mut services);
 
+    #[cfg(feature = "desktop")]
+    state.desktop.register_services(&mut services);
+
     services.start()?;
 
     // Pick the connection strategy from `--poll`: a schedule selects polling

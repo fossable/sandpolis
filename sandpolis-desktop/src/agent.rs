@@ -1,6 +1,7 @@
 use crate::DesktopData;
 use anyhow::{Result, bail};
 use sandpolis_agent::Collector;
+use sandpolis_instance::InstanceId;
 use sandpolis_instance::database::{RealmDatabase, ResidentVec};
 use tracing::trace;
 
@@ -52,12 +53,14 @@ pub(crate) fn for_each_rgb(
 /// Enumerates capturable desktops (displays) into the database.
 pub struct DesktopDisplayCollector {
     data: ResidentVec<DesktopData>,
+    instance_id: InstanceId,
 }
 
 impl DesktopDisplayCollector {
-    pub fn new(db: RealmDatabase) -> Result<Self> {
+    pub fn new(db: RealmDatabase, instance_id: InstanceId) -> Result<Self> {
         Ok(Self {
             data: db.resident_vec(())?,
+            instance_id,
         })
     }
 }
@@ -84,6 +87,7 @@ impl Collector for DesktopDisplayCollector {
             }
 
             self.data.push(DesktopData {
+                _instance_id: self.instance_id,
                 name,
                 width: display.width() as u32,
                 height: display.height() as u32,

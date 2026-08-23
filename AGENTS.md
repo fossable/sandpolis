@@ -259,6 +259,8 @@ cd android && ./gradlew assembleDebug
   notification. If the client is not running in the foreground, only show
   OS-native notifcations.
   - Notification on errors
+- Move Collector/CollectorService to sandpolis-instance subsystem
+- Extract sandpolis-core subsystem from sandpolis-instance?
 
 ## `sandpolis-tunnel`
 
@@ -324,16 +326,18 @@ cd android && ./gradlew assembleDebug
 - ONVIF probe (`onvif.rs`)
   - View the video stream
   - Driven from the desktop layer?
-- RDP probe via desktop subsystem
-  - Implement on top of the IronRDP crates
-  - Driven from the desktop layer
+- RDP probe via desktop subsystem (`rdp.rs`, on the IronRDP crates)
+  - Driven from the desktop layer, like VNC
+  - First cut negotiates TLS security; hosts requiring NLA/CredSSP need
+    `enable_credssp` turned on and the sspi CredSSP path exercised
+  - `ironrdp-connector` is vendored under `vendor/` with a one-line picky bump
+    and a `buffer_len` fixup so it resolves against the pinned `sspi` rev; drop
+    it once IronRDP releases against picky rc.26
 - RTSP probe (`rtsp/`)
   - Button on expanded node panel to maximize the video stream
   - Driven from the desktop layer?
 - SSH probe via shell subsystem
   - Driven from the shell layer
-- VNC probe
-  - Driven from the desktop layer
 - IPMI probe (skeleton in `ipmi.rs`, needs real BMC queries)
   - Drive from inventory layer?
 - SNMP probe — partial, needs MIB-driven discovery
@@ -351,9 +355,8 @@ cd android && ./gradlew assembleDebug
     `curve25519-dalek`/`ed25519-dalek`/`p256` that no published `russh` agrees
     with — cargo cannot resolve both. Those pins are macOS/iOS-only and upstream
     has dropped them; delete the patch once 0.21.4 is out.
-  - Only the mapping helpers are unit-tested. There is no pure-Rust SMB server to
-    run in-process the way `tests/nfs.rs` runs `nfs3_server`, so the wire
-    protocol is verified by hand against a real server.
+  - Only the mapping helpers are unit-tested. The wire protocol is verified by
+    hand against the Samba server in `sandpolis-probe/tests/`, as is NFS.
 - Node panels on probes in probe layer just show what protocols are supported -
   to interact with probes, you use a more specific layer like desktop,
   filesystem, etc.
@@ -373,11 +376,15 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-desktop`
 
-- Desktop streaming controls: start/stop stream, request screenshot
-- VNC probes stream here like agents (`vnc.rs`, `probe` feature). RDP probes get
-  a node and a placeholder controller; they need an IronRDP backend.
+- VNC (`vnc.rs`) and RDP (`rdp.rs`) probes stream here like agents, behind the
+  `probe` feature: the owning server speaks the protocol and re-encodes into the
+  desktop frame format. VNC uses the blocking `vnc` crate on an OS thread; RDP
+  uses async IronRDP on a tokio task (the `ssh.rs` pattern).
 - `DesktopStreamInputEvent` only carries `Option<char>`, so
-  Enter/Backspace/arrows reach neither agents nor VNC probes
+  Enter/Backspace/arrows reach neither agents nor VNC/RDP probes. RDP maps the
+  `char` through a Unicode keyboard event; the non-printing keys are still lost.
+- `sandpolis-probe/tests/` is a manual (non-`cargo test`) container that serves
+  every probe protocol at once, including one desktop over both VNC and RDP.
 - Button on expanded node panel to maximize the desktop session
 
 ## `sandpolis-instance`
@@ -399,7 +406,8 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-client`
 
-- Build a reusable 2-column table that can render lists of data
+- Build a reusable 2-column table that can render lists of data from a
+  ResidentVec
   - It should support vertical scrolling only
 
 ## `sandpolis` (main crate)

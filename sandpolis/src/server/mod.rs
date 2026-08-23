@@ -13,6 +13,8 @@ use tempfile::tempdir;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
+pub mod config_watch;
+
 /// Bring up everything a server needs and run it: the realms it serves, the
 /// database that holds them, and the subsystems over both.
 pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCode> {
@@ -198,10 +200,16 @@ fn install_persist_callbacks(options: &RuntimeOptions, stratum: &crate::ServerSt
                     })
                     .cloned()
                     .collect();
-                realm.modify(|c| {
+                if let Err(e) = realm.modify(|c| {
                     c.probe.devices = devices.clone();
                     Ok(())
-                })?;
+                }) {
+                    tracing::warn!(
+                        realm = %name,
+                        error = %e,
+                        "Not persisting probe devices to this realm"
+                    );
+                }
             }
 
             if !only_realm && probe.devices.iter().any(|device| device.server.is_none()) {
@@ -270,6 +278,19 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             state.network.clone(),
             state.instance.instance_id,
         ));
+    }
+
+    // Realm configs are hand-editable while the server runs, but the realms
+    // themselves are frozen at startup: watch the files so a manual edit warns
+    // that a restart is needed and stops the server from overwriting it.
+    if state.server.stratum.is_global()
+        && let Some(dir) = options.database.storage.clone()
+    {
+        tokio::spawn(async move {
+            if let Err(e) = config_watch::watch_realm_configs(dir).await {
+                tracing::error!(error = %e, "Realm config watcher stopped");
+            }
+        });
     }
 
     // A local stratum server holds a link to its global stratum server for as

@@ -25,5 +25,14 @@ in mkShell rec {
       $(< ${stdenv.cc}/nix-support/libcxx-cxxflags) \
       -idirafter ${libclang.lib}/lib/clang/${lib.versions.major (lib.getVersion clang)}/include \
       -isystem ${linuxHeaders}/include"
+
+    # The nixpkgs vulkan loader finds its ICD manifests under
+    # /run/opengl-driver, which only a NixOS host populates. Inside a container
+    # that directory is empty and wgpu panics with "Unable to find a GPU", so
+    # fall back to the mesa we already carry in buildInputs.
+    if [ ! -d /run/opengl-driver ]; then
+      export VK_DRIVER_FILES="$(echo ${mesa}/share/vulkan/icd.d/*.json | tr ' ' ':')"
+      export VK_ICD_FILENAMES="$VK_DRIVER_FILES"
+    fi
   '';
 }

@@ -55,6 +55,7 @@ validator = { workspace = true }
 
 # Server exclusive
 axum-macros = { workspace = true, optional = true }
+notify = { workspace = true, optional = true }
 axum-server = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 
@@ -77,6 +78,7 @@ server = [
   "dep:axum",
   "dep:axum-server",
   "dep:axum-macros",
+  "dep:notify",
   "sandpolis-account?/server",
   "sandpolis-agent/server",
   "sandpolis-desktop?/server",

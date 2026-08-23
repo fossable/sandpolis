@@ -111,22 +111,6 @@ impl NodePanel for DesktopPanel {
         let target = ctx.target;
         let theme = ctx.theme;
 
-        // A probe that only speaks RDP still gets a node (the layer shows them
-        // so the estate looks complete), but there's nothing to drive yet.
-        #[cfg(feature = "probe")]
-        if is_rdp_only(target) {
-            ctx.children(|p| {
-                p.spawn(heading(theme, "Desktop Stream"));
-                p.spawn(text(
-                    theme,
-                    "RDP streaming is not implemented yet.",
-                    theme.metrics.font_sm,
-                    Role::TextMuted,
-                ));
-            });
-            return;
-        }
-
         ctx.children(|p| {
             p.spawn(heading(theme, "Desktop Stream"));
 
@@ -330,13 +314,6 @@ fn probe_device(target: PanelTarget) -> Option<sandpolis_probe::RegisteredDevice
     Some(device)
 }
 
-/// Whether `target` is a probe this layer shows but can't stream yet.
-#[cfg(feature = "probe")]
-fn is_rdp_only(target: PanelTarget) -> bool {
-    probe_device(target)
-        .is_some_and(|device| device.device.rdp.is_some() && device.device.vnc.is_none())
-}
-
 /// The outcome of trying to open a viewer's stream.
 enum StreamStart {
     /// The stream is open; here is where its events will arrive.
@@ -380,6 +357,29 @@ fn open_stream(target: PanelTarget, outbound_rx: Receiver<DesktopStreamRequest>)
             device_id: device.id,
         };
         spawn_vnc_stream(conn, requester, initial, outbound_rx);
+        return StreamStart::Opened(events);
+    }
+
+    // RDP probes stream the same way, run by the device's owning server. VNC is
+    // preferred above, so this is reached for RDP-only devices.
+    #[cfg(feature = "probe")]
+    if let Some(device) = probe_device(target)
+        && device.device.rdp.is_some()
+    {
+        let Some(conn) = device
+            .device
+            .server
+            .as_ref()
+            .and_then(sandpolis_client::sync::connection_for)
+            .or_else(sandpolis_client::sync::connection)
+        else {
+            return StreamStart::NotReady;
+        };
+        let (requester, events) = crate::rdp::RdpStreamRequester::channel();
+        let initial = crate::rdp::RdpStreamRequest::Start {
+            device_id: device.id,
+        };
+        spawn_rdp_stream(conn, requester, initial, outbound_rx);
         return StreamStart::Opened(events);
     }
 
@@ -428,6 +428,43 @@ fn spawn_vnc_stream(
             let req = match req {
                 DesktopStreamRequest::Input(event) => crate::vnc::VncStreamRequest::Input(event),
                 DesktopStreamRequest::Stop => crate::vnc::VncStreamRequest::Stop,
+                // Sent as the stream's initial request, never through here.
+                DesktopStreamRequest::Start { .. } => continue,
+            };
+            let payload = match serde_cbor::to_vec(&req) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if msg_tx.send(StreamMessage::local(id, payload)).await.is_err() {
+                break;
+            }
+        }
+        conn.close_stream(id);
+    });
+}
+
+/// Open an RDP stream against a probe device over `conn` and forward outbound
+/// requests over it until the channel closes. The shape mirrors
+/// [`spawn_vnc_stream`]; only the wire request type differs.
+#[cfg(feature = "probe")]
+fn spawn_rdp_stream(
+    conn: std::sync::Arc<sandpolis_instance::network::InstanceConnection>,
+    requester: crate::rdp::RdpStreamRequester,
+    initial: crate::rdp::RdpStreamRequest,
+    mut outbound_rx: Receiver<DesktopStreamRequest>,
+) {
+    sandpolis_client::sync::spawn(async move {
+        let (id, msg_tx) = match conn.open_stream(requester, initial).await {
+            Ok(v) => v,
+            Err(e) => {
+                warn!(error = %e, "Failed to open RDP stream");
+                return;
+            }
+        };
+        while let Some(req) = outbound_rx.recv().await {
+            let req = match req {
+                DesktopStreamRequest::Input(event) => crate::rdp::RdpStreamRequest::Input(event),
+                DesktopStreamRequest::Stop => crate::rdp::RdpStreamRequest::Stop,
                 // Sent as the stream's initial request, never through here.
                 DesktopStreamRequest::Start { .. } => continue,
             };

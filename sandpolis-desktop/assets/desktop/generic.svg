@@ -17,10 +17,10 @@
   <rect x="10" y="16" width="44" height="26" fill="url(#desktopGenericGradient)"/>
 
   <!-- Windows on the desktop -->
-  <rect x="14" y="20" width="18" height="13" rx="1" fill="#ecf0f1" opacity="0.85"/>
-  <rect x="14" y="20" width="18" height="3" rx="1" fill="#bdc3c7" opacity="0.85"/>
-  <rect x="26" y="26" width="20" height="12" rx="1" fill="#ecf0f1" opacity="0.7"/>
-  <rect x="26" y="26" width="20" height="3" rx="1" fill="#bdc3c7" opacity="0.7"/>
+  <rect x="14" y="20" width="18" height="13" rx="1" fill="#ecf0f1" fill-opacity="0.85"/>
+  <rect x="14" y="20" width="18" height="3" rx="1" fill="#bdc3c7" fill-opacity="0.85"/>
+  <rect x="26" y="26" width="20" height="12" rx="1" fill="#ecf0f1" fill-opacity="0.7"/>
+  <rect x="26" y="26" width="20" height="3" rx="1" fill="#bdc3c7" fill-opacity="0.7"/>
 
   <!-- Stand -->
   <rect x="28" y="46" width="8" height="7" fill="#34495e"/>

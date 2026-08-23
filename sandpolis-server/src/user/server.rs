@@ -3,7 +3,7 @@ use super::{ClientAuthToken, UserData, UserManager, UserName};
 use crate::login::LoginPassword;
 use anyhow::{Result, anyhow, bail};
 use aws_lc_rs::pbkdf2;
-use axum::extract::{FromRequestParts, State, WebSocketUpgrade};
+use axum::extract::{ConnectInfo, FromRequestParts, State, WebSocketUpgrade};
 use axum::http::{StatusCode, request::Parts};
 use axum::RequestPartsExt;
 use axum_extra::TypedHeader;
@@ -414,6 +414,7 @@ impl FromRequestParts<UserManager> for Claims {
 pub async fn connect(
     State(state): State<UserManager>,
     TypedHeader(realm): TypedHeader<RealmName>,
+    ConnectInfo(peer): ConnectInfo<std::net::SocketAddr>,
     headers: axum::http::HeaderMap,
     ws: WebSocketUpgrade,
 ) -> axum::response::Response {
@@ -465,6 +466,16 @@ pub async fn connect(
     // id is self-reported; tying it to the connection's certificate is the
     // standing TODO above.)
     let peer_is_client = !peer_is_server && !remote_instance.is_some_and(|id| id.is_agent());
+
+    // What this peer is called in the logs, from the same classification the
+    // rest of the handler runs on.
+    let peer_kind = if peer_is_server {
+        "server"
+    } else if peer_is_client {
+        "client"
+    } else {
+        "agent"
+    };
 
     // When the realm has user accounts, a client connection must carry a token
     // from `/user/login`; its user decides which streams the connection may
@@ -547,8 +558,18 @@ pub async fn connect(
             cd.remote_instance = id;
         }
         cd.established = chrono::Utc::now();
+        let instance = cd.remote_instance;
+
         // Live connection bookkeeping is local state, allowed on a replica.
         let data = network.connections.push_local(cd).unwrap();
+
+        info!(
+            kind = peer_kind,
+            %instance,
+            realm = %realm,
+            peer = %peer,
+            "Instance connected"
+        );
 
         // Serve this peer's subscriptions from our local realm database.
         let realm_db = network.database.realm(realm.clone()).unwrap();

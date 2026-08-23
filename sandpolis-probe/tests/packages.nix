@@ -53,6 +53,17 @@ pkgs.buildEnv {
     xkeyboard-config
     dejavu_fonts
 
+    # `syslogd` is the sink for the daemons that report even fatal errors only
+    # over syslog (`rpcbind` above all), which a container otherwise drops on the
+    # floor for want of a /dev/log; `nc` is how the entrypoint finds out whether
+    # it may bind a privileged port. Only those two applets are linked in, so
+    # busybox doesn't shadow coreutils on PATH.
+    (runCommand "test-probe-busybox" { } ''
+      mkdir -p $out/bin
+      ln -s ${busybox}/bin/busybox $out/bin/syslogd
+      ln -s ${busybox}/bin/busybox $out/bin/nc
+    '')
+
     bashInteractive
     coreutils
     gnused

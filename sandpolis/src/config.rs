@@ -4,9 +4,11 @@ use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::realm::config::{CaConfig, CertSource, RealmBootstrap, ron_options};
 use sandpolis_instance::realm::url::ServerUrl;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use std::sync::{LazyLock, Mutex};
 use tracing::debug;
 
 /// The filename suffix of a realm config, whose stem is the realm's name.
@@ -16,7 +18,7 @@ pub const REALM_CONFIG_SUFFIX: &str = ".realm.ron";
 ///
 /// This doubles as the test for whether a file in the data directory is a realm
 /// config at all, so the suffix is checked in exactly one place.
-fn realm_name(path: &Path) -> Result<&str> {
+pub(crate) fn realm_name(path: &Path) -> Result<&str> {
     path.file_name()
         .and_then(|name| name.to_str())
         .and_then(|name| name.strip_suffix(REALM_CONFIG_SUFFIX))
@@ -27,6 +29,114 @@ fn realm_name(path: &Path) -> Result<&str> {
                 path.display()
             )
         })
+}
+
+/// What the server last read from or wrote to a realm config, or the fact that
+/// the file changed underneath it and must never be written again.
+///
+/// This is how manual edits are told apart from the server's own write-backs:
+/// every read and write records the exact bytes involved, so any other bytes on
+/// disk mean someone edited the file. Contents are compared raw rather than
+/// re-serialized, since reading and writing don't share RON extension flags.
+enum ConfigDisposition {
+    /// The exact bytes last read from or written to the file at `path`.
+    Synced {
+        contents: String,
+        // The path only matters to the server's config watcher.
+        #[cfg_attr(not(feature = "server"), allow(dead_code))]
+        path: PathBuf,
+    },
+    /// The file was edited outside the server; leave it alone until restart.
+    ReadOnly,
+}
+
+static CONFIG_REGISTRY: LazyLock<Mutex<HashMap<RealmName, ConfigDisposition>>> =
+    LazyLock::new(Default::default);
+
+/// Remember the contents the server itself just read or wrote, so a later
+/// change on disk is recognizable as a manual edit.
+fn record_synced(name: &RealmName, path: &Path, contents: &str) {
+    let mut registry = CONFIG_REGISTRY.lock().unwrap();
+    if !matches!(registry.get(name), Some(ConfigDisposition::ReadOnly)) {
+        registry.insert(
+            name.clone(),
+            ConfigDisposition::Synced {
+                contents: contents.to_string(),
+                path: path.to_path_buf(),
+            },
+        );
+    }
+}
+
+/// Stop ever writing this realm's config again. Returns whether this call made
+/// the transition, so callers can warn exactly once.
+pub(crate) fn mark_read_only(name: &RealmName) -> bool {
+    !matches!(
+        CONFIG_REGISTRY
+            .lock()
+            .unwrap()
+            .insert(name.clone(), ConfigDisposition::ReadOnly),
+        Some(ConfigDisposition::ReadOnly)
+    )
+}
+
+pub(crate) fn is_read_only(name: &RealmName) -> bool {
+    matches!(
+        CONFIG_REGISTRY.lock().unwrap().get(name),
+        Some(ConfigDisposition::ReadOnly)
+    )
+}
+
+/// The bytes the server last synced for this realm: `None` if the realm was
+/// never loaded, `Some(None)` if it's read-only, `Some(Some(_))` otherwise.
+pub(crate) fn synced_contents(name: &RealmName) -> Option<Option<String>> {
+    CONFIG_REGISTRY
+        .lock()
+        .unwrap()
+        .get(name)
+        .map(|disposition| match disposition {
+            ConfigDisposition::Synced { contents, .. } => Some(contents.clone()),
+            ConfigDisposition::ReadOnly => None,
+        })
+}
+
+/// Every synced realm whose config file lives in `dir`, so the watcher can
+/// notice deletions without claiming realms loaded from elsewhere.
+#[cfg(feature = "server")]
+pub(crate) fn synced_realms_in(dir: &Path) -> Vec<RealmName> {
+    CONFIG_REGISTRY
+        .lock()
+        .unwrap()
+        .iter()
+        .filter_map(|(name, disposition)| match disposition {
+            ConfigDisposition::Synced { path, .. } if path.parent() == Some(dir) => {
+                Some(name.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+fn manual_edit_error(name: &RealmName) -> anyhow::Error {
+    anyhow::anyhow!(
+        "Realm config {name} was edited on disk while the server was running; \
+         refusing to overwrite it — restart the server to apply the manual changes"
+    )
+}
+
+/// Refuse to write when the on-disk contents no longer match what the server
+/// last synced, which means someone edited the file manually. Must be called
+/// with the file's advisory lock held, so the comparison can't race a write.
+fn ensure_still_synced(name: &RealmName, on_disk: &str) -> Result<()> {
+    match synced_contents(name) {
+        // Never loaded, so there's nothing to compare against.
+        None => Ok(()),
+        Some(Some(expected)) if on_disk == expected => Ok(()),
+        _ => {
+            mark_read_only(name);
+            Err(manual_edit_error(name))
+        }
+    }
 }
 
 /// A realm as declared in a realm config, which the global stratum server reads
@@ -110,6 +220,7 @@ impl RealmConfig {
 
         config.path = Some(path.to_path_buf());
         config.name = name;
+        record_synced(&config.name, path, &contents);
         Ok(config)
     }
 
@@ -228,6 +339,9 @@ impl RealmConfig {
         let Some(path) = &self.path else {
             return Ok(());
         };
+        if is_read_only(&self.name) {
+            return Err(manual_edit_error(&self.name));
+        }
 
         debug!(path = %path.display(), "Saving realm config");
 
@@ -245,10 +359,16 @@ impl RealmConfig {
             .open(path)?;
 
         FileExt::lock_exclusive(&file)?;
+
+        let mut on_disk = String::new();
+        file.read_to_string(&mut on_disk)?;
+        ensure_still_synced(&self.name, &on_disk)?;
+
         file.set_len(0)?;
         file.seek(SeekFrom::Start(0))?;
         file.write_all(contents.as_bytes())?;
         file.sync_all()?;
+        record_synced(&self.name, path, &contents);
 
         Ok(())
     }
@@ -267,6 +387,9 @@ impl RealmConfig {
             bail!("Realm config has no associated file path");
         };
         let name = self.name.clone();
+        if is_read_only(&name) {
+            return Err(manual_edit_error(&name));
+        }
 
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -283,6 +406,7 @@ impl RealmConfig {
 
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
+        ensure_still_synced(&name, &buf)?;
         if !buf.trim().is_empty() {
             *self = ron_options()
                 .from_str(&buf)
@@ -299,6 +423,9 @@ impl RealmConfig {
         file.seek(SeekFrom::Start(0))?;
         file.write_all(contents.as_bytes())?;
         file.sync_all()?;
+        if let Some(path) = self.path.as_deref() {
+            record_synced(&self.name, path, &contents);
+        }
 
         Ok(())
     }
@@ -364,7 +491,9 @@ mod test_realm_config {
     #[test]
     fn stored_ca_round_trips() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        let path = dir.path().join("prod.realm.ron");
+        // Realm names are unique per test: the sync registry is process-global,
+        // so two tests writing the same name would race each other.
+        let path = dir.path().join("storedca.realm.ron");
         std::fs::write(&path, "")?;
 
         let mut config = RealmConfig::load(&path)?;
@@ -374,7 +503,7 @@ mod test_realm_config {
         )?;
 
         let reloaded = RealmConfig::load(&path)?;
-        assert_eq!(reloaded.name, "prod".parse()?);
+        assert_eq!(reloaded.name, "storedca".parse()?);
         let ca = reloaded.ca.expect("the generated CA is written back");
         assert!(matches!(ca.cert, CertSource::Inline(_)));
         assert!(ca.key.is_some());
@@ -448,6 +577,50 @@ mod test_realm_config {
             .server_url()?
             .expect("an address was declared");
         assert_eq!(url.canonical(), "gs.example.com:9000/prod");
+        Ok(())
+    }
+
+    /// A file edited on disk after loading is never overwritten: the write is
+    /// refused, the realm becomes read-only, and the manual edit survives.
+    #[test]
+    fn manual_edit_makes_config_read_only() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("edited.realm.ron");
+        std::fs::write(&path, "")?;
+
+        let mut config = RealmConfig::load(&path)?;
+        let edit = r#"(address: "gs.example.com:9000")"#;
+        std::fs::write(&path, edit)?;
+
+        assert!(config.modify(|_| Ok(())).is_err());
+        assert!(is_read_only(&"edited".parse()?));
+
+        // Later writes are refused up front, without touching the file.
+        assert!(
+            config
+                .store_ca("AAAA".into(), "BBBB".into())
+                .is_err()
+        );
+        assert_eq!(std::fs::read_to_string(&path)?, edit);
+        Ok(())
+    }
+
+    /// The server's own write-backs don't count as manual edits, so repeated
+    /// writes keep working.
+    #[test]
+    fn own_writes_stay_writable() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("ownwrites.realm.ron");
+        std::fs::write(&path, "")?;
+
+        let mut config = RealmConfig::load(&path)?;
+        config.store_ca("AAAA".into(), "BBBB".into())?;
+        config.modify(|c| {
+            c.address = Some("gs.example.com:9000".into());
+            Ok(())
+        })?;
+
+        assert!(!is_read_only(&"ownwrites".parse()?));
         Ok(())
     }
 }
