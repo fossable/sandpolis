@@ -43,16 +43,9 @@ sandpolis-client = { path = "../sandpolis-client", version = "0.0.1", optional =
 ratatui = { workspace = true, optional = true }
 
 [dev-dependencies]
-# Userspace NFSv3 server (portmap + mount + nfs on one port), so the NFS backend
-# is tested against a real server rather than mocks.
-nfs3_server = { version = "0.11", features = ["memfs"] }
 ron = { workspace = true }
 # SMB timestamps are `time` values; the unit tests build them directly.
 time = { workspace = true, features = ["macros"] }
-
-[[test]]
-name = "nfs"
-required-features = ["server"]
 
 [features]
 agent = [
