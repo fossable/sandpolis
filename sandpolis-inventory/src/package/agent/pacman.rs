@@ -15,8 +15,8 @@ pub struct Pacman {
 
 impl Pacman {
     pub fn new() -> Result<Self> {
-        let executable = which::which("pacman")
-            .map_err(|_| anyhow::anyhow!("pacman not found in PATH"))?;
+        let executable =
+            which::which("pacman").map_err(|_| anyhow::anyhow!("pacman not found in PATH"))?;
         Ok(Self { executable })
     }
 
@@ -25,9 +25,7 @@ impl Pacman {
     }
 
     async fn exec_command(&self, args: &[&str]) -> Result<String> {
-        let output = Command::new(&self.executable)
-            .args(args)
-            .output()?;
+        let output = Command::new(&self.executable).args(args).output()?;
 
         if !output.status.success() {
             bail!("pacman command failed with exit code: {}", output.status);
@@ -45,13 +43,13 @@ impl PackageManager for Pacman {
     async fn get_version(&self) -> Result<String> {
         let output = self.exec_command(&["-V"]).await?;
         let version_regex = Regex::new(r"Pacman v(.*) -").unwrap();
-        
+
         for line in output.lines() {
             if let Some(captures) = version_regex.captures(line) {
                 return Ok(captures.get(1).unwrap().as_str().to_string());
             }
         }
-        
+
         bail!("Could not parse pacman version");
     }
 
@@ -70,7 +68,7 @@ impl PackageManager for Pacman {
             if parts.len() >= 2 {
                 let name = parts[0];
                 let version = parts[1];
-                
+
                 packages.push(PackageData {
                     name: name.to_string(),
                     version: version.to_string(),
@@ -95,7 +93,7 @@ impl PackageManager for Pacman {
             if let Some((key, value)) = line.split_once(" : ") {
                 let key = key.trim();
                 let value = value.trim();
-                
+
                 match key {
                     "Version" => package_data.version = value.to_string(),
                     "Description" => package_data.description = Some(value.to_string()),
@@ -103,29 +101,28 @@ impl PackageManager for Pacman {
                     "Installed Size" => {
                         // Parse size like "1.23 MiB" or "456.78 KiB"
                         if let Some(size_str) = value.split_whitespace().next()
-                            && let Ok(size) = size_str.parse::<f64>() {
-                                let unit = value.split_whitespace().nth(1).unwrap_or("");
-                                let bytes = match unit {
-                                    "KiB" => (size * 1024.0) as u64,
-                                    "MiB" => (size * 1024.0 * 1024.0) as u64,
-                                    "GiB" => (size * 1024.0 * 1024.0 * 1024.0) as u64,
-                                    _ => size as u64,
-                                };
-                                package_data.installed_size = Some(bytes);
-                            }
+                            && let Ok(size) = size_str.parse::<f64>()
+                        {
+                            let unit = value.split_whitespace().nth(1).unwrap_or("");
+                            let bytes = match unit {
+                                "KiB" => (size * 1024.0) as u64,
+                                "MiB" => (size * 1024.0 * 1024.0) as u64,
+                                "GiB" => (size * 1024.0 * 1024.0 * 1024.0) as u64,
+                                _ => size as u64,
+                            };
+                            package_data.installed_size = Some(bytes);
+                        }
                     }
                     "URL" => package_data.upstream_url = Some(value.to_string()),
                     "Licenses" => {
-                        let licenses: Vec<String> = value.split_whitespace()
-                            .map(|s| s.to_string())
-                            .collect();
+                        let licenses: Vec<String> =
+                            value.split_whitespace().map(|s| s.to_string()).collect();
                         package_data.licenses = Some(licenses);
                     }
                     "Depends On" => {
                         if value != "None" {
-                            let deps: Vec<String> = value.split_whitespace()
-                                .map(|s| s.to_string())
-                                .collect();
+                            let deps: Vec<String> =
+                                value.split_whitespace().map(|s| s.to_string()).collect();
                             package_data.dependencies = Some(deps);
                         }
                     }
@@ -224,7 +221,7 @@ impl PackageMetadata {
     /// Parse package metadata from a pacman database directory
     pub fn from_directory<P: AsRef<Path>>(directory: P) -> Result<Self> {
         let directory = directory.as_ref();
-        
+
         // Read "desc" file
         let desc_path = directory.join("desc");
         let desc_content = fs::read_to_string(&desc_path)
@@ -233,9 +230,12 @@ impl PackageMetadata {
 
         // Helper function to find value after a key
         let find_value = |key: &str| -> Result<String> {
-            let index = desc_lines.iter().position(|&line| line == key)
+            let index = desc_lines
+                .iter()
+                .position(|&line| line == key)
                 .ok_or_else(|| anyhow::anyhow!("Key {} not found", key))?;
-            desc_lines.get(index + 1)
+            desc_lines
+                .get(index + 1)
                 .ok_or_else(|| anyhow::anyhow!("Value for key {} not found", key))
                 .map(|s| s.to_string())
         };
@@ -283,7 +283,7 @@ impl PackageMetadata {
             let files_content = fs::read_to_string(&files_path)
                 .map_err(|e| anyhow::anyhow!("Failed to read files file: {}", e))?;
             let files_lines: Vec<&str> = files_content.lines().collect();
-            
+
             if let Some(files_idx) = files_lines.iter().position(|&line| line == "%FILES%") {
                 let mut idx = files_idx + 1;
                 while idx < files_lines.len() && !files_lines[idx].is_empty() {

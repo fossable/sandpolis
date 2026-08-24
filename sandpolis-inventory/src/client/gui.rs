@@ -6,14 +6,20 @@
 //! drawn with the shared [`gauge`] control, so "how full is it" reads the same
 //! way here as anywhere else in the GUI.
 
-use super::{query_cpu_cores, query_memory, query_mountpoints, query_packages, query_users};
+use super::{
+    query_cpu_cores, query_cpu_usage_history, query_memory, query_memory_history,
+    query_mountpoints, query_packages, query_users, query_vulnerabilities,
+};
+use crate::cve::CveSeverity;
 use bevy::prelude::*;
 use sandpolis_client::gui::layer_visuals::utilization_tint;
 use sandpolis_client::gui::queries::query_instance_metadata;
 use sandpolis_client::gui::ui::bind::bind_text;
+use sandpolis_client::gui::ui::chart::{ChartSeries, bind_chart, chart};
 use sandpolis_client::gui::ui::gauge::{GaugeValue, bind_gauge, gauge};
 use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
 use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx};
+use sandpolis_client::gui::ui::table::{TableData, TableRow, bind_table, table};
 use sandpolis_client::gui::ui::theme::Role;
 use sandpolis_client::gui::ui::widgets::{heading, text};
 use sandpolis_instance::{InstanceId, InstanceType, LayerName};
@@ -27,6 +33,14 @@ const SUMMARY_GAUGE_WIDTH: f32 = 170.0;
 /// more scrolling than information; they're sorted largest-first, so what's cut
 /// is the least interesting.
 const MAX_MOUNTS: usize = 6;
+
+/// How many vulnerability rows the panel shows. They're sorted worst-first, so
+/// what's cut is the least severe; the table isn't virtualized yet.
+const MAX_VULNERABILITIES: usize = 200;
+
+/// How many pending-update rows the panel shows; the table isn't virtualized
+/// yet.
+const MAX_OUTDATED: usize = 200;
 
 /// The inventory layer's node panel (system information).
 pub struct InventoryPanel;
@@ -83,6 +97,30 @@ impl NodePanel for InventoryPanel {
                 gauge(theme, "Utilization", cpu_usage(instance)),
                 bind_gauge(move || cpu_usage(instance)),
             ));
+            p.spawn((
+                chart(theme, "Usage history"),
+                bind_chart(move || cpu_series(instance)),
+            ));
+            p.spawn((
+                table(theme, None),
+                bind_table(move || {
+                    let mut cores = query_cpu_cores(instance).unwrap_or_default();
+                    cores.sort_by_key(|core| core.index);
+                    let mut data = TableData::new(["Core", "Usage", "Frequency", "Temp"])
+                        .with_placeholder("No core data");
+                    for core in cores {
+                        data.push_row(TableRow::new([
+                            core.index.to_string(),
+                            format!("{:.0}%", core.usage * 100.0),
+                            format!("{} MHz", core.frequency / 1_000_000),
+                            core.temperature
+                                .map(|t| format!("{t:.0}°C"))
+                                .unwrap_or_default(),
+                        ]));
+                    }
+                    data
+                }),
+            ));
 
             p.spawn(heading(theme, "Memory"));
             p.spawn((
@@ -92,6 +130,10 @@ impl NodePanel for InventoryPanel {
             p.spawn((
                 gauge(theme, "Swap", swap_usage(instance)),
                 bind_gauge(move || swap_usage(instance)),
+            ));
+            p.spawn((
+                chart(theme, "RAM history"),
+                bind_chart(move || memory_series(instance)),
             ));
 
             p.spawn(heading(theme, "Storage"));
@@ -118,25 +160,29 @@ impl NodePanel for InventoryPanel {
 
             p.spawn(heading(theme, "Users"));
             p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
-                    let users = query_users(instance).unwrap_or_default();
-                    if users.is_empty() {
-                        return "No user data".into();
-                    }
-                    let mut names: Vec<String> = users
-                        .iter()
-                        .map(|u| {
-                            u.username
+                table(theme, None),
+                bind_table(move || {
+                    let mut users = query_users(instance).unwrap_or_default();
+                    users.sort_by_key(|user| user.uid);
+                    let mut data = TableData::new(["UID", "Username", "Shell", "Home"])
+                        .with_placeholder("No user data");
+                    for user in users {
+                        data.push_row(TableRow::new([
+                            user.uid.to_string(),
+                            user.username
                                 .clone()
-                                .unwrap_or_else(|| format!("uid {}", u.uid))
-                        })
-                        .collect();
-                    names.sort();
-                    format!("{} users — {}", users.len(), names.join(", "))
+                                .unwrap_or_else(|| format!("uid {}", user.uid)),
+                            user.shell.clone().unwrap_or_default(),
+                            user.directory.clone().unwrap_or_default(),
+                        ]));
+                    }
+                    data
                 }),
             ));
 
+            // The full package list stays a count: thousands of retained rows
+            // needs the table to learn virtualization first. Pending updates
+            // are a small bounded subset, so they get a real table.
             p.spawn(heading(theme, "Packages"));
             p.spawn((
                 text(theme, "", theme.metrics.font_md, Role::Text),
@@ -145,7 +191,63 @@ impl NodePanel for InventoryPanel {
                     if packages.is_empty() {
                         return "No package data".into();
                     }
-                    format!("{} installed packages", packages.len())
+                    let outdated = packages.iter().filter(|p| is_outdated(p)).count();
+                    if outdated > 0 {
+                        format!(
+                            "{} installed packages, {} updates available",
+                            packages.len(),
+                            outdated
+                        )
+                    } else {
+                        format!("{} installed packages", packages.len())
+                    }
+                }),
+            ));
+            p.spawn((
+                table(theme, None),
+                bind_table(move || {
+                    let mut data = TableData::new(["Package", "Installed", "Available"])
+                        .with_placeholder("No pending updates");
+                    for package in outdated_packages(instance).iter().take(MAX_OUTDATED) {
+                        data.push_row(
+                            TableRow::new([
+                                package.name.clone(),
+                                package.version.clone(),
+                                package.latest_available.clone().unwrap_or_default(),
+                            ])
+                            .with_role(Role::Warn),
+                        );
+                    }
+                    data
+                }),
+            ));
+
+            p.spawn(heading(theme, "Vulnerabilities"));
+            p.spawn((
+                table(theme, None),
+                bind_table(move || {
+                    let vulnerabilities = query_vulnerabilities(instance).unwrap_or_default();
+                    let mut data = TableData::new(["CVE", "Package", "Version", "Severity"])
+                        .with_placeholder("No known vulnerabilities");
+                    for vulnerability in vulnerabilities.iter().take(MAX_VULNERABILITIES) {
+                        let row = TableRow::new([
+                            vulnerability.cve_id.clone(),
+                            vulnerability.package.clone(),
+                            vulnerability.version.clone(),
+                            match vulnerability.score {
+                                Some(score) => {
+                                    format!("{} ({score:.1})", vulnerability.severity)
+                                }
+                                None => vulnerability.severity.to_string(),
+                            },
+                        ]);
+                        data.push_row(match vulnerability.severity {
+                            CveSeverity::Critical | CveSeverity::High => row.with_role(Role::Error),
+                            CveSeverity::Medium => row.with_role(Role::Warn),
+                            CveSeverity::Low => row,
+                        });
+                    }
+                    data
                 }),
             ));
 
@@ -172,6 +274,27 @@ fn cpu_usage(instance: InstanceId) -> GaugeValue {
     )
 }
 
+/// Mean utilization across an instance's cores over time, from the replicated
+/// revision history.
+fn cpu_series(instance: InstanceId) -> ChartSeries {
+    let points = query_cpu_usage_history(instance).unwrap_or_default();
+    let caption = match points.last() {
+        Some((_, usage)) => format!("{:.0}%", usage * 100.0),
+        None => "No data".into(),
+    };
+    ChartSeries::new(points, caption)
+}
+
+/// An instance's RAM usage over time, from the replicated revision history.
+fn memory_series(instance: InstanceId) -> ChartSeries {
+    let points = query_memory_history(instance).unwrap_or_default();
+    let caption = match points.last() {
+        Some((_, usage)) => format!("{:.0}%", usage * 100.0),
+        None => "No data".into(),
+    };
+    ChartSeries::new(points, caption)
+}
+
 /// An instance's RAM usage.
 fn memory_usage(instance: InstanceId) -> GaugeValue {
     let Ok(Some(memory)) = query_memory(instance) else {
@@ -181,11 +304,7 @@ fn memory_usage(instance: InstanceId) -> GaugeValue {
     GaugeValue::ratio(
         used,
         memory.total,
-        format!(
-            "{} / {}",
-            format_bytes(used),
-            format_bytes(memory.total)
-        ),
+        format!("{} / {}", format_bytes(used), format_bytes(memory.total)),
     )
 }
 
@@ -247,6 +366,26 @@ fn mount_usage_of(mount: &crate::os::mountpoint::MountpointData) -> GaugeValue {
             format_bytes(mount.total_bytes())
         ),
     )
+}
+
+/// Whether a package's reported available version is newer than what's
+/// installed.
+fn is_outdated(package: &crate::package::PackageData) -> bool {
+    !package.version.is_empty()
+        && package
+            .latest_available
+            .as_deref()
+            .is_some_and(|latest| {
+                crate::version::vercmp(latest, &package.version) == std::cmp::Ordering::Greater
+            })
+}
+
+/// Packages with a pending update, sorted by name.
+fn outdated_packages(instance: InstanceId) -> Vec<crate::package::PackageData> {
+    let mut packages = query_packages(instance).unwrap_or_default();
+    packages.retain(is_outdated);
+    packages.sort_by(|a, b| a.name.cmp(&b.name));
+    packages
 }
 
 /// Format a byte count as a human-readable string (GB/MB/KB).

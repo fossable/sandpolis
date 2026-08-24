@@ -18,10 +18,26 @@ testClientConnect() {
 
 	sandpolis server --listen "127.0.0.1:${port}" --data . &
 
-	# The server writes the realm cert once it's up
+	# Wait for the realm cert
 	until [ -s ./default.realm.pem ]; do
 		sleep 0.1
 	done
 
-	sandpolis server list --json --realm ./default.realm.pem
+	sandpolis servers --json --realm ./default.realm.pem
+}
+
+## Test that a agent can connect to a server.
+testAgentConnect() {
+	port=$(randomPort)
+
+	sandpolis server --listen "127.0.0.1:${port}" --data . &
+
+	# Wait for the realm cert
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+
+	sandpolis agent --realm ./default.realm.pem &
+
+	sandpolis agents --json | jq -e .
 }

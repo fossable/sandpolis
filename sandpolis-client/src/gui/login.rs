@@ -24,7 +24,8 @@ pub struct LoginPhase1Handle {
 }
 
 pub struct LoginPhase2Handle {
-    pub task: bevy::tasks::Task<Result<(sandpolis_server::ServerConnection, LoginResponse), String>>,
+    pub task:
+        bevy::tasks::Task<Result<(sandpolis_server::ServerConnection, LoginResponse), String>>,
     pub server_url: ServerUrl,
     pub username: sandpolis_server::user::UserName,
 }
@@ -102,7 +103,9 @@ pub fn handle_login_phase2(
     // Check if we need to start phase 2
     if matches!(
         login_state.phase,
-        LoginPhase::Credentials { .. } | LoginPhase::PasswordSetup { .. } | LoginPhase::TotpEnroll { .. }
+        LoginPhase::Credentials { .. }
+            | LoginPhase::PasswordSetup { .. }
+            | LoginPhase::TotpEnroll { .. }
     ) && login_state.loading
         && login_operation.phase2_handle.is_none()
     {
@@ -447,7 +450,12 @@ fn spawn_login_modal(commands: &mut Commands, theme: &Theme, state: &LoginDialog
                         }
                         LoginPhase::Credentials { banner } => {
                             if let Some(message) = &banner.message {
-                                p.spawn(text(theme, message.clone(), theme.metrics.font_md, Role::Text));
+                                p.spawn(text(
+                                    theme,
+                                    message.clone(),
+                                    theme.metrics.font_md,
+                                    Role::Text,
+                                ));
                             }
                             if banner.maintenance {
                                 p.spawn(text(

@@ -12,8 +12,8 @@
 
 use crate::gui::input::CurrentLayer;
 use crate::gui::ui::Activate;
-use crate::gui::ui::layer::{LayerRegistry, ToolbarEnabledFn};
 use crate::gui::ui::icon::IconCache;
+use crate::gui::ui::layer::{LayerRegistry, ToolbarEnabledFn};
 use crate::gui::ui::theme::Theme;
 use crate::gui::ui::tooltip::Tooltip;
 use crate::gui::ui::widgets::icon_button;

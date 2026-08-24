@@ -84,8 +84,7 @@ mod tests {
         let database: DatabaseManager = test_db!(UserData);
 
         let instance_id = InstanceId::new_server();
-        let mut collector =
-            UserCollector::new(database.realm(RealmName::default())?, instance_id)?;
+        let mut collector = UserCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;
 
         // Every collected user must be scoped to this instance.

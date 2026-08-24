@@ -1,8 +1,9 @@
 use super::MemoryData;
+use crate::HISTORY_RETENTION;
 use anyhow::Result;
 use sandpolis_agent::Collector;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::{RealmDatabase, Resident};
+use sandpolis_instance::database::{DataExpiration, RealmDatabase, Resident};
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tracing::trace;
 
@@ -35,6 +36,11 @@ impl Collector for MemoryMonitor {
             data.free = self.system.free_memory();
             data.swap_total = self.system.total_swap();
             data.swap_free = self.system.free_swap();
+            // Superseded readings become the usage history the client charts.
+            // Restamping the expiration means even an identical reading writes
+            // a revision, which is the point: history has no gaps while the
+            // agent is up.
+            data._expiration = DataExpiration::after(HISTORY_RETENTION);
             Ok(())
         })?;
 
@@ -55,8 +61,7 @@ mod tests {
         let database: DatabaseManager = test_db!(MemoryData);
 
         let instance_id = InstanceId::new_server();
-        let mut monitor =
-            MemoryMonitor::new(database.realm(RealmName::default())?, instance_id)?;
+        let mut monitor = MemoryMonitor::new(database.realm(RealmName::default())?, instance_id)?;
         monitor.refresh().await?;
 
         assert!(monitor.data.read().total > 0);

@@ -35,6 +35,13 @@ pub(crate) trait PackageManager {
         bail!("Not implemented");
     }
 
+    /// Fill in `latest_available` for the given installed packages. The default
+    /// is a no-op rather than a bail so the collector can call it for every
+    /// manager; those without an implementation leave the packages untouched.
+    async fn get_latest_available(&self, _packages: &mut [PackageData]) -> Result<()> {
+        Ok(())
+    }
+
     /// Gather advanced metadata for the given package.
     async fn get_metadata(&self, _name: String) -> Result<PackageData> {
         bail!("Not implemented");

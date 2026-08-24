@@ -96,7 +96,10 @@ pub struct NetworkStats {
 }
 
 /// Query network stats for a specific instance
-pub fn query_network_stats(_network_manager: &NetworkManager, _id: InstanceId) -> Result<NetworkStats> {
+pub fn query_network_stats(
+    _network_manager: &NetworkManager,
+    _id: InstanceId,
+) -> Result<NetworkStats> {
     // TODO: Query from network resident
     Ok(NetworkStats {
         latency_ms: None,

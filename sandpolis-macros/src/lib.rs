@@ -87,6 +87,10 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
                 self._creation
             }
 
+            fn set_creation(&mut self, creation: #krate::database::DataCreation) {
+                self._creation = creation;
+            }
+
             #scope
 
             #expiration

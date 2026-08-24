@@ -8,6 +8,7 @@ use bevy::prelude::*;
 use sandpolis_client::gui::ui::bind::bind_text;
 use sandpolis_client::gui::ui::layer::{LayerClientInfo, RegisterLayerClient};
 use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx};
+use sandpolis_client::gui::ui::table::{TableData, TableRow, bind_table, table};
 use sandpolis_client::gui::ui::theme::Role;
 use sandpolis_client::gui::ui::widgets::{heading, text};
 use sandpolis_instance::{InstanceType, LayerName};
@@ -78,22 +79,33 @@ impl NodePanel for HealthPanel {
                 }),
             ));
 
-            // Failed units (most actionable).
-            p.spawn(heading(theme, "Failed Units"));
+            // Every unit, failed ones first (most actionable) and tinted so
+            // they read as broken without parsing the state column.
+            p.spawn(heading(theme, "Units"));
             p.spawn((
-                text(theme, "", theme.metrics.font_md, Role::Text),
-                bind_text(move || {
-                    let units = query_systemd_units(instance).unwrap_or_default();
-                    let failed: Vec<String> = units
-                        .iter()
-                        .filter(|unit| unit.active_state == ActiveState::Failed)
-                        .map(|unit| unit.name.clone())
-                        .collect();
-                    if failed.is_empty() {
-                        "None".into()
-                    } else {
-                        failed.join("\n")
+                table(theme, None),
+                bind_table(move || {
+                    let mut units = query_systemd_units(instance).unwrap_or_default();
+                    units.sort_by(|a, b| {
+                        (a.active_state != ActiveState::Failed, &a.name)
+                            .cmp(&(b.active_state != ActiveState::Failed, &b.name))
+                    });
+                    let mut data = TableData::new(["Unit", "Active", "Sub", "Description"])
+                        .with_placeholder("No unit data");
+                    for unit in units {
+                        let row = TableRow::new([
+                            unit.name.clone(),
+                            unit.active_state.to_string(),
+                            unit.sub_state.clone().unwrap_or_default(),
+                            unit.description.clone().unwrap_or_default(),
+                        ]);
+                        data.push_row(if unit.active_state == ActiveState::Failed {
+                            row.with_role(Role::Error)
+                        } else {
+                            row
+                        });
                     }
+                    data
                 }),
             ));
 

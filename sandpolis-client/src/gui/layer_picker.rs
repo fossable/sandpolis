@@ -3,8 +3,8 @@
 //! indicator or the `L` key.
 
 use crate::gui::input::CurrentLayer;
-use crate::gui::ui::layer::LayerRegistry;
 use crate::gui::ui::gating::UiPointerState;
+use crate::gui::ui::layer::LayerRegistry;
 use crate::gui::ui::panel::modal_scrim;
 use crate::gui::ui::text_input::text_input;
 use crate::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder};
@@ -16,8 +16,7 @@ use bevy_ui_widgets::{Activate, Button};
 use sandpolis_instance::LayerName;
 
 /// Layer picker state.
-#[derive(Resource)]
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct LayerPickerState {
     pub show: bool,
     pub available_layers: Vec<LayerName>,
@@ -25,7 +24,6 @@ pub struct LayerPickerState {
     /// Highlighted item index for keyboard navigation.
     pub selected_index: usize,
 }
-
 
 /// Modal root marker.
 #[derive(Component)]

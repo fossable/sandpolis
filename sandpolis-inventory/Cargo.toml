@@ -9,6 +9,7 @@ version = "0.0.1"
 anyhow = { workspace = true }
 serde = { workspace = true }
 os_info = { workspace = true }
+strum = { workspace = true }
 tracing = { workspace = true }
 native_db = { workspace = true }
 tokio = { workspace = true }
@@ -18,6 +19,10 @@ sysinfo = { version = "0.39.3", optional = true }
 which = { version = "8", optional = true }
 regex = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+tokio-util = { workspace = true, optional = true }
+liblzma = { version = "0.4", features = ["static"], optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-agent = { path = "../sandpolis-agent", version = "0.0.1", optional = true }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
@@ -41,7 +46,14 @@ agent = [
   "dep:regex",
   "dep:serde_json",
 ]
-server = []
+server = [
+  "sandpolis-instance/server",
+  "dep:chrono",
+  "dep:liblzma",
+  "dep:reqwest",
+  "dep:serde_json",
+  "dep:tokio-util",
+]
 client = [
   "dep:bevy",
   "dep:include_dir",

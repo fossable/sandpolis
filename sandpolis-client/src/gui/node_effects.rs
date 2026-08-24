@@ -97,11 +97,14 @@ fn dashed_ring_mesh(inner: f32, outer: f32) -> Mesh {
     }
 
     let vertex_count = positions.len();
-    Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
-        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
-        .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; vertex_count])
-        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; vertex_count])
-        .with_inserted_indices(Indices::U32(indices))
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; vertex_count])
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; vertex_count])
+    .with_inserted_indices(Indices::U32(indices))
 }
 
 /// Spawn / despawn selection visuals to match the [`Selected`] markers.
@@ -165,10 +168,7 @@ pub fn update_selection_visuals(
                 Mesh2d(meshes.add(mesh)),
                 MeshMaterial2d(materials.add(ColorMaterial::from(color))),
                 Transform::from_xyz(0.0, 0.0, -0.1), // Behind the node
-                SelectionRing {
-                    node_entity,
-                    style,
-                },
+                SelectionRing { node_entity, style },
             ));
         });
     }

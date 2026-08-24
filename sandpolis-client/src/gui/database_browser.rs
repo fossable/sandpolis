@@ -3,12 +3,14 @@
 //! Lists every `#[data]` table registered in
 //! [`sandpolis_instance::database::browse::BROWSE`] with live row counts, an
 //! instance filter (whole database or a single instance's rows), and the
-//! selected table's rows pretty-printed as JSON. Since `bind_text` closures run
-//! every frame, all database reads sit behind ~1s caches.
+//! selected table's rows in a shared [`table`] widget (columns are the union of
+//! the rows' JSON keys). Since `bind_text` closures run every frame, the count
+//! reads sit behind a ~1s cache; the rows table throttles itself.
 
 use crate::gui::ui::Activate;
 use crate::gui::ui::bind::bind_text;
 use crate::gui::ui::panel::{PanelClosed, spawn_floating_panel};
+use crate::gui::ui::table::{TableData, TableRow, bind_table, table};
 use crate::gui::ui::theme::{Role, Theme, ThemedBorder, ThemedButton};
 use crate::gui::ui::widgets::{row, text};
 use bevy::ecs::world::CommandQueue;
@@ -35,8 +37,6 @@ struct BrowserState {
     selected: Option<(u32, &'static str)>,
     /// `None` = whole database.
     instance: Option<InstanceId>,
-    /// Cached rows text for `(model_id, instance)`.
-    rows_cache: Option<(Instant, (u32, Option<InstanceId>), String)>,
     /// Cached per-table count labels, refreshed together.
     counts_cache: Option<(Instant, Option<InstanceId>, HashMap<u32, String>)>,
 }
@@ -167,14 +167,15 @@ fn build_body(commands: &mut Commands, body: Entity, theme: &Theme) {
                 .spawn(Node {
                     flex_direction: FlexDirection::Column,
                     flex_grow: 1.0,
+                    min_height: Val::Px(0.0),
                     overflow: Overflow::scroll_y(),
                     ..default()
                 })
                 .with_children(|pane| {
                     let rows_state = state.clone();
                     pane.spawn((
-                        text(theme, "", theme.metrics.font_sm, Role::TextMuted),
-                        bind_text(move || rows_text(&rows_state)),
+                        table(theme, None),
+                        bind_table(move || rows_data(&rows_state)),
                     ));
                 });
         });
@@ -237,33 +238,53 @@ fn table_label(state: &Shared, model_id: u32, name: &str) -> String {
     format!("{name} ({count})")
 }
 
-/// Pretty-printed JSON rows of the selected table, cached for [`REFRESH`].
-fn rows_text(state: &Shared) -> String {
-    let mut s = state.lock().unwrap();
-    let Some((model_id, name)) = s.selected else {
-        return "Select a table to view its rows.".into();
+/// The selected table's rows as [`TableData`]: columns are the union of the
+/// rows' top-level JSON keys (internal `_`-prefixed keys like `_id` first).
+///
+/// The table widget's own refresh throttle bounds how often this queries.
+fn rows_data(state: &Shared) -> TableData {
+    let (model_id, name, instance) = {
+        let s = state.lock().unwrap();
+        let Some((model_id, name)) = s.selected else {
+            return TableData::default().with_placeholder("Select a table to view its rows.");
+        };
+        (model_id, name, s.instance)
     };
-    let key = (model_id, s.instance);
-    if let Some((at, cached_key, cached)) = &s.rows_cache
-        && *cached_key == key
-        && at.elapsed() < REFRESH
-    {
-        return cached.clone();
+    let Some(db) = realm_db() else {
+        return TableData::default().with_placeholder("Database not initialized.");
+    };
+    let rows = match BROWSE.rows(&db, model_id, instance) {
+        Ok(rows) => rows,
+        Err(e) => {
+            return TableData::default().with_placeholder(format!("{name}: query failed: {e}"));
+        }
+    };
+
+    let mut columns: Vec<String> = rows
+        .iter()
+        .filter_map(|row| row.as_object())
+        .flat_map(|object| object.keys().cloned())
+        .collect();
+    columns.sort_by(|a, b| {
+        // Internal fields lead, so every table starts with its identity.
+        (!a.starts_with('_'), a.as_str()).cmp(&(!b.starts_with('_'), b.as_str()))
+    });
+    columns.dedup();
+    if columns.is_empty() {
+        // Non-object rows (or none at all) collapse to a single column.
+        columns.push("value".into());
     }
-    let rendered = match realm_db() {
-        None => "Database not initialized.".into(),
-        Some(db) => match BROWSE.rows(&db, model_id, s.instance) {
-            Err(e) => format!("{name}: query failed: {e}"),
-            Ok(rows) => {
-                let mut out = format!("{name}: {} row(s)\n\n", rows.len());
-                for row in &rows {
-                    out.push_str(&serde_json::to_string_pretty(row).unwrap_or_default());
-                    out.push_str("\n\n");
-                }
-                out
-            }
-        },
-    };
-    s.rows_cache = Some((Instant::now(), key, rendered.clone()));
-    rendered
+
+    let mut data = TableData::new(columns.clone()).with_placeholder(format!("{name}: no rows"));
+    for row in &rows {
+        data.push_row(match row.as_object() {
+            Some(object) => TableRow::new(columns.iter().map(|column| match object.get(column) {
+                None => String::new(),
+                Some(serde_json::Value::String(s)) => s.clone(),
+                Some(value) => value.to_string(),
+            })),
+            None => TableRow::new([row.to_string()]),
+        });
+    }
+    data
 }

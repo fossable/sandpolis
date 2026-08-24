@@ -420,6 +420,8 @@ impl RealmDatabase {
         // we don't miss any updates.
         let r = self.inner.r_transaction()?;
         let mut items = query.query(r.scan())?;
+        // A temporal singleton's history is still one logical record.
+        items.retain(|item| matches!(item.revision(), DataRevision::Latest(_)));
 
         let item = if items.len() > 1 {
             bail!("Too many items");
@@ -500,6 +502,11 @@ impl RealmDatabase {
         let r = self.inner.r_transaction()?;
         let mut inner = BTreeMap::new();
         for item in query.query(r.scan())? {
+            // Previous revisions are a temporal record's history, not rows of
+            // their own.
+            if matches!(item.revision(), DataRevision::Previous(_)) {
+                continue;
+            }
             inner.insert(
                 item.id(),
                 Resident {
@@ -595,6 +602,8 @@ where
     }
 
     fn creation(&self) -> DataCreation;
+
+    fn set_creation(&mut self, creation: DataCreation);
 
     fn creation_key() -> KeyDefinition<KeyOptions> {
         KeyDefinition::new(
@@ -770,6 +779,21 @@ impl DataIdentifier {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DataExpiration(DateTime<Utc>);
 
+impl DataExpiration {
+    /// An expiration `duration` from now.
+    pub fn after(duration: std::time::Duration) -> Self {
+        Self(
+            Utc::now()
+                + chrono::TimeDelta::from_std(duration).unwrap_or(chrono::TimeDelta::MAX),
+        )
+    }
+
+    /// Whether the expiration has passed.
+    pub fn expired(&self) -> bool {
+        self.0 < Utc::now()
+    }
+}
+
 impl Default for DataExpiration {
     fn default() -> Self {
         Self(DateTime::<Utc>::MAX_UTC)
@@ -858,9 +882,26 @@ impl<T: Data> Resident<T> {
     fn handle_event(&self, event: Event) {
         trace!(event = ?event, "Handling event");
         match event {
-            Event::Insert(_data) => {}
+            Event::Insert(data) => {
+                // A temporal update lands as an insert: the new revision is a
+                // new row. Previous revisions are history, not new state.
+                if let Ok(d) = data.inner::<T>() {
+                    if matches!(d.revision(), DataRevision::Previous(_)) {
+                        return;
+                    }
+                    let mut c = self.inner.write().unwrap();
+                    if d.revision() >= c.revision() {
+                        *c = d;
+                    }
+                }
+            }
             Event::Update(data) => {
                 if let Ok(d) = data.inner_new::<T>() {
+                    // A row flipping to a previous revision is bookkeeping on
+                    // the old copy, not a change to the live value.
+                    if matches!(d.revision(), DataRevision::Previous(_)) {
+                        return;
+                    }
                     let mut c = self.inner.write().unwrap();
                     // Only accept updates with newer or equal revisions (last write wins)
                     if d.revision() >= c.revision() {
@@ -874,7 +915,14 @@ impl<T: Data> Resident<T> {
                     }
                 }
             }
-            Event::Delete(_) => warn!("Deleting a singleton is undefined"),
+            Event::Delete(data) => {
+                // Trimming an expired revision is routine; deleting the live
+                // row is not.
+                match data.inner::<T>() {
+                    Ok(d) if matches!(d.revision(), DataRevision::Previous(_)) => {}
+                    _ => warn!("Deleting a singleton is undefined"),
+                }
+            }
         }
     }
 }
@@ -927,9 +975,35 @@ impl<T: Data> Resident<T> {
         if previous.expiration().is_some() {
             // Derive new id from the previous
             next.set_id(previous.id().new_revision());
+            // Each revision records when it was written, giving history a time
+            // axis; the original creation lives on in the oldest revision.
+            next.set_creation(DataCreation::default());
 
             rw.insert(next.clone())?;
             rw.upsert(previous.clone())?;
+
+            // Retire this chain's expired revisions while we're here, so
+            // temporal rows don't accumulate forever. The range covers every
+            // id sharing this record's revision id.
+            let expired: Vec<T> = rw
+                .scan()
+                .primary()?
+                .range(
+                    DataIdentifier((previous.id().revision_id() as u64) << 32)
+                        ..=DataIdentifier(
+                            ((previous.id().revision_id() as u64) << 32) | 0xFFFF_FFFF,
+                        ),
+                )?
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .filter(|item: &T| {
+                    matches!(item.revision(), DataRevision::Previous(_))
+                        && item.expiration().is_some_and(|e| e.expired())
+                })
+                .collect();
+            for item in expired {
+                rw.remove(item)?;
+            }
         } else {
             rw.upsert(next.clone())?;
         }
@@ -1300,6 +1374,12 @@ impl<T: Data> ResidentVec<T> {
         match event {
             Event::Insert(insert) => {
                 if let Ok(data) = insert.inner::<T>() {
+                    // Previous revisions are a temporal record's history, not
+                    // rows of their own.
+                    if matches!(data.revision(), DataRevision::Previous(_)) {
+                        return;
+                    }
+
                     // The first condition should be satified because that's the watcher's condition
                     assert!(
                         self.conditions
@@ -1339,6 +1419,34 @@ impl<T: Data> ResidentVec<T> {
                         }
                     }
 
+                    // A temporal update lands as an insert under a fresh id
+                    // while the same logical record already sits in the map
+                    // under its old id (revision chains share the upper id
+                    // half). Re-key that entry instead of duplicating it.
+                    if data.expiration().is_some()
+                        && let Some(old_id) = (*c)
+                            .keys()
+                            .find(|id| {
+                                id.revision_id() == data_id.revision_id() && **id != data_id
+                            })
+                            .copied()
+                    {
+                        let resident = (*c).remove(&old_id).unwrap();
+                        {
+                            let mut inner = resident.inner.write().unwrap();
+                            // On the writing instance the entry was already
+                            // advanced in place; elsewhere this is the update.
+                            if data.revision() >= inner.revision() {
+                                *inner = data;
+                            }
+                        }
+                        (*c).insert(data_id, resident.clone());
+                        drop(c);
+
+                        self.notify_listeners(ResidentVecEvent::Updated(resident));
+                        return;
+                    }
+
                     let resident = Resident {
                         db: self.db.clone(),
                         inner: Arc::new(RwLock::new(data)),
@@ -1354,6 +1462,12 @@ impl<T: Data> ResidentVec<T> {
             }
             Event::Update(insert) => {
                 if let Ok(data) = insert.inner_new::<T>() {
+                    // A row flipping to a previous revision is bookkeeping on
+                    // the old copy, not a change to the live value.
+                    if matches!(data.revision(), DataRevision::Previous(_)) {
+                        return;
+                    }
+
                     let mut c = self.inner.write().unwrap();
                     match (*c).get(&data.id()) {
                         Some(r) => {
@@ -2053,6 +2167,109 @@ mod test_resident_vec {
         let values: Vec<String> = history.iter().map(|d| d.b.clone()).collect();
         assert!(values.contains(&"version_1".to_string()));
         assert!(values.contains(&"version_5".to_string()));
+
+        Ok(())
+    }
+
+    /// Each revision records when it was written, so history has a time axis.
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_revision_creation_stamped() -> Result<()> {
+        use super::test_resident::TestHistoryData;
+
+        let database = test_db!(TestHistoryData);
+        let db = database.realm(RealmName::default())?;
+        let resident: Resident<TestHistoryData> = db.resident(())?;
+
+        for i in 1..=3 {
+            sleep(Duration::from_millis(5)).await;
+            resident.update(|data| {
+                data.b = format!("version_{}", i);
+                Ok(())
+            })?;
+        }
+
+        let mut history = resident.history(DataCreation::all())?;
+        history.sort_by_key(|d| d.creation().timestamp());
+        let creations: Vec<_> = history.iter().map(|d| d.creation().timestamp()).collect();
+        for pair in creations.windows(2) {
+            assert!(pair[0] < pair[1], "revision creations must be distinct");
+        }
+        assert_eq!(history.last().unwrap().b, "version_3");
+
+        Ok(())
+    }
+
+    /// A temporal record's updates must not multiply `ResidentVec` entries or
+    /// break reloading residents against a database that holds history.
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_temporal_resident_vec_no_duplicates() -> Result<()> {
+        use super::test_resident::TestHistoryData;
+
+        let database = test_db!(TestHistoryData);
+        let db = database.realm(RealmName::default())?;
+        let vec: ResidentVec<TestHistoryData> = db.resident_vec(())?;
+
+        let resident = vec.push(TestHistoryData {
+            a: "row".to_string(),
+            b: "version_0".to_string(),
+            ..Default::default()
+        })?;
+
+        for i in 1..=5 {
+            resident.update(|data| {
+                data.b = format!("version_{}", i);
+                Ok(())
+            })?;
+        }
+
+        // Let the watcher events land.
+        sleep(Duration::from_millis(50)).await;
+
+        assert_eq!(vec.len(), 1, "revisions must not become entries");
+        let entry = vec.iter().next().unwrap();
+        assert_eq!(entry.read().b, "version_5");
+        assert_eq!(entry.read().id(), resident.read().id());
+
+        // The database holds the full history nonetheless.
+        assert_eq!(resident.history(DataCreation::all())?.len(), 6);
+
+        // Reloading sees one logical record, not one per revision.
+        let reloaded_vec: ResidentVec<TestHistoryData> = db.resident_vec(())?;
+        assert_eq!(reloaded_vec.len(), 1);
+        let reloaded: Resident<TestHistoryData> = db.resident(())?;
+        assert_eq!(reloaded.read().b, "version_5");
+
+        Ok(())
+    }
+
+    /// Expired revisions are dropped as new ones are written.
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_expired_revisions_trimmed() -> Result<()> {
+        use super::test_resident::TestHistoryData;
+
+        let database = test_db!(TestHistoryData);
+        let db = database.realm(RealmName::default())?;
+        let resident: Resident<TestHistoryData> = db.resident(())?;
+
+        for i in 1..=5 {
+            resident.update(|data| {
+                data.b = format!("version_{}", i);
+                // Already expired, so every superseded revision is trimmable.
+                data._expiration = DataExpiration(Utc::now() - chrono::TimeDelta::seconds(1));
+                Ok(())
+            })?;
+        }
+
+        let history = resident.history(DataCreation::all())?;
+        assert!(
+            history.len() <= 2,
+            "expired revisions must be trimmed, found {}",
+            history.len()
+        );
+        assert_eq!(resident.read().b, "version_5");
 
         Ok(())
     }

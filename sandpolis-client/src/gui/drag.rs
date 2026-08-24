@@ -100,7 +100,10 @@ pub fn handle_node_selection(
     mut selection_set: ResMut<SelectionSet>,
     mut pending: Local<Option<PendingPress>>,
 ) {
-    let cursor = windows.single().ok().and_then(|window| window.cursor_position());
+    let cursor = windows
+        .single()
+        .ok()
+        .and_then(|window| window.cursor_position());
 
     if mouse_button.just_pressed(MouseButton::Left) {
         // A press that starts over blocking UI belongs to that UI, so nothing is

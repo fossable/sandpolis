@@ -50,6 +50,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     #[cfg(feature = "health")]
     state.health.register_services(&mut services);
 
+    #[cfg(feature = "audit")]
+    state.audit.register_services(&mut services);
+
     #[cfg(feature = "inventory")]
     state.inventory.register_services(&mut services);
 

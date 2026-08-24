@@ -12,13 +12,24 @@ use std::sync::Arc;
 pub mod client;
 
 pub mod applications;
+pub mod config;
+pub mod cve;
 pub mod hardware;
 pub mod os;
 pub mod package;
+pub(crate) mod version;
 
 #[data]
 #[derive(Default)]
 pub struct InventoryManagerData {}
+
+/// How long superseded revisions of fast-changing readings (CPU usage, memory)
+/// are kept, which bounds how far back the client's history charts can reach.
+pub const HISTORY_RETENTION: std::time::Duration = std::time::Duration::from_secs(60 * 60);
+
+/// How often agents poll CPU utilization. The client also buckets replicated
+/// core readings by this interval to reassemble per-pass averages.
+pub const CPU_POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
 
 #[cfg(feature = "agent")]
 use tokio::sync::Mutex;
@@ -27,6 +38,8 @@ use tokio::sync::Mutex;
 pub struct InventoryManager {
     #[allow(dead_code)]
     data: Resident<InventoryManagerData>,
+    #[cfg(feature = "server")]
+    realm: sandpolis_instance::database::RealmDatabase,
     #[cfg(feature = "agent")]
     pub memory: Arc<Mutex<os::memory::agent::MemoryMonitor>>,
     #[cfg(feature = "agent")]
@@ -54,12 +67,10 @@ impl InventoryManager {
                 instance.instance_id,
             )?)),
             #[cfg(feature = "agent")]
-            mountpoints: Arc::new(Mutex::new(
-                os::mountpoint::agent::MountpointCollector::new(
-                    database.realm(RealmName::default())?,
-                    instance.instance_id,
-                )?,
-            )),
+            mountpoints: Arc::new(Mutex::new(os::mountpoint::agent::MountpointCollector::new(
+                database.realm(RealmName::default())?,
+                instance.instance_id,
+            )?)),
             #[cfg(feature = "agent")]
             users: Arc::new(Mutex::new(os::user::agent::UserCollector::new(
                 database.realm(RealmName::default())?,
@@ -70,8 +81,38 @@ impl InventoryManager {
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
+            #[cfg(feature = "server")]
+            realm: database.realm(RealmName::default())?,
             data: database.realm(RealmName::default())?.resident(())?,
         })
+    }
+
+    /// Add the subsystem's background services to the server's runner.
+    ///
+    /// `owned` decides which instances' data this server currently owns, so a
+    /// local stratum server only matches (and writes findings for) its own
+    /// agents. The config flag is a coarse startup switch: a disabled service
+    /// is never registered and doesn't appear in the client at all.
+    #[cfg(feature = "server")]
+    pub fn register_server_services(
+        &self,
+        config: &config::InventoryManagerConfig,
+        data_dir: std::path::PathBuf,
+        owned: cve::server::OwnedFn,
+        runner: &mut sandpolis_instance::service::ServiceRunner,
+    ) -> Result<()> {
+        if !config.cve.enabled {
+            tracing::info!("CVE matching is disabled");
+            return Ok(());
+        }
+
+        runner.register(cve::CveService::new(
+            self.realm.clone(),
+            data_dir,
+            &config.cve,
+            owned,
+        )?);
+        Ok(())
     }
 
     /// Add the subsystem's background services to the agent's runner.
@@ -97,7 +138,7 @@ impl InventoryManager {
             "Inventory",
             "cpu",
             "Collects the host's per-core CPU utilization",
-            Duration::from_secs(5),
+            CPU_POLL_INTERVAL,
         ));
         runner.register(CollectorService::new(
             self.mountpoints.clone(),

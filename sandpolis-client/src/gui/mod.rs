@@ -4,8 +4,8 @@
 //! including layer-agnostic components and Bevy systems.
 
 pub mod activity;
-pub mod core_toolbar;
 pub mod assets;
+pub mod core_toolbar;
 pub mod database_browser;
 pub mod drag;
 pub mod edges;

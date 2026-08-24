@@ -1,8 +1,9 @@
 use super::{CpuCoreData, CpuData};
+use crate::HISTORY_RETENTION;
 use anyhow::Result;
 use sandpolis_agent::Collector;
 use sandpolis_instance::InstanceId;
-use sandpolis_instance::database::{Data, RealmDatabase, Resident, ResidentVec};
+use sandpolis_instance::database::{Data, DataExpiration, RealmDatabase, Resident, ResidentVec};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use tracing::trace;
 
@@ -59,6 +60,11 @@ impl Collector for CpuCollector {
                     resident.update(|core| {
                         core.usage = usage;
                         core.frequency = frequency;
+                        // Superseded readings become the usage history the
+                        // client charts. Restamping the expiration means even
+                        // an identical reading writes a revision, which is the
+                        // point: history has no gaps while the agent is up.
+                        core._expiration = DataExpiration::after(HISTORY_RETENTION);
                         Ok(())
                     })?;
                     continue 'next_core;

@@ -81,10 +81,7 @@ fn track_foreground(windows: Query<&Window>) {
 #[cfg(target_os = "android")]
 fn track_foreground(mut lifecycle: MessageReader<bevy::window::AppLifecycle>) {
     for event in lifecycle.read() {
-        crate::notification::set_foreground(matches!(
-            event,
-            bevy::window::AppLifecycle::Running
-        ));
+        crate::notification::set_foreground(matches!(event, bevy::window::AppLifecycle::Running));
     }
 }
 

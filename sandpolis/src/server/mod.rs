@@ -247,6 +247,31 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
         .account
         .register_services(&account_config, &mut services)?;
 
+    // CVE matching runs where the agents' package data lives. Only the owner of
+    // an instance's data writes findings for it, so a local stratum server
+    // covers exactly its own agents and the global stratum server the rest.
+    #[cfg(feature = "inventory")]
+    {
+        let cve_dir = options
+            .database
+            .get_storage_dir()?
+            .unwrap_or_else(std::env::temp_dir)
+            .join("cve");
+        let ownership = state.server.ownership.clone();
+        let self_id = state.instance.instance_id;
+        state.inventory.register_server_services(
+            &options.merged_inventory_config(),
+            cve_dir,
+            std::sync::Arc::new(move |id| {
+                ownership
+                    .owned_by(self_id)
+                    .iter()
+                    .any(|scope| scope.instance == id)
+            }),
+            &mut services,
+        )?;
+    }
+
     services.start()?;
 
     // A local stratum server can't serve TLS until the global stratum server has

@@ -22,7 +22,7 @@ pub struct CpuData {
     pub l4_cache: Option<u64>,
 }
 
-#[data(instance)]
+#[data(instance, temporal)]
 #[derive(Default)]
 pub struct CpuCoreData {
     #[secondary_key]

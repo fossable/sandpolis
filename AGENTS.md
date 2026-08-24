@@ -249,10 +249,6 @@ cd android && ./gradlew assembleDebug
   only servers are shown and they become interactable. Clients are only present
   in the graph when the client layer is active (servers are also present, but
   not interactable).
-- The node panel framework needs more shared controls. It has buttons, text and
-  gauges today (`sandpolis-client/src/gui/ui/{widgets,gauge}.rs`); charts and
-  tables are the obvious gaps, and every layer currently rolls its own list.
-  - CPU and memory usage line graphs with historical data
 - Notifications currently only reach the user as a toast or an OS notification.
   Add a notification center in the GUI (history, per-layer muting). When the
   client is running in the foreground, show in-app toasts and no OS-native
@@ -290,8 +286,6 @@ cd android && ./gradlew assembleDebug
   - Also augment with publically available information like account creation
     dates
 - Service that checks accounts with haveibeenpwned API
-- Service that consumes CVE data and alerts if software versions are found
-  - depend on inventory subsystem
 
 ## `sandpolis-snapshot`
 
@@ -309,7 +303,7 @@ cd android && ./gradlew assembleDebug
 - Button on toolbar that sets "Away" mode where monitoring becomes more strict
   - For example, a sucessful SSH login when away is highly suspicious and must
     be notified immediately
-- Configurable notifications
+- Configurable notifications in realm config file
   - failed login attempts
   - all login attempts
 
@@ -376,15 +370,6 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-desktop`
 
-- VNC (`vnc.rs`) and RDP (`rdp.rs`) probes stream here like agents, behind the
-  `probe` feature: the owning server speaks the protocol and re-encodes into the
-  desktop frame format. VNC uses the blocking `vnc` crate on an OS thread; RDP
-  uses async IronRDP on a tokio task (the `ssh.rs` pattern).
-- `DesktopStreamInputEvent` only carries `Option<char>`, so
-  Enter/Backspace/arrows reach neither agents nor VNC/RDP probes. RDP maps the
-  `char` through a Unicode keyboard event; the non-printing keys are still lost.
-- `sandpolis-probe/tests/` is a manual (non-`cargo test`) container that serves
-  every probe protocol at once, including one desktop over both VNC and RDP.
 - Button on expanded node panel to maximize the desktop session
 
 ## `sandpolis-instance`
@@ -402,13 +387,13 @@ cd android && ./gradlew assembleDebug
 ## `sandpolis-inventory`
 
 - Manage firmware updates
-- Inspect nixpkgs package versions
+- latest_available is only populated for nix; apt/pacman need
+  get_latest_available implementations
 
 ## `sandpolis-client`
 
-- Build a reusable 2-column table that can render lists of data from a
-  ResidentVec
-  - It should support vertical scrolling only
+- Virtualize rows in the shared table widget (`src/gui/ui/table.rs`) so large
+  lists (e.g. installed packages) can use it
 
 ## `sandpolis` (main crate)
 
@@ -440,3 +425,6 @@ cd android && ./gradlew assembleDebug
     health/inventory as the device's. Shell, desktop and filesystem discriminate
     on `ctx.target.sub` and route probe targets to per-protocol code; health and
     inventory need the same before their nodes can appear.
+- Move `sandpolis agent` subcommand to `sandpolis agents`, but keep
+  `sandpolis agent` to start the agent daemon. Do the same for the server
+  subcommand.

@@ -46,8 +46,7 @@ pub struct RealmSelectOperation {
     /// The SAF picker is out; its result arrives through the JNI callback.
     #[cfg(target_os = "android")]
     pub pick_pending: bool,
-    pub connect_task:
-        Option<bevy::tasks::Task<Result<sandpolis_server::ServerConnection, String>>>,
+    pub connect_task: Option<bevy::tasks::Task<Result<sandpolis_server::ServerConnection, String>>>,
 }
 
 impl RealmSelectOperation {
@@ -188,7 +187,11 @@ fn spawn_realm_select_modal(
                         ..default()
                     })
                     .with_children(|row| {
-                        let primary = if phase == 1 { "Retry" } else { "Choose File…" };
+                        let primary = if phase == 1 {
+                            "Retry"
+                        } else {
+                            "Choose File…"
+                        };
                         row.spawn(button(theme, primary)).observe(on_realm_primary);
                         row.spawn(button(theme, "Cancel")).observe(on_realm_cancel);
                     });
@@ -285,8 +288,8 @@ pub fn drive_realm_pick(
 
 /// Validate picked file contents as a realm cert.
 fn import_cert(name: &str, contents: Vec<u8>) -> anyhow::Result<RealmCert> {
-    let text = String::from_utf8(contents)
-        .map_err(|_| anyhow::anyhow!("{name} is not a PEM file"))?;
+    let text =
+        String::from_utf8(contents).map_err(|_| anyhow::anyhow!("{name} is not a PEM file"))?;
     let cert = sandpolis_instance::realm::config::from_pem(&text, Path::new(name))?;
     if cert.key.is_none() {
         anyhow::bail!("{name} holds no private key, so it cannot authenticate this client");
@@ -337,7 +340,10 @@ pub fn drive_realm_connect(
 
         // Surface the server in the saved server list, deduplicating so it
         // isn't re-added on retry.
-        let already_saved = server_manager.servers.iter().any(|s| s.read().address == url);
+        let already_saved = server_manager
+            .servers
+            .iter()
+            .any(|s| s.read().address == url);
         if !already_saved {
             use sandpolis_instance::database::{DataCreation, DataIdentifier, DataRevision};
             if let Err(e) = server_manager.save_server(sandpolis_server::client::SavedServerData {
@@ -354,14 +360,12 @@ pub fn drive_realm_connect(
 
         debug!(address = %url, "Connecting to imported realm's server");
         let server_manager = server_manager.clone();
-        operation.connect_task = Some(bevy::tasks::AsyncComputeTaskPool::get().spawn(
-            async move {
-                server_manager
-                    .connect(url)
-                    .await
-                    .map_err(|e| format!("Connection failed: {e}"))
-            },
-        ));
+        operation.connect_task = Some(bevy::tasks::AsyncComputeTaskPool::get().spawn(async move {
+            server_manager
+                .connect(url)
+                .await
+                .map_err(|e| format!("Connection failed: {e}"))
+        }));
     }
 
     if let Some(mut task) = operation.connect_task.take() {

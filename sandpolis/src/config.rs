@@ -177,6 +177,9 @@ pub struct RealmConfig {
     #[cfg(feature = "account")]
     pub account: sandpolis_account::config::AccountManagerConfig,
 
+    #[cfg(feature = "inventory")]
+    pub inventory: sandpolis_inventory::config::InventoryManagerConfig,
+
     #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::config::ProbeManagerConfig,
 

@@ -208,6 +208,23 @@ where
         .collect::<std::result::Result<Vec<_>, _>>()?)
 }
 
+/// Like [`scan_all`], but only the latest revision of each record.
+///
+/// This is what a view of current state wants for temporal models, whose
+/// replicated revision history would otherwise show up as duplicate rows. Note
+/// `DataRevision` equality compares only the number, so the variant has to be
+/// matched explicitly.
+pub fn scan_latest<T>() -> anyhow::Result<Vec<T>>
+where
+    T: sandpolis_instance::database::Data + native_model::Model + 'static,
+{
+    use sandpolis_instance::database::DataRevision;
+    Ok(scan_all::<T>()?
+        .into_iter()
+        .filter(|item| matches!(item.revision(), DataRevision::Latest(_)))
+        .collect())
+}
+
 /// Subscribe to live updates for several models at once, optionally scoped to
 /// one instance. The mirror of [`unsubscribe_all`].
 pub fn subscribe_all(model_ids: impl IntoIterator<Item = u32>, instance: Option<InstanceId>) {

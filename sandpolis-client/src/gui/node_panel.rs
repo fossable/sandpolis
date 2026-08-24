@@ -321,9 +321,7 @@ pub fn manage_node_panels(
             desired(entity, visibility, pinned)
         });
         let stale = match (want, panel.state) {
-            (Some(PanelState::Expanded), PanelState::Expanded) => {
-                panel.layer != **current_layer
-            }
+            (Some(PanelState::Expanded), PanelState::Expanded) => panel.layer != **current_layer,
             (Some(PanelState::Collapsed(want)), PanelState::Collapsed(have)) => {
                 want != have || panel.layer != **current_layer
             }
@@ -380,7 +378,9 @@ pub fn manage_node_panels(
             fallback_icon_path(instance, sub, &current_layer),
             icon_px,
         );
-        let icon = icon.map(|i| i.0.clone()).unwrap_or_else(|| fallback_icon.clone());
+        let icon = icon
+            .map(|i| i.0.clone())
+            .unwrap_or_else(|| fallback_icon.clone());
         let identity = identity.map(|i| i.0.clone()).unwrap_or_default();
 
         let body = match state {
@@ -419,7 +419,15 @@ pub fn manage_node_panels(
         let Some(layer_panel) = layer_panel.as_ref() else {
             continue;
         };
-        build_body(&mut commands, layer_panel, &theme, body.body, node, target, state);
+        build_body(
+            &mut commands,
+            layer_panel,
+            &theme,
+            body.body,
+            node,
+            target,
+            state,
+        );
     }
 }
 
@@ -648,25 +656,33 @@ fn spawn_expanded(parts: CardParts, window_size: Vec2) -> SpawnedPanel {
         .with_children(|right| {
             right
                 .spawn((PanelPinButton { node }, header_button(theme, "Pin")))
-                .observe(move |_: On<Activate>, mut commands: Commands, pinned: Query<(), With<PanelPinned>>| {
-                    let Ok(mut entity) = commands.get_entity(node) else {
-                        return;
-                    };
-                    if pinned.contains(node) {
-                        entity.remove::<PanelPinned>();
-                    } else {
-                        entity.insert(PanelPinned);
-                    }
-                });
-            right
-                .spawn(header_button(theme, "✕"))
-                .observe(move |_: On<Activate>, mut commands: Commands, mut selection: ResMut<SelectionSet>| {
+                .observe(
+                    move |_: On<Activate>,
+                          mut commands: Commands,
+                          pinned: Query<(), With<PanelPinned>>| {
+                        let Ok(mut entity) = commands.get_entity(node) else {
+                            return;
+                        };
+                        if pinned.contains(node) {
+                            entity.remove::<PanelPinned>();
+                        } else {
+                            entity.insert(PanelPinned);
+                        }
+                    },
+                );
+            right.spawn(header_button(theme, "✕")).observe(
+                move |_: On<Activate>,
+                      mut commands: Commands,
+                      mut selection: ResMut<SelectionSet>| {
                     if let Ok(mut entity) = commands.get_entity(node) {
                         entity.remove::<PanelPinned>();
                         entity.remove::<Selected>();
                     }
-                    selection.selected_nodes.retain(|&selected| selected != node);
-                });
+                    selection
+                        .selected_nodes
+                        .retain(|&selected| selected != node);
+                },
+            );
         });
     });
 
@@ -842,13 +858,22 @@ mod test_node_panel {
     fn hiding_the_node_beats_everything() {
         // Including a pin: a pinned panel over a node the active layer doesn't
         // show would be describing something that isn't on screen.
-        assert_eq!(panel_state(true, true, false, true, Verbosity::Normal), None);
+        assert_eq!(
+            panel_state(true, true, false, true, Verbosity::Normal),
+            None
+        );
     }
 
     #[test]
     fn the_toggle_clears_unpinned_panels() {
-        assert_eq!(panel_state(false, false, true, false, Verbosity::Normal), None);
-        assert_eq!(panel_state(true, false, true, false, Verbosity::Normal), None);
+        assert_eq!(
+            panel_state(false, false, true, false, Verbosity::Normal),
+            None
+        );
+        assert_eq!(
+            panel_state(true, false, true, false, Verbosity::Normal),
+            None
+        );
     }
 
     #[test]

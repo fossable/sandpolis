@@ -19,7 +19,9 @@ use std::sync::{Arc, Mutex};
 pub enum LoginOutcome {
     /// The token is stored on the [`ServerConnection`]; this carries the user
     /// it belongs to so the caller can persist both.
-    Success { username: UserName },
+    Success {
+        username: UserName,
+    },
     Cancelled,
 }
 
@@ -280,9 +282,7 @@ impl WidgetRef for LoginPromptWidget {
         } else {
             lines.push(Line::from(""));
         }
-        lines.push(Line::from(
-            "Tab: next field  Enter: submit  Esc: cancel",
-        ));
+        lines.push(Line::from("Tab: next field  Enter: submit  Esc: cancel"));
 
         Paragraph::new(lines)
             .alignment(Alignment::Left)

@@ -8,8 +8,8 @@
 //!   the pointer/keyboard is captured by the UI (replaces egui's
 //!   `wants_pointer_input` / `is_pointer_over_area` checks).
 //! - [`icon`]: SVG-to-texture rasterization for icons inside UI nodes.
-//! - [`widgets`] / [`gauge`]: themed spawn-helpers built on top of
-//!   `bevy_ui_widgets`.
+//! - [`widgets`] / [`gauge`] / [`table`] / [`chart`]: themed spawn-helpers
+//!   built on top of `bevy_ui_widgets`.
 //! - [`layer`]: the registry each layer's client plugin registers itself in.
 //! - [`node_panel`]: the panel abstraction subsystems build their node UI on.
 //!
@@ -19,6 +19,7 @@ use bevy::prelude::*;
 
 pub mod anchored;
 pub mod bind;
+pub mod chart;
 pub mod gating;
 pub mod gauge;
 pub mod icon;
@@ -27,6 +28,7 @@ pub mod node_panel;
 pub mod panel;
 pub mod scene;
 pub mod scroll;
+pub mod table;
 pub mod text_input;
 pub mod theme;
 pub mod tooltip;
@@ -81,7 +83,9 @@ impl Plugin for UiPlugin {
             .add_plugins(scroll::ScrollPlugin)
             .add_plugins(anchored::AnchoredPlugin)
             .add_plugins(bind::BindPlugin)
+            .add_plugins(chart::ChartPlugin)
             .add_plugins(gauge::GaugePlugin)
+            .add_plugins(table::TablePlugin)
             .add_plugins(tooltip::TooltipPlugin)
             .init_resource::<layer::LayerRegistry>()
             .add_observer(text_input::focus_text_input_on_click);

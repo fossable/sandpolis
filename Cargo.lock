@@ -345,7 +345,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -356,7 +356,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1962,7 +1962,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3247,7 +3247,7 @@ version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3510,7 +3510,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "windows 0.61.3",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -4187,7 +4187,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4502,7 +4502,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5143,7 +5143,7 @@ dependencies = [
  "vec_map",
  "wasm-bindgen",
  "web-sys",
- "windows 0.58.0",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -5162,7 +5162,7 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5433,7 +5433,7 @@ dependencies = [
  "log 0.4.33",
  "presser",
  "thiserror 2.0.20",
- "windows 0.58.0",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -6003,7 +6003,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -6023,7 +6023,7 @@ dependencies = [
  "js-sys",
  "log 0.4.33",
  "wasm-bindgen",
- "windows-core 0.58.0",
+ "windows-core 0.62.2",
 ]
 
 [[package]]
@@ -6450,7 +6450,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-async"
 version = "0.10.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "bytes",
  "ironrdp-connector",
@@ -6462,12 +6462,12 @@ dependencies = [
 [[package]]
 name = "ironrdp-bulk"
 version = "0.1.1"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 
 [[package]]
 name = "ironrdp-connector"
 version = "0.10.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-core",
  "ironrdp-error",
@@ -6485,7 +6485,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-core"
 version = "0.2.1"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-error",
 ]
@@ -6493,7 +6493,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-displaycontrol"
 version = "0.8.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-core",
  "ironrdp-dvc",
@@ -6505,7 +6505,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-dvc"
 version = "0.8.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-core",
  "ironrdp-pdu",
@@ -6516,12 +6516,12 @@ dependencies = [
 [[package]]
 name = "ironrdp-error"
 version = "0.2.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 
 [[package]]
 name = "ironrdp-graphics"
 version = "0.9.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "bit_field",
  "bitflags 2.13.1",
@@ -6537,7 +6537,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-input"
 version = "0.7.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "bitvec",
  "ironrdp-pdu",
@@ -6547,7 +6547,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-pdu"
 version = "0.9.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "bit_field",
  "bitflags 2.13.1",
@@ -6569,7 +6569,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-session"
 version = "0.11.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-bulk",
  "ironrdp-core",
@@ -6585,7 +6585,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-svc"
 version = "0.8.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "bitflags 2.13.1",
  "ironrdp-core",
@@ -6595,7 +6595,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-tls"
 version = "0.2.2"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "tokio",
  "tokio-rustls",
@@ -6605,7 +6605,7 @@ dependencies = [
 [[package]]
 name = "ironrdp-tokio"
 version = "0.10.0"
-source = "git+https://github.com/cilki/IronRDP?rev=4c776f6b49c125ddcb326261482540e7bfea90a9#4c776f6b49c125ddcb326261482540e7bfea90a9"
+source = "git+https://github.com/cilki/IronRDP?rev=ac1ba147783448a6062198cfa492bd9f868bd840#ac1ba147783448a6062198cfa492bd9f868bd840"
 dependencies = [
  "ironrdp-async",
  "ironrdp-connector",
@@ -7018,6 +7018,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "liblzma"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fe0a34ca854fd4f20c07f696fc8675aec78f87d88d29f5e10257a7490a1b2e1"
+dependencies = [
+ "liblzma-sys",
+]
+
+[[package]]
+name = "liblzma-sys"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0dad045e4b1b7b170be4b60b54b780cafb4490165461bac7d1cf7b703f61d5f"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7082,7 +7102,7 @@ dependencies = [
  "nom 8.0.0",
  "serde",
  "serde_with",
- "thiserror 1.0.69",
+ "thiserror 2.0.20",
  "tinyvec",
 ]
 
@@ -7421,7 +7441,7 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "536bfad37a309d62069485248eeaba1e8d9853aaf951caaeaed0585a95346f08"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7857,7 +7877,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8631,7 +8651,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.45.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9758,7 +9778,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash 2.1.3",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "thiserror 2.0.20",
  "tokio",
  "tracing",
@@ -9797,9 +9817,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -10900,7 +10920,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -10970,7 +10990,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -11181,12 +11201,19 @@ name = "sandpolis-audit"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "chrono",
+ "inventory",
  "linux-audit-parser",
  "native_db",
  "native_model",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde",
+ "tempfile",
+ "test-log",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]
@@ -11395,22 +11422,27 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "bevy",
+ "chrono",
  "include_dir",
  "inventory",
+ "liblzma",
  "native_db",
  "native_model",
  "os_info",
  "regex",
+ "reqwest 0.13.4",
  "sandpolis-agent",
  "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde",
  "serde_json",
+ "strum",
  "sysinfo 0.39.6",
  "tempfile",
  "test-log",
  "tokio",
+ "tokio-util",
  "tracing",
  "which",
 ]
@@ -12368,7 +12400,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -12809,7 +12841,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -12831,7 +12863,7 @@ dependencies = [
  "parking_lot",
  "rustix 1.1.4",
  "signal-hook 0.3.18",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -13649,7 +13681,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -14582,7 +14614,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

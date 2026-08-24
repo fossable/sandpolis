@@ -111,6 +111,17 @@ impl RuntimeOptions {
         merged
     }
 
+    /// The inventory section of the first loaded realm. See
+    /// [`merged_account_config`](Self::merged_account_config) for why config is
+    /// pooled across realms for now.
+    #[cfg(all(feature = "server", feature = "inventory"))]
+    pub fn merged_inventory_config(&self) -> sandpolis_inventory::config::InventoryManagerConfig {
+        self.realms
+            .first()
+            .map(|realm| realm.inventory.clone())
+            .unwrap_or_default()
+    }
+
     /// The probe sections of every loaded realm, merged. See
     /// [`merged_account_config`](Self::merged_account_config) for why.
     #[cfg(all(feature = "server", feature = "probe"))]
@@ -201,6 +212,8 @@ pub struct InstanceState {
     #[cfg(feature = "account")]
     pub account: sandpolis_account::AccountManager,
     pub agent: sandpolis_agent::AgentManager,
+    #[cfg(feature = "audit")]
+    pub audit: sandpolis_audit::AuditManager,
     #[cfg(feature = "desktop")]
     pub desktop: sandpolis_desktop::DesktopManager,
     #[cfg(feature = "filesystem")]
@@ -285,6 +298,9 @@ impl InstanceState {
         #[cfg(feature = "health")]
         let health = sandpolis_health::HealthManager::new(database.clone(), instance.clone()).await?;
 
+        #[cfg(feature = "audit")]
+        let audit = sandpolis_audit::AuditManager::new(database.clone(), instance.clone()).await?;
+
         #[cfg(feature = "shell")]
         let shell = sandpolis_shell::ShellManager::new(database.clone()).await?;
 
@@ -321,6 +337,8 @@ impl InstanceState {
             inventory,
             #[cfg(feature = "health")]
             health,
+            #[cfg(feature = "audit")]
+            audit,
             #[cfg(feature = "shell")]
             shell,
             #[cfg(feature = "filesystem")]

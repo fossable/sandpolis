@@ -18,9 +18,7 @@ use anyhow::Result;
 use chrono::Utc;
 use native_db::*;
 use native_model::Model;
-use sandpolis_instance::database::{
-    DataIdentifier, DatabaseManager, Resident, ResidentVecEvent,
-};
+use sandpolis_instance::database::{DataIdentifier, DatabaseManager, Resident, ResidentVecEvent};
 use sandpolis_instance::notification::{NotificationData, notification_model_id};
 use sandpolis_instance::realm::RealmName;
 use sandpolis_macros::data;
@@ -161,12 +159,7 @@ fn claim(notification: &NotificationData) -> bool {
         return false;
     }
 
-    if !surfaced
-        .seen
-        .lock()
-        .unwrap()
-        .insert(notification._id)
-    {
+    if !surfaced.seen.lock().unwrap().insert(notification._id) {
         return false;
     }
 
@@ -182,7 +175,9 @@ fn claim(notification: &NotificationData) -> bool {
 
 /// Show one notification, by whichever route currently fits.
 fn deliver(notification: NotificationData) {
-    let sink = TOAST_SINK.get().filter(|_| FOREGROUND.load(Ordering::Relaxed));
+    let sink = TOAST_SINK
+        .get()
+        .filter(|_| FOREGROUND.load(Ordering::Relaxed));
 
     match sink {
         // A dead channel means the GUI is gone; fall back rather than drop it.

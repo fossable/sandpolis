@@ -81,6 +81,7 @@ server = [
   "dep:notify",
   "sandpolis-account?/server",
   "sandpolis-agent/server",
+  "sandpolis-audit?/server",
   "sandpolis-desktop?/server",
   "sandpolis-filesystem?/server",
   "sandpolis-health?/server",
@@ -93,6 +94,7 @@ server = [
 agent = [
   "sandpolis-account?/agent",
   "sandpolis-agent/agent",
+  "sandpolis-audit?/agent",
   "sandpolis-desktop?/agent",
   "sandpolis-filesystem?/agent",
   "sandpolis-health?/agent",
@@ -120,6 +122,7 @@ client = [
   "dep:tui-popup",
   # Propagate to optional subsystems
   "sandpolis-account?/client",
+  "sandpolis-audit?/client",
   "sandpolis-desktop?/client",
   "sandpolis-filesystem?/client",
   "sandpolis-health?/client",
