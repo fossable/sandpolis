@@ -1,6 +1,7 @@
 use super::PackageManager;
 use crate::package::{PackageData, PackageManager as PM};
 use anyhow::{Result, bail};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
 use tracing::debug;
@@ -91,6 +92,31 @@ impl PackageManager for Apt {
         }
 
         Ok(packages)
+    }
+
+    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+        // `apt list --upgradable` reports each upgradable package alongside its
+        // candidate version. Packages already at the newest version are omitted
+        // and left untouched, mirroring how `get_outdated` reads the same list.
+        let lines = self.exec_command(&["list", "--upgradable"]).await?;
+        let mut latest: HashMap<&str, &str> = HashMap::new();
+        for line in lines.lines() {
+            // Format: "name/suite 1.2-3 amd64 [upgradable from: 1.2-2]". The
+            // header line lacks a '/', so this guard skips it too.
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2
+                && let Some((name, _)) = parts[0].split_once('/')
+            {
+                latest.insert(name, parts[1]);
+            }
+        }
+
+        for package in packages.iter_mut() {
+            if let Some(version) = latest.get(package.name.as_str()) {
+                package.latest_available = Some(version.to_string());
+            }
+        }
+        Ok(())
     }
 
     async fn get_metadata(&self, name: String) -> Result<PackageData> {

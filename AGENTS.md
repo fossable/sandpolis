@@ -387,8 +387,6 @@ cd android && ./gradlew assembleDebug
 ## `sandpolis-inventory`
 
 - Manage firmware updates
-- latest_available is only populated for nix; apt/pacman need
-  get_latest_available implementations
 
 ## `sandpolis-client`
 

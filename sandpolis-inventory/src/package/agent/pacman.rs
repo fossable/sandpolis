@@ -81,6 +81,42 @@ impl PackageManager for Pacman {
         Ok(packages)
     }
 
+    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+        // `pacman -Qu` lists upgradable packages as "name old -> new" by
+        // comparing against the already-synced local database. It exits
+        // non-zero when nothing is upgradable, which is a normal condition
+        // rather than an error, so tolerate that and only bail on a real
+        // failure (which reports on stderr).
+        let output = Command::new(&self.executable).arg("-Qu").output()?;
+        if !output.status.success() && !output.stderr.is_empty() {
+            bail!(
+                "pacman -Qu failed: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            );
+        }
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        let mut latest: HashMap<&str, &str> = HashMap::new();
+        for line in stdout.lines() {
+            // Format: "name 1.0-1 -> 2.0-1". Ignore any trailing "[ignored]"
+            // marker by only reading the token immediately after the arrow.
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if let Some(&name) = parts.first()
+                && let Some(arrow) = parts.iter().position(|&p| p == "->")
+                && let Some(&version) = parts.get(arrow + 1)
+            {
+                latest.insert(name, version);
+            }
+        }
+
+        for package in packages.iter_mut() {
+            if let Some(version) = latest.get(package.name.as_str()) {
+                package.latest_available = Some(version.to_string());
+            }
+        }
+        Ok(())
+    }
+
     async fn get_metadata(&self, name: String) -> Result<PackageData> {
         let stdout = self.exec_command(&["-Qi", &name]).await?;
         let mut package_data = PackageData {
