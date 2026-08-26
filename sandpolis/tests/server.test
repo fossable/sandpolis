@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+randomPort() {
+	local port
+	while true; do
+		port=$(((RANDOM % 64512) + 1024))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+## Test that a server with a data directory generates a realm certificate.
+testRealmCertGenerated() {
+	port=$(randomPort)
+
+	sandpolis server --listen "127.0.0.1:${port}" --data . &
+
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+
+	grep "BEGIN CERTIFICATE" ./default.realm.pem
+}
+
+## Test that a configured server shows up in the server list with the address
+## the realm cert names.
+testServersList() {
+	port=$(randomPort)
+
+	sandpolis server --listen "127.0.0.1:${port}" --data . &
+
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+
+	sandpolis servers list --json --realm ./default.realm.pem |
+		jq -e --arg port "${port}" '.[0].address | contains($port)'
+}
+
+## Test that an ephemeral server (no --data) writes no realm or database files
+## into the working directory.
+testEphemeralServerWritesNothing() {
+	port=$(randomPort)
+
+	sandpolis server --listen "127.0.0.1:${port}" &
+
+	# Wait until the server is accepting connections
+	until (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; do
+		sleep 0.1
+	done
+
+	[ -z "$(ls -A .)" ]
+}

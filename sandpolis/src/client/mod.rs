@@ -88,7 +88,7 @@ pub async fn ensure_authenticated(state: &InstanceState, fps: f32) -> anyhow::Re
 
         if !std::io::stdout().is_terminal() {
             anyhow::bail!(
-                "authentication required for {}: run `sandpolis server list` to log in",
+                "authentication required for {}: run `sandpolis servers list` to log in",
                 connection.url
             );
         }

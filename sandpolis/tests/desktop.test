@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+randomPort() {
+	local port
+	while true; do
+		port=$(((RANDOM % 64512) + 1024))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+startServer() {
+	sandpolis server --listen "127.0.0.1:$(randomPort)" --data . &
+
+	# Wait for the realm cert
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+}
+
+## Test that a screenshot request against a live agent completes with an
+## honest JSON status. A headless agent has no display to capture, so this
+## exercises the request path without asserting which status comes back.
+testScreenshotReportsStatus() {
+	startServer
+
+	sandpolis agent --realm ./default.realm.pem &
+
+	for _ in $(seq 30); do
+		instance=$(sandpolis agents list --json --realm ./default.realm.pem |
+			jq -r '.[0].instance_id // empty')
+		if [ -n "${instance}" ]; then
+			break
+		fi
+		sleep 1
+	done
+	[ -n "${instance}" ]
+
+	output=$(sandpolis desktop --json --instance "${instance}" \
+		--realm ./default.realm.pem screenshot) || true
+	echo "${output}" | jq -e .status
+}

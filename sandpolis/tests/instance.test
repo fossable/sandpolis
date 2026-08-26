@@ -23,7 +23,7 @@ testClientConnect() {
 		sleep 0.1
 	done
 
-	sandpolis servers --json --realm ./default.realm.pem
+	sandpolis servers list --json --realm ./default.realm.pem
 }
 
 ## Test that a agent can connect to a server.
@@ -39,5 +39,5 @@ testAgentConnect() {
 
 	sandpolis agent --realm ./default.realm.pem &
 
-	sandpolis agents --json | jq -e .
+	sandpolis agents list --json --realm ./default.realm.pem | jq -e .
 }

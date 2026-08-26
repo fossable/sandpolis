@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+## The shell subsystem has no noninteractive implementation yet; the CLI
+## must say so honestly instead of pretending success.
+testJsonReportsUnimplemented() {
+	! output=$(sandpolis shell --json --data .)
+	echo "${output}" | jq -e '.status == "unimplemented"'
+}

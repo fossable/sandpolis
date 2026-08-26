@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+## The audit subsystem has no noninteractive implementation yet; the CLI
+## must say so honestly instead of pretending success.
+testJsonReportsUnimplemented() {
+	! output=$(sandpolis audit --json --data .)
+	echo "${output}" | jq -e '.status == "unimplemented"'
+}

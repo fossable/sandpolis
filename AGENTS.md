@@ -425,6 +425,3 @@ cd android && ./gradlew assembleDebug
     health/inventory as the device's. Shell, desktop and filesystem discriminate
     on `ctx.target.sub` and route probe targets to per-protocol code; health and
     inventory need the same before their nodes can appear.
-- Move `sandpolis agent` subcommand to `sandpolis agents`, but keep
-  `sandpolis agent` to start the agent daemon. Do the same for the server
-  subcommand.

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+randomPort() {
+	local port
+	while true; do
+		port=$(((RANDOM % 64512) + 1024))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+startServer() {
+	sandpolis server --listen "127.0.0.1:$(randomPort)" --data . &
+
+	# Wait for the realm cert
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+}
+
+## Test that a connected agent shows up in the agent list as online.
+testAgentAppearsOnline() {
+	startServer
+
+	sandpolis agent --realm ./default.realm.pem &
+
+	# Sync is asynchronous, so retry until the agent lands in the list
+	for _ in $(seq 30); do
+		if sandpolis agents list --json --realm ./default.realm.pem |
+			jq -e '.[0].online == true'; then
+			return
+		fi
+		sleep 1
+	done
+	false
+}
+
+## Test that a server with no agents reports an empty agent list.
+testAgentsListEmpty() {
+	startServer
+
+	sandpolis agents list --json --realm ./default.realm.pem | jq -e '. == []'
+}
+
+## Agent restart is not yet wired end-to-end; the CLI must say so honestly
+## instead of pretending success.
+testAgentRestartUnimplemented() {
+	startServer
+
+	sandpolis agent --realm ./default.realm.pem &
+
+	for _ in $(seq 30); do
+		instance=$(sandpolis agents list --json --realm ./default.realm.pem |
+			jq -r '.[0].instance_id // empty')
+		if [ -n "${instance}" ]; then
+			break
+		fi
+		sleep 1
+	done
+	[ -n "${instance}" ]
+
+	! output=$(sandpolis agents restart --instance "${instance}" --realm ./default.realm.pem)
+	echo "${output}" | jq -e '.status == "unimplemented"'
+}

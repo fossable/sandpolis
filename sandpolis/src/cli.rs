@@ -1,7 +1,5 @@
 use crate::RuntimeOptions;
 use anyhow::Result;
-#[cfg(feature = "client")]
-use anyhow::bail;
 use clap::Parser;
 use clap::Subcommand;
 use colored::Colorize;
@@ -186,10 +184,10 @@ impl ClientArgs {
     }
 }
 
-/// Subcommands for `sandpolis agent`. Without one, the agent daemon runs.
+/// Subcommands for `sandpolis agents`, which manages agent instances.
 #[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
-pub enum AgentCommand {
+pub enum AgentsCommand {
     /// List all connected agents
     List {
         /// Emit machine-readable JSON instead of opening a TUI
@@ -210,10 +208,10 @@ pub enum AgentCommand {
     },
 }
 
-/// Subcommands for `sandpolis server`. Without one, the server daemon runs.
+/// Subcommands for `sandpolis servers`, which manages configured servers.
 #[cfg(feature = "client")]
 #[derive(Subcommand, Debug, Clone)]
-pub enum ServerCommand {
+pub enum ServersCommand {
     /// List all configured servers
     List {
         /// Emit machine-readable JSON instead of opening a TUI
@@ -237,28 +235,32 @@ pub enum Commands {
         args: crate::lsp::LspArgs,
     },
 
-    /// Run the agent daemon, or manage agent instances
-    #[cfg(any(feature = "agent", feature = "client"))]
+    /// Run the agent daemon
+    #[cfg(feature = "agent")]
     Agent {
-        #[cfg(feature = "agent")]
         #[clap(flatten)]
         args: AgentArgs,
-
-        #[cfg(feature = "client")]
-        #[command(subcommand)]
-        action: Option<AgentCommand>,
     },
 
-    /// Run the server daemon, or manage server instances
-    #[cfg(any(feature = "server", feature = "client"))]
+    /// Run the server daemon
+    #[cfg(feature = "server")]
     Server {
-        #[cfg(feature = "server")]
         #[clap(flatten)]
         args: ServerArgs,
+    },
 
-        #[cfg(feature = "client")]
+    /// Manage agent instances
+    #[cfg(feature = "client")]
+    Agents {
         #[command(subcommand)]
-        action: Option<ServerCommand>,
+        action: AgentsCommand,
+    },
+
+    /// Manage configured servers
+    #[cfg(feature = "client")]
+    Servers {
+        #[command(subcommand)]
+        action: ServersCommand,
     },
 
     /// Run the client in the foreground
@@ -395,33 +397,21 @@ impl Commands {
         }
     }
 
-    /// The flags for the server daemon, when that's what this command is:
-    /// `sandpolis server` with no action beneath it.
+    /// The flags for the server daemon, when that's what this command is.
     #[cfg(feature = "server")]
     pub fn server_daemon(&self) -> Option<&ServerArgs> {
         match self {
-            Commands::Server {
-                args,
-                #[cfg(feature = "client")]
-                    action: None,
-                ..
-            } => Some(args),
+            Commands::Server { args } => Some(args),
             #[allow(unreachable_patterns)]
             _ => None,
         }
     }
 
-    /// The flags for the agent daemon, when that's what this command is:
-    /// `sandpolis agent` with no action beneath it.
+    /// The flags for the agent daemon, when that's what this command is.
     #[cfg(feature = "agent")]
     pub fn agent_daemon(&self) -> Option<&AgentArgs> {
         match self {
-            Commands::Agent {
-                args,
-                #[cfg(feature = "client")]
-                    action: None,
-                ..
-            } => Some(args),
+            Commands::Agent { args } => Some(args),
             #[allow(unreachable_patterns)]
             _ => None,
         }
@@ -433,12 +423,12 @@ impl Commands {
     pub fn client_args(&self) -> Option<&ClientArgs> {
         match self {
             Commands::Client { client } => Some(client),
-            Commands::Agent { action, .. } => match action.as_ref()? {
-                AgentCommand::List { client, .. } => Some(client),
-                AgentCommand::Restart { client, .. } => Some(client),
+            Commands::Agents { action } => match action {
+                AgentsCommand::List { client, .. } => Some(client),
+                AgentsCommand::Restart { client, .. } => Some(client),
             },
-            Commands::Server { action, .. } => match action.as_ref()? {
-                ServerCommand::List { client, .. } => Some(client),
+            Commands::Servers { action } => match action {
+                ServersCommand::List { client, .. } => Some(client),
             },
             #[cfg(feature = "probe")]
             Commands::Probe { client, .. } => Some(client),
@@ -518,22 +508,8 @@ impl Commands {
     ) -> Result<ExitCode> {
         let fps = options.fps as f32;
         match self {
-            Commands::Agent { action, .. } => match action {
-                Some(action) => client::agent(action, fps).await,
-                // Only reachable on a build without the agent; otherwise this
-                // is the daemon and never gets here.
-                None => bail!(
-                    "This build has no agent. Rebuild with `--features agent` to run one, \
-                     or name a subcommand (see `sandpolis agent --help`)."
-                ),
-            },
-            Commands::Server { action, .. } => match action {
-                Some(action) => client::server(action, &state.server, fps).await,
-                None => bail!(
-                    "This build has no server. Rebuild with `--features server` to run one, \
-                     or name a subcommand (see `sandpolis server --help`)."
-                ),
-            },
+            Commands::Agents { action } => client::agents(action, fps).await,
+            Commands::Servers { action } => client::servers(action, &state.server, fps).await,
             #[cfg(feature = "probe")]
             Commands::Probe { target, .. } => {
                 sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
@@ -732,6 +708,52 @@ mod test_agent_args {
 }
 
 #[cfg(all(test, feature = "client"))]
+mod test_client_commands {
+    use super::*;
+
+    /// Managing agent instances is `agents list`, distinct from `agent` which
+    /// runs the daemon.
+    #[test]
+    fn agents_list_parses() {
+        let command = CommandLine::try_parse_from(["sandpolis", "agents", "list", "--json"])
+            .expect("`agents list --json` parses")
+            .command;
+
+        let Commands::Agents {
+            action: AgentsCommand::List { json, .. },
+        } = command
+        else {
+            panic!("expected the agents list subcommand, got {command:?}");
+        };
+        assert!(json);
+    }
+
+    /// Managing configured servers is `servers list`, distinct from `server`
+    /// which runs the daemon.
+    #[test]
+    fn servers_list_parses() {
+        let command = CommandLine::try_parse_from(["sandpolis", "servers", "list", "--json"])
+            .expect("`servers list --json` parses")
+            .command;
+
+        let Commands::Servers {
+            action: ServersCommand::List { json, .. },
+        } = command
+        else {
+            panic!("expected the servers list subcommand, got {command:?}");
+        };
+        assert!(json);
+    }
+
+    /// The plural commands manage instances, so they need an action to say
+    /// which management operation to run.
+    #[test]
+    fn agents_requires_a_subcommand() {
+        assert!(CommandLine::try_parse_from(["sandpolis", "agents"]).is_err());
+    }
+}
+
+#[cfg(all(test, feature = "client"))]
 mod test_lsp_args {
     use super::*;
 
@@ -780,9 +802,9 @@ mod client {
         Ok(ExitCode::SUCCESS)
     }
 
-    pub(super) async fn agent(action: AgentCommand, fps: f32) -> Result<ExitCode> {
+    pub(super) async fn agents(action: AgentsCommand, fps: f32) -> Result<ExitCode> {
         match action {
-            AgentCommand::List { json, .. } => {
+            AgentsCommand::List { json, .. } => {
                 if json {
                     return list_agents_json().await;
                 }
@@ -790,7 +812,7 @@ mod client {
                 sandpolis_client::tui::run_tui(fps, widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
-            AgentCommand::Restart { instance, .. } => {
+            AgentsCommand::Restart { instance, .. } => {
                 // The agent reboot stream is not yet wired end-to-end; report
                 // honestly rather than pretend success.
                 println!(
@@ -806,13 +828,13 @@ mod client {
         }
     }
 
-    pub(super) async fn server(
-        action: ServerCommand,
+    pub(super) async fn servers(
+        action: ServersCommand,
         server_manager: &sandpolis_server::ServerManager,
         fps: f32,
     ) -> Result<ExitCode> {
         match action {
-            ServerCommand::List { json, .. } => {
+            ServersCommand::List { json, .. } => {
                 if json {
                     return list_servers_json(server_manager);
                 }
