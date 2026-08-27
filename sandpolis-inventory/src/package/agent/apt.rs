@@ -65,26 +65,8 @@ impl PackageManager for Apt {
                         name: name.to_string(),
                         version: version.to_string(),
                         manager: PM::Apt,
-                        description: None,
-                        latest_available: None,
-                        latest_upstream: None,
-                        architecture: if parts.len() > 2 {
-                            Some(parts[2].to_string())
-                        } else {
-                            None
-                        },
-                        package_size: None,
-                        installed_size: None,
-                        upstream_url: None,
-                        remote_location: None,
-                        repository: None,
-                        files: None,
-                        explicit: None,
-                        licenses: None,
-                        dependencies: None,
-                        usages: None,
-                        build_time: None,
-                        install_time: None,
+                        // `parts.len() >= 3` is guaranteed above.
+                        architecture: Some(parts[2].to_string()),
                         ..Default::default()
                     });
                 }
