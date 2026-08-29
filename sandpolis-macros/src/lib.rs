@@ -24,14 +24,10 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
     let krate = instance_crate();
 
     let has_field = |name: &str| {
-        input.fields.iter().any(|field| {
-            field
-                .ident
-                .as_ref()
-                .map(|i| i.to_string())
-                .unwrap_or_default()
-                == name
-        })
+        input
+            .fields
+            .iter()
+            .any(|field| field.ident.as_ref().is_some_and(|i| i == name))
     };
 
     // Instance-scoped data belongs to the instance in `_instance_id`;
