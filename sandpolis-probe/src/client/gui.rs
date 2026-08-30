@@ -797,6 +797,38 @@ fn build_tab_content(
             }
         }
         ProbeType::Nfs | ProbeType::Smb => build_filesystem_tab(content, theme, device, proto),
+        // Probe tabs stay descriptive; containers and virtual machines are
+        // controlled from the Health layer.
+        ProbeType::Docker => {
+            if let Some(docker) = &device.device.docker {
+                content.spawn(text(
+                    theme,
+                    docker.host.clone(),
+                    theme.metrics.font_sm,
+                    Role::Text,
+                ));
+            }
+            content.spawn(muted(
+                theme,
+                "Manage containers in the Health layer.",
+                theme.metrics.font_sm,
+            ));
+        }
+        ProbeType::Libvirt => {
+            if let Some(libvirt) = &device.device.libvirt {
+                content.spawn(text(
+                    theme,
+                    libvirt.uri.clone(),
+                    theme.metrics.font_sm,
+                    Role::Text,
+                ));
+            }
+            content.spawn(muted(
+                theme,
+                "Manage virtual machines in the Health layer.",
+                theme.metrics.font_sm,
+            ));
+        }
         other => {
             content.spawn(muted(
                 theme,
@@ -885,11 +917,11 @@ fn build_filesystem_tab(
     content
         .spawn(row(theme.metrics.space_sm))
         .with_children(|controls| {
-            controls.spawn(button(theme, "Refresh")).observe(
-                move |_: On<Activate>| {
+            controls
+                .spawn(button(theme, "Refresh"))
+                .observe(move |_: On<Activate>| {
                     crate::filesystem::client::enumerate(device_id, proto);
-                },
-            );
+                });
         });
 
     content.spawn(muted(

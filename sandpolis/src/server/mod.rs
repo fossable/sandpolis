@@ -5,8 +5,8 @@ use axum::{
     routing::{get, post},
 };
 use rand::RngExt;
-use sandpolis_instance::realm::RealmCert;
 use sandpolis_instance::ClusterId;
+use sandpolis_instance::realm::RealmCert;
 use std::path::PathBuf;
 use tempfile::TempDir;
 use tempfile::tempdir;
@@ -270,6 +270,33 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             }),
             &mut services,
         )?;
+    }
+
+    // Snapshot storage lives on the server's filesystem, next to the realm
+    // database but never inside it. The ownership gate mirrors CVE matching:
+    // only the owner of an agent's data records snapshots for it.
+    #[cfg(feature = "snapshot")]
+    {
+        let snapshot_dir = options
+            .database
+            .get_storage_dir()?
+            .unwrap_or_else(std::env::temp_dir)
+            .join("snapshots");
+        let ownership = state.server.ownership.clone();
+        let self_id = state.instance.instance_id;
+        state
+            .snapshot
+            .install_server(sandpolis_snapshot::server::SnapshotServerContext::new(
+                state.instance.realm().clone(),
+                sandpolis_snapshot::server::qemu::SnapshotStore::new(snapshot_dir),
+                state.network.clone(),
+                std::sync::Arc::new(move |id| {
+                    ownership
+                        .owned_by(self_id)
+                        .iter()
+                        .any(|scope| scope.instance == id)
+                }),
+            )?);
     }
 
     services.start()?;

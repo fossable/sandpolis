@@ -40,6 +40,8 @@ axum-macros = "0.5.0"
 axum-server = { version = "0.8.0", features = ["tls-rustls"] }
 axum = { version = "0.8.8", features = ["ws", "json"] }
 base64 = "0.23.1"
+blake3 = "1"
+bollard = { version = "0.19", features = ["ssl"] }
 cached = "0.54.0"
 chrono = { version = "0.4.42", features = ["serde"] }
 clap = { version = "4.4.7", features = ["derive", "env", "string"] }
@@ -102,6 +104,7 @@ uuid = { version = "1.15.1", features = ["v7", "serde", "rng-getrandom"] }
 validator = { version = "0.21", features = ["derive"] }
 inventory = "0.3"
 zbus = { version = "5.5.0", default-features = false, features = ["tokio"] }
+zstd = "0.13"
 reqwest = { version = "0.13.4", default-features = false, features = [
   "stream",
   "cookies",

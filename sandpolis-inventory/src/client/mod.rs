@@ -6,6 +6,7 @@
 
 use crate::cve::VulnerabilityData;
 use crate::hardware::cpu::CpuCoreData;
+use crate::hardware::disk::partition::PartitionData;
 use crate::os::memory::MemoryData;
 use crate::os::mountpoint::MountpointData;
 use crate::os::user::UserData;
@@ -31,7 +32,7 @@ pub fn unsubscribe(instance: InstanceId) {
     sandpolis_client::sync::unsubscribe_all(inventory_model_ids(), Some(instance));
 }
 
-fn inventory_model_ids() -> [u32; 6] {
+fn inventory_model_ids() -> [u32; 7] {
     [
         <MemoryData as Model>::native_model_id(),
         <CpuCoreData as Model>::native_model_id(),
@@ -39,6 +40,7 @@ fn inventory_model_ids() -> [u32; 6] {
         <UserData as Model>::native_model_id(),
         <PackageData as Model>::native_model_id(),
         <VulnerabilityData as Model>::native_model_id(),
+        <PartitionData as Model>::native_model_id(),
     ]
 }
 
@@ -119,6 +121,23 @@ pub fn query_mountpoints(id: InstanceId) -> anyhow::Result<Vec<MountpointData>> 
         .collect();
     mounts.sort_by_key(|mount| std::cmp::Reverse(mount.total_bytes()));
     Ok(mounts)
+}
+
+/// Query the disk partitions known for an instance, ordered by name.
+pub fn query_partitions(id: InstanceId) -> anyhow::Result<Vec<PartitionData>> {
+    let mut partitions: Vec<PartitionData> =
+        sandpolis_client::sync::scan_latest::<PartitionData>()?
+            .into_iter()
+            .filter(|p| p._instance_id == id)
+            .collect();
+    partitions.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(partitions)
+}
+
+/// Model id of [PartitionData], so other subsystems (snapshot) can subscribe
+/// to partition updates without redeclaring the model.
+pub fn partition_model_id() -> u32 {
+    <PartitionData as Model>::native_model_id()
 }
 
 /// Query the user accounts known for an instance.

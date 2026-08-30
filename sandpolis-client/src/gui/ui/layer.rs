@@ -26,6 +26,7 @@ pub const LAYER_ORDER: &[&str] = &[
     "Health",
     "Shell",
     "Inventory",
+    "Snapshot",
 ];
 
 /// A layer's position in [`LAYER_ORDER`]. Layers missing from it sort last, in

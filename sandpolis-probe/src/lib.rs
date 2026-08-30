@@ -21,6 +21,7 @@ pub mod nfs;
 pub mod onvif;
 pub mod rdp;
 pub mod rtsp;
+pub mod service;
 pub mod smb;
 pub mod snmp;
 pub mod ssh;
@@ -204,6 +205,12 @@ impl ProbeType {
     pub fn is_filesystem(&self) -> bool {
         matches!(self, ProbeType::Nfs | ProbeType::Smb)
     }
+
+    /// Whether this protocol manages service instances (containers or virtual
+    /// machines), and so can back the health subsystem via [`crate::service`].
+    pub fn is_service(&self) -> bool {
+        matches!(self, ProbeType::Docker | ProbeType::Libvirt)
+    }
 }
 
 /// A registered device, the runtime counterpart of a [`DeviceConfig`]. Each
@@ -299,6 +306,15 @@ impl DeviceConfig {
             .filter(ProbeType::is_filesystem)
             .collect()
     }
+
+    /// The subset of [`protocols`](Self::protocols) that manage service
+    /// instances. This is what the health subsystem offers to control.
+    pub fn service_protocols(&self) -> Vec<ProbeType> {
+        self.protocols()
+            .into_iter()
+            .filter(ProbeType::is_service)
+            .collect()
+    }
 }
 
 // What a client must be granted to open this layer's streams.
@@ -317,4 +333,8 @@ inventory::submit! {
 inventory::submit! {
     sandpolis_instance::network::stream::StreamPermission::require(
         sandpolis_macros::stream_tag!(ProbeFsStream), "probe:filesystem")
+}
+inventory::submit! {
+    sandpolis_instance::network::stream::StreamPermission::require(
+        sandpolis_macros::stream_tag!(ProbeServiceStream), "probe:service")
 }

@@ -27,13 +27,9 @@ use sandpolis_client::gui::activity::{
     spawn_network_activity_lines, spawn_transfer_activity_lines, update_activity_line_positions,
 };
 use sandpolis_client::gui::core_toolbar::CoreLayerToolbarPlugin;
-use sandpolis_client::gui::node_panel::NodePanelPlugin;
 use sandpolis_client::gui::drag::{
     DragState, SelectionSet, disable_forces_while_dragging, handle_node_selection, start_node_drag,
     stop_node_drag, update_node_drag, update_selection_ui,
-};
-use sandpolis_client::gui::node_effects::{
-    spin_selection_rings, update_offline_markers, update_offline_visuals, update_selection_visuals,
 };
 use sandpolis_client::gui::edges::{render_edges, update_edge_visibility, update_edges_for_layer};
 use sandpolis_client::gui::input::{
@@ -66,6 +62,10 @@ use sandpolis_client::gui::login::{
 };
 use sandpolis_client::gui::minimap::{MinimapViewport, spawn_minimap, update_minimap};
 use sandpolis_client::gui::node::{NodeEntity, WorldView, scale_node_svgs, spawn_node};
+use sandpolis_client::gui::node_effects::{
+    spin_selection_rings, update_offline_markers, update_offline_visuals, update_selection_visuals,
+};
+use sandpolis_client::gui::node_panel::NodePanelPlugin;
 use sandpolis_client::gui::node_picker::{
     NodePickerState, focus_node_search, handle_node_picker_toggle, manage_node_picker,
     node_picker_keys, rebuild_node_rows, sync_node_search,
@@ -355,6 +355,9 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     app.add_plugins(sandpolis_health::client::gui::HealthClientPlugin);
     #[cfg(feature = "shell")]
     app.add_plugins(sandpolis_shell::client::gui::ShellClientPlugin);
+
+    #[cfg(feature = "snapshot")]
+    app.add_plugins(sandpolis_snapshot::client::gui::SnapshotClientPlugin);
     #[cfg(feature = "probe")]
     app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
     #[cfg(feature = "account")]

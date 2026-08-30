@@ -289,9 +289,37 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-snapshot`
 
-- Use boot agent to create/apply "cold snapshots"
-- Store snapshots on server
-- Not compatible with regular agents
+Implemented: cold snapshots of partitions (addressed by partition UUID, from
+inventory's partition collector), stored on the server under
+`<data>/snapshots/<instance>/<partition>/` as a qcow2 backing-file chain with
+zstd-compressed clusters (base image + incremental overlays, built by shelling
+out to `qemu-img`; never inside the realm database). The agent hashes every
+block and streams the hashes; on create the server replies with the offsets to
+upload, on apply with the blocks to download. Clients drive it through a
+`SnapshotMgmtStream` to the server (`snapshot:manage` permission), which opens
+the block stream toward the agent; `sandpolis snapshot list/create/apply/delete`
+and the GUI snapshot layer (per-partition snapshot list, progress bar, animated
+agent↔server link while an operation runs) sit on top.
+
+Remaining:
+
+- Boot-mode gating: cold snapshots should be refused on non-boot agents, but no
+  boot-mode concept exists yet (see the bootagent TODOs under `sandpolis`)
+- Multi-stratum: the management responder refuses agents attached to a
+  different (LS) server instead of forwarding to the owner
+- Deleting non-leaf snapshots (requires a rebase/squash of the chain)
+- Incremental layers are bigger than the actual change: `qemu-img convert -B`
+  skips only zero-reading source clusters, it does not content-compare against
+  the backing file, so unchanged non-zero clusters are stored again
+  (zstd-compressed). The wire transfer is truly incremental; only the at-rest
+  layer isn't. Verified correct both ways — a smarter commit would need
+  qemu-nbd/qemu-storage-daemon writes into a fresh overlay
+- A partition that changed size invalidates its chain; auto re-base instead of
+  refusing
+- `wipe_free` (zero free space while filesystems are mounted, shrinking later
+  cold snapshots; useless on encrypted disks) exists in `agent.rs` but is not
+  wired to any stream, service, or CLI
+- Snapshot TUI widget (the CLI's no-subcommand form shows a placeholder)
 
 ## `sandpolis-health`
 
@@ -309,14 +337,8 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-probe`
 
-- Docker probe (`docker.rs`)
-  - Control the docker daemon by starting/stopping containers, etc
-  - Drive from health layer
 - HTTP probe (`http.rs`)
   - Drive from health layer?
-- libvirt probe (`libvirt.rs`)
-  - Control virtual machines
-  - Drive from health layer
 - ONVIF probe (`onvif.rs`)
   - View the video stream
   - Driven from the desktop layer?
@@ -415,11 +437,13 @@ cd android && ./gradlew assembleDebug
 - Implement db sync permissions
 - Which nodes each layer shows, and the order they appear in the picker, are
   declared on each layer's `LayerClientInfo` and by `LAYER_ORDER` in
-  `sandpolis-client/src/gui/ui/layer.rs`. Two probe filters are still missing:
-  - The health layer should show probes that support docker/libvirt/ssh
+  `sandpolis-client/src/gui/ui/layer.rs`. The health layer now shows
+  docker/libvirt probes (its panel discriminates on `ctx.target.sub` like
+  shell/desktop/filesystem); ssh probes there are still pending. One probe
+  filter is still missing:
   - The inventory layer should show probes that support ipmi/snmp
-  - Both are blocked on their panels, which read `ctx.target.instance`. For a
-    probe node that's the gateway server's id, so they'd report the server's
-    health/inventory as the device's. Shell, desktop and filesystem discriminate
-    on `ctx.target.sub` and route probe targets to per-protocol code; health and
-    inventory need the same before their nodes can appear.
+  - It's blocked on its panel, which reads `ctx.target.instance`. For a
+    probe node that's the gateway server's id, so it'd report the server's
+    inventory as the device's. Shell, desktop, filesystem and health
+    discriminate on `ctx.target.sub` and route probe targets to per-protocol
+    code; inventory needs the same before its nodes can appear.

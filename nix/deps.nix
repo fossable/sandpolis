@@ -45,6 +45,10 @@ rec {
     gst_all_1.gst-plugins-base
     # Kernel uapi headers for v4l2-sys (pulled in by scrap via nokhwa)
     linuxHeaders
+    # sandpolis-snapshot's server store shells out to qemu-img for qcow2 work
+    qemu-utils
+    # sandpolis-probe's libvirt probe shells out to virsh
+    libvirt
   ];
 
   # What every image needs before it can run anything at all. The binary names an
@@ -59,7 +63,9 @@ rec {
   # is four times the closure for a libudev nothing else uses at runtime. Nothing
   # links openssl (the `openssl` crate is only a dev-dependency), and anything
   # that did would be picked up from the binary's RUNPATH anyway.
-  runtimeServer = runtimeBase ++ [ udev ];
+  # `qemu-utils` provides the `qemu-img` binary the snapshot store shells out to,
+  # and `libvirt` the `virsh` binary the libvirt probe shells out to.
+  runtimeServer = runtimeBase ++ [ udev qemu-utils libvirt ];
 
   runtimeAgent = runtimeServer ++ [
     alsa-lib

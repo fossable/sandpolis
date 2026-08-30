@@ -54,6 +54,7 @@ pub fn render_edges(
             "Network" => Color::srgb(0.3, 0.8, 1.0),    // Cyan
             "Filesystem" => Color::srgb(0.3, 1.0, 0.3), // Green
             "Desktop" => Color::srgb(1.0, 0.5, 0.3),    // Orange
+            "Snapshot" => Color::srgb(0.3, 0.9, 0.8),   // Teal
             _ => Color::srgb(0.6, 0.6, 0.6),            // Gray
         };
 

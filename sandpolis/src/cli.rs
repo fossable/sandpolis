@@ -273,6 +273,9 @@ pub enum Commands {
     /// Manage probes
     #[cfg(all(feature = "client", feature = "probe"))]
     Probe {
+        #[command(subcommand)]
+        action: Option<sandpolis_probe::cli::ProbeCommand>,
+
         #[clap(flatten)]
         target: TargetArgs,
 
@@ -346,6 +349,9 @@ pub enum Commands {
     /// Manage cold snapshots
     #[cfg(all(feature = "client", feature = "snapshot"))]
     Snapshot {
+        #[command(subcommand)]
+        action: Option<sandpolis_snapshot::cli::SnapshotCommand>,
+
         #[clap(flatten)]
         target: TargetArgs,
 
@@ -511,8 +517,8 @@ impl Commands {
             Commands::Agents { action } => client::agents(action, fps).await,
             Commands::Servers { action } => client::servers(action, &state.server, fps).await,
             #[cfg(feature = "probe")]
-            Commands::Probe { target, .. } => {
-                sandpolis_probe::cli::dispatch(target, &state.probe, fps).await
+            Commands::Probe { action, target, .. } => {
+                sandpolis_probe::cli::dispatch(action, target, &state.probe, fps).await
             }
             #[cfg(feature = "desktop")]
             Commands::Desktop { action, target, .. } => {
@@ -531,7 +537,9 @@ impl Commands {
             #[cfg(feature = "account")]
             Commands::Account { target, .. } => client::stub("account", target, fps).await,
             #[cfg(feature = "snapshot")]
-            Commands::Snapshot { target, .. } => client::stub("snapshot", target, fps).await,
+            Commands::Snapshot { action, target, .. } => {
+                sandpolis_snapshot::cli::dispatch(action, target, fps).await
+            }
             Commands::Wake { target, .. } => client::stub("wake", target, fps).await,
             #[cfg(feature = "audit")]
             Commands::Audit { target, .. } => client::stub("audit", target, fps).await,

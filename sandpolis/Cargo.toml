@@ -90,6 +90,7 @@ server = [
   "sandpolis-probe?/server",
   "sandpolis-server/server",
   "sandpolis-shell?/server",
+  "sandpolis-snapshot?/server",
 ]
 agent = [
   "sandpolis-account?/agent",
@@ -103,6 +104,7 @@ agent = [
   "sandpolis-probe?/agent",
   "sandpolis-server/agent",
   "sandpolis-shell?/agent",
+  "sandpolis-snapshot?/agent",
 ]
 client = [
   "dep:roniker",
@@ -129,6 +131,7 @@ client = [
   "sandpolis-inventory?/client",
   "sandpolis-probe?/client",
   "sandpolis-shell?/client",
+  "sandpolis-snapshot?/client",
 ]
 
 # Subsystems
@@ -145,6 +148,7 @@ probe = [
   "sandpolis-shell?/probe",
   "sandpolis-desktop?/probe",
   "sandpolis-filesystem?/probe",
+  "sandpolis-health?/probe",
 ]
 tunnel = []
 

@@ -26,6 +26,8 @@ pub enum ActivityType {
     NetworkTraffic,
     ShellCommand,
     DesktopStream,
+    /// Snapshot blocks moving between an agent and its server
+    Snapshot,
 }
 
 impl ActivityType {
@@ -36,6 +38,7 @@ impl ActivityType {
             ActivityType::NetworkTraffic => Color::srgb(0.3, 0.6, 1.0), // Blue
             ActivityType::ShellCommand => Color::srgb(1.0, 0.8, 0.2), // Yellow
             ActivityType::DesktopStream => Color::srgb(0.9, 0.3, 0.9), // Purple
+            ActivityType::Snapshot => Color::srgb(0.3, 0.9, 0.8),     // Teal
         }
     }
 
@@ -46,6 +49,7 @@ impl ActivityType {
             ActivityType::NetworkTraffic => 5.0,
             ActivityType::ShellCommand => 6.0,
             ActivityType::DesktopStream => 7.0,
+            ActivityType::Snapshot => 7.0,
         }
     }
 }
@@ -230,6 +234,7 @@ pub fn cleanup_layer_activity_lines(
             ActivityType::NetworkTraffic => **current_layer == "Network",
             ActivityType::ShellCommand => **current_layer == "Shell",
             ActivityType::DesktopStream => **current_layer == "Desktop",
+            ActivityType::Snapshot => **current_layer == "Snapshot",
         };
 
         if !should_keep {

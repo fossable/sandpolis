@@ -1,8 +1,119 @@
 #!/usr/bin/env bash
 
-## The probe subsystem has no noninteractive implementation yet; the CLI
+randomPort() {
+	local port
+	while true; do
+		port=$(((RANDOM % 64512) + 1024))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+startServer() {
+	sandpolis server --listen "127.0.0.1:$(randomPort)" --data . &
+
+	# Wait for the realm cert
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+}
+
+# Pre-author probe devices; the server folds its minted CA into this file on
+# startup. Device ids are assigned 1..N in config order:
+#   1: libvirt against the built-in mock hypervisor (no daemon needed)
+#   2: docker against a socket that cannot exist
+#   3: docker against the host's real socket, if present
+writeProbeConfig() {
+	# printf rather than a heredoc: attest's function extraction can't carry
+	# heredocs into the test context.
+	printf '%s\n' \
+		'( probe: ( devices: [' \
+		'( name: "test-libvirt", ip: "127.0.0.1",' \
+		'  rtsp: None, wol: None, ssh: None, rdp: None, vnc: None,' \
+		'  http: None, ipmi: None, snmp: None, onvif: None, docker: None,' \
+		'  libvirt: ( uri: "test:///default", username: None, private_key_path: None ),' \
+		'  ups: None, nfs: None, smb: None ),' \
+		'( name: "test-docker-unreachable", ip: "127.0.0.1",' \
+		'  rtsp: None, wol: None, ssh: None, rdp: None, vnc: None,' \
+		'  http: None, ipmi: None, snmp: None, onvif: None,' \
+		'  docker: ( host: "unix:///nonexistent/docker.sock", tls_ca_cert: None, tls_cert: None, tls_key: None, tls_verify: None ),' \
+		'  libvirt: None, ups: None, nfs: None, smb: None ),' \
+		'( name: "test-docker", ip: "127.0.0.1",' \
+		'  rtsp: None, wol: None, ssh: None, rdp: None, vnc: None,' \
+		'  http: None, ipmi: None, snmp: None, onvif: None,' \
+		'  docker: ( host: "unix:///var/run/docker.sock", tls_ca_cert: None, tls_cert: None, tls_key: None, tls_verify: None ),' \
+		'  libvirt: None, ups: None, nfs: None, smb: None ),' \
+		'] ) )' \
+		>./default.realm.ron
+}
+
+## The probe subsystem has no noninteractive device listing yet; the bare CLI
 ## must say so honestly instead of pretending success.
 testJsonReportsUnimplemented() {
 	! output=$(sandpolis probe --json --data .)
 	echo "${output}" | jq -e '.status == "unimplemented"'
+}
+
+## The mock hypervisor ships one running domain named "test", and listing it
+## exercises the whole path: client → server → virsh.
+testLibvirtListShowsTestDomain() {
+	writeProbeConfig
+	startServer
+
+	sandpolis probe --json --realm ./default.realm.pem \
+		service --device 1 --protocol libvirt list |
+		jq -e '.status == "ok" and .domains[0].name == "test" and .domains[0].state == "Running"'
+}
+
+## Stop and restart must reach virsh and answer with a fresh domain list. The
+## mock hypervisor forgets state between virsh processes, so the assertions stay
+## on the command succeeding rather than the state sticking.
+testLibvirtStopAndRestartReportOk() {
+	writeProbeConfig
+	startServer
+
+	sandpolis probe --json --realm ./default.realm.pem \
+		service --device 1 --protocol libvirt stop test |
+		jq -e '.status == "ok" and (.domains | type == "array")'
+	sandpolis probe --json --realm ./default.realm.pem \
+		service --device 1 --protocol libvirt restart test |
+		jq -e '.status == "ok"'
+}
+
+## Acting on a domain that doesn't exist must fail cleanly with a JSON error
+## and a nonzero exit, not hang or pretend success.
+testLibvirtUnknownDomainFailsCleanly() {
+	writeProbeConfig
+	startServer
+
+	! output=$(sandpolis probe --json --realm ./default.realm.pem \
+		service --device 1 --protocol libvirt start no-such-domain)
+	echo "${output}" | jq -e '.status == "failed"'
+}
+
+## A daemon that isn't there must fail cleanly too.
+testDockerUnreachableFailsCleanly() {
+	writeProbeConfig
+	startServer
+
+	! output=$(sandpolis probe --json --realm ./default.realm.pem \
+		service --device 2 --protocol docker list)
+	echo "${output}" | jq -e '.status == "failed"'
+}
+
+## When the host actually runs Docker, the happy path answers with a container
+## array. Skipped where there's no socket to talk to.
+testDockerListWhenSocketPresent() {
+	# Nothing to talk to on hosts without Docker; pass vacuously.
+	[ -S /var/run/docker.sock ] || return 0
+
+	writeProbeConfig
+	startServer
+
+	sandpolis probe --json --realm ./default.realm.pem \
+		service --device 3 --protocol docker list |
+		jq -e '.status == "ok" and (.containers | type == "array")'
 }

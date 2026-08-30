@@ -17,6 +17,8 @@ pub mod cve;
 pub mod hardware;
 pub mod os;
 pub mod package;
+#[cfg(feature = "agent")]
+pub(crate) mod sysfs;
 pub(crate) mod version;
 
 #[data]
@@ -50,6 +52,10 @@ pub struct InventoryManager {
     pub users: Arc<Mutex<os::user::agent::UserCollector>>,
     #[cfg(feature = "agent")]
     pub packages: Arc<Mutex<package::agent::PackageCollector>>,
+    #[cfg(feature = "agent")]
+    pub partitions: Arc<Mutex<hardware::disk::partition::agent::PartitionCollector>>,
+    #[cfg(feature = "agent")]
+    pub block_devices: Arc<Mutex<os::block_device::agent::BlockDeviceCollector>>,
 }
 
 impl InventoryManager {
@@ -81,6 +87,20 @@ impl InventoryManager {
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
+            #[cfg(feature = "agent")]
+            partitions: Arc::new(Mutex::new(
+                hardware::disk::partition::agent::PartitionCollector::new(
+                    database.realm(RealmName::default())?,
+                    instance.instance_id,
+                )?,
+            )),
+            #[cfg(feature = "agent")]
+            block_devices: Arc::new(Mutex::new(
+                os::block_device::agent::BlockDeviceCollector::new(
+                    database.realm(RealmName::default())?,
+                    instance.instance_id,
+                )?,
+            )),
             #[cfg(feature = "server")]
             realm: database.realm(RealmName::default())?,
             data: database.realm(RealmName::default())?.resident(())?,
@@ -160,6 +180,20 @@ impl InventoryManager {
             "packages",
             "Collects the host's installed packages",
             Duration::from_secs(300),
+        ));
+        runner.register(CollectorService::new(
+            self.partitions.clone(),
+            "Inventory",
+            "partitions",
+            "Collects the host's disk partitions",
+            Duration::from_secs(60),
+        ));
+        runner.register(CollectorService::new(
+            self.block_devices.clone(),
+            "Inventory",
+            "block-devices",
+            "Collects the host's block devices",
+            Duration::from_secs(60),
         ));
     }
 }

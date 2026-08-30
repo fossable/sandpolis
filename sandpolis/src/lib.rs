@@ -250,7 +250,8 @@ impl InstanceState {
         // Create all the configured subsystems, starting with the most foundational
 
         let instance =
-            sandpolis_instance::InstanceManager::new(database.clone(), options.instance_type).await?;
+            sandpolis_instance::InstanceManager::new(database.clone(), options.instance_type)
+                .await?;
 
         let network = sandpolis_instance::network::NetworkManager::new(database.clone()).await?;
 
@@ -296,7 +297,8 @@ impl InstanceState {
             sandpolis_inventory::InventoryManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "health")]
-        let health = sandpolis_health::HealthManager::new(database.clone(), instance.clone()).await?;
+        let health =
+            sandpolis_health::HealthManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "audit")]
         let audit = sandpolis_audit::AuditManager::new(database.clone(), instance.clone()).await?;
@@ -315,7 +317,8 @@ impl InstanceState {
         let account = sandpolis_account::AccountManager::new(database.clone()).await?;
 
         #[cfg(feature = "snapshot")]
-        let snapshot = sandpolis_snapshot::SnapshotManager::new().await?;
+        let snapshot =
+            sandpolis_snapshot::SnapshotManager::new(database.clone(), instance.clone()).await?;
 
         #[cfg(feature = "probe")]
         let probe = sandpolis_probe::ProbeManager::new(

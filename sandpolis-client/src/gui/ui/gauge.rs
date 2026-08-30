@@ -30,6 +30,9 @@ pub struct GaugeValue {
     pub fraction: f32,
     /// Text shown to the right of the label (e.g. `"6.9 GB / 16.0 GB"`).
     pub caption: String,
+    /// Paint the fill in this role regardless of fraction. For progress bars,
+    /// where approaching full is success rather than a warning.
+    pub role: Option<Role>,
 }
 
 impl GaugeValue {
@@ -37,6 +40,7 @@ impl GaugeValue {
         Self {
             fraction,
             caption: caption.into(),
+            role: None,
         }
     }
 
@@ -50,10 +54,18 @@ impl GaugeValue {
         Self::new(fraction, caption)
     }
 
+    /// Pin the fill's role instead of deriving it from the fraction.
+    pub fn with_role(mut self, role: Role) -> Self {
+        self.role = Some(role);
+        self
+    }
+
     /// The role the fill is painted in, which is how a gauge conveys "this is
     /// getting full" without the reader parsing the caption.
     fn role(&self) -> Role {
-        if self.fraction >= ERROR_AT {
+        if let Some(role) = self.role {
+            role
+        } else if self.fraction >= ERROR_AT {
             Role::Error
         } else if self.fraction >= WARN_AT {
             Role::Warn
