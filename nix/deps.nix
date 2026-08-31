@@ -116,6 +116,6 @@ rec {
     libGL
   ];
 
-  # The demo image runs all three from one --all-features binary.
+  # The demo image runs all three from one --features server,agent,client binary.
   runtimeDemo = lib.unique (runtimeServer ++ runtimeAgent ++ runtimeClient);
 }

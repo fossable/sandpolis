@@ -183,6 +183,9 @@ pub struct RealmConfig {
     #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::config::ProbeManagerConfig,
 
+    #[cfg(feature = "tunnel")]
+    pub tunnel: sandpolis_tunnel::config::TunnelManagerConfig,
+
     /// User accounts that clients (not agents) login to, and what each is
     /// allowed to do. Editing this section is the only way accounts are ever
     /// created, changed, or removed.
@@ -599,11 +602,7 @@ mod test_realm_config {
         assert!(is_read_only(&"edited".parse()?));
 
         // Later writes are refused up front, without touching the file.
-        assert!(
-            config
-                .store_ca("AAAA".into(), "BBBB".into())
-                .is_err()
-        );
+        assert!(config.store_ca("AAAA".into(), "BBBB".into()).is_err());
         assert_eq!(std::fs::read_to_string(&path)?, edit);
         Ok(())
     }

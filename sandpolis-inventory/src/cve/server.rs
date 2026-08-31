@@ -147,10 +147,18 @@ impl Service for CveService {
         }
 
         if new_findings > 0 {
-            info!(count = new_findings, agents = new_agents, "Found new vulnerabilities");
+            info!(
+                count = new_findings,
+                agents = new_agents,
+                "Found new vulnerabilities"
+            );
             let title = format!(
                 "{new_findings} new {} across {new_agents} {}",
-                if new_findings == 1 { "vulnerability" } else { "vulnerabilities" },
+                if new_findings == 1 {
+                    "vulnerability"
+                } else {
+                    "vulnerabilities"
+                },
                 if new_agents == 1 { "agent" } else { "agents" },
             );
             let notification = if worst >= CveSeverity::Critical {
@@ -519,7 +527,10 @@ fn normalize_version(version: &str) -> &str {
         .rsplit_once('-')
         .map(|(upstream, _)| upstream)
         .unwrap_or(version);
-    version.split_once('+').map(|(base, _)| base).unwrap_or(version)
+    version
+        .split_once('+')
+        .map(|(base, _)| base)
+        .unwrap_or(version)
 }
 
 /// The `(part, product, version)` fields of a CPE 2.3 criteria string, with
@@ -548,9 +559,18 @@ fn version_matches(cpe: &CpeMatch, cpe_version: &str, installed: &str) -> bool {
 
     let mut bounded = false;
     for (bound, ok) in [
-        (&cpe.version_start_including, [Ordering::Equal, Ordering::Greater]),
-        (&cpe.version_start_excluding, [Ordering::Greater, Ordering::Greater]),
-        (&cpe.version_end_including, [Ordering::Equal, Ordering::Less]),
+        (
+            &cpe.version_start_including,
+            [Ordering::Equal, Ordering::Greater],
+        ),
+        (
+            &cpe.version_start_excluding,
+            [Ordering::Greater, Ordering::Greater],
+        ),
+        (
+            &cpe.version_end_including,
+            [Ordering::Equal, Ordering::Less],
+        ),
         (&cpe.version_end_excluding, [Ordering::Less, Ordering::Less]),
     ] {
         if let Some(bound) = bound {
@@ -597,9 +617,7 @@ impl CveRecord {
             None,
             v2.and_then(|m| m.cvss_data.base_score),
         )?;
-        let score = preferred
-            .or(v2)
-            .and_then(|m| m.cvss_data.base_score);
+        let score = preferred.or(v2).and_then(|m| m.cvss_data.base_score);
         Some((severity, score))
     }
 
@@ -697,9 +715,18 @@ mod tests {
             CveSeverity::from_nvd(None, Some("Medium"), Some(9.0)),
             Some(CveSeverity::Medium)
         );
-        assert_eq!(CveSeverity::from_nvd(None, None, Some(7.5)), Some(CveSeverity::High));
-        assert_eq!(CveSeverity::from_nvd(None, None, Some(5.0)), Some(CveSeverity::Medium));
-        assert_eq!(CveSeverity::from_nvd(None, None, Some(2.0)), Some(CveSeverity::Low));
+        assert_eq!(
+            CveSeverity::from_nvd(None, None, Some(7.5)),
+            Some(CveSeverity::High)
+        );
+        assert_eq!(
+            CveSeverity::from_nvd(None, None, Some(5.0)),
+            Some(CveSeverity::Medium)
+        );
+        assert_eq!(
+            CveSeverity::from_nvd(None, None, Some(2.0)),
+            Some(CveSeverity::Low)
+        );
         assert_eq!(CveSeverity::from_nvd(None, None, None), None);
     }
 
@@ -938,15 +965,27 @@ mod tests {
     async fn parses_the_live_feed() -> Result<()> {
         let config = crate::config::CveConfig::default();
         let url = format!("{}/CVE-Recent.json.xz", config.feed_url);
-        let body = reqwest::get(&url).await?.error_for_status()?.bytes().await?;
+        let body = reqwest::get(&url)
+            .await?
+            .error_for_status()?
+            .bytes()
+            .await?;
 
         let dir = tempfile::tempdir()?;
         fs::write(dir.path().join("CVE-Recent.json.xz"), &body)?;
         let feed = parse_file(&dir.path().join("CVE-Recent.json.xz"))?;
         println!("{} records in the recent feed", feed.cve_items.len());
         assert!(!feed.cve_items.is_empty());
-        assert!(feed.cve_items.iter().all(|record| record.id.starts_with("CVE-")));
-        assert!(feed.cve_items.iter().any(|record| record.severity().is_some()));
+        assert!(
+            feed.cve_items
+                .iter()
+                .all(|record| record.id.starts_with("CVE-"))
+        );
+        assert!(
+            feed.cve_items
+                .iter()
+                .any(|record| record.severity().is_some())
+        );
         assert!(
             feed.cve_items
                 .iter()

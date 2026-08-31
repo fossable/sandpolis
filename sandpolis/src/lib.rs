@@ -4,6 +4,11 @@ use sandpolis_instance::database::DatabaseManager;
 use sandpolis_instance::realm::RealmManager;
 use std::collections::HashMap;
 
+#[cfg(all(feature = "uki", any(feature = "server", feature = "client")))]
+compile_error!(
+    "the `uki` feature builds a boot agent; it cannot be combined with `server` or `client`"
+);
+
 #[cfg(feature = "agent")]
 pub mod agent;
 #[cfg(not(target_os = "android"))]
@@ -47,8 +52,9 @@ pub struct RuntimeOptions {
     #[cfg(feature = "client")]
     pub fps: u32,
 
-    /// Polling connection mode, from `--poll`.
-    #[cfg(feature = "agent")]
+    /// Polling connection mode, from `--poll`. A boot agent has no polling
+    /// mode: it stays continuously connected so the server can hold it.
+    #[cfg(all(feature = "agent", not(feature = "uki")))]
     pub poll: Option<sandpolis_agent::PollConfig>,
 
     /// The server this agent attaches to, named by its realm cert.
@@ -74,7 +80,7 @@ impl Default for RuntimeOptions {
             blocked_ips: Vec::new(),
             #[cfg(feature = "client")]
             fps: 30,
-            #[cfg(feature = "agent")]
+            #[cfg(all(feature = "agent", not(feature = "uki")))]
             poll: None,
             #[cfg(feature = "agent")]
             server: None,
@@ -131,6 +137,19 @@ impl RuntimeOptions {
                 .realms
                 .iter()
                 .flat_map(|realm| realm.probe.devices.iter().cloned())
+                .collect(),
+        }
+    }
+
+    /// The tunnel sections of every loaded realm, merged. See
+    /// [`merged_account_config`](Self::merged_account_config) for why.
+    #[cfg(all(feature = "server", feature = "tunnel"))]
+    pub fn merged_tunnel_config(&self) -> sandpolis_tunnel::config::TunnelManagerConfig {
+        sandpolis_tunnel::config::TunnelManagerConfig {
+            tunnels: self
+                .realms
+                .iter()
+                .flat_map(|realm| realm.tunnel.tunnels.iter().cloned())
                 .collect(),
         }
     }
@@ -230,6 +249,8 @@ pub struct InstanceState {
     pub shell: sandpolis_shell::ShellManager,
     #[cfg(feature = "snapshot")]
     pub snapshot: sandpolis_snapshot::SnapshotManager,
+    #[cfg(feature = "tunnel")]
+    pub tunnel: sandpolis_tunnel::TunnelManager,
     #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::ProbeManager,
     pub user: sandpolis_server::user::UserManager,
@@ -320,6 +341,10 @@ impl InstanceState {
         let snapshot =
             sandpolis_snapshot::SnapshotManager::new(database.clone(), instance.clone()).await?;
 
+        #[cfg(feature = "tunnel")]
+        let tunnel =
+            sandpolis_tunnel::TunnelManager::new(database.clone(), instance.clone()).await?;
+
         #[cfg(feature = "probe")]
         let probe = sandpolis_probe::ProbeManager::new(
             {
@@ -350,6 +375,8 @@ impl InstanceState {
             desktop,
             #[cfg(feature = "snapshot")]
             snapshot,
+            #[cfg(feature = "tunnel")]
+            tunnel,
             #[cfg(feature = "probe")]
             probe,
             #[cfg(feature = "account")]

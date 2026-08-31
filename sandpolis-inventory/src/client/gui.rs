@@ -372,12 +372,9 @@ fn mount_usage_of(mount: &crate::os::mountpoint::MountpointData) -> GaugeValue {
 /// installed.
 fn is_outdated(package: &crate::package::PackageData) -> bool {
     !package.version.is_empty()
-        && package
-            .latest_available
-            .as_deref()
-            .is_some_and(|latest| {
-                crate::version::vercmp(latest, &package.version) == std::cmp::Ordering::Greater
-            })
+        && package.latest_available.as_deref().is_some_and(|latest| {
+            crate::version::vercmp(latest, &package.version) == std::cmp::Ordering::Greater
+        })
 }
 
 /// Packages with a pending update, sorted by name.

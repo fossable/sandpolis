@@ -19,6 +19,13 @@ pub mod os;
 pub mod package;
 #[cfg(feature = "agent")]
 pub(crate) mod sysfs;
+// Version comparison serves the package collector, the server's CVE matching,
+// and the client's package history — none of which exist in a uki build.
+#[cfg(any(
+    feature = "server",
+    feature = "client",
+    all(feature = "agent", not(feature = "uki"))
+))]
 pub(crate) mod version;
 
 #[data]
@@ -46,11 +53,11 @@ pub struct InventoryManager {
     pub memory: Arc<Mutex<os::memory::agent::MemoryMonitor>>,
     #[cfg(feature = "agent")]
     pub cpu: Arc<Mutex<hardware::cpu::agent::CpuCollector>>,
-    #[cfg(feature = "agent")]
+    #[cfg(all(feature = "agent", not(feature = "uki")))]
     pub mountpoints: Arc<Mutex<os::mountpoint::agent::MountpointCollector>>,
-    #[cfg(feature = "agent")]
+    #[cfg(all(feature = "agent", not(feature = "uki")))]
     pub users: Arc<Mutex<os::user::agent::UserCollector>>,
-    #[cfg(feature = "agent")]
+    #[cfg(all(feature = "agent", not(feature = "uki")))]
     pub packages: Arc<Mutex<package::agent::PackageCollector>>,
     #[cfg(feature = "agent")]
     pub partitions: Arc<Mutex<hardware::disk::partition::agent::PartitionCollector>>,
@@ -72,17 +79,17 @@ impl InventoryManager {
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
-            #[cfg(feature = "agent")]
+            #[cfg(all(feature = "agent", not(feature = "uki")))]
             mountpoints: Arc::new(Mutex::new(os::mountpoint::agent::MountpointCollector::new(
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
-            #[cfg(feature = "agent")]
+            #[cfg(all(feature = "agent", not(feature = "uki")))]
             users: Arc::new(Mutex::new(os::user::agent::UserCollector::new(
                 database.realm(RealmName::default())?,
                 instance.instance_id,
             )?)),
-            #[cfg(feature = "agent")]
+            #[cfg(all(feature = "agent", not(feature = "uki")))]
             packages: Arc::new(Mutex::new(package::agent::PackageCollector::new(
                 database.realm(RealmName::default())?,
                 instance.instance_id,
@@ -160,27 +167,32 @@ impl InventoryManager {
             "Collects the host's per-core CPU utilization",
             CPU_POLL_INTERVAL,
         ));
-        runner.register(CollectorService::new(
-            self.mountpoints.clone(),
-            "Inventory",
-            "mountpoints",
-            "Collects the host's mounted filesystems and their capacity",
-            Duration::from_secs(60),
-        ));
-        runner.register(CollectorService::new(
-            self.users.clone(),
-            "Inventory",
-            "users",
-            "Collects the host's user accounts",
-            Duration::from_secs(30),
-        ));
-        runner.register(CollectorService::new(
-            self.packages.clone(),
-            "Inventory",
-            "packages",
-            "Collects the host's installed packages",
-            Duration::from_secs(300),
-        ));
+        // The OS-level collectors only exist on regular agents: the UKI boot
+        // environment has no mounts, users, or packages worth reporting.
+        #[cfg(not(feature = "uki"))]
+        {
+            runner.register(CollectorService::new(
+                self.mountpoints.clone(),
+                "Inventory",
+                "mountpoints",
+                "Collects the host's mounted filesystems and their capacity",
+                Duration::from_secs(60),
+            ));
+            runner.register(CollectorService::new(
+                self.users.clone(),
+                "Inventory",
+                "users",
+                "Collects the host's user accounts",
+                Duration::from_secs(30),
+            ));
+            runner.register(CollectorService::new(
+                self.packages.clone(),
+                "Inventory",
+                "packages",
+                "Collects the host's installed packages",
+                Duration::from_secs(300),
+            ));
+        }
         runner.register(CollectorService::new(
             self.partitions.clone(),
             "Inventory",

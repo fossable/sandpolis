@@ -14,7 +14,11 @@ It's comprised of multiple applications:
   - CLI based on clap for scripting or optional TUI based on Ratatui
 
 All of these applications are built from the main `sandpolis` crate (except for
-the mobile app) with feature flags.
+the mobile app) with feature flags. The agent's "UKI" mode is its own feature:
+`uki` implies `agent` and builds the boot agent (always-on chainloader UI, cold
+snapshot streams). It is a **compile error** to combine `uki` with `server` or
+`client`, which means `--all-features` no longer builds — never use it; always
+pass an explicit feature list like `--features server,agent,client`.
 
 Every crate in the workspace apart from `sandpolis` and `sandpolis-mobile` is a
 _subsystem_ that brings some functionality. Subsystems can depend on each other
@@ -210,7 +214,8 @@ docker build --target demo   -f sandpolis/Dockerfile -t sandpolis/demo   .
 ```
 
 The `server`, `agent` and `client` targets each carry one instance. `demo`
-carries all three around a single `--all-features` binary: its entrypoint starts
+carries all three around a single `--features server,agent,client` binary
+(remember `--all-features` doesn't build): its entrypoint starts
 a server, waits for the realm cert, attaches an agent, and opens the GUI client
 if a wayland socket or `$DISPLAY` was handed in. Without one it drops into a
 shell with `$S7S_REALM` and `$S7S_DATA` already pointed at the running demo, so
@@ -260,10 +265,21 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-tunnel`
 
-- Application-level tunnel (between two agents or between an agent and a client)
-  - Implement as stream
-  - Configured in realm config, using syntax similar to SSH local/reverse
-    tunnels
+- **Direct (hole-punched) tunnels.** `TunnelMode::Direct` is a stubbed seam:
+  `direct::attempt_direct` always fails, so a `Direct` client↔agent tunnel falls
+  back to the indirect bridge seamlessly (`effective_mode` records the choice).
+  Real NAT traversal needs a networking foundation that doesn't exist yet — a
+  UDP transport, a DTLS `InstanceConnection` (the third transport its doc
+  comment anticipates), and a STUN/TURN-style rendezvous (sketched in
+  `direct::Rendezvous`, reworked from the long-dead `network::messages`).
+- **Config hot-reload.** Tunnels are applied at server startup; the realm-config
+  watcher does not yet re-orchestrate on edits (stop removed / start added).
+- **UDP session expiry.** UDP sessions live for the tunnel's lifetime rather
+  than expiring on idle, so churny UDP accumulates session ids until stop.
+- **Multi-stratum control.** Only the global stratum server orchestrates (it is
+  the only one that reads realm configs); an endpoint is reachable via the
+  relay, but there's no LS-local bridging to keep same-LS traffic off the GS.
+- Tunnel TUI widget (the CLI's no-subcommand form shows a placeholder).
 
 ## `sandpolis-agent`
 
@@ -289,24 +305,12 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis-snapshot`
 
-Implemented: cold snapshots of partitions (addressed by partition UUID, from
-inventory's partition collector), stored on the server under
-`<data>/snapshots/<instance>/<partition>/` as a qcow2 backing-file chain with
-zstd-compressed clusters (base image + incremental overlays, built by shelling
-out to `qemu-img`; never inside the realm database). The agent hashes every
-block and streams the hashes; on create the server replies with the offsets to
-upload, on apply with the blocks to download. Clients drive it through a
-`SnapshotMgmtStream` to the server (`snapshot:manage` permission), which opens
-the block stream toward the agent; `sandpolis snapshot list/create/apply/delete`
-and the GUI snapshot layer (per-partition snapshot list, progress bar, animated
-agent↔server link while an operation runs) sit on top.
-
-Remaining:
-
-- Boot-mode gating: cold snapshots should be refused on non-boot agents, but no
-  boot-mode concept exists yet (see the bootagent TODOs under `sandpolis`)
-- Multi-stratum: the management responder refuses agents attached to a
-  different (LS) server instead of forwarding to the owner
+- Boot-mode gating is now compile-time: the block stream responders only exist
+  in `uki` builds, so regular agents never answer them. Remaining runtime work:
+  the management responder should refuse (rather than hang on) an agent that
+  isn't a boot agent
+- Multi-stratum: the management responder refuses agents attached to a different
+  (LS) server instead of forwarding to the owner
 - Deleting non-leaf snapshots (requires a rebase/squash of the chain)
 - Incremental layers are bigger than the actual change: `qemu-img convert -B`
   skips only zero-reading source clusters, it does not content-compare against
@@ -425,12 +429,16 @@ Remaining:
 - Whenever a stream is active, we need to render that in the GUI as a dotted
   line running parallel to the link between the nodes
   - This also works for streams running over direct connections
-- Bootagent mode is a UKI that boots before the actual OS
-  - The server can place a "boot hold" that prevents the UKI from chainloading
-    the actual bootloader.
-  - Also configured as fallback in case the primary OS fails to boot which the
-    UKI detects
-  - Only the following subsystems are supported by bootagents: shell, snapshot
+- The server places a "boot hold" per agent (`BootAgentData.hold`, written on
+  the server; nothing toggles it from a client yet). A boot agent announces
+  itself on the `BootStream` after connecting; the responder answers
+  Hold/Proceed and sends Release when the flag clears, which reboots the
+  agent. While held, a snapshot operation swaps the homepage for the snapshot
+  layer's block-grid display (`boot_snapshot::active()`).
+- Building the UKI itself (`mkrootfs`) remains; the UI uses
+  `SLINT_BACKEND=linuxkms-noseat` there, winit on a desktop
+- Also configured as fallback in case the primary OS fails to boot which the
+  UKI detects (not implemented)
 - See if we can generate better, more cohesive instance type icons under
   sandpolis-client/assets/network/ (these are what node panels show for
   instances)
@@ -442,8 +450,8 @@ Remaining:
   shell/desktop/filesystem); ssh probes there are still pending. One probe
   filter is still missing:
   - The inventory layer should show probes that support ipmi/snmp
-  - It's blocked on its panel, which reads `ctx.target.instance`. For a
-    probe node that's the gateway server's id, so it'd report the server's
-    inventory as the device's. Shell, desktop, filesystem and health
-    discriminate on `ctx.target.sub` and route probe targets to per-protocol
-    code; inventory needs the same before its nodes can appear.
+  - It's blocked on its panel, which reads `ctx.target.instance`. For a probe
+    node that's the gateway server's id, so it'd report the server's inventory
+    as the device's. Shell, desktop, filesystem and health discriminate on
+    `ctx.target.sub` and route probe targets to per-protocol code; inventory
+    needs the same before its nodes can appear.

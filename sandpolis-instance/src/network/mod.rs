@@ -103,6 +103,29 @@ impl NetworkManager {
             .collect()
     }
 
+    /// Find a connection over which a stream to `instance` can be opened, plus
+    /// the relay destination to stamp on its messages.
+    ///
+    /// Returns `(connection, None)` when the instance is directly attached here
+    /// (open the stream directly), or `(connection, Some(instance))` when it is
+    /// reachable through an advertised server peer (the message must be relayed).
+    /// `None` when the instance is not reachable from this server.
+    pub fn connection_to(
+        &self,
+        instance: InstanceId,
+    ) -> Option<(Arc<InstanceConnection>, Option<InstanceId>)> {
+        if let Some(direct) = self
+            .live_inbound()
+            .into_iter()
+            .find(|c| c.data.read().remote_instance == instance)
+        {
+            return Some((direct, None));
+        }
+        self.relay
+            .reachable_via(instance)
+            .map(|conn| (conn, Some(instance)))
+    }
+
     pub async fn new(database: DatabaseManager) -> Result<Self> {
         debug!("Initializing network manager");
 

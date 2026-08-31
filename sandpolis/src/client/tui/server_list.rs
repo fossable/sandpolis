@@ -321,7 +321,8 @@ impl EventHandler for ServerListWidget {
                                 debug!(address = %server_data.address, "Connecting to server");
 
                                 tokio::spawn(async move {
-                                    match server_manager.connect(server_data.address.clone()).await {
+                                    match server_manager.connect(server_data.address.clone()).await
+                                    {
                                         Ok(connection) => {
                                             // Requests on this connection carry
                                             // the saved token from the last login.

@@ -1,8 +1,51 @@
 #!/usr/bin/env bash
 
-## The tunnel subsystem has no noninteractive implementation yet; the CLI
-## must say so honestly instead of pretending success.
-testJsonReportsUnimplemented() {
-	! output=$(sandpolis tunnel --json --data .)
-	echo "${output}" | jq -e '.status == "unimplemented"'
+randomPort() {
+	local port
+	while true; do
+		port=$(((RANDOM % 64512) + 1024))
+		if ! (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			echo "${port}"
+			return
+		fi
+		exec 3>&-
+	done
+}
+
+startServer() {
+	sandpolis server --listen "127.0.0.1:$(randomPort)" --data . &
+
+	# Wait for the realm cert
+	until [ -s ./default.realm.pem ]; do
+		sleep 0.1
+	done
+}
+
+## A fresh estate has no tunnels, and the list command must say so with an empty
+## JSON array rather than an error.
+testListReturnsEmptyJsonArray() {
+	startServer
+
+	sandpolis tunnel --json --realm ./default.realm.pem list | jq -e '. == []'
+}
+
+## A tunnel declared in the realm config is orchestrated by the server, appears
+## in the replicated list with its configured fields, and (with no endpoints
+## attached) sits in the Pending state rather than erroring.
+testConfiguredTunnelIsListed() {
+	# Written before the server starts, so it reads the tunnel on boot. A blank
+	# CA means "generate one for me", which the server writes back alongside the
+	# tunnel section. Written with printf (RON ignores whitespace) to avoid a
+	# heredoc, which the test harness mangles.
+	printf '%s' '(tunnel:(tunnels:[(name:"web",listener:"00000000-0000-0000-0000-000000000001",listen:"127.0.0.1:15555",terminator:"00000000-0000-0000-0000-000000000002",target:"10.0.0.5:80",protocol:Tcp,mode:Indirect)]))' >./default.realm.ron
+
+	startServer
+
+	sandpolis tunnel --json --realm ./default.realm.pem list | jq -e '
+		.[0].name == "web"
+		and .[0].listen_addr == "127.0.0.1:15555"
+		and .[0].target_addr == "10.0.0.5:80"
+		and .[0].protocol == "Tcp"
+		and .[0].state == "Pending"
+	'
 }

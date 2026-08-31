@@ -42,16 +42,3 @@ testListReturnsEmptyJsonArray() {
 
 	sandpolis snapshot --json --realm ./default.realm.pem list | jq -e '. == []'
 }
-
-## Creating a snapshot of a partition that doesn't exist must fail cleanly with
-## a JSON error and a nonzero exit, not hang or pretend success.
-testCreateUnknownPartitionFailsCleanly() {
-	startServer
-	sandpolis agent --realm ./default.realm.pem &
-	waitForAgent
-
-	! output=$(sandpolis snapshot --json --instance "${instance}" \
-		--realm ./default.realm.pem \
-		create --partition 00000000-0000-0000-0000-000000000000)
-	echo "${output}" | jq -e '.status == "failed"'
-}

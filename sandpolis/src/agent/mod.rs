@@ -1,12 +1,22 @@
 use crate::{InstanceState, RuntimeOptions};
 use anyhow::Result;
 use chrono::Utc;
+#[cfg(feature = "uki")]
+use sandpolis_agent::bootagent::BootAgentState;
+#[cfg(feature = "uki")]
+use sandpolis_agent::bootagent::streams::{BootStreamRequest, BootStreamRequester};
 use sandpolis_instance::network::RetryWait;
 use sandpolis_server::ServerConnectStrategy;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info, warn};
+
+#[cfg(feature = "uki")]
+use tracing::error;
+
+#[cfg(feature = "uki")]
+pub mod boot;
 
 /// Bring up everything an agent needs and run it: the realm named by its realm
 /// cert, the database its collectors write into, and the subsystems over both.
@@ -25,11 +35,40 @@ pub async fn start(args: crate::cli::AgentArgs) -> Result<std::process::ExitCode
 
     let state = crate::endpoint_state(&options, endpoint_certs).await?;
 
-    main(options, state).await?;
-    Ok(std::process::ExitCode::SUCCESS)
+    // A UKI build is always a boot agent: the fullscreen chainloader UI takes
+    // over the main thread (`#[tokio::main]`'s `block_on` runs `start` there),
+    // while the regular agent continues on the runtime's workers.
+    #[cfg(feature = "uki")]
+    {
+        let boot_state = Arc::new(BootAgentState::default());
+        {
+            let boot_state = boot_state.clone();
+            tokio::spawn(async move {
+                if let Err(e) = main(options, state, boot_state).await {
+                    error!(error = %e, "Agent failed");
+                }
+            });
+        }
+
+        let handle = tokio::runtime::Handle::current();
+        boot::run_boot_ui(boot_state, boot::chainload_entries(), move |entry| {
+            boot::chainload(&handle, entry)
+        })?;
+        Ok(std::process::ExitCode::SUCCESS)
+    }
+
+    #[cfg(not(feature = "uki"))]
+    {
+        main(options, state).await?;
+        Ok(std::process::ExitCode::SUCCESS)
+    }
 }
 
-pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
+pub async fn main(
+    options: RuntimeOptions,
+    state: InstanceState,
+    #[cfg(feature = "uki")] boot: Arc<BootAgentState>,
+) -> Result<()> {
     let Some(url) = options.server.clone() else {
         warn!("Waiting for server configuration");
         std::future::pending::<()>().await;
@@ -61,9 +100,15 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     services.start()?;
 
+    // A boot agent stays continuously connected so the server can hold it;
+    // `--poll` doesn't exist in UKI builds.
+    #[cfg(feature = "uki")]
+    let strategy = ServerConnectStrategy::Continuous;
+
     // Pick the connection strategy from `--poll`: a schedule selects polling
     // mode (periodic check-ins), otherwise the agent stays continuously
     // connected.
+    #[cfg(not(feature = "uki"))]
     let strategy = match &options.poll {
         Some(poll) => {
             match ServerConnectStrategy::polling(
@@ -108,6 +153,28 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                         };
                         retry = RetryWait::default();
 
+                        // A boot agent announces itself so the server can
+                        // place a boot hold (and later release it).
+                        #[cfg(feature = "uki")]
+                        {
+                            *boot.server.lock().unwrap() =
+                                Some(format!("{}:{}", url.host, url.port));
+                            if let Some(socket) = &socket
+                                && let Err(e) = socket
+                                    .open_stream(
+                                        BootStreamRequester {
+                                            state: boot.clone(),
+                                        },
+                                        BootStreamRequest::Announce {
+                                            agent: instance.instance_id,
+                                        },
+                                    )
+                                    .await
+                            {
+                                warn!(error = %e, "Failed to open boot stream");
+                            }
+                        }
+
                         // Reconnect when either token fires: the socket's, which
                         // is what a server-side drop or a dead peer cancels, or
                         // the connection's own. Waiting on the latter alone would
@@ -127,6 +194,10 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
                             .write()
                             .unwrap()
                             .retain(|c| !Arc::ptr_eq(c, &entry));
+                        #[cfg(feature = "uki")]
+                        {
+                            *boot.server.lock().unwrap() = None;
+                        }
                         warn!(url = %url, "Server connection cancelled, reconnecting");
                     }
                     Err(e) => {

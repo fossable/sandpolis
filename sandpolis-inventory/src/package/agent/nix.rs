@@ -392,12 +392,18 @@ mod tests {
 
     #[test]
     fn attr_prefix_stripping() {
-        assert_eq!(strip_attr_prefix("legacyPackages.x86_64-linux.hello"), "hello");
+        assert_eq!(
+            strip_attr_prefix("legacyPackages.x86_64-linux.hello"),
+            "hello"
+        );
         assert_eq!(
             strip_attr_prefix("legacyPackages.aarch64-darwin.python312Packages.requests"),
             "python312Packages.requests"
         );
-        assert_eq!(strip_attr_prefix("packages.x86_64-linux.default"), "default");
+        assert_eq!(
+            strip_attr_prefix("packages.x86_64-linux.default"),
+            "default"
+        );
         assert_eq!(strip_attr_prefix("hello"), "hello");
     }
 

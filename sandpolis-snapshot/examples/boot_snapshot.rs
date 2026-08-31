@@ -2,12 +2,12 @@
 //! the UI can be reviewed without a server or agent:
 //!
 //! ```sh
-//! cargo run -p sandpolis-snapshot --features agent --example boot_display
+//! cargo run -p sandpolis-snapshot --features agent --example boot_snapshot
 //! ```
 //!
 //! Set `SNAPSHOT_MOCK_FAILURES=1` to sprinkle in failed blocks.
 
-use sandpolis_snapshot::boot_display::{BlockState, SnapshotProgress, run_boot_display};
+use sandpolis_snapshot::boot_snapshot::{BlockState, SnapshotProgress, run_boot_snapshot};
 use sandpolis_snapshot::{SNAPSHOT_BLOCK_SIZE, SnapshotDirection};
 use std::sync::Arc;
 use std::time::Duration;
@@ -76,5 +76,5 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
-    run_boot_display(progress)
+    run_boot_snapshot(progress)
 }

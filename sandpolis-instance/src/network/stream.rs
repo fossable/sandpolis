@@ -507,6 +507,18 @@ impl Relay {
         );
     }
 
+    /// The connection a message for `target` would be relayed through, if the
+    /// target is advertised as reachable via a server peer (rather than being
+    /// directly connected here). Used to originate a server-opened stream toward
+    /// an instance behind another stratum.
+    pub fn reachable_via(&self, target: InstanceId) -> Option<Arc<super::InstanceConnection>> {
+        self.reachable
+            .read()
+            .unwrap()
+            .get(&target)
+            .and_then(|entry| entry.upgrade())
+    }
+
     /// Forget every route advertised through `via` (its connection dropped).
     pub fn withdraw(&self, via: InstanceId) {
         self.reachable

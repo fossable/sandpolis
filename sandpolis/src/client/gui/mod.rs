@@ -358,6 +358,8 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
 
     #[cfg(feature = "snapshot")]
     app.add_plugins(sandpolis_snapshot::client::gui::SnapshotClientPlugin);
+    #[cfg(feature = "tunnel")]
+    app.add_plugins(sandpolis_tunnel::client::gui::TunnelClientPlugin);
     #[cfg(feature = "probe")]
     app.add_plugins(sandpolis_probe::client::gui::ProbeClientPlugin);
     #[cfg(feature = "account")]

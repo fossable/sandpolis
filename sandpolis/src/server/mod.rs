@@ -299,6 +299,28 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             )?);
     }
 
+    // Boot agents announce themselves on connect; the responder answers from
+    // the realm's per-agent boot hold rows.
+    state
+        .agent
+        .install_server(sandpolis_agent::bootagent::server::BootServerContext::new(
+            state.instance.realm().clone(),
+        )?);
+
+    // Tunnels are declared in realm config (only the global stratum server reads
+    // it) and bridged by this server; an empty config simply idles.
+    #[cfg(feature = "tunnel")]
+    {
+        state
+            .tunnel
+            .install_server(sandpolis_tunnel::server::TunnelServerContext::new(
+                state.instance.realm().clone(),
+                state.network.clone(),
+                state.instance.instance_id,
+                options.merged_tunnel_config(),
+            )?);
+    }
+
     services.start()?;
 
     // A local stratum server can't serve TLS until the global stratum server has

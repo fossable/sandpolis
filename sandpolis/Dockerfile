@@ -64,7 +64,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,id=sandpolis-registry-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/registry \
     --mount=type=cache,id=sandpolis-git-${TARGETPLATFORM},sharing=locked,target=/root/.cargo/git \
     --mount=type=cache,id=sandpolis-target-demo-${TARGETPLATFORM},sharing=locked,target=/build/target \
-    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --all-features" \
+    nix-shell shell.nix --run "cargo build --release -p sandpolis --bin sandpolis --features server,agent,client" \
     && install -Dm755 target/release/sandpolis /out/bin/sandpolis
 
 # Kept separate from `deps` so that editing mkrootfs doesn't invalidate the

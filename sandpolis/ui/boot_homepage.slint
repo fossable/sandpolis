@@ -1,0 +1,154 @@
+// Fullscreen homepage for the boot agent: identity at the top, the
+// chainloadable boot entries in the middle, and a draining countdown bar at
+// the bottom. No std-widgets import on purpose: everything is plain
+// rectangles so no widget style gets compiled in (same as boot_snapshot).
+
+export enum BootMode {
+    /// The countdown bar is draining toward an automatic boot
+    countdown,
+    /// A key was pressed; the user is picking an entry
+    menu,
+    /// The server placed a boot hold; chainloading is suspended
+    hold,
+}
+
+export component BootHomepage inherits Window {
+    title: "sandpolis";
+    background: #333333;
+    preferred-width: 1280px;
+    preferred-height: 800px;
+
+    in property <string> server;
+    in property <string> ip;
+    in property <[string]> entries;
+    in property <int> selected;
+    in property <BootMode> mode: BootMode.countdown;
+    /// Fraction of the countdown remaining (1.0 -> 0.0)
+    in property <float> countdown: 1.0;
+    in property <string> countdown-label;
+    in property <string> message;
+
+    /// One of "up", "down", "enter", "other"
+    callback key(string);
+
+    forward-focus: keys;
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.UpArrow) {
+                root.key("up");
+            } else if (event.text == Key.DownArrow) {
+                root.key("down");
+            } else if (event.text == Key.Return) {
+                root.key("enter");
+            } else {
+                root.key("other");
+            }
+            accept
+        }
+    }
+
+    VerticalLayout {
+        padding: 48px;
+        spacing: 12px;
+
+        // Identity
+        Image {
+            source: @image-url("../assets/logo.svg");
+            height: 140px;
+        }
+
+        Text {
+            text: root.server == "" ? "Not connected" : "Server: " + root.server;
+            color: root.server == "" ? #909090 : #e0e0e0;
+            font-size: 15px;
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: root.ip == "" ? "" : "IP: " + root.ip;
+            color: #909090;
+            font-size: 15px;
+            horizontal-alignment: center;
+        }
+
+        Rectangle { height: 12px; }
+
+        // Boot menu, or the hold notice in its place
+        if root.mode != BootMode.hold: Rectangle {
+            VerticalLayout {
+                alignment: start;
+                spacing: 4px;
+
+                for entry[index] in root.entries: Rectangle {
+                    width: 480px;
+                    height: 40px;
+                    x: (parent.width - self.width) / 2;
+                    border-radius: 4px;
+                    background: index == root.selected ? #4a4a4a : transparent;
+
+                    Text {
+                        x: 16px;
+                        text: entry;
+                        color: index == root.selected ? #c8ab37 : #e0e0e0;
+                        font-size: 16px;
+                        vertical-alignment: center;
+                        height: parent.height;
+                    }
+                }
+
+                if root.entries.length == 0: Text {
+                    text: "No boot entries found";
+                    color: #909090;
+                    font-size: 15px;
+                    horizontal-alignment: center;
+                }
+            }
+        }
+
+        if root.mode == BootMode.hold: Text {
+            text: root.message;
+            color: #c8ab37;
+            font-size: 17px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            wrap: word-wrap;
+        }
+    }
+
+    footer := Rectangle {
+        y: root.height - self.height;
+        height: 72px;
+        background: #2a2a2a;
+
+        VerticalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-top: 12px;
+            padding-bottom: 16px;
+            spacing: 10px;
+
+            Text {
+                text: root.mode == BootMode.countdown ? root.countdown-label
+                    : root.mode == BootMode.menu ? "↑/↓ select · Enter boot"
+                    : root.message == "" ? "Waiting for the server..." : "";
+                color: #e0e0e0;
+                font-size: 15px;
+                vertical-alignment: center;
+            }
+
+            Rectangle {
+                height: 6px;
+                border-radius: 3px;
+                background: #4a4a4a;
+
+                Rectangle {
+                    x: 0;
+                    width: parent.width * min(1.0, max(0.0, root.mode == BootMode.countdown ? root.countdown : 0.0));
+                    height: parent.height;
+                    border-radius: parent.border-radius;
+                    background: #c8ab37;
+                }
+            }
+        }
+    }
+}

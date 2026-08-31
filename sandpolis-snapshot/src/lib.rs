@@ -31,11 +31,11 @@ use serde::{Deserialize, Serialize};
 
 pub mod streams;
 
-#[cfg(feature = "agent")]
+#[cfg(feature = "uki")]
 pub mod agent;
 
-#[cfg(feature = "agent")]
-pub mod boot_display;
+#[cfg(feature = "uki")]
+pub mod boot_snapshot;
 
 #[cfg(feature = "server")]
 pub mod server;
@@ -57,6 +57,36 @@ pub const HASHES_PER_MESSAGE: usize = 256;
 /// (device links on the agent, storage directories on the server).
 pub fn valid_uuid(uuid: &str) -> bool {
     !uuid.is_empty() && uuid.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
+}
+
+/// Wipe free space on the given filesystem by filling it with zeros, which can
+/// significantly reduce the size of subsequent snapshots.
+///
+/// This belongs to the *regular* agent: it must run while the filesystem is
+/// still mounted, before the machine reboots into a cold snapshot. Don't use it
+/// with software-based encryption schemes — the zeros are encrypted into
+/// incompressible noise, making snapshots larger rather than smaller.
+///
+/// Not yet wired into any stream or service.
+#[cfg(all(feature = "agent", not(feature = "uki")))]
+#[allow(dead_code)]
+pub async fn wipe_free<P>(path: P) -> Result<()>
+where
+    P: AsRef<std::path::Path>,
+{
+    use tokio::io::AsyncWriteExt;
+
+    let path = path.as_ref().join(".blank");
+    let mut file = tokio::fs::File::create(&path).await?;
+    let zeros = vec![0u8; SNAPSHOT_BLOCK_SIZE as usize];
+
+    // Fill until the filesystem refuses more, then release it all.
+    while file.write_all(&zeros).await.is_ok() {}
+
+    file.sync_all().await?;
+    drop(file);
+    tokio::fs::remove_file(&path).await?;
+    Ok(())
 }
 
 /// One stored snapshot of one partition. Written by the server that holds the
@@ -181,11 +211,13 @@ impl SnapshotManager {
     }
 }
 
-/// Static handler for registering the agent's block stream responders.
-#[cfg(feature = "agent")]
+/// Static handler for registering the boot agent's block stream responders.
+/// Cold snapshots only run in the UKI boot environment, so regular agents
+/// don't answer these streams at all.
+#[cfg(feature = "uki")]
 pub struct SnapshotAgentResponderRegistration;
 
-#[cfg(feature = "agent")]
+#[cfg(feature = "uki")]
 impl sandpolis_instance::network::RegisterResponders for SnapshotAgentResponderRegistration {
     fn register_responders(&self, registry: &sandpolis_instance::network::StreamRegistry) {
         registry.register_responder(agent::SnapshotCreateStreamResponder::default);
@@ -193,7 +225,7 @@ impl sandpolis_instance::network::RegisterResponders for SnapshotAgentResponderR
     }
 }
 
-#[cfg(feature = "agent")]
+#[cfg(feature = "uki")]
 inventory::submit!(sandpolis_instance::network::ResponderRegistration(
     &SnapshotAgentResponderRegistration
 ));

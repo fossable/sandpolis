@@ -43,42 +43,13 @@ impl sandpolis_instance::network::StreamResponder for WakeStreamResponder {
             return Ok(());
         }
 
-        let response = match change_power_state(&request.action).await {
+        let response = match crate::wake::change_power_state(&request.action).await {
             Ok(()) => WakeStreamResponse::Ok,
             Err(e) => WakeStreamResponse::Failed(e.to_string()),
         };
         sender.send(response).await?;
         Ok(())
     }
-}
-
-/// Initiate a power state change on the local system.
-#[cfg(feature = "agent")]
-async fn change_power_state(action: &WakeAction) -> anyhow::Result<()> {
-    use anyhow::bail;
-    use tokio::process::Command;
-
-    let (systemctl_verb, shutdown_arg) = match action {
-        WakeAction::Poweroff => ("poweroff", "-h"),
-        WakeAction::Reboot => ("reboot", "-r"),
-    };
-
-    // Prefer systemctl when available, falling back to the classic `shutdown`.
-    let status = Command::new("systemctl").arg(systemctl_verb).status().await;
-    if let Ok(status) = status
-        && status.success() {
-            return Ok(());
-        }
-
-    let status = Command::new("shutdown")
-        .arg(shutdown_arg)
-        .arg("now")
-        .status()
-        .await?;
-    if !status.success() {
-        bail!("failed to {systemctl_verb}: shutdown exited with {status}");
-    }
-    Ok(())
 }
 
 #[cfg(feature = "agent")]

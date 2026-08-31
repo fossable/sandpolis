@@ -42,9 +42,11 @@ fn segments(version: &str) -> Vec<Segment<'_>> {
     while let Some(start) = rest.find(|c: char| c.is_ascii_alphanumeric()) {
         rest = &rest[start..];
         let end = if rest.starts_with(|c: char| c.is_ascii_digit()) {
-            rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len())
+            rest.find(|c: char| !c.is_ascii_digit())
+                .unwrap_or(rest.len())
         } else {
-            rest.find(|c: char| !c.is_ascii_alphabetic()).unwrap_or(rest.len())
+            rest.find(|c: char| !c.is_ascii_alphabetic())
+                .unwrap_or(rest.len())
         };
         let (segment, tail) = rest.split_at(end);
         segments.push(if segment.starts_with(|c: char| c.is_ascii_digit()) {

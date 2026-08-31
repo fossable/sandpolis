@@ -11,6 +11,7 @@ version = "8.0.0"
 [build-dependencies]
 roniker = { workspace = true, features = ["analyze"] }
 serde_json = { workspace = true }
+slint-build = { version = "1.17", optional = true }
 walkdir = "2"
 
 [dependencies]
@@ -40,6 +41,7 @@ sandpolis-probe = { path = "../sandpolis-probe", version = "0.0.1", optional = t
 sandpolis-server = { path = "../sandpolis-server", version = "0.0.1" }
 sandpolis-shell = { path = "../sandpolis-shell", version = "0.0.1", optional = true }
 sandpolis-snapshot = { path = "../sandpolis-snapshot", version = "0.0.1", optional = true }
+sandpolis-tunnel = { path = "../sandpolis-tunnel", version = "0.0.1", optional = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -58,6 +60,15 @@ axum-macros = { workspace = true, optional = true }
 notify = { workspace = true, optional = true }
 axum-server = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
+
+# Boot agent exclusive
+slint = { version = "1.17", optional = true, default-features = false, features = [
+  "std",
+  "compat-1-2",
+  "backend-winit",
+  "backend-linuxkms-noseat",
+  "renderer-software",
+] }
 
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
@@ -91,6 +102,7 @@ server = [
   "sandpolis-server/server",
   "sandpolis-shell?/server",
   "sandpolis-snapshot?/server",
+  "sandpolis-tunnel?/server",
 ]
 agent = [
   "sandpolis-account?/agent",
@@ -105,6 +117,7 @@ agent = [
   "sandpolis-server/agent",
   "sandpolis-shell?/agent",
   "sandpolis-snapshot?/agent",
+  "sandpolis-tunnel?/agent",
 ]
 client = [
   "dep:roniker",
@@ -132,6 +145,17 @@ client = [
   "sandpolis-probe?/client",
   "sandpolis-shell?/client",
   "sandpolis-snapshot?/client",
+  "sandpolis-tunnel?/client",
+]
+# Boot agent running inside a Unified Kernel Image: always shows the
+# chainloader UI and answers cold snapshot streams. Incompatible with the
+# server and client features, so `--all-features` no longer builds.
+uki = [
+  "agent",
+  "dep:slint",
+  "dep:slint-build",
+  "sandpolis-inventory?/uki",
+  "sandpolis-snapshot?/uki",
 ]
 
 # Subsystems
@@ -150,7 +174,7 @@ probe = [
   "sandpolis-filesystem?/probe",
   "sandpolis-health?/probe",
 ]
-tunnel = []
+tunnel = ["dep:sandpolis-tunnel"]
 
 default = [
   "account",
@@ -164,6 +188,10 @@ default = [
   "snapshot",
   "tunnel",
 ]
+
+[[example]]
+name = "boot_homepage"
+required-features = ["uki", "snapshot"]
 
 [[example]]
 name = "client_tui_server_list"

@@ -3,7 +3,7 @@ use native_model::Model;
 use sandpolis_instance::InstanceId;
 use sandpolis_macros::data;
 
-#[cfg(feature = "agent")]
+#[cfg(all(feature = "agent", not(feature = "uki")))]
 pub mod agent;
 
 #[data(temporal)]

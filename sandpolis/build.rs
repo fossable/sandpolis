@@ -4,6 +4,16 @@ use std::{
 };
 
 fn main() {
+    // Embed the referenced assets: in the UKI boot environment there is no
+    // source tree to load them from at runtime.
+    #[cfg(feature = "uki")]
+    slint_build::compile_with_config(
+        "ui/boot_homepage.slint",
+        slint_build::CompilerConfiguration::new()
+            .embed_resources(slint_build::EmbedResourcesKind::EmbedFiles),
+    )
+    .expect("failed to compile boot_homepage.slint");
+
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
 
     // Generate rust_analyzer.json for the LSP. The analyzer indexes every

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 // message RQ_RefreshPackages {
 // }
 
-#[cfg(feature = "agent")]
+#[cfg(all(feature = "agent", not(feature = "uki")))]
 pub mod agent;
 
 // pub fn packages_iter() -> impl Iterator<Item = Package> {}

@@ -2,7 +2,7 @@
 //! running in the UKI boot environment.
 //!
 //! Rendering uses Slint's software renderer. On a desktop (and in the
-//! `boot_display` example) the winit backend provides a window; in the UKI
+//! `boot_snapshot` example) the winit backend provides a window; in the UKI
 //! there is no compositor, so the linuxkms backend draws straight to
 //! `/dev/dri/card0` (select it with `SLINT_BACKEND=linuxkms-noseat`).
 //!
@@ -14,11 +14,34 @@
 use crate::SnapshotDirection;
 use anyhow::Result;
 use slint::{ComponentHandle, Image, Rgb8Pixel, SharedPixelBuffer, Timer, TimerMode};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
+use tokio::sync::watch;
 
 slint::include_modules!();
+
+/// The progress of the snapshot operation currently running in this process,
+/// if any. The boot UI watches this to switch to the block-grid display; a
+/// watcher that wants to keep rendering past completion holds its own `Arc`.
+static ACTIVE: LazyLock<watch::Sender<Option<Arc<SnapshotProgress>>>> =
+    LazyLock::new(|| watch::channel(None).0);
+
+/// Announce a newly started snapshot operation to any watching UI.
+pub fn publish(progress: Arc<SnapshotProgress>) {
+    ACTIVE.send_replace(Some(progress));
+}
+
+/// Clear the announcement once the operation finishes.
+pub fn clear() {
+    ACTIVE.send_replace(None);
+}
+
+/// Watch for snapshot operations starting; the receiver always holds the
+/// latest announcement.
+pub fn active() -> watch::Receiver<Option<Arc<SnapshotProgress>>> {
+    ACTIVE.subscribe()
+}
 
 /// Side length of one grid cell in pixels.
 const CELL_SIZE: u32 = 10;
@@ -208,11 +231,10 @@ fn format_bytes(bytes: u64) -> String {
     }
 }
 
-/// Run the display until the window closes (winit) or forever (linuxkms). This
-/// owns the calling thread; the snapshot operation drives `progress` from
-/// other threads.
-pub fn run_boot_display(progress: Arc<SnapshotProgress>) -> Result<()> {
-    let ui = BootDisplay::new()?;
+/// Wire `progress` into an existing display component, returning the timer
+/// that keeps it updating (drop it to stop). This is the piece a caller with
+/// its own event loop (the boot homepage) uses directly.
+pub fn attach(ui: &BootSnapshot, progress: Arc<SnapshotProgress>) -> Timer {
     ui.set_operation(progress.describe().into());
 
     let ui_weak = ui.as_weak();
@@ -263,7 +285,15 @@ pub fn run_boot_display(progress: Arc<SnapshotProgress>) -> Result<()> {
             );
         }
     });
+    timer
+}
 
+/// Run the display until the window closes (winit) or forever (linuxkms). This
+/// owns the calling thread; the snapshot operation drives `progress` from
+/// other threads.
+pub fn run_boot_snapshot(progress: Arc<SnapshotProgress>) -> Result<()> {
+    let ui = BootSnapshot::new()?;
+    let _timer = attach(&ui, progress);
     ui.run()?;
     Ok(())
 }

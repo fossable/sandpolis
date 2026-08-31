@@ -12122,8 +12122,11 @@ dependencies = [
  "sandpolis-server",
  "sandpolis-shell",
  "sandpolis-snapshot",
+ "sandpolis-tunnel",
  "serde",
  "serde_json",
+ "slint",
+ "slint-build",
  "strum",
  "tempfile",
  "tokio",
@@ -12609,9 +12612,23 @@ name = "sandpolis-tunnel"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "bevy",
+ "clap",
+ "inventory",
+ "native_db",
+ "native_model",
+ "ratatui",
+ "sandpolis-agent",
+ "sandpolis-client",
  "sandpolis-instance",
  "sandpolis-macros",
  "serde",
+ "serde_cbor",
+ "serde_json",
+ "test-log",
+ "tokio",
+ "tokio-util",
+ "tracing",
 ]
 
 [[package]]

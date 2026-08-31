@@ -1,4 +1,55 @@
+use native_db::ToKey;
+use native_model::Model;
+use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "server")]
+pub mod server;
+pub mod streams;
+
+/// Per-agent boot behavior, written on the server. A boot agent that finds a
+/// hold set stays connected instead of chainloading, so the server can run
+/// snapshot operations against the cold partitions.
+#[data(instance)]
+#[derive(Default)]
+pub struct BootAgentData {
+    /// Prevents the boot agent from chainloading until cleared
+    pub hold: bool,
+}
+
+/// Live state a boot-mode agent shares between its network tasks and the
+/// fullscreen boot UI, which samples it on a timer.
+#[derive(Default)]
+pub struct BootAgentState {
+    /// Address of the currently connected server
+    pub server: std::sync::Mutex<Option<String>>,
+
+    /// The server has placed a boot hold; chainloading must not proceed
+    pub hold: std::sync::atomic::AtomicBool,
+
+    /// The server released the hold; the device should reboot
+    pub release: std::sync::atomic::AtomicBool,
+}
+
+/// Static handler for registering the server's boot stream responder.
+#[cfg(feature = "server")]
+pub struct BootResponderRegistration;
+
+#[cfg(feature = "server")]
+impl sandpolis_instance::network::RegisterResponders for BootResponderRegistration {
+    fn register_responders(&self, registry: &sandpolis_instance::network::StreamRegistry) {
+        registry.register_responder(server::BootStreamResponder::default);
+    }
+}
+
+#[cfg(feature = "server")]
+inventory::submit!(sandpolis_instance::network::ResponderRegistration(
+    &BootResponderRegistration
+));
+
+// The boot stream deliberately has no permission declaration: undeclared tags
+// fail closed, so clients cannot open it — only boot agents (whose
+// connections are not gated) announce themselves on it.
 
 /// Request that the boot agent be started.
 #[derive(Serialize, Deserialize)]

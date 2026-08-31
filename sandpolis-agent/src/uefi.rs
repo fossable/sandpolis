@@ -7,6 +7,12 @@ const EFIVARS_PATH: &str = "/sys/firmware/efi/efivars";
 // EFI Global Variable GUID
 const EFI_GLOBAL_VARIABLE_GUID: &str = "8be4df61-93ca-11d2-aa0d-00e098032b8c";
 
+/// EFI_LOAD_OPTION attribute bit: the entry participates in boot.
+const LOAD_OPTION_ACTIVE: u32 = 0x1;
+
+/// Variable attributes: non-volatile + boot services + runtime services.
+const EFI_VARIABLE_NV_BS_RT: u32 = 0x7;
+
 /// Common UEFI variables
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UefiVariable {
@@ -176,5 +182,100 @@ impl UefiVariable {
         }
 
         Ok(variables)
+    }
+}
+
+/// One entry from the firmware's boot menu.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BootEntry {
+    /// The `Boot####` variable number
+    pub number: u16,
+
+    /// Human-readable description from the load option
+    pub description: String,
+}
+
+/// The number of the `Boot####` entry the firmware booted this time.
+pub fn current_boot() -> Result<u16> {
+    let (data, _) = UefiVariable::BootCurrent.get()?;
+    let bytes: [u8; 2] = data
+        .get(..2)
+        .and_then(|b| b.try_into().ok())
+        .context("BootCurrent variable is too short")?;
+    Ok(u16::from_le_bytes(bytes))
+}
+
+/// Make the firmware boot the given `Boot####` entry on the next boot only.
+pub fn set_boot_next(number: u16) -> Result<()> {
+    UefiVariable::BootNext.set(EFI_VARIABLE_NV_BS_RT, &number.to_le_bytes())
+}
+
+/// Boot menu entries in `BootOrder` order, skipping inactive or unreadable
+/// load options.
+pub fn boot_entries() -> Result<Vec<BootEntry>> {
+    let (order, _) = UefiVariable::BootOrder.get()?;
+    Ok(order
+        .chunks_exact(2)
+        .map(|c| u16::from_le_bytes([c[0], c[1]]))
+        .filter_map(|number| {
+            let (data, _) = UefiVariable::BootEntry(number).get().ok()?;
+            parse_load_option(number, &data)
+        })
+        .collect())
+}
+
+/// Parse an EFI_LOAD_OPTION: `attributes: u32`, `file_path_list_length: u16`,
+/// then the NUL-terminated UTF-16LE description. Inactive or malformed
+/// entries yield `None`.
+fn parse_load_option(number: u16, data: &[u8]) -> Option<BootEntry> {
+    let attributes = u32::from_le_bytes(data.get(..4)?.try_into().ok()?);
+    if attributes & LOAD_OPTION_ACTIVE == 0 {
+        return None;
+    }
+
+    let description: Vec<u16> = data
+        .get(6..)?
+        .chunks_exact(2)
+        .map(|unit| u16::from_le_bytes([unit[0], unit[1]]))
+        .take_while(|&c| c != 0)
+        .collect();
+
+    Some(BootEntry {
+        number,
+        description: String::from_utf16_lossy(&description),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build an EFI_LOAD_OPTION payload with the given attributes and
+    /// description.
+    fn load_option(attributes: u32, description: &str) -> Vec<u8> {
+        let mut data = attributes.to_le_bytes().to_vec();
+        data.extend_from_slice(&4u16.to_le_bytes()); // FilePathListLength
+        for c in description.encode_utf16().chain([0]) {
+            data.extend_from_slice(&c.to_le_bytes());
+        }
+        data.extend_from_slice(&[0xde, 0xad, 0xbe, 0xef]); // device path
+        data
+    }
+
+    #[test]
+    fn parse_active_load_option() {
+        let entry = parse_load_option(3, &load_option(0x1, "Arch Linux")).unwrap();
+        assert_eq!(entry.number, 3);
+        assert_eq!(entry.description, "Arch Linux");
+    }
+
+    #[test]
+    fn skip_inactive_load_option() {
+        assert!(parse_load_option(0, &load_option(0x0, "Disabled")).is_none());
+    }
+
+    #[test]
+    fn skip_truncated_load_option() {
+        assert!(parse_load_option(0, &[0x01, 0x00]).is_none());
     }
 }

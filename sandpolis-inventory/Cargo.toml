@@ -46,6 +46,10 @@ agent = [
   "dep:regex",
   "dep:serde_json",
 ]
+# Boot agent: only the hardware collectors run; the OS-level collectors
+# (packages, users, mountpoints) are compiled out since the UKI environment
+# has no OS of its own worth reporting.
+uki = []
 server = [
   "sandpolis-instance/server",
   "dep:chrono",

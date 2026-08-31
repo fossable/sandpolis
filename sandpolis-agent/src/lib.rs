@@ -46,6 +46,13 @@ impl AgentManager {
     pub async fn new(database: DatabaseManager) -> Result<Self> {
         Ok(Self { database })
     }
+
+    /// Give the server-side boot responder its database context. Called once
+    /// at server startup.
+    #[cfg(feature = "server")]
+    pub fn install_server(&self, context: bootagent::server::BootServerContext) {
+        bootagent::server::install(context);
+    }
 }
 
 /// Polls data periodically.

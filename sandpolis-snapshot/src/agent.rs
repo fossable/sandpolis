@@ -6,13 +6,15 @@
 //! channel. Blocking in `on_message` would stall the connection's dispatch
 //! loop, since responder handlers run inline on the socket's receive path.
 
+use crate::boot_snapshot::{self, BlockState, SnapshotProgress};
 use crate::streams::*;
-use crate::{HASHES_PER_MESSAGE, SNAPSHOT_BLOCK_SIZE};
+use crate::{HASHES_PER_MESSAGE, SNAPSHOT_BLOCK_SIZE, SnapshotDirection};
 use anyhow::{Result, bail};
 use sandpolis_instance::network::StreamResponder;
 use sandpolis_macros::Stream;
 use std::io::SeekFrom;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::sync::Mutex;
@@ -31,6 +33,33 @@ pub fn resolve_partition(partition_uuid: &str) -> Result<PathBuf> {
     }
     let path = Path::new("/dev/disk/by-partuuid").join(partition_uuid);
     Ok(std::fs::canonicalize(&path)?)
+}
+
+/// Announce a starting operation to the boot UI (if one is watching) and
+/// return the progress the worker drives.
+fn announce_progress(
+    direction: SnapshotDirection,
+    path: &Path,
+    partition_uuid: &str,
+    size: u64,
+    block_size: u64,
+) -> Arc<SnapshotProgress> {
+    let label = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| partition_uuid.to_string());
+    let progress = Arc::new(SnapshotProgress::new(direction, label, size, block_size));
+    boot_snapshot::publish(progress.clone());
+    progress
+}
+
+/// Mark the operation's outcome on its progress and clear the announcement.
+fn conclude_progress(progress: &SnapshotProgress, result: &Result<()>) {
+    match result {
+        Ok(()) => progress.finish(),
+        Err(e) => progress.fail(e.to_string()),
+    }
+    boot_snapshot::clear();
 }
 
 /// Size of a partition (or any seekable file) in bytes.
@@ -96,7 +125,7 @@ impl StreamResponder for SnapshotCreateStreamResponder {
 async fn create_worker(
     partition_uuid: &str,
     block_size: u64,
-    mut requests: UnboundedReceiver<SnapshotCreateRequest>,
+    requests: UnboundedReceiver<SnapshotCreateRequest>,
     sender: &Sender<SnapshotCreateResponse>,
 ) -> Result<()> {
     if block_size == 0 || !block_size.is_power_of_two() {
@@ -110,6 +139,30 @@ async fn create_worker(
 
     sender.send(SnapshotCreateResponse::Meta { size }).await?;
 
+    let progress = announce_progress(
+        SnapshotDirection::Create,
+        &path,
+        partition_uuid,
+        size,
+        block_size,
+    );
+    let result = create_blocks(&mut file, size, block_size, requests, sender, &progress).await;
+    conclude_progress(&progress, &result);
+    result?;
+    debug!(?path, "Partition scan complete");
+    Ok(())
+}
+
+/// The block exchange of a capture: hash everything, upload what the server
+/// asks for.
+async fn create_blocks(
+    file: &mut File,
+    size: u64,
+    block_size: u64,
+    mut requests: UnboundedReceiver<SnapshotCreateRequest>,
+    sender: &Sender<SnapshotCreateResponse>,
+    progress: &SnapshotProgress,
+) -> Result<()> {
     // Hash every block, flushing batches as they fill. Upload requests arrive
     // interleaved with the scan (the server compares batches as they land), so
     // they're drained between blocks rather than only after the scan.
@@ -118,11 +171,14 @@ async fn create_worker(
     let mut offset = 0u64;
     while offset < size {
         while let Ok(request) = requests.try_recv() {
-            handle_upload(request, &mut file, block_size, size, sender).await?;
+            handle_upload(request, file, block_size, size, sender, progress).await?;
         }
 
-        let block = read_block(&mut file, offset, block_size, size).await?;
+        progress.set_offset(offset, BlockState::Hashing);
+        let block = read_block(file, offset, block_size, size).await?;
         hashes.push(blake3::hash(&block).into());
+        // Provisionally clean until the server asks for it
+        progress.set_offset(offset, BlockState::Clean);
         offset += block_size;
 
         if hashes.len() >= HASHES_PER_MESSAGE || offset >= size {
@@ -140,12 +196,11 @@ async fn create_worker(
     // Serve the remaining upload requests until the server has compared
     // everything.
     while let Some(request) = requests.recv().await {
-        if !handle_upload(request, &mut file, block_size, size, sender).await? {
+        if !handle_upload(request, file, block_size, size, sender, progress).await? {
             break;
         }
     }
     sender.send(SnapshotCreateResponse::Done).await?;
-    debug!(?path, "Partition scan complete");
     Ok(())
 }
 
@@ -157,6 +212,7 @@ async fn handle_upload(
     block_size: u64,
     size: u64,
     sender: &Sender<SnapshotCreateResponse>,
+    progress: &SnapshotProgress,
 ) -> Result<bool> {
     match request {
         SnapshotCreateRequest::Need { offsets } => {
@@ -164,13 +220,14 @@ async fn handle_upload(
                 if offset >= size {
                     bail!("Requested block is out of range");
                 }
+                progress.set_offset(offset, BlockState::Transferring);
                 let block = read_block(file, offset, block_size, size).await?;
+                let data = zstd::bulk::compress(&block, WIRE_COMPRESSION_LEVEL)?;
+                progress.add_bytes(data.len() as u64);
                 sender
-                    .send(SnapshotCreateResponse::Block {
-                        offset,
-                        data: zstd::bulk::compress(&block, WIRE_COMPRESSION_LEVEL)?,
-                    })
+                    .send(SnapshotCreateResponse::Block { offset, data })
                     .await?;
+                progress.set_offset(offset, BlockState::Done);
             }
             Ok(true)
         }
@@ -227,7 +284,7 @@ async fn apply_worker(
     partition_uuid: &str,
     block_size: u64,
     size: u64,
-    mut requests: UnboundedReceiver<SnapshotApplyRequest>,
+    requests: UnboundedReceiver<SnapshotApplyRequest>,
     sender: &Sender<SnapshotApplyResponse>,
 ) -> Result<()> {
     if block_size == 0 || !block_size.is_power_of_two() {
@@ -246,6 +303,30 @@ async fn apply_worker(
     }
     debug!(?path, size, "Restoring partition snapshot");
 
+    let progress = announce_progress(
+        SnapshotDirection::Apply,
+        &path,
+        partition_uuid,
+        size,
+        block_size,
+    );
+    let result = apply_blocks(&mut file, size, block_size, requests, sender, &progress).await;
+    conclude_progress(&progress, &result);
+    result?;
+    debug!(?path, "Partition restore complete");
+    Ok(())
+}
+
+/// The block exchange of a restore: hash everything, write back what the
+/// server sends.
+async fn apply_blocks(
+    file: &mut File,
+    size: u64,
+    block_size: u64,
+    mut requests: UnboundedReceiver<SnapshotApplyRequest>,
+    sender: &Sender<SnapshotApplyResponse>,
+    progress: &SnapshotProgress,
+) -> Result<()> {
     // Hash every block so the server can diff against the snapshot. Differing
     // blocks start arriving while the scan runs; a block is only ever sent
     // after its hash was received, so writing it mid-scan can't corrupt a hash
@@ -255,13 +336,16 @@ async fn apply_worker(
     let mut offset = 0u64;
     while offset < size {
         while let Ok(request) = requests.try_recv() {
-            if !handle_restore(request, &mut file, size).await? {
+            if !handle_restore(request, file, size, progress).await? {
                 bail!("Restore ended before the scan finished");
             }
         }
 
-        let block = read_block(&mut file, offset, block_size, size).await?;
+        progress.set_offset(offset, BlockState::Hashing);
+        let block = read_block(file, offset, block_size, size).await?;
         hashes.push(blake3::hash(&block).into());
+        // Provisionally clean until the server sends a differing block
+        progress.set_offset(offset, BlockState::Clean);
         offset += block_size;
 
         if hashes.len() >= HASHES_PER_MESSAGE || offset >= size {
@@ -277,56 +361,36 @@ async fn apply_worker(
     sender.send(SnapshotApplyResponse::HashesDone).await?;
 
     while let Some(request) = requests.recv().await {
-        if !handle_restore(request, &mut file, size).await? {
+        if !handle_restore(request, file, size, progress).await? {
             break;
         }
     }
     file.sync_all().await?;
     sender.send(SnapshotApplyResponse::Applied).await?;
-    debug!(?path, "Partition restore complete");
     Ok(())
 }
 
 /// Write one restored block. Returns false once the server has sent everything.
-async fn handle_restore(request: SnapshotApplyRequest, file: &mut File, size: u64) -> Result<bool> {
+async fn handle_restore(
+    request: SnapshotApplyRequest,
+    file: &mut File,
+    size: u64,
+    progress: &SnapshotProgress,
+) -> Result<bool> {
     match request {
         SnapshotApplyRequest::Block { offset, data } => {
             let block = zstd::bulk::decompress(&data, SNAPSHOT_BLOCK_SIZE as usize)?;
             if offset >= size || offset + block.len() as u64 > size {
                 bail!("Restored block is out of range");
             }
+            progress.set_offset(offset, BlockState::Transferring);
+            progress.add_bytes(data.len() as u64);
             file.seek(SeekFrom::Start(offset)).await?;
             file.write_all(&block).await?;
+            progress.set_offset(offset, BlockState::Done);
             Ok(true)
         }
         SnapshotApplyRequest::Done => Ok(false),
         SnapshotApplyRequest::Start { .. } => bail!("Stream already started"),
     }
-}
-
-/// Wipe free space on the given filesystem by filling it with zeros, which can
-/// significantly reduce the size of subsequent snapshots.
-///
-/// This belongs to the *regular* agent: it must run while the filesystem is
-/// still mounted, before the machine reboots into a cold snapshot. Don't use it
-/// with software-based encryption schemes — the zeros are encrypted into
-/// incompressible noise, making snapshots larger rather than smaller.
-///
-/// Not yet wired into any stream or service.
-#[allow(dead_code)]
-pub async fn wipe_free<P>(path: P) -> Result<()>
-where
-    P: AsRef<Path>,
-{
-    let path = path.as_ref().join(".blank");
-    let mut file = File::create(&path).await?;
-    let zeros = vec![0u8; SNAPSHOT_BLOCK_SIZE as usize];
-
-    // Fill until the filesystem refuses more, then release it all.
-    while file.write_all(&zeros).await.is_ok() {}
-
-    file.sync_all().await?;
-    drop(file);
-    tokio::fs::remove_file(&path).await?;
-    Ok(())
 }

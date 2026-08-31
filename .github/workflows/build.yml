@@ -31,12 +31,17 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --target ${{ matrix.target }} --all-features
+          args: --target ${{ matrix.target }} --features server,agent,client
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --package sandpolis --target ${{ matrix.target }} --features uki
 
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --bin sandpolis --target ${{ matrix.target }} --all-features --release
+          args: --bin sandpolis --target ${{ matrix.target }} --features server,agent,client --release
 
       - uses: actions/upload-artifact@v4
         with:

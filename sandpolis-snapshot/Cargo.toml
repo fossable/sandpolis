@@ -47,11 +47,9 @@ agent = [
   "dep:sandpolis-agent",
   "sandpolis-agent/agent",
   "dep:tokio",
-  "dep:zstd",
-  "dep:blake3",
-  "dep:slint",
-  "dep:slint-build",
 ]
+# Boot agent: block stream responders and their fullscreen progress display
+uki = ["agent", "dep:zstd", "dep:blake3", "dep:slint", "dep:slint-build"]
 server = ["sandpolis-instance/server", "dep:tokio", "dep:zstd", "dep:blake3"]
 client = [
   "sandpolis-instance/client",
@@ -66,5 +64,5 @@ client = [
 ]
 
 [[example]]
-name = "boot_display"
-required-features = ["agent"]
+name = "boot_snapshot"
+required-features = ["uki"]

@@ -81,12 +81,14 @@ pub struct AgentArgs {
     /// for a check-in every five minutes ($S7S_POLL).
     ///
     /// Without it the agent stays connected continuously.
+    #[cfg(not(feature = "uki"))]
     #[clap(long, value_name = "CRON", env = "S7S_POLL")]
     pub poll: Option<String>,
 
     /// How long each check-in window stays open, in seconds ($S7S_POLL_TIMEOUT).
     ///
     /// Only meaningful alongside `--poll`.
+    #[cfg(not(feature = "uki"))]
     #[clap(
         long,
         value_name = "SECONDS",
@@ -156,6 +158,7 @@ impl AgentArgs {
                 ..Default::default()
             },
             instance_type: sandpolis_instance::InstanceType::Agent,
+            #[cfg(not(feature = "uki"))]
             poll: self
                 .poll
                 .clone()
@@ -382,6 +385,9 @@ pub enum Commands {
     /// Manage tunnels
     #[cfg(all(feature = "client", feature = "tunnel"))]
     Tunnel {
+        #[command(subcommand)]
+        action: Option<sandpolis_tunnel::cli::TunnelCommand>,
+
         #[clap(flatten)]
         target: TargetArgs,
 
@@ -544,7 +550,9 @@ impl Commands {
             #[cfg(feature = "audit")]
             Commands::Audit { target, .. } => client::stub("audit", target, fps).await,
             #[cfg(feature = "tunnel")]
-            Commands::Tunnel { target, .. } => client::stub("tunnel", target, fps).await,
+            Commands::Tunnel { action, target, .. } => {
+                sandpolis_tunnel::cli::dispatch(action, target, fps).await
+            }
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),
         }
@@ -679,6 +687,7 @@ mod test_agent_args {
 
     /// Polling is a property of how this agent runs rather than of the
     /// certificate it holds, so it comes from the command line.
+    #[cfg(not(feature = "uki"))]
     #[test]
     fn poll_flags_build_the_poll_config() {
         let command = CommandLine::try_parse_from([
@@ -702,6 +711,7 @@ mod test_agent_args {
 
     /// Without `--poll` the agent stays continuously connected, whatever
     /// `--poll-timeout` says.
+    #[cfg(not(feature = "uki"))]
     #[test]
     fn no_poll_flag_means_continuous() {
         let command = CommandLine::try_parse_from(["sandpolis", "agent", "--poll-timeout", "45"])
