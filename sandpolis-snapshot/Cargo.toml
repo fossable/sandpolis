@@ -5,6 +5,9 @@ license = "Unlicense"
 name = "sandpolis-snapshot"
 version = "0.0.1"
 
+[build-dependencies]
+slint-build = { version = "1.17", optional = true }
+
 [dependencies]
 anyhow = { workspace = true }
 inventory = { workspace = true }
@@ -19,6 +22,13 @@ clap = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 zstd = { workspace = true, optional = true }
 bevy = { workspace = true, optional = true }
+slint = { version = "1.17", optional = true, default-features = false, features = [
+  "std",
+  "compat-1-2",
+  "backend-winit",
+  "backend-linuxkms-noseat",
+  "renderer-software",
+] }
 serde_json = { workspace = true, optional = true }
 sandpolis-instance = { path = "../sandpolis-instance", version = "0.0.1" }
 sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
@@ -39,13 +49,10 @@ agent = [
   "dep:tokio",
   "dep:zstd",
   "dep:blake3",
+  "dep:slint",
+  "dep:slint-build",
 ]
-server = [
-  "sandpolis-instance/server",
-  "dep:tokio",
-  "dep:zstd",
-  "dep:blake3",
-]
+server = ["sandpolis-instance/server", "dep:tokio", "dep:zstd", "dep:blake3"]
 client = [
   "sandpolis-instance/client",
   "dep:sandpolis-client",
@@ -57,3 +64,7 @@ client = [
   "dep:serde_json",
   "dep:tokio",
 ]
+
+[[example]]
+name = "boot_display"
+required-features = ["agent"]

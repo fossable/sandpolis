@@ -1,0 +1,77 @@
+// Fullscreen progress display for boot-mode snapshot operations. The block
+// grid arrives pre-rendered as an image (one cell per aggregated block range)
+// because a partition can map to tens of thousands of cells - far too many for
+// the element tree. No std-widgets import on purpose: the progress bar is a
+// plain rectangle so no widget style gets compiled in.
+
+export component BootDisplay inherits Window {
+    title: "sandpolis";
+    background: #333333;
+    preferred-width: 1280px;
+    preferred-height: 800px;
+
+    in property <image> grid;
+    in property <string> operation;
+    in property <string> stats;
+    in property <float> progress;
+    in property <bool> failed;
+
+    // Grid pitch in logical pixels; the rust side sizes its pixel buffer from
+    // the reported grid area so cells stay unscaled and crisp.
+    out property <length> grid-width: self.width - 48px;
+    out property <length> grid-height: self.height - footer.height - 48px;
+
+    Image {
+        source: root.grid;
+        image-rendering: pixelated;
+        x: (root.width - self.width) / 2;
+        y: (root.grid-height - self.height) / 2 + 24px;
+        width: self.source.width * 1px;
+        height: self.source.height * 1px;
+    }
+
+    footer := Rectangle {
+        y: root.height - self.height;
+        height: 72px;
+        background: #2a2a2a;
+
+        VerticalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-top: 12px;
+            padding-bottom: 16px;
+            spacing: 10px;
+
+            HorizontalLayout {
+                Text {
+                    text: root.operation;
+                    color: #e0e0e0;
+                    font-size: 15px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: root.stats;
+                    color: root.failed ? #aa3333 : #909090;
+                    font-size: 15px;
+                    horizontal-alignment: right;
+                    vertical-alignment: center;
+                }
+            }
+
+            Rectangle {
+                height: 6px;
+                border-radius: 3px;
+                background: #4a4a4a;
+
+                Rectangle {
+                    x: 0;
+                    width: parent.width * min(1.0, max(0.0, root.progress));
+                    height: parent.height;
+                    border-radius: parent.border-radius;
+                    background: root.failed ? #aa3333 : #c8ab37;
+                }
+            }
+        }
+    }
+}

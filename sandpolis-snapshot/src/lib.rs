@@ -34,6 +34,9 @@ pub mod streams;
 #[cfg(feature = "agent")]
 pub mod agent;
 
+#[cfg(feature = "agent")]
+pub mod boot_display;
+
 #[cfg(feature = "server")]
 pub mod server;
 

@@ -45,6 +45,10 @@ rec {
     gst_all_1.gst-plugins-base
     # Kernel uapi headers for v4l2-sys (pulled in by scrap via nokhwa)
     linuxHeaders
+    # sandpolis-snapshot's boot-mode display (slint) links fontconfig for text
+    # and libinput for the linuxkms backend
+    fontconfig
+    libinput
     # sandpolis-snapshot's server store shells out to qemu-img for qcow2 work
     qemu-utils
     # sandpolis-probe's libvirt probe shells out to virsh
@@ -83,6 +87,12 @@ rec {
     gst_all_1.gstreamer
     gst_all_1.gst-plugins-base
     gst_all_1.gst-plugins-good
+    # The boot-mode snapshot display draws via slint's linuxkms backend, which
+    # links libinput and renders text through fontconfig - and fontconfig finds
+    # nothing without an actual font in the image
+    fontconfig
+    libinput
+    dejavu_fonts
   ];
 
   runtimeClient = runtimeServer ++ [
