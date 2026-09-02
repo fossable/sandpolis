@@ -50,11 +50,7 @@ pub enum SnapshotCommand {
 /// moves the whole partition.
 const OPERATION_TIMEOUT: Duration = Duration::from_secs(3600);
 
-pub async fn dispatch(
-    action: Option<SnapshotCommand>,
-    target: TargetArgs,
-    fps: f32,
-) -> Result<ExitCode> {
+pub async fn dispatch(action: Option<SnapshotCommand>, target: TargetArgs) -> Result<ExitCode> {
     match action {
         Some(SnapshotCommand::List { partition }) => list(target, partition).await,
         Some(SnapshotCommand::Create { partition, label }) => {
@@ -100,12 +96,9 @@ pub async fn dispatch(
             .await
         }
         None => {
-            sandpolis_client::tui::run_tui(
-                fps,
-                sandpolis_client::tui::PlaceholderPanel::new(
-                    "snapshot browser (pass a subcommand, e.g. `snapshot list`)",
-                ),
-            )
+            sandpolis_client::tui::run_tui(sandpolis_client::tui::PlaceholderPanel::new(
+                "snapshot browser (pass a subcommand, e.g. `snapshot list`)",
+            ))
             .await?;
             Ok(ExitCode::SUCCESS)
         }

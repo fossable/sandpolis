@@ -32,10 +32,9 @@ use tracing::{debug, info};
 use validator::Validate;
 
 pub mod banner;
-#[cfg(feature = "server")]
-pub mod block;
 #[cfg(feature = "client")]
 pub mod client;
+pub mod config;
 #[cfg(feature = "server")]
 pub mod liveness;
 pub mod location;

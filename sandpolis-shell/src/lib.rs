@@ -4,7 +4,7 @@ use native_model::Model;
 use regex::Regex;
 use sandpolis_instance::InstanceId;
 use sandpolis_instance::database::DatabaseManager;
-use sandpolis_instance::network::{RegisterResponders, StreamRegistry, StreamRequester};
+use sandpolis_instance::network::{RegisterResponders, StreamRegistry};
 use sandpolis_macros::data;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

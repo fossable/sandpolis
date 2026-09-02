@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::num::NonZeroU32;
 use totp_rs::{Builder, Secret};
-use tracing::info;
+use tracing::{info, warn};
 use validator::Validate;
 
 const SHA256_OUTPUT_LEN: usize = 32;
@@ -494,6 +494,8 @@ pub async fn connect(
             .map(|data| data.claims);
 
         let Some(claims) = claims else {
+            // Canonical line matched by the shipped fail2ban filter
+            warn!(peer = %peer.ip(), "Authentication failure");
             return (StatusCode::UNAUTHORIZED, "login required").into_response();
         };
 

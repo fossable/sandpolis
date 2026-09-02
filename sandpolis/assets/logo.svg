@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Placeholder mark; replace with the official sandpolis logo. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <polygon points="120,12 214,66 214,174 120,228 26,174 26,66"
+           fill="none" stroke="#c8ab37" stroke-width="10"/>
+  <text x="120" y="152" text-anchor="middle" font-family="monospace"
+        font-size="96" fill="#c8ab37">S7S</text>
+</svg>

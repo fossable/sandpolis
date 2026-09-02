@@ -36,6 +36,8 @@ async fn main() -> Result<ExitCode> {
             .with_default_directive(level.into())
             .from_env()
     };
+    // Color only when a person is watching: ANSI escapes in a captured log
+    // break anything that parses it (fail2ban, grep).
     if use_log_file {
         let file = std::fs::OpenOptions::new()
             .append(true)
@@ -44,10 +46,14 @@ async fn main() -> Result<ExitCode> {
         tracing_subscriber::fmt()
             .with_env_filter(make_filter()?)
             .with_writer(file)
+            .with_ansi(false)
             .init();
     } else {
+        use std::io::IsTerminal;
         tracing_subscriber::fmt()
             .with_env_filter(make_filter()?)
+            .with_writer(std::io::stderr)
+            .with_ansi(std::io::stderr().is_terminal())
             .init();
     }
 

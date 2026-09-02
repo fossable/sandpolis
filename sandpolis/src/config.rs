@@ -183,6 +183,8 @@ pub struct RealmConfig {
     #[cfg(feature = "probe")]
     pub probe: sandpolis_probe::config::ProbeManagerConfig,
 
+    pub server: sandpolis_server::config::ServerManagerConfig,
+
     #[cfg(feature = "tunnel")]
     pub tunnel: sandpolis_tunnel::config::TunnelManagerConfig,
 

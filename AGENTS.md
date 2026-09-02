@@ -245,10 +245,6 @@ cd android && ./gradlew assembleDebug
 > move toward a MVP and then a stable 1.0 release afterwards. This roadmap
 > outlines our overall requirements in no particular order.
 
-- Investigate whether our current organization of subsystems is optimal or are
-  there new subsystems we should create or collapse old subsystems. Previously
-  we had subsystems for database, network, realm that we collapsed into the
-  instance subsystem, which is why `sandpolis-instance` now holds four managers.
 - On desktop, probe, and shell layers: servers are present in the graph (so we
   have links), but they are not interactable. When the server layer is active,
   only servers are shown and they become interactable. Clients are only present
@@ -417,8 +413,6 @@ cd android && ./gradlew assembleDebug
 
 ## `sandpolis` (main crate)
 
-- Remove `--blocked-ips` and just store IP block list in realm database
-  - Add/remove from the GUI in the server layer
 - Encrypted storage enclave for secrets
 - Support direct connections between clients/agents if hole punching works
   - Streams can optionally run over this direct connection

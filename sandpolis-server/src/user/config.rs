@@ -7,7 +7,7 @@ use std::time::Duration;
 /// are ever created or modified. The global stratum server reconciles this into
 /// the realm database at startup, so removing a user here removes the account
 /// (and its password hash and TOTP secret) from the estate.
-#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(default)]
 pub struct UsersConfig {
     /// Require every user to enroll a TOTP secret, which happens when they set
@@ -17,8 +17,22 @@ pub struct UsersConfig {
     /// Maximum (and default) lifetime of the auth tokens this realm issues.
     pub token_lifetime: Option<Duration>,
 
+    /// Raise a notification whenever a login attempt against this realm fails.
+    pub notify_login_failures: bool,
+
     /// The realm's user accounts, which clients (not agents) login to.
     pub users: Vec<UserConfig>,
+}
+
+impl Default for UsersConfig {
+    fn default() -> Self {
+        Self {
+            totp: false,
+            token_lifetime: None,
+            notify_login_failures: true,
+            users: Vec::new(),
+        }
+    }
 }
 
 impl UsersConfig {

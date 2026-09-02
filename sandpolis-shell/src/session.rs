@@ -34,13 +34,23 @@ pub enum ShellSessionStreamRequest {
     },
 }
 
-/// Event containing shell output.
+/// Event containing shell output, or notice that the shell exited.
 #[derive(Serialize, Deserialize)]
-pub struct ShellSessionStreamResponse {
-    pub stdout: Vec<u8>,
-    /// Always empty on unix agents: the shell runs on a PTY, which merges
-    /// stderr into stdout by design.
-    pub stderr: Vec<u8>,
+pub enum ShellSessionStreamResponse {
+    /// A chunk of shell output.
+    Output {
+        stdout: Vec<u8>,
+        /// Always empty on unix agents: the shell runs on a PTY, which merges
+        /// stderr into stdout by design.
+        stderr: Vec<u8>,
+    },
+    /// The shell exited and no more output will arrive. Without this the
+    /// requester has no way to notice the session ended: stream closure is
+    /// local to each registry and never crosses the relay.
+    Exited {
+        /// The shell's exit code, if it exited normally.
+        code: Option<i32>,
+    },
 }
 
 #[cfg(feature = "agent")]
@@ -114,15 +124,16 @@ mod agent {
                         tokio::spawn(async move {
                             let mut child = child;
                             loop {
-                                let mut response = ShellSessionStreamResponse {
-                                    stdout: Vec::new(),
-                                    stderr: Vec::new(),
-                                };
+                                let mut stdout = Vec::new();
                                 tokio::select! {
                                     _ = cancel.cancelled() => break,
-                                    read = reader.read_buf(&mut response.stdout) => match read {
+                                    read = reader.read_buf(&mut stdout) => match read {
                                         Ok(0) => break, // EOF
                                         Ok(_) => {
+                                            let response = ShellSessionStreamResponse::Output {
+                                                stdout,
+                                                stderr: Vec::new(),
+                                            };
                                             if sender.send(response).await.is_err() {
                                                 break;
                                             }
@@ -133,7 +144,11 @@ mod agent {
                                 }
                             }
                             let _ = child.start_kill();
-                            let _ = child.wait().await;
+                            let code = child.wait().await.ok().and_then(|status| status.code());
+                            // Best-effort: the requester may already be gone.
+                            let _ = sender
+                                .send(ShellSessionStreamResponse::Exited { code })
+                                .await;
                         });
                     }
 
@@ -155,15 +170,16 @@ mod agent {
                         tokio::spawn(async move {
                             let mut child = child;
                             loop {
-                                let mut response = ShellSessionStreamResponse {
-                                    stdout: Vec::new(),
-                                    stderr: Vec::new(),
-                                };
+                                let mut data = Vec::new();
                                 tokio::select! {
                                     _ = cancel.cancelled() => break,
-                                    read = stdout.read_buf(&mut response.stdout) => match read {
+                                    read = stdout.read_buf(&mut data) => match read {
                                         Ok(0) => break, // EOF
                                         Ok(_) => {
+                                            let response = ShellSessionStreamResponse::Output {
+                                                stdout: data,
+                                                stderr: Vec::new(),
+                                            };
                                             if sender.send(response).await.is_err() {
                                                 break;
                                             }
@@ -173,7 +189,11 @@ mod agent {
                                 }
                             }
                             let _ = child.start_kill();
-                            let _ = child.wait().await;
+                            let code = child.wait().await.ok().and_then(|status| status.code());
+                            // Best-effort: the requester may already be gone.
+                            let _ = sender
+                                .send(ShellSessionStreamResponse::Exited { code })
+                                .await;
                         });
                     }
                 }
@@ -215,8 +235,10 @@ pub use agent::ShellSessionStreamResponder;
 mod client {
     use super::*;
     use anyhow::Result;
-    use sandpolis_instance::network::StreamRequester;
-    use tokio::sync::mpsc::{Sender, UnboundedReceiver, UnboundedSender, unbounded_channel};
+    use sandpolis_instance::InstanceId;
+    use sandpolis_instance::network::{StreamRequester, stream::StreamMessage};
+    use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, UnboundedSender, unbounded_channel};
+    use tracing::warn;
 
     /// An output chunk surfaced to the GUI terminal as a shell session runs.
     pub struct ShellOutput {
@@ -224,17 +246,27 @@ mod client {
         pub stderr: Vec<u8>,
     }
 
-    /// Client side of a shell session: forwards stdout/stderr to the GUI through
-    /// an unbounded channel. The tag matches [`ShellSessionStreamResponder`] so
-    /// the agent terminates the relayed stream with a real PTY.
+    /// What a running session surfaces to its consumer (GUI terminal or the
+    /// CLI's raw relay).
+    pub enum ShellEvent {
+        /// A chunk of output to display.
+        Output(ShellOutput),
+        /// The remote shell exited with this code, if known. Nothing follows.
+        Exited(Option<i32>),
+    }
+
+    /// Client side of a shell session: forwards output and exit events to the
+    /// consumer through an unbounded channel. The tag matches
+    /// [`ShellSessionStreamResponder`] so the agent terminates the relayed
+    /// stream with a real PTY.
     #[derive(Stream)]
     pub struct ShellSessionStreamRequester {
-        output: UnboundedSender<ShellOutput>,
+        output: UnboundedSender<ShellEvent>,
     }
 
     impl ShellSessionStreamRequester {
-        /// Construct a requester paired with the receiver the GUI drains.
-        pub fn channel() -> (Self, UnboundedReceiver<ShellOutput>) {
+        /// Construct a requester paired with the receiver the consumer drains.
+        pub fn channel() -> (Self, UnboundedReceiver<ShellEvent>) {
             let (output, rx) = unbounded_channel();
             (Self { output }, rx)
         }
@@ -253,18 +285,55 @@ mod client {
         }
 
         async fn on_message(&self, response: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
-            // GUI receiver may be gone (controller closed); dropping is fine.
-            let _ = self.output.send(ShellOutput {
-                stdout: response.stdout,
-                stderr: response.stderr,
-            });
+            let event = match response {
+                ShellSessionStreamResponse::Output { stdout, stderr } => {
+                    ShellEvent::Output(ShellOutput { stdout, stderr })
+                }
+                ShellSessionStreamResponse::Exited { code } => ShellEvent::Exited(code),
+            };
+            // Consumer's receiver may be gone (session closed); dropping is fine.
+            let _ = self.output.send(event);
             Ok(())
         }
+    }
+
+    /// Open a relayed shell session to `instance` over `conn` and forward
+    /// outbound requests (stdin, resize) over it until the channel closes.
+    pub fn spawn_shell_stream(
+        conn: std::sync::Arc<sandpolis_instance::network::InstanceConnection>,
+        instance: InstanceId,
+        requester: ShellSessionStreamRequester,
+        initial: ShellSessionStreamRequest,
+        mut outbound_rx: Receiver<ShellSessionStreamRequest>,
+    ) {
+        sandpolis_client::sync::spawn(async move {
+            let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
+                Ok(v) => v,
+                Err(e) => {
+                    warn!(error = %e, "Failed to open shell session");
+                    return;
+                }
+            };
+            while let Some(req) = outbound_rx.recv().await {
+                let payload = match serde_cbor::to_vec(&req) {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
+                if msg_tx
+                    .send(StreamMessage::to(id, payload, instance))
+                    .await
+                    .is_err()
+                {
+                    break;
+                }
+            }
+            conn.close_stream(id);
+        });
     }
 }
 
 #[cfg(feature = "client")]
-pub use client::{ShellOutput, ShellSessionStreamRequester};
+pub use client::{ShellEvent, ShellOutput, ShellSessionStreamRequester, spawn_shell_stream};
 
 #[cfg(all(test, feature = "agent", unix))]
 mod test_shell_session {
@@ -299,18 +368,31 @@ mod test_shell_session {
         (rx, handle)
     }
 
-    /// Collect session output until the stream ends or times out.
-    async fn collect_output(mut rx: mpsc::Receiver<ShellSessionStreamResponse>) -> String {
+    /// Collect session output until the stream ends or times out, returning the
+    /// output and the exit code reported by the final `Exited` event (if seen).
+    async fn collect_session(
+        mut rx: mpsc::Receiver<ShellSessionStreamResponse>,
+    ) -> (String, Option<Option<i32>>) {
         let mut output = Vec::new();
+        let mut exited = None;
         while let Ok(response) =
             tokio::time::timeout(tokio::time::Duration::from_secs(2), rx.recv()).await
         {
             match response {
-                Some(resp) => output.extend(resp.stdout),
+                Some(ShellSessionStreamResponse::Output { stdout, .. }) => output.extend(stdout),
+                Some(ShellSessionStreamResponse::Exited { code }) => {
+                    exited = Some(code);
+                    break;
+                }
                 None => break,
             }
         }
-        String::from_utf8_lossy(&output).into_owned()
+        (String::from_utf8_lossy(&output).into_owned(), exited)
+    }
+
+    /// Collect session output until the stream ends or times out.
+    async fn collect_output(rx: mpsc::Receiver<ShellSessionStreamResponse>) -> String {
+        collect_session(rx).await.0
     }
 
     async fn send_stdin(responder: &ShellSessionStreamResponder, data: &[u8]) {
@@ -331,15 +413,20 @@ mod test_shell_session {
         let (rx, handle) = start_session(&responder, HashMap::new(), 24, 80);
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        send_stdin(&responder, b"echo hello\nexit\n").await;
+        send_stdin(&responder, b"echo hello\nexit 3\n").await;
 
-        let output = collect_output(rx).await;
+        let (output, exited) = collect_session(rx).await;
         let _ = handle.await;
 
         assert!(
             output.contains("hello"),
             "Expected 'hello' in output, got: {}",
             output
+        );
+        assert_eq!(
+            exited,
+            Some(Some(3)),
+            "Expected an Exited event carrying the shell's exit code"
         );
     }
 

@@ -46,10 +46,10 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
 
     // A subcommand against a realm with user accounts needs a login before it
     // can do anything, so the prompt comes up front rather than mid-command.
-    ensure_authenticated(&state, options.fps as f32).await?;
+    ensure_authenticated(&state).await?;
 
     spawn_client_sync(state.clone());
-    command.dispatch_client(&options, &state).await
+    command.dispatch_client(&state).await
 }
 
 /// Make sure every connected server that requires a login holds a usable auth
@@ -57,7 +57,7 @@ pub async fn start(command: crate::cli::Commands) -> anyhow::Result<std::process
 /// without users and servers with a cached token pass straight through;
 /// non-interactive runs fail with instructions instead of hanging on a prompt.
 #[cfg(not(target_os = "android"))]
-pub async fn ensure_authenticated(state: &InstanceState, fps: f32) -> anyhow::Result<()> {
+pub async fn ensure_authenticated(state: &InstanceState) -> anyhow::Result<()> {
     use sandpolis_client::tui::login::{LoginOutcome, LoginPromptWidget};
     use std::io::IsTerminal;
 
@@ -103,7 +103,7 @@ pub async fn ensure_authenticated(state: &InstanceState, fps: f32) -> anyhow::Re
         // lands on the retained connection too.
         let widget = LoginPromptWidget::new((*connection).clone(), saved_user);
         let widget =
-            sandpolis_client::tui::run_tui_until(fps, widget, |widget| widget.finished()).await?;
+            sandpolis_client::tui::run_tui_until(widget, |widget| widget.finished()).await?;
 
         match widget.outcome() {
             Some(LoginOutcome::Success { username }) => {

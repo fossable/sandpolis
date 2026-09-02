@@ -3,10 +3,11 @@ use crate::user::UserManager;
 use crate::user::server::Claims;
 use aws_lc_rs::pbkdf2;
 use axum::Json;
-use axum::extract::{self, State};
+use axum::extract::{self, ConnectInfo, State};
 use axum_extra::TypedHeader;
 use sandpolis_instance::network::RequestResult;
 use sandpolis_instance::realm::RealmName;
+use std::net::SocketAddr;
 use std::time::SystemTime;
 use totp_rs::Totp;
 use tracing::{debug, error, info, warn};
@@ -16,6 +17,7 @@ use validator::Validate;
 pub async fn post_login(
     state: State<UserManager>,
     TypedHeader(realm): TypedHeader<RealmName>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     extract::Json(request): extract::Json<LoginRequest>,
 ) -> RequestResult<LoginResponse> {
     request
@@ -24,7 +26,7 @@ pub async fn post_login(
 
     let Ok(user) = state.user(&realm, &request.username).await else {
         debug!(username = %request.username, "User does not exist");
-        record_attempt(&state, &realm, &request, false);
+        record_attempt(&state, &realm, &request, peer, false);
         return Err(Json(LoginResponse::Denied));
     };
 
@@ -33,7 +35,7 @@ pub async fn post_login(
         .is_some_and(|expiration| expiration <= chrono::Utc::now().timestamp())
     {
         debug!(username = %request.username, "User account is expired");
-        record_attempt(&state, &realm, &request, false);
+        record_attempt(&state, &realm, &request, peer, false);
         return Err(Json(LoginResponse::Expired));
     }
 
@@ -81,7 +83,7 @@ pub async fn post_login(
                     return Ok(Json(LoginResponse::TotpSetupRequired { otpauth_url }));
                 }
                 None => {
-                    record_attempt(&state, &realm, &request, true);
+                    record_attempt(&state, &realm, &request, peer, true);
                     return mint(&state, &realm, user, lifetime);
                 }
             }
@@ -99,7 +101,7 @@ pub async fn post_login(
             .is_none()
         {
             debug!("TOTP check failed");
-            record_attempt(&state, &realm, &request, false);
+            record_attempt(&state, &realm, &request, peer, false);
             return Err(Json(LoginResponse::Denied));
         }
     }
@@ -116,7 +118,7 @@ pub async fn post_login(
     .is_err()
     {
         debug!("Password check failed");
-        record_attempt(&state, &realm, &request, false);
+        record_attempt(&state, &realm, &request, peer, false);
         return Err(Json(LoginResponse::Denied));
     }
 
@@ -134,7 +136,7 @@ pub async fn post_login(
         }));
     }
 
-    record_attempt(&state, &realm, &request, true);
+    record_attempt(&state, &realm, &request, peer, true);
     mint(&state, &realm, user, lifetime)
 }
 
@@ -164,7 +166,36 @@ fn mint(
 
 /// Record the attempt for the audit trail. Best-effort: a full audit log must
 /// never be able to lock users out.
-fn record_attempt(state: &UserManager, realm: &RealmName, request: &LoginRequest, allowed: bool) {
+///
+/// Failures also log a canonical `Authentication failure` line with the peer
+/// address, which the shipped fail2ban filter matches (see `fail2ban/`).
+fn record_attempt(
+    state: &UserManager,
+    realm: &RealmName,
+    request: &LoginRequest,
+    peer: SocketAddr,
+    allowed: bool,
+) {
+    if !allowed {
+        warn!(peer = %peer.ip(), username = %request.username, "Authentication failure");
+
+        // The realm config decides whether the user hears about it too. A local
+        // stratum server has no realm configs, so it defaults to notifying.
+        if state
+            .configs
+            .get(realm)
+            .is_none_or(|config| config.notify_login_failures)
+        {
+            sandpolis_instance::notification::notify(
+                sandpolis_instance::notification::Notification::warn(
+                    "Server",
+                    format!("Login failure for {}", request.username),
+                )
+                .body(format!("A login attempt from {} failed", peer.ip())),
+            );
+        }
+    }
+
     let result = || -> anyhow::Result<()> {
         let db = state.database.realm(realm.clone())?;
         // Attempts against this server are its own bookkeeping, not estate data.
@@ -172,7 +203,7 @@ fn record_attempt(state: &UserManager, realm: &RealmName, request: &LoginRequest
         rw.insert(LoginAttemptData {
             timestamp: chrono::Utc::now().timestamp() as u64,
             username: request.username.clone(),
-            source: None,
+            source: Some(peer),
             allowed,
             ..Default::default()
         })?;

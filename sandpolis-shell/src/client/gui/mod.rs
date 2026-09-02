@@ -24,12 +24,14 @@ use sandpolis_client::gui::ui::node_panel::{NodePanel, PanelCtx, PanelTarget};
 use sandpolis_client::gui::ui::theme::Role;
 use sandpolis_client::gui::ui::widgets::{row, text};
 use sandpolis_instance::network::stream::StreamMessage;
-use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use sandpolis_instance::{InstanceType, LayerName};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::sync::mpsc::{Receiver, Sender, UnboundedReceiver, channel};
 
-use crate::session::{ShellOutput, ShellSessionStreamRequest, ShellSessionStreamRequester};
+use crate::session::{
+    ShellEvent, ShellSessionStreamRequest, ShellSessionStreamRequester, spawn_shell_stream,
+};
 
 /// Terminal font size, in logical pixels.
 const FONT_SIZE: f32 = 13.0;
@@ -60,7 +62,7 @@ struct ShellStreams {
 /// A live shell session the GUI is rendering.
 struct ShellStreamSession {
     /// Output chunks pushed by the requester (registered on the connection).
-    output: UnboundedReceiver<ShellOutput>,
+    output: UnboundedReceiver<ShellEvent>,
     /// Outbound requests (stdin, resize). A background task forwards these over
     /// the stream, translating to the SSH wire type for probe sessions.
     outbound: Sender<ShellSessionStreamRequest>,
@@ -349,7 +351,7 @@ fn ssh_probe_device(target: PanelTarget) -> Option<sandpolis_probe::RegisteredDe
 /// The outcome of trying to open a session's stream.
 enum SessionStart {
     /// The stream is open; here is where its output will arrive.
-    Opened(UnboundedReceiver<ShellOutput>),
+    Opened(UnboundedReceiver<ShellEvent>),
     /// There's no server connection yet. Worth trying again shortly — the
     /// websocket comes up asynchronously after startup, so a panel expanded in
     /// the first second of a run lands here.
@@ -359,7 +361,7 @@ enum SessionStart {
 }
 
 /// A probe target gets an SSH session run by the device's owning server; anything
-/// else gets a PTY on the agent itself. Both produce [`ShellOutput`], so the
+/// else gets a PTY on the agent itself. Both produce [`ShellEvent`], so the
 /// terminal above this doesn't care which it got.
 ///
 /// The connection is resolved here rather than inside the spawn helpers so that
@@ -459,40 +461,6 @@ fn spawn_ssh_stream(
     });
 }
 
-/// Open a relayed shell session to `instance` over `conn` and forward outbound
-/// requests (stdin, resize) over it until the channel closes.
-fn spawn_shell_stream(
-    conn: std::sync::Arc<sandpolis_instance::network::InstanceConnection>,
-    instance: InstanceId,
-    requester: ShellSessionStreamRequester,
-    initial: ShellSessionStreamRequest,
-    mut outbound_rx: Receiver<ShellSessionStreamRequest>,
-) {
-    sandpolis_client::sync::spawn(async move {
-        let (id, msg_tx) = match conn.open_stream_to(instance, requester, initial).await {
-            Ok(v) => v,
-            Err(e) => {
-                warn!(error = %e, "Failed to open shell session");
-                return;
-            }
-        };
-        while let Some(req) = outbound_rx.recv().await {
-            let payload = match serde_cbor::to_vec(&req) {
-                Ok(p) => p,
-                Err(_) => continue,
-            };
-            if msg_tx
-                .send(StreamMessage::to(id, payload, instance))
-                .await
-                .is_err()
-            {
-                break;
-            }
-        }
-        conn.close_stream(id);
-    });
-}
-
 /// Drain shell output into each session's terminal emulator.
 fn drive_shell_streams(mut streams: ResMut<ShellStreams>) {
     use tokio::sync::mpsc::error::TryRecvError;
@@ -501,9 +469,13 @@ fn drive_shell_streams(mut streams: ResMut<ShellStreams>) {
         let mut chunk = Vec::new();
         loop {
             match session.output.try_recv() {
-                Ok(output) => {
+                Ok(ShellEvent::Output(output)) => {
                     chunk.extend_from_slice(&output.stdout);
                     chunk.extend_from_slice(&output.stderr);
+                }
+                Ok(ShellEvent::Exited(_)) => {
+                    session.ended = true;
+                    break;
                 }
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => {

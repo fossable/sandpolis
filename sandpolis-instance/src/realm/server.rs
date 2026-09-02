@@ -10,7 +10,11 @@ use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
 use axum::{
-    Extension, extract::Request, middleware::AddExtension, middleware::Next, response::Response,
+    Extension,
+    extract::{ConnectInfo, Request, State},
+    middleware::AddExtension,
+    middleware::Next,
+    response::Response,
 };
 use axum_server::tls_rustls::RustlsConfig;
 use axum_server::{accept::Accept, tls_rustls::RustlsAcceptor};
@@ -38,6 +42,7 @@ use tokio_rustls::server::TlsStream;
 use tower::Layer;
 use tracing::debug;
 use tracing::trace;
+use tracing::warn;
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 impl RealmCert {
@@ -243,10 +248,19 @@ pub struct TlsData {
 
 /// Accepts TLS connections with realm certificates.
 #[derive(Debug, Clone)]
-pub struct RealmAcceptor(RustlsAcceptor);
+pub struct RealmAcceptor {
+    acceptor: RustlsAcceptor,
+    /// Whether a rejected handshake raises a user-facing notification, from the
+    /// realm configs' `server.notify_cert_failures`.
+    notify_cert_failures: bool,
+}
 
 impl RealmAcceptor {
-    pub async fn new(instance_manager: InstanceManager, realms: RealmManager) -> Result<Self> {
+    pub async fn new(
+        instance_manager: InstanceManager,
+        realms: RealmManager,
+        notify_cert_failures: bool,
+    ) -> Result<Self> {
         let mut roots = RootCertStore::empty();
         let mut sni_resolver = ResolvesServerCertUsingSni::new();
 
@@ -300,16 +314,32 @@ impl RealmAcceptor {
             )?;
         }
 
-        Ok(Self(RustlsAcceptor::new(RustlsConfig::from_config(
-            Arc::new(
+        Ok(Self {
+            acceptor: RustlsAcceptor::new(RustlsConfig::from_config(Arc::new(
                 config
                     .with_client_cert_verifier(
                         WebPkiClientVerifier::builder(Arc::new(roots)).build()?,
                     )
                     .with_cert_resolver(Arc::new(sni_resolver)),
-            ),
-        ))))
+            ))),
+            notify_cert_failures,
+        })
     }
+}
+
+/// Whether a failed TLS accept was the peer failing *certificate*
+/// authentication, as opposed to unrelated handshake noise (port scanners,
+/// protocol mismatches) that shouldn't reach the user.
+fn is_cert_auth_error(error: &io::Error) -> bool {
+    error
+        .get_ref()
+        .and_then(|inner| inner.downcast_ref::<rustls::Error>())
+        .is_some_and(|error| {
+            matches!(
+                error,
+                rustls::Error::NoCertificatesPresented | rustls::Error::InvalidCertificate(_)
+            )
+        })
 }
 impl<I, S> Accept<I, S> for RealmAcceptor
 where
@@ -321,13 +351,23 @@ where
     type Future = BoxFuture<'static, io::Result<(Self::Stream, Self::Service)>>;
 
     fn accept(&self, stream: I, service: S) -> Self::Future {
-        let acceptor = self.0.clone();
+        let acceptor = self.acceptor.clone();
+        let notify_cert_failures = self.notify_cert_failures;
 
         Box::pin(async move {
             let (stream, service) = match acceptor.accept(stream, service).await {
                 Ok(result) => result,
                 Err(e) => {
                     debug!("TLS accept failed: {}", e);
+                    if notify_cert_failures && is_cert_auth_error(&e) {
+                        crate::notification::notify(
+                            crate::notification::Notification::warn(
+                                "Network",
+                                "Connection rejected: certificate authentication failed",
+                            )
+                            .body(e.to_string()),
+                        );
+                    }
                     return Err(e);
                 }
             };
@@ -345,11 +385,16 @@ where
 }
 
 pub async fn auth_middleware(
+    State(notify_cert_failures): State<bool>,
     Extension(tls_data): Extension<TlsData>,
     mut request: Request,
     next: Next,
 ) -> Result<Response, &'static str> {
-    if let Some(peer_certificates) = tls_data.peer_certificates {
+    let realm = (|| {
+        let peer_certificates = tls_data
+            .peer_certificates
+            .ok_or("missing client certificate")?;
+
         // Take first client certificate
         let cert = X509Certificate::from_der(
             peer_certificates
@@ -374,11 +419,36 @@ pub async fn auth_middleware(
             .parse::<ServerUrl>()
             .map_err(|_| "invalid common name in client certificate")?;
 
-        // Pass authentication to routes
-        request.extensions_mut().insert(url.realm);
-    } else {
-        return Err("missing client certificate");
-    }
+        Ok::<_, &'static str>(url.realm)
+    })();
+
+    let realm = realm.inspect_err(|reason| {
+        let peer = request
+            .extensions()
+            .get::<ConnectInfo<std::net::SocketAddr>>()
+            .map(|ConnectInfo(peer)| peer.ip());
+
+        // Canonical line matched by the shipped fail2ban filter
+        if let Some(peer) = peer {
+            warn!(peer = %peer, reason = %reason, "Authentication failure");
+        }
+
+        if notify_cert_failures {
+            let mut notification = crate::notification::Notification::warn(
+                "Network",
+                "Connection rejected: invalid client certificate",
+            );
+            if let Some(peer) = peer {
+                notification = notification.body(format!("{reason} (peer {peer})"));
+            } else {
+                notification = notification.body(*reason);
+            }
+            crate::notification::notify(notification);
+        }
+    })?;
+
+    // Pass authentication to routes
+    request.extensions_mut().insert(realm);
 
     Ok(next.run(request).await)
 }

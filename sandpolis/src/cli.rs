@@ -51,11 +51,6 @@ pub struct ServerArgs {
     /// Address:port for this server to listen on.
     #[clap(long, default_value = "0.0.0.0:8768")]
     pub listen: std::net::SocketAddr,
-
-    /// IP addresses denied access to the server, rejected before authentication
-    /// runs. May be given multiple times.
-    #[clap(long, value_name = "IP")]
-    pub blocked_ips: Vec<std::net::IpAddr>,
 }
 
 /// Flags for the agent daemon (`sandpolis agent`).
@@ -122,10 +117,6 @@ pub struct ClientArgs {
     /// process.
     #[clap(long, value_name = "DIR", env = "S7S_DATA")]
     pub data: Option<PathBuf>,
-
-    /// Frame rate for the GUI and TUI ($S7S_FPS).
-    #[clap(long, default_value_t = 30, env = "S7S_FPS")]
-    pub fps: u32,
 }
 
 #[cfg(feature = "server")]
@@ -141,7 +132,6 @@ impl ServerArgs {
             },
             instance_type: sandpolis_instance::InstanceType::Server,
             listen: self.listen,
-            blocked_ips: self.blocked_ips.clone(),
             ..Default::default()
         }
     }
@@ -181,7 +171,6 @@ impl ClientArgs {
                 ..Default::default()
             },
             instance_type: sandpolis_instance::InstanceType::Client,
-            fps: self.fps,
             ..Default::default()
         }
     }
@@ -558,45 +547,40 @@ impl Commands {
     /// Dispatch a client subcommand: opens a focused TUI, or runs
     /// noninteractively (`--json`). Requires the live [`InstanceState`].
     #[cfg(feature = "client")]
-    pub async fn dispatch_client(
-        self,
-        options: &RuntimeOptions,
-        state: &crate::InstanceState,
-    ) -> Result<ExitCode> {
-        let fps = options.fps as f32;
+    pub async fn dispatch_client(self, state: &crate::InstanceState) -> Result<ExitCode> {
         match self {
-            Commands::Agents { action } => client::agents(action, fps).await,
-            Commands::Servers { action } => client::servers(action, &state.server, fps).await,
+            Commands::Agents { action } => client::agents(action).await,
+            Commands::Servers { action } => client::servers(action, &state.server).await,
             #[cfg(feature = "probe")]
             Commands::Probe { action, target, .. } => {
-                sandpolis_probe::cli::dispatch(action, target, &state.probe, fps).await
+                sandpolis_probe::cli::dispatch(action, target, &state.probe).await
             }
             #[cfg(feature = "desktop")]
             Commands::Desktop { action, target, .. } => {
-                sandpolis_desktop::cli::dispatch(action, target, &state.desktop, fps).await
+                sandpolis_desktop::cli::dispatch(action, target, &state.desktop).await
             }
             #[cfg(feature = "shell")]
             Commands::Shell { target, .. } => {
-                sandpolis_shell::cli::dispatch(target, state.shell.clone(), fps).await
+                sandpolis_shell::cli::dispatch(target, state.shell.clone()).await
             }
             #[cfg(feature = "health")]
-            Commands::Health { target, .. } => client::stub("health", target, fps).await,
+            Commands::Health { target, .. } => client::stub("health", target).await,
             #[cfg(feature = "inventory")]
-            Commands::Inventory { target, .. } => client::stub("inventory", target, fps).await,
+            Commands::Inventory { target, .. } => client::stub("inventory", target).await,
             #[cfg(feature = "filesystem")]
-            Commands::Filesystem { target, .. } => client::stub("filesystem", target, fps).await,
+            Commands::Filesystem { target, .. } => client::stub("filesystem", target).await,
             #[cfg(feature = "account")]
-            Commands::Account { target, .. } => client::stub("account", target, fps).await,
+            Commands::Account { target, .. } => client::stub("account", target).await,
             #[cfg(feature = "snapshot")]
             Commands::Snapshot { action, target, .. } => {
-                sandpolis_snapshot::cli::dispatch(action, target, fps).await
+                sandpolis_snapshot::cli::dispatch(action, target).await
             }
-            Commands::Wake { target, .. } => client::stub("wake", target, fps).await,
+            Commands::Wake { target, .. } => client::stub("wake", target).await,
             #[cfg(feature = "audit")]
-            Commands::Audit { target, .. } => client::stub("audit", target, fps).await,
+            Commands::Audit { target, .. } => client::stub("audit", target).await,
             #[cfg(feature = "tunnel")]
             Commands::Tunnel { action, target, .. } => {
-                sandpolis_tunnel::cli::dispatch(action, target, fps).await
+                sandpolis_tunnel::cli::dispatch(action, target).await
             }
             #[allow(unreachable_patterns)]
             _ => unreachable!("standalone commands are dispatched by dispatch_standalone"),
@@ -896,7 +880,7 @@ mod client {
 
     /// A not-yet-implemented client subcommand: opens a placeholder TUI, or
     /// prints an unimplemented JSON result for noninteractive callers.
-    pub(super) async fn stub(name: &str, target: TargetArgs, fps: f32) -> Result<ExitCode> {
+    pub(super) async fn stub(name: &str, target: TargetArgs) -> Result<ExitCode> {
         if target.json {
             println!(
                 "{}",
@@ -904,19 +888,18 @@ mod client {
             );
             return Ok(ExitCode::FAILURE);
         }
-        sandpolis_client::tui::run_tui(fps, sandpolis_client::tui::PlaceholderPanel::new(name))
-            .await?;
+        sandpolis_client::tui::run_tui(sandpolis_client::tui::PlaceholderPanel::new(name)).await?;
         Ok(ExitCode::SUCCESS)
     }
 
-    pub(super) async fn agents(action: AgentsCommand, fps: f32) -> Result<ExitCode> {
+    pub(super) async fn agents(action: AgentsCommand) -> Result<ExitCode> {
         match action {
             AgentsCommand::List { json, .. } => {
                 if json {
                     return list_agents_json().await;
                 }
                 let widget = crate::client::tui::agent_list::AgentListWidget::new()?;
-                sandpolis_client::tui::run_tui(fps, widget).await?;
+                sandpolis_client::tui::run_tui(widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
             AgentsCommand::Restart { instance, .. } => {
@@ -1161,7 +1144,6 @@ mod client {
     pub(super) async fn servers(
         action: ServersCommand,
         server_manager: &sandpolis_server::ServerManager,
-        fps: f32,
     ) -> Result<ExitCode> {
         match action {
             ServersCommand::List { json, .. } => {
@@ -1170,7 +1152,7 @@ mod client {
                 }
                 let widget =
                     crate::client::tui::server_list::ServerListWidget::new(server_manager.clone())?;
-                sandpolis_client::tui::run_tui(fps, widget).await?;
+                sandpolis_client::tui::run_tui(widget).await?;
                 Ok(ExitCode::SUCCESS)
             }
         }

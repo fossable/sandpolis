@@ -63,7 +63,6 @@ pub async fn dispatch(
     action: Option<ProbeCommand>,
     target: TargetArgs,
     _layer: &ProbeManager,
-    fps: f32,
 ) -> Result<ExitCode> {
     if let Some(ProbeCommand::Service {
         device,
@@ -78,8 +77,7 @@ pub async fn dispatch(
         println!("{{\"status\":\"unimplemented\",\"command\":\"probe\"}}");
         return Ok(ExitCode::FAILURE);
     }
-    sandpolis_client::tui::run_tui(fps, sandpolis_client::tui::PlaceholderPanel::new("probe"))
-        .await?;
+    sandpolis_client::tui::run_tui(sandpolis_client::tui::PlaceholderPanel::new("probe")).await?;
     Ok(ExitCode::SUCCESS)
 }
 

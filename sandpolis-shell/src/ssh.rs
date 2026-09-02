@@ -141,7 +141,7 @@ mod server {
     async fn report(sender: &Sender<ShellSessionStreamResponse>, message: String) {
         warn!(message = %message, "SSH probe session failed");
         let _ = sender
-            .send(ShellSessionStreamResponse {
+            .send(ShellSessionStreamResponse::Output {
                 stdout: format!("\r\n[sandpolis] ssh: {message}\r\n").into_bytes(),
                 stderr: Vec::new(),
             })
@@ -251,7 +251,7 @@ mod server {
                 message = read.wait() => match message {
                     Some(ChannelMsg::Data { data }) => {
                         if sender
-                            .send(ShellSessionStreamResponse {
+                            .send(ShellSessionStreamResponse::Output {
                                 stdout: data.to_vec(),
                                 stderr: Vec::new(),
                             })
@@ -263,7 +263,7 @@ mod server {
                     }
                     Some(ChannelMsg::ExtendedData { data, .. }) => {
                         if sender
-                            .send(ShellSessionStreamResponse {
+                            .send(ShellSessionStreamResponse::Output {
                                 stdout: Vec::new(),
                                 stderr: data.to_vec(),
                             })
@@ -287,6 +287,11 @@ mod server {
         }
 
         debug!(host = %host, "SSH probe session closed");
+        // SSH doesn't report the shell's exit code through this channel; the
+        // event still lets the client notice the session ended.
+        let _ = sender
+            .send(ShellSessionStreamResponse::Exited { code: None })
+            .await;
         Ok(())
     }
 }
@@ -297,7 +302,7 @@ pub use server::SshSessionStreamResponder;
 #[cfg(all(feature = "client", feature = "probe"))]
 mod client {
     use super::*;
-    use crate::session::ShellOutput;
+    use crate::session::{ShellEvent, ShellOutput};
     use anyhow::Result;
     use sandpolis_instance::network::StreamRequester;
     use sandpolis_macros::Stream;
@@ -308,12 +313,12 @@ mod client {
     /// so both feed the same terminal.
     #[derive(Stream)]
     pub struct SshSessionStreamRequester {
-        output: UnboundedSender<ShellOutput>,
+        output: UnboundedSender<ShellEvent>,
     }
 
     impl SshSessionStreamRequester {
         /// Construct a requester paired with the receiver the GUI drains.
-        pub fn channel() -> (Self, UnboundedReceiver<ShellOutput>) {
+        pub fn channel() -> (Self, UnboundedReceiver<ShellEvent>) {
             let (output, rx) = unbounded_channel();
             (Self { output }, rx)
         }
@@ -332,11 +337,14 @@ mod client {
         }
 
         async fn on_message(&self, response: Self::In, _tx: Sender<Self::Out>) -> Result<()> {
+            let event = match response {
+                ShellSessionStreamResponse::Output { stdout, stderr } => {
+                    ShellEvent::Output(ShellOutput { stdout, stderr })
+                }
+                ShellSessionStreamResponse::Exited { code } => ShellEvent::Exited(code),
+            };
             // GUI receiver may be gone (controller closed); dropping is fine.
-            let _ = self.output.send(ShellOutput {
-                stdout: response.stdout,
-                stderr: response.stderr,
-            });
+            let _ = self.output.send(event);
             Ok(())
         }
     }

@@ -44,14 +44,6 @@ pub struct RuntimeOptions {
     #[cfg(feature = "server")]
     pub listen: std::net::SocketAddr,
 
-    /// Addresses rejected before authentication runs.
-    #[cfg(feature = "server")]
-    pub blocked_ips: Vec<std::net::IpAddr>,
-
-    /// Frame rate for the GUI and TUI.
-    #[cfg(feature = "client")]
-    pub fps: u32,
-
     /// Polling connection mode, from `--poll`. A boot agent has no polling
     /// mode: it stays continuously connected so the server can hold it.
     #[cfg(all(feature = "agent", not(feature = "uki")))]
@@ -76,10 +68,6 @@ impl Default for RuntimeOptions {
                 std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
                 sandpolis_server::ServerUrl::default_port(),
             ),
-            #[cfg(feature = "server")]
-            blocked_ips: Vec::new(),
-            #[cfg(feature = "client")]
-            fps: 30,
             #[cfg(all(feature = "agent", not(feature = "uki")))]
             poll: None,
             #[cfg(feature = "agent")]

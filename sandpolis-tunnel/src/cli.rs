@@ -16,23 +16,16 @@ pub enum TunnelCommand {
     List,
 }
 
-pub async fn dispatch(
-    action: Option<TunnelCommand>,
-    target: TargetArgs,
-    fps: f32,
-) -> Result<ExitCode> {
+pub async fn dispatch(action: Option<TunnelCommand>, target: TargetArgs) -> Result<ExitCode> {
     match action {
         Some(TunnelCommand::List) => list(target).await,
         // No subcommand: list noninteractively under `--json`, otherwise open a
         // placeholder browser.
         None if target.json => list(target).await,
         None => {
-            sandpolis_client::tui::run_tui(
-                fps,
-                sandpolis_client::tui::PlaceholderPanel::new(
-                    "tunnel browser (pass a subcommand, e.g. `tunnel list`)",
-                ),
-            )
+            sandpolis_client::tui::run_tui(sandpolis_client::tui::PlaceholderPanel::new(
+                "tunnel browser (pass a subcommand, e.g. `tunnel list`)",
+            ))
             .await?;
             Ok(ExitCode::SUCCESS)
         }

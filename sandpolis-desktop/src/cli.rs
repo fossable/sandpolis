@@ -27,7 +27,6 @@ pub async fn dispatch(
     action: Option<DesktopCommand>,
     target: TargetArgs,
     _layer: &DesktopManager,
-    fps: f32,
 ) -> Result<ExitCode> {
     match action {
         Some(DesktopCommand::Screenshot { desktop, output }) => {
@@ -40,15 +39,12 @@ pub async fn dispatch(
             match target.instance {
                 Some(instance) => {
                     let widget = crate::client::tui::DesktopViewerWidget::new(instance);
-                    sandpolis_client::tui::run_tui(fps, widget).await?;
+                    sandpolis_client::tui::run_tui(widget).await?;
                 }
                 None => {
-                    sandpolis_client::tui::run_tui(
-                        fps,
-                        sandpolis_client::tui::PlaceholderPanel::new(
-                            "desktop viewer (pass --instance <id>)",
-                        ),
-                    )
+                    sandpolis_client::tui::run_tui(sandpolis_client::tui::PlaceholderPanel::new(
+                        "desktop viewer (pass --instance <id>)",
+                    ))
                     .await?;
                 }
             }

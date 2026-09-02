@@ -11,17 +11,19 @@ pub mod loading;
 pub mod login;
 pub mod resident_vec;
 
+/// Time between TUI redraws (30 fps).
+const REDRAW_PERIOD: Duration = Duration::from_nanos(1_000_000_000 / 30);
+
 /// Run a full-screen TUI driven by a single root widget until the user quits
 /// (`q` or Ctrl-C). Sets up and tears down the terminal. Each client subcommand
 /// builds its own root and calls this.
-pub async fn run_tui<W>(fps: f32, mut root: W) -> anyhow::Result<()>
+pub async fn run_tui<W>(mut root: W) -> anyhow::Result<()>
 where
     W: WidgetRef + EventHandler,
 {
     let mut terminal = ratatui::init();
     let mut should_quit = false;
-    let period = Duration::from_secs_f32(1.0 / fps.max(1.0));
-    let mut interval = tokio::time::interval(period);
+    let mut interval = tokio::time::interval(REDRAW_PERIOD);
     let mut events = EventStream::new();
 
     while !should_quit {
@@ -51,15 +53,14 @@ where
 
 /// Like [`run_tui`] but also ends as soon as `done` reports true, for widgets
 /// that complete on their own (a login prompt) rather than when the user quits.
-pub async fn run_tui_until<W, F>(fps: f32, mut root: W, done: F) -> anyhow::Result<W>
+pub async fn run_tui_until<W, F>(mut root: W, done: F) -> anyhow::Result<W>
 where
     W: WidgetRef + EventHandler,
     F: Fn(&W) -> bool,
 {
     let mut terminal = ratatui::init();
     let mut should_quit = false;
-    let period = Duration::from_secs_f32(1.0 / fps.max(1.0));
-    let mut interval = tokio::time::interval(period);
+    let mut interval = tokio::time::interval(REDRAW_PERIOD);
     let mut events = EventStream::new();
 
     while !should_quit && !done(&root) {

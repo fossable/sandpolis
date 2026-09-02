@@ -418,15 +418,18 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
         post(sandpolis_server::stratum::issue_server_cert),
     );
 
-    let app = app.route_layer(axum::middleware::from_fn(
-        sandpolis_instance::realm::server::auth_middleware,
-    ));
+    // Certificate authentication runs before the realm is known, so its
+    // failure notification stays on unless every served realm disables it. A
+    // server with no realm configs (a local stratum or ephemeral server)
+    // notifies by default.
+    let notify_cert_failures = options
+        .realms
+        .iter()
+        .all(|realm| realm.server.notify_cert_failures);
 
-    // Reject requests from blocked IPs before authentication runs
-    let blocklist = sandpolis_server::block::IpBlockList::new(options.blocked_ips.iter().copied());
     let app = app.route_layer(axum::middleware::from_fn_with_state(
-        blocklist,
-        sandpolis_server::block::block_middleware,
+        notify_cert_failures,
+        sandpolis_instance::realm::server::auth_middleware,
     ));
 
     // Tracing support for Axum
@@ -438,6 +441,7 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
             sandpolis_instance::realm::server::RealmAcceptor::new(
                 state.instance.clone(),
                 state.realms.clone(),
+                notify_cert_failures,
             )
             .await?,
         )
