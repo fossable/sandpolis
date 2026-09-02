@@ -90,7 +90,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
         database.clone(),
         instance,
         stratum.is_global(),
-        options.listen.port(),
+        default_realm_url(&options)?,
     )
     .await?;
 
@@ -113,6 +113,39 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     info!(%stratum, "Starting Sandpolis server");
     main(options, state).await?;
     Ok(std::process::ExitCode::SUCCESS)
+}
+
+/// The address certificates name when a realm's config declares none:
+/// `--server-name` if given, else the machine's hostname, else loopback.
+fn default_realm_url(options: &RuntimeOptions) -> anyhow::Result<sandpolis_server::ServerUrl> {
+    let host = match options.server_name.clone() {
+        Some(host) => host,
+        None => match gethostname::gethostname().into_string() {
+            Ok(hostname) if !hostname.is_empty() => hostname,
+            _ => {
+                tracing::warn!(
+                    "The machine has no usable hostname; certificates will name loopback \
+                     and only same-host instances will be able to connect"
+                );
+                "127.0.0.1".to_string()
+            }
+        },
+    };
+
+    let url: sandpolis_server::ServerUrl =
+        format!("{host}:{}", options.listen.port()).parse()?;
+
+    // A host that doesn't resolve still makes a valid certificate, but the
+    // instances loading it won't be able to dial the address it names.
+    if url.resolve().is_err() {
+        tracing::warn!(
+            %host,
+            "The server's hostname doesn't resolve; instances on other hosts may not \
+             be able to connect. Pass --server-name or set the realm's address"
+        );
+    }
+
+    Ok(url)
 }
 
 /// Write out the realm cert for each realm this server brought up.
@@ -454,6 +487,39 @@ pub async fn main(options: RuntimeOptions, state: InstanceState) -> Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod test_default_realm_url {
+    use super::*;
+
+    /// `--server-name` beats hostname detection, and the port always comes
+    /// from `--listen`.
+    #[test]
+    fn server_name_wins() -> anyhow::Result<()> {
+        let mut options = RuntimeOptions::embedded();
+        options.listen = "0.0.0.0:9999".parse()?;
+        options.server_name = Some("gs.example.com".to_string());
+
+        let url = default_realm_url(&options)?;
+        assert_eq!(url.host, "gs.example.com");
+        assert_eq!(url.port, 9999);
+        Ok(())
+    }
+
+    /// Without `--server-name`, certificates name the machine's hostname.
+    #[test]
+    fn falls_back_to_the_machine_hostname() -> anyhow::Result<()> {
+        let options = RuntimeOptions::embedded();
+
+        let url = default_realm_url(&options)?;
+        match gethostname::gethostname().into_string() {
+            Ok(hostname) if !hostname.is_empty() => assert_eq!(url.host, hostname),
+            _ => assert_eq!(url.host, "127.0.0.1"),
+        }
+        assert_eq!(url.port, options.listen.port());
+        Ok(())
+    }
+}
+
 /// Holds randomized parameters for a test server.
 pub struct TestServer {
     pub port: u16,
@@ -507,13 +573,13 @@ pub async fn test_server() -> Result<TestServer> {
                 ca_cert.cert.clone(),
                 ca_cert.key.clone().expect("a fresh CA carries its key"),
             )),
-            address: Some(url),
+            address: Some(url.clone()),
         }],
         Vec::new(),
         database.clone(),
         instance,
         true,
-        port,
+        url,
     )
     .await?;
 

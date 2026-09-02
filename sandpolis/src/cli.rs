@@ -51,6 +51,37 @@ pub struct ServerArgs {
     /// Address:port for this server to listen on.
     #[clap(long, default_value = "0.0.0.0:8768")]
     pub listen: std::net::SocketAddr,
+
+    /// Hostname clients and agents will use to reach this server
+    /// ($S7S_SERVER_NAME).
+    ///
+    /// Certificates minted for realms that declare no `address` of their own
+    /// carry this host in their common name, which is where instances loading
+    /// those certificates dial. Defaults to the machine's hostname, falling
+    /// back to `127.0.0.1` if it has none.
+    #[clap(long, value_name = "HOST", env = "S7S_SERVER_NAME", value_parser = parse_server_name)]
+    pub server_name: Option<String>,
+}
+
+/// Accept only a bare host for `--server-name`: the port comes from `--listen`
+/// and the realm from each realm config, so anything else smuggled into the
+/// value (`:port`, `/realm`) would be silently dropped or corrupt the
+/// certificate's common name. Round-tripping through [`ServerUrl`] also
+/// guarantees the host parses back on the instances that load the certificate.
+#[cfg(feature = "server")]
+fn parse_server_name(s: &str) -> Result<String, String> {
+    use sandpolis_server::ServerUrl;
+
+    let url: ServerUrl = s
+        .parse()
+        .map_err(|e| format!("not a valid hostname: {e}"))?;
+    if url.host != s
+        || url.port != ServerUrl::default_port()
+        || url.realm != Default::default()
+    {
+        return Err("expected a bare hostname or IP address, without port or realm".into());
+    }
+    Ok(url.host)
 }
 
 /// Flags for the agent daemon (`sandpolis agent`).
@@ -132,6 +163,7 @@ impl ServerArgs {
             },
             instance_type: sandpolis_instance::InstanceType::Server,
             listen: self.listen,
+            server_name: self.server_name.clone(),
             ..Default::default()
         }
     }
@@ -616,6 +648,18 @@ mod test_stratum_args {
     #[test]
     fn an_instance_is_required() {
         assert!(CommandLine::try_parse_from(["sandpolis"]).is_err());
+    }
+
+    /// `--server-name` is a bare host: the port belongs to `--listen` and the
+    /// realm to each realm config, so values carrying either are rejected.
+    #[test]
+    fn server_name_is_a_bare_host() {
+        let args = server_args(&["sandpolis", "server", "--server-name", "gs.example.com"])
+            .expect("a bare hostname parses");
+        assert_eq!(args.server_name.as_deref(), Some("gs.example.com"));
+
+        assert!(server_args(&["sandpolis", "server", "--server-name", "host:9000"]).is_err());
+        assert!(server_args(&["sandpolis", "server", "--server-name", "host/realm"]).is_err());
     }
 
     /// Absent `--realm`, this is the network's single global stratum server.

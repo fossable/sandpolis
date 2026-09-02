@@ -12119,6 +12119,7 @@ dependencies = [
  "fossable",
  "fs2",
  "futures",
+ "gethostname",
  "image",
  "native_db",
  "notify",

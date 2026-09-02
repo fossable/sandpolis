@@ -245,9 +245,9 @@ impl RealmManager {
     /// in the realm configs the bootstraps came from, and the endpoint
     /// certificate minted for each realm.
     ///
-    /// `listen_port` is where this process's server binds, used to name
-    /// certificates when a realm declares no address of its own — which is how
-    /// a local development server reaches itself.
+    /// `default_address` names the host and port certificates carry when a
+    /// realm declares no address of its own; its realm field is ignored (each
+    /// bootstrap's realm name is substituted).
     #[allow(unused_variables)]
     pub async fn new(
         bootstraps: Vec<RealmBootstrap>,
@@ -255,7 +255,7 @@ impl RealmManager {
         database: DatabaseManager,
         instance: InstanceManager,
         authoritative: bool,
-        listen_port: u16,
+        default_address: ServerUrl,
     ) -> Result<(Self, RealmStartupOutput)> {
         debug!("Initializing realms");
 
@@ -348,14 +348,25 @@ impl RealmManager {
                 rw.commit()?;
 
                 // Certificates minted here name the address this realm is
-                // reachable at, falling back to loopback for a realm that
-                // declares none — a development server other instances reach on
-                // the same host.
-                let mut url: ServerUrl = match bootstrap.address.clone() {
-                    Some(url) => url,
-                    None => format!("127.0.0.1:{listen_port}").parse()?,
-                };
+                // reachable at, falling back to the caller's default for a
+                // realm that declares none.
+                let mut url: ServerUrl = bootstrap
+                    .address
+                    .clone()
+                    .unwrap_or_else(|| default_address.clone());
                 url.realm = name.clone();
+
+                // X.509 ub-common-name caps the encoded identity at 64
+                // characters; a longer one would produce a certificate
+                // instances can't parse back.
+                if url.canonical().len() > 64 {
+                    bail!(
+                        "realm address `{}` exceeds 64 characters and can't be \
+                         encoded into a certificate; use a shorter hostname or \
+                         realm name",
+                        url.canonical()
+                    );
+                }
 
                 // The caller writes this out as `<realm>.realm.pem`. Clients and
                 // agents both attach with it, so a realm is usable as soon as

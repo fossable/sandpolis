@@ -44,6 +44,12 @@ pub struct RuntimeOptions {
     #[cfg(feature = "server")]
     pub listen: std::net::SocketAddr,
 
+    /// Host to name in certificates minted for realms that declare no address
+    /// of their own, from `--server-name`. `None` means detect the machine's
+    /// hostname at server start.
+    #[cfg(feature = "server")]
+    pub server_name: Option<String>,
+
     /// Polling connection mode, from `--poll`. A boot agent has no polling
     /// mode: it stays continuously connected so the server can hold it.
     #[cfg(all(feature = "agent", not(feature = "uki")))]
@@ -68,6 +74,8 @@ impl Default for RuntimeOptions {
                 std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
                 sandpolis_server::ServerUrl::default_port(),
             ),
+            #[cfg(feature = "server")]
+            server_name: None,
             #[cfg(all(feature = "agent", not(feature = "uki")))]
             poll: None,
             #[cfg(feature = "agent")]
