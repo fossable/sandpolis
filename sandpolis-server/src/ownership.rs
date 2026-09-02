@@ -58,7 +58,6 @@ const RESYNC_INTERVAL: Duration = Duration::from_secs(30);
 /// a mirror of that server's own grants, maintained with `local_write` (never
 /// replicated) so ownership survives a restart while the GS is unreachable.
 #[data]
-#[derive(Default)]
 pub struct OwnershipData {
     /// The instance whose data this grant covers.
     #[secondary_key]
@@ -71,6 +70,20 @@ pub struct OwnershipData {
     /// Fencing counter, bumped each time ownership moves. An owner seeing an
     /// unexpected epoch knows the scope left and returned behind its back.
     pub epoch: u64,
+}
+
+impl OwnershipData {
+    /// A grant of `instance`'s data to `owner` at the given epoch.
+    pub fn grant(instance: InstanceId, owner: InstanceId, epoch: u64) -> Self {
+        Self {
+            instance,
+            owner,
+            epoch,
+            _id: Default::default(),
+            _revision: Default::default(),
+            _creation: Default::default(),
+        }
+    }
 }
 
 /// Sent by a server to the global stratum server.
@@ -150,12 +163,7 @@ impl Ownership {
                     })?;
                 }
                 None => {
-                    self.grants.push(OwnershipData {
-                        instance,
-                        owner: claimer,
-                        epoch: 1,
-                        ..Default::default()
-                    })?;
+                    self.grants.push(OwnershipData::grant(instance, claimer, 1))?;
                 }
             }
         }
@@ -199,12 +207,7 @@ impl Ownership {
             }),
             None => self
                 .grants
-                .push_local(OwnershipData {
-                    instance: scope.instance,
-                    owner: self_id,
-                    epoch: scope.epoch,
-                    ..Default::default()
-                })
+                .push_local(OwnershipData::grant(scope.instance, self_id, scope.epoch))
                 .map(|_| ()),
         }
     }
@@ -247,7 +250,7 @@ pub(crate) fn attached_instances(network: &NetworkManager) -> BTreeSet<InstanceI
     network
         .live_inbound()
         .iter()
-        .map(|c| c.data.read().remote_instance)
+        .filter_map(|c| c.data.read().remote_instance)
         .filter(|id| !id.is_server())
         .collect()
 }
@@ -290,17 +293,17 @@ pub async fn maintain_local_claims(
 #[cfg(test)]
 mod test_grants {
     use super::*;
-    use sandpolis_instance::InstanceType;
+    
     use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::{test_db, test_scoped_db};
 
     fn server() -> InstanceId {
-        InstanceId::new(InstanceType::Server)
+        sandpolis_instance::ServerId::random().into()
     }
 
     fn agent() -> InstanceId {
-        InstanceId::new(InstanceType::Agent)
+        sandpolis_instance::AgentId::random().into()
     }
 
     /// A claim grants what is newly attached and bumps the epoch only when
@@ -535,7 +538,11 @@ pub fn accept_claims(
     ownership: Arc<Ownership>,
     realm: RealmDatabase,
 ) {
-    let peer = connection.data.read().remote_instance;
+    // Only identified server peers are given the claim stream, so a peer
+    // without an id has nothing to claim.
+    let Some(peer) = connection.data.read().remote_instance else {
+        return;
+    };
     let via = Arc::downgrade(connection);
 
     connection
@@ -698,7 +705,7 @@ pub async fn maintain_agent_sync(
             .unwrap()
             .iter()
             .filter(|c| !c.cancel.is_cancelled())
-            .map(|c| (c.data.read().remote_instance, c.clone()))
+            .filter_map(|c| c.data.read().remote_instance.map(|id| (id, c.clone())))
             .filter(|(id, _)| !id.is_server())
             .collect();
 

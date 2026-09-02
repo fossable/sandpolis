@@ -22,7 +22,7 @@ impl CpuCollector {
             system: System::new_with_specifics(
                 RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
             ),
-            cpu: db.resident(())?,
+            cpu: db.resident_with((), || CpuData::scoped(instance_id))?,
             cores: db.resident_vec(())?,
             instance_id,
         })
@@ -72,11 +72,10 @@ impl Collector for CpuCollector {
             }
 
             self.cores.push(CpuCoreData {
-                _instance_id: self.instance_id,
                 index,
                 usage,
                 frequency,
-                ..Default::default()
+                ..CpuCoreData::scoped(self.instance_id)
             })?;
         }
 
@@ -109,7 +108,7 @@ mod tests {
     async fn test_cpu_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(CpuData, CpuCoreData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector = CpuCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;
 

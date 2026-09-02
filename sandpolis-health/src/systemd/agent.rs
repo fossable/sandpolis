@@ -123,17 +123,17 @@ impl Collector for SystemdCollector {
                 self.notify_failed(unit);
             }
 
-            let mut data: SystemdUnitData = unit.into();
-            data._instance_id = self.instance_id;
-            self.data.push(data)?;
+            self.data
+                .push(SystemdUnitData::collected(unit, self.instance_id))?;
         }
 
         Ok(())
     }
 }
 
-impl From<&UnitListEntry> for SystemdUnitData {
-    fn from(value: &UnitListEntry) -> Self {
+impl SystemdUnitData {
+    /// A row for a listed unit, scoped to the collecting instance.
+    fn collected(value: &UnitListEntry, instance: InstanceId) -> Self {
         Self {
             name: value.name.clone(),
             description: Some(value.description.clone()),
@@ -141,7 +141,7 @@ impl From<&UnitListEntry> for SystemdUnitData {
             active_state: ActiveState::from_str(&value.active_state)
                 .unwrap_or(ActiveState::Unknown(value.active_state.clone())),
             sub_state: Some(value.sub_state.clone()),
-            ..Default::default()
+            ..SystemdUnitData::scoped(instance)
         }
     }
 }
@@ -160,7 +160,10 @@ mod tests {
         let database: DatabaseManager = test_db!(SystemdUnitData);
 
         let mut collector =
-            SystemdCollector::new(database.realm(RealmName::default())?, InstanceId::default())?;
+            SystemdCollector::new(
+            database.realm(RealmName::default())?,
+            sandpolis_instance::AgentId::random().into(),
+        )?;
         collector.refresh().await?;
 
         assert!(!collector.data.iter().next().is_none());

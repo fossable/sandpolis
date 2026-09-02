@@ -62,7 +62,6 @@ impl Collector for MountpointCollector {
             }
 
             self.data.push(MountpointData {
-                _instance_id: self.instance_id,
                 mounted: true,
                 device,
                 device_alias: String::new(),
@@ -72,7 +71,7 @@ impl Collector for MountpointCollector {
                 blocks: total,
                 blocks_free: available,
                 blocks_available: available,
-                ..Default::default()
+                ..MountpointData::scoped(self.instance_id)
             })?;
         }
 
@@ -104,7 +103,7 @@ mod tests {
     async fn test_mountpoint_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(MountpointData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector =
             MountpointCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;

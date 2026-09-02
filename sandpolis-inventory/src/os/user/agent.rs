@@ -39,9 +39,8 @@ impl Collector for UserCollector {
                     continue 'next_user;
                 }
             }
-            let mut data: UserData = user.into();
-            data._instance_id = self.instance_id;
-            self.data.push(data)?;
+            self.data
+                .push(UserData::collected(user, self.instance_id))?;
         }
 
         // Remove residents whose uid is no longer present on the system.
@@ -60,13 +59,14 @@ impl Collector for UserCollector {
     }
 }
 
-impl From<&User> for UserData {
-    fn from(value: &User) -> Self {
+impl UserData {
+    /// A row for a local account, scoped to the collecting instance.
+    fn collected(value: &User, instance: InstanceId) -> Self {
         Self {
             uid: **value.id(),
             gid: *value.group_id(),
             username: Some(value.name().to_string()),
-            ..Default::default()
+            ..UserData::scoped(instance)
         }
     }
 }
@@ -83,7 +83,7 @@ mod tests {
     async fn test_user_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(UserData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector = UserCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;
 

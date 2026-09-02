@@ -11,7 +11,7 @@ use sandpolis_instance::database::{DatabaseManager, WriteAuthority, config::Data
 use sandpolis_instance::network::ConnectionData;
 use sandpolis_instance::realm::RealmName;
 use sandpolis_instance::realm::RealmManager;
-use sandpolis_instance::{InstanceId, InstanceType};
+use sandpolis_instance::{AgentId, ServerId};
 use sandpolis_server::ServerStratum;
 
 #[tokio::main]
@@ -43,26 +43,24 @@ async fn main() -> Result<()> {
         // Create several test agent connections
         for i in 1..=5 {
             rw.insert(ConnectionData {
-                _instance_id: state.instance.instance_id,
-                remote_instance: InstanceId::new(InstanceType::Agent),
+                remote_instance: Some(AgentId::random().into()),
                 read_bytes: (i * 1024) as u64,
                 write_bytes: (i * 512) as u64,
                 read_throughput: (i * 100) as u64,
                 write_throughput: (i * 50) as u64,
-                ..Default::default()
+                ..ConnectionData::scoped(state.instance.instance_id)
             })?;
         }
 
         // Create a couple of server connections
         for i in 1..=2 {
             rw.insert(ConnectionData {
-                _instance_id: state.instance.instance_id,
-                remote_instance: InstanceId::new(InstanceType::Server),
+                remote_instance: Some(ServerId::random().into()),
                 read_bytes: (i * 2048) as u64,
                 write_bytes: (i * 1024) as u64,
                 read_throughput: (i * 200) as u64,
                 write_throughput: (i * 100) as u64,
-                ..Default::default()
+                ..ConnectionData::scoped(state.instance.instance_id)
             })?;
         }
 

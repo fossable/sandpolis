@@ -1,3 +1,4 @@
+use sandpolis_instance::InstanceId;
 use super::PackageData;
 use anyhow::{Result, bail};
 use std::path::PathBuf;
@@ -30,25 +31,30 @@ pub(crate) trait PackageManager {
         bail!("Not implemented");
     }
 
-    /// Get all currently installed packages.
-    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+    /// Get all currently installed packages, scoped to `instance` (the
+    /// instance whose packages these are).
+    async fn get_installed(&self, _instance: InstanceId) -> Result<Vec<PackageData>> {
         bail!("Not implemented");
     }
 
     /// Fill in `latest_available` for the given installed packages. The default
     /// is a no-op rather than a bail so the collector can call it for every
     /// manager; those without an implementation leave the packages untouched.
-    async fn get_latest_available(&self, _packages: &mut [PackageData]) -> Result<()> {
+    async fn get_latest_available(
+        &self,
+        _packages: &mut [PackageData],
+        _instance: InstanceId,
+    ) -> Result<()> {
         Ok(())
     }
 
     /// Gather advanced metadata for the given package.
-    async fn get_metadata(&self, _name: String) -> Result<PackageData> {
+    async fn get_metadata(&self, _name: String, _instance: InstanceId) -> Result<PackageData> {
         bail!("Not implemented");
     }
 
     /// Get all packages that are currently outdated.
-    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
+    async fn get_outdated(&self, _instance: InstanceId) -> Result<Vec<PackageData>> {
         bail!("Not implemented");
     }
 

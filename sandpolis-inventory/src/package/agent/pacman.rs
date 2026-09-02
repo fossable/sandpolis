@@ -1,3 +1,4 @@
+use sandpolis_instance::InstanceId;
 use super::PackageManager;
 use crate::package::{PackageData, PackageManager as PM};
 use anyhow::{Result, bail};
@@ -59,7 +60,7 @@ impl PackageManager for Pacman {
         Ok(())
     }
 
-    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+    async fn get_installed(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         let lines = self.exec_command(&["-Q"]).await?;
         let mut packages = Vec::new();
 
@@ -73,7 +74,7 @@ impl PackageManager for Pacman {
                     name: name.to_string(),
                     version: version.to_string(),
                     manager: PM::Pacman,
-                    ..Default::default()
+                    ..PackageData::scoped(instance)
                 });
             }
         }
@@ -81,7 +82,11 @@ impl PackageManager for Pacman {
         Ok(packages)
     }
 
-    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+    async fn get_latest_available(
+        &self,
+        packages: &mut [PackageData],
+        _instance: InstanceId,
+    ) -> Result<()> {
         // `pacman -Qu` lists upgradable packages as "name old -> new" by
         // comparing against the already-synced local database. It exits
         // non-zero when nothing is upgradable, which is a normal condition
@@ -117,12 +122,12 @@ impl PackageManager for Pacman {
         Ok(())
     }
 
-    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+    async fn get_metadata(&self, name: String, instance: InstanceId) -> Result<PackageData> {
         let stdout = self.exec_command(&["-Qi", &name]).await?;
         let mut package_data = PackageData {
             name: name.clone(),
             manager: PM::Pacman,
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
 
         for line in stdout.lines() {
@@ -179,7 +184,7 @@ impl PackageManager for Pacman {
         Ok(package_data)
     }
 
-    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
+    async fn get_outdated(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         debug!("Querying for outdated packages");
 
         let lines = self.exec_command(&["-Suq", "--print-format", "%n"]).await?;
@@ -191,7 +196,7 @@ impl PackageManager for Pacman {
                 packages.push(PackageData {
                     name: name.to_string(),
                     manager: PM::Pacman,
-                    ..Default::default()
+                    ..PackageData::scoped(instance)
                 });
             }
         }

@@ -123,14 +123,14 @@ pub struct TunnelData {
     #[secondary_key]
     pub name: String,
 
-    /// The endpoint that binds the listener.
-    pub listener_id: InstanceId,
+    /// The endpoint that binds the listener, when the config named a valid one.
+    pub listener_id: Option<InstanceId>,
 
     /// Where the listener binds, as a `host:port` string.
     pub listen_addr: String,
 
-    /// The endpoint that dials the target.
-    pub terminator_id: InstanceId,
+    /// The endpoint that dials the target, when the config named a valid one.
+    pub terminator_id: Option<InstanceId>,
 
     /// The target the terminator dials, as a `host:port` string.
     pub target_addr: String,

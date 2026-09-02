@@ -7,6 +7,22 @@ use syn::{
     parse::Parser, parse_macro_input,
 };
 
+/// Whether the struct declares `_instance_id: Option<...>`, marking a record
+/// that may be unowned.
+fn instance_id_is_optional(item: &ItemStruct) -> bool {
+    item.fields
+        .iter()
+        .find(|field| field.ident.as_ref().is_some_and(|i| i == "_instance_id"))
+        .is_some_and(|field| match &field.ty {
+            syn::Type::Path(path) => path
+                .path
+                .segments
+                .last()
+                .is_some_and(|segment| segment.ident == "Option"),
+            _ => false,
+        })
+}
+
 /// Returns the token stream for the `sandpolis_instance` crate root.
 /// When compiling from within `sandpolis-instance` itself, this returns `crate`;
 /// otherwise it returns `sandpolis_instance`.
@@ -31,8 +47,17 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
     };
 
     // Instance-scoped data belongs to the instance in `_instance_id`;
-    // everything else is estate-wide.
-    let scope = if has_field("_instance_id") {
+    // everything else is estate-wide. An `Option<InstanceId>` field marks a
+    // record that may be unowned, which falls back to the estate-wide scope.
+    let scope = if instance_id_is_optional(&input) {
+        quote! {
+            fn scope(&self) -> #krate::database::DataScope {
+                self._instance_id
+                    .map(#krate::database::DataScope::Instance)
+                    .unwrap_or(#krate::database::DataScope::Global)
+            }
+        }
+    } else if has_field("_instance_id") {
         quote! {
             fn scope(&self) -> #krate::database::DataScope {
                 #krate::database::DataScope::Instance(self._instance_id)
@@ -101,6 +126,7 @@ struct DataAttributes {
     // Our attributes
     temporal: bool,
     instance: bool,
+    defaults: bool,
 
     // Wrapper for: https://github.com/vincent-herlemont/native_model/blob/084a81809d3d82bba731ae930eafb56aae3537bc/native_model_macro/src/lib.rs#L19
     pub(crate) id: Option<LitInt>,
@@ -115,6 +141,8 @@ impl DataAttributes {
             self.temporal = true;
         } else if meta.path.is_ident("instance") {
             self.instance = true;
+        } else if meta.path.is_ident("defaults") {
+            self.defaults = true;
         } else if meta.path.is_ident("id") {
             self.id = Some(meta.value()?.parse()?);
         } else if meta.path.is_ident("version") {
@@ -249,7 +277,46 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
     }
 
     let struct_ident = &item_struct.ident;
-    let register = if has_instance {
+
+    // `InstanceId` deliberately has no default, so instance-scoped structs
+    // can't derive `Default`. The `defaults` flag generates the replacement: a
+    // constructor with every field defaulted and the scope filled in.
+    let scoped_impl = if attrs.defaults {
+        if !has_instance {
+            panic!("`defaults` requires an `_instance_id` field (add the `instance` flag)");
+        }
+        let optional = instance_id_is_optional(&item_struct);
+        let field_inits: Vec<TokenStream2> = item_struct
+            .fields
+            .iter()
+            .map(|f| {
+                let ident = f.ident.as_ref().expect("named field");
+                if ident == "_instance_id" {
+                    if optional {
+                        quote! { #ident: Some(instance_id) }
+                    } else {
+                        quote! { #ident: instance_id }
+                    }
+                } else {
+                    quote! { #ident: ::core::default::Default::default() }
+                }
+            })
+            .collect();
+        quote! {
+            impl #struct_ident {
+                /// Every field at its default, scoped to the given instance.
+                pub fn scoped(instance_id: #krate::InstanceId) -> Self {
+                    Self { #(#field_inits),* }
+                }
+            }
+        }
+    } else {
+        quote!()
+    };
+
+    // A record with an `Option<InstanceId>` scope may be unowned, so the
+    // browse registry can't partition it by instance.
+    let register = if has_instance && !instance_id_is_optional(&item_struct) {
         quote! { r.register_scoped::<#struct_ident>(|d| d._instance_id) }
     } else {
         quote! { r.register::<#struct_ident>() }
@@ -260,6 +327,8 @@ pub fn data(args: TokenStream, input: TokenStream) -> TokenStream {
         #[native_model::native_model(#model_args)]
         #[native_db::native_db]
         #item_struct
+
+        #scoped_impl
 
         // Auto-register in the database viewer's browse registry.
         #krate::inventory::submit! {

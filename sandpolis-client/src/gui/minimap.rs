@@ -101,7 +101,7 @@ pub fn update_minimap(
     viewport: Res<MinimapViewport>,
     panel_query: Query<Entity, With<Minimap>>,
     dots_query: Query<Entity, With<MinimapDot>>,
-    nodes_query: Query<&Transform, With<NodeEntity>>,
+    nodes_query: Query<(&Transform, Option<&Visibility>), With<NodeEntity>>,
     camera_query: Query<(&Transform, &Projection), With<WorldView>>,
     mut rect_query: Query<&mut Node, With<MinimapViewportRect>>,
 ) {
@@ -121,7 +121,11 @@ pub fn update_minimap(
         ((wx + FIXED_WORLD) * scale, (FIXED_WORLD - wy) * scale)
     };
 
-    for transform in nodes_query.iter() {
+    for (transform, visibility) in nodes_query.iter() {
+        // Nodes hidden by the active layer's filter get no dot either.
+        if visibility == Some(&Visibility::Hidden) {
+            continue;
+        }
         let pos = transform.translation;
         let (lx, ly) = to_local(pos.x, pos.y);
         commands.entity(panel).with_children(|parent| {

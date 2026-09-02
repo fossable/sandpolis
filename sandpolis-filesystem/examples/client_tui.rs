@@ -1,6 +1,6 @@
 use anyhow::Result;
 use sandpolis_filesystem::{FilesystemManager, client::tui::FilesystemViewerWidget};
-use sandpolis_instance::InstanceId;
+use sandpolis_instance::ServerId;
 use std::env;
 use std::path::PathBuf;
 
@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     };
 
     let widget =
-        FilesystemViewerWidget::new(InstanceId::new_server(), filesystem, Some(initial_path));
+        FilesystemViewerWidget::new(ServerId::random().into(), filesystem, Some(initial_path));
 
     sandpolis_client::tui::test_widget(widget).await.unwrap();
 

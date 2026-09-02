@@ -24,7 +24,7 @@ impl PartitionCollector {
 
     /// Enumerate partitions: every subdirectory of `/sys/block/<disk>` that
     /// carries a `partition` attribute is one.
-    fn scan() -> Vec<PartitionData> {
+    fn scan(instance: InstanceId) -> Vec<PartitionData> {
         let uuids = sysfs::partuuid_map();
         let mounts = sysfs::mount_map();
         let mut partitions = Vec::new();
@@ -61,7 +61,7 @@ impl PartitionCollector {
                     minor,
                     mount: mounts.get(&device).cloned().unwrap_or_default(),
                     name,
-                    ..Default::default()
+                    ..PartitionData::scoped(instance)
                 });
             }
         }
@@ -71,7 +71,7 @@ impl PartitionCollector {
 
 impl Collector for PartitionCollector {
     async fn refresh(&mut self) -> Result<()> {
-        let partitions = Self::scan();
+        let partitions = Self::scan(self.instance_id);
         trace!(partitions = partitions.len(), "Polled disk partitions");
 
         let mut live: Vec<String> = Vec::new();
@@ -128,7 +128,7 @@ mod tests {
     async fn test_partition_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(PartitionData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector =
             PartitionCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;

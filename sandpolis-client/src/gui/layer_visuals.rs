@@ -184,9 +184,11 @@ pub fn update_node_visibility_for_layer(
     current_layer: Res<CurrentLayer>,
     registry: Res<LayerRegistry>,
     mut node_query: Query<(&NodeEntity, &mut Visibility)>,
+    added_nodes: Query<(), Added<NodeEntity>>,
 ) {
-    // Only update when layer changes
-    if !current_layer.is_changed() {
+    // Only update when the layer changes or a node spawns; a node spawned
+    // mid-session must not keep its spawn-time visibility on a filtered layer.
+    if !current_layer.is_changed() && added_nodes.is_empty() {
         return;
     }
 

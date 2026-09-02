@@ -89,9 +89,8 @@ impl ProbeManager {
         let devices: Vec<RegisteredDevice> = config
             .devices
             .into_iter()
-            .enumerate()
-            .map(|(i, device)| RegisteredDevice {
-                id: i as u64 + 1,
+            .map(|device| RegisteredDevice {
+                id: ProbeId::random(),
                 gateway,
                 device,
                 online: false,
@@ -213,13 +212,20 @@ impl ProbeType {
     }
 }
 
+sandpolis_instance::typed_id!(
+    /// Identifies a registered device (stable for the process lifetime).
+    ProbeId,
+    "probe",
+    4
+);
+
 /// A registered device, the runtime counterpart of a [`DeviceConfig`]. Each
 /// device maps to exactly one graph node; the protocols it exposes become tabs in
 /// its controller.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RegisteredDevice {
     /// Unique identifier for this device (stable for the process lifetime).
-    pub id: u64,
+    pub id: ProbeId,
 
     /// The gateway instance that reaches this device.
     pub gateway: InstanceId,

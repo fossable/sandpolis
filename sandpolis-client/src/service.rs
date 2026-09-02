@@ -88,7 +88,7 @@ fn send_request(target: InstanceId, request: ServiceControlRequest) {
         tracing::warn!("Not connected to a server");
         return;
     };
-    let relay = (conn.data.read().remote_instance != target).then_some(target);
+    let relay = (conn.data.read().remote_instance != Some(target)).then_some(target);
 
     crate::sync::spawn(async move {
         let (id, tx) = conn.streams.register_to(ServiceControlRequester, relay);

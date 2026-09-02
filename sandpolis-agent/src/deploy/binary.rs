@@ -28,6 +28,12 @@ impl std::fmt::Display for AgentBinaryKey {
 pub trait AgentBinarySource: Send + Sync + 'static {
     /// The complete agent executable for `key`.
     fn resolve(&self, key: &AgentBinaryKey) -> Result<Vec<u8>>;
+
+    /// Whether [`resolve`](Self::resolve) would succeed, without keeping the
+    /// binary around.
+    fn check(&self, key: &AgentBinaryKey) -> Result<()> {
+        self.resolve(key).map(|_| ())
+    }
 }
 
 static SOURCE: OnceLock<Box<dyn AgentBinarySource>> = OnceLock::new();
@@ -45,5 +51,34 @@ pub fn resolve(key: &AgentBinaryKey) -> Result<Vec<u8>> {
             "no prebuilt agent binary available for {key}. Install an agent on \
              the target manually and deploy again to configure it."
         ),
+    }
+}
+
+/// Whether [`resolve`] would succeed for `key`, without materializing the
+/// binary.
+pub fn check(key: &AgentBinaryKey) -> Result<()> {
+    match SOURCE.get() {
+        Some(source) => source.check(key),
+        None => bail!(
+            "no prebuilt agent binary available for {key}. Install an agent on \
+             the target manually and deploy again to configure it."
+        ),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /// With no source installed, a dry run's availability check reports the
+    /// same "no prebuilt agent binary" blocker a real deployment would hit.
+    #[test]
+    fn check_without_a_source_names_the_blocker() {
+        let key = AgentBinaryKey {
+            os: TargetOs::Linux("debian".to_string()),
+            arch: "x86_64".to_string(),
+        };
+        let error = check(&key).expect_err("no source is installed in tests");
+        assert!(error.to_string().contains("no prebuilt agent binary"));
     }
 }

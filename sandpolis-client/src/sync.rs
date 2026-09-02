@@ -35,7 +35,12 @@ struct ServerConnectionEntry {
 /// Record an established server connection for routing. Called for every server
 /// websocket the client brings up (including the primary). Idempotent per server.
 pub fn register_connection(url: ServerUrl, connection: Arc<InstanceConnection>) {
-    let instance_id = connection.data.read().remote_instance;
+    // Servers always report their id in the upgrade response; a connection
+    // without one can't be routed to and isn't worth tracking.
+    let Some(instance_id) = connection.data.read().remote_instance else {
+        tracing::warn!("Ignoring a server connection with no instance id");
+        return;
+    };
     {
         let mut conns = CONNECTIONS.write().unwrap();
         match conns.iter_mut().find(|c| c.instance_id == instance_id) {

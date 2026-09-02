@@ -41,8 +41,7 @@ pub struct PackageManagerData {
     pub cached_packages: Option<u64>,
 }
 
-#[data]
-#[derive(Default)]
+#[data(defaults)]
 pub struct PackageData {
     #[secondary_key]
     pub _instance_id: InstanceId,

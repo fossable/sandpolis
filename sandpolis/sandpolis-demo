@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Bring up a server, an agent and the GUI client in one container. A process is
 # exactly one instance, so this is three of them around one binary.
 #

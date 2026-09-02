@@ -18,7 +18,7 @@
 //!   (and hydration snapshots) from the global stratum server.
 
 use super::stream::{
-    Stream, StreamId, StreamMessage, StreamRegistry, StreamRequester, StreamResponder,
+    StreamId, StreamMessage, StreamRegistry, StreamRequester, StreamResponder,
 };
 use super::{InstanceConnection, RegisterResponders};
 use crate::database::RealmDatabase;

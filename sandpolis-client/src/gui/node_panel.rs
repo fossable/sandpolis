@@ -274,7 +274,7 @@ fn fallback_icon_path(
 ) -> &'static str {
     match instance
         .filter(|_| sub.is_none())
-        .and_then(|i| i.instance_id.instance_type())
+        .map(|i| i.instance_id.instance_type())
     {
         Some(instance_type) => instance_icon_path(instance_type),
         None => layer_icon_path(layer),
@@ -891,7 +891,7 @@ mod test_node_panel {
     /// A node standing in for an instance of the given type.
     fn instance_node(instance_type: InstanceType) -> NodeEntity {
         NodeEntity {
-            instance_id: InstanceId::new(instance_type),
+            instance_id: InstanceId::random(instance_type),
         }
     }
 
@@ -934,14 +934,4 @@ mod test_node_panel {
         );
     }
 
-    #[test]
-    fn a_typeless_id_falls_back_to_the_layer_icon() {
-        let node = NodeEntity {
-            instance_id: InstanceId::default(),
-        };
-        assert_eq!(
-            fallback_icon_path(Some(&node), None, &LayerName("Shell".to_string())),
-            "layer/Shell.svg"
-        );
-    }
 }

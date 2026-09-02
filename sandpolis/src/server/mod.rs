@@ -100,7 +100,7 @@ pub async fn start(args: crate::cli::ServerArgs) -> Result<std::process::ExitCod
     for ca in &startup.minted_cas {
         if let Some(realm) = options.realms.iter_mut().find(|r| r.name == ca.name) {
             realm.store_ca(ca.cert_pem.clone(), ca.key_pem.clone())?;
-            info!(realm = %ca.name, path = ?realm.path(), "Wrote the realm CA back to its file");
+            info!(path = ?realm.path(), "Wrote the realm CA back to its file");
         }
     }
 

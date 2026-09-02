@@ -70,6 +70,9 @@ slint = { version = "1.17", optional = true, default-features = false, features 
   "renderer-software",
 ] }
 
+# Client exclusive
+rpassword = { version = "7", optional = true }
+
 # GUI client exclusive
 bevy = { workspace = true, optional = true }
 bevy_svg = { workspace = true, optional = true, features = ["2d"] }
@@ -121,6 +124,7 @@ agent = [
 ]
 client = [
   "dep:roniker",
+  "dep:rpassword",
   "sandpolis-agent/client",
   "sandpolis-client/client",
   "sandpolis-instance/client",

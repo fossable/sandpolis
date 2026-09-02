@@ -19,7 +19,7 @@ impl MemoryMonitor {
             system: System::new_with_specifics(
                 RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
             ),
-            data: db.resident(())?,
+            data: db.resident_with((), || MemoryData::scoped(instance_id))?,
             instance_id,
         })
     }
@@ -60,7 +60,7 @@ mod tests {
     async fn test_memory_monitor() -> Result<()> {
         let database: DatabaseManager = test_db!(MemoryData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut monitor = MemoryMonitor::new(database.realm(RealmName::default())?, instance_id)?;
         monitor.refresh().await?;
 

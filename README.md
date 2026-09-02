@@ -31,11 +31,9 @@ machine also has an authorized key installed that allows access from another
 machine:
 
 ```
-┌──────────┐  SSH Key  ┌──────────┐  API Token  ┌───────────────────┐
-│Machine A ┼───────────►Machine B ┼─────────────► Github            │
-└──────────┘           └──────────┘             │                   │
-                                                │  - Private repos  │
-                                                └───────────────────┘
+┌──────────┐ SSH Key ┌──────────┐ API Token ┌────────────────┐
+│Machine A ┼─────────►Machine B ┼───────────► Github Account │
+└──────────┘         └──────────┘           └────────────────┘
 ```
 
 This picture represents a simple virtual estate with physical/digital assets
@@ -60,18 +58,50 @@ Others recognize that the "cloud" is just someone else's computer and they're
 effectively sharing control over their digital assets.
 
 If you're in the first category, then Sandpolis probably doesn't offer much
-value. For the rest of you, Sandpolis is an invaluable tool for shifting control
-of your virtual estate back where it belongs.
+value. For the rest of you, Sandpolis is an invaluable tool that can help shift
+control of your virtual estate back where it belongs!
 
 ## How it works
 
-Sandpolis itself runs as a server that you login to via a GUI/CLI application
-(the client). The server generates a certificate that clients use to
-authenticate with mTLS.
+Sandpolis is three applications:
 
-You can run the Sandpolis agent on your devices which allows you to interact
-with them from a client. Agents also use the same mTLS certificate that client
-use.
+- _the agent_ which is a headless daemon that runs on machines you want to
+  control.
+- _the client_ which is a GUI or CLI application that you use to interact with
+  you virtual estate.
+- _the server_ which ties everything together and stores persistent state.
+
+If you don't want to run agents, you can also use _probes_ which offer similar
+functionality, but reuse a common protocol like SSH instead.
+
+Depending on how big your virtual estate is, you can also run multiple servers
+in the same network arranged into _strata_: local stratum (LS) servers connect
+upwards to a global stratum (GS) server. Here's an example network demonstrating
+all of the above:
+
+```
+┌──────────────┐
+│ Client (you) │
+└──────┬───────┘
+       │ mTLS
+┌──────▼──────┐           ┌───────┐
+│  GS Server  ◄───────────┤ Agent │
+└──────▲──────┘   mTLS    └───────┘
+       │ mTLS
+┌──────┴──────┐           ┌───────────┐
+│  LS Server  ┼───────────► SSH Probe │
+└─────────────┘    SSH    └───────────┘
+```
+
+You connect your client to a server, which relays your requests to any agent or
+probe in the estate. In the above example, your client application can do
+`sandpolis shell <Agent>` or `sandpolis shell <SSH Probe>` to get a shell
+session on either the agent or the probe.
+
+All connections between instances (clients, servers, agents) are secured with
+strict mTLS. This means you always need a certificate called a _realm
+certificate_ to login. Servers can host multiple _realms_ which provide strong
+isolation for different environments.
 
 ## Installation
 
@@ -135,9 +165,9 @@ container:
 
 ```sh
 docker run --rm -it \
-  -e XDG_RUNTIME_DIR=/run/user/1000 \
-  -e WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
-  -v "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY":/run/user/1000/"$WAYLAND_DISPLAY" \
+  -e XDG_RUNTIME_DIR \
+  -e WAYLAND_DISPLAY \
+  -v "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY":"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" \
   --device /dev/dri \
   -v sandpolis-demo:/data \
   sandpolis/demo
@@ -147,7 +177,7 @@ Without a compositor handed in, the server and agent still come up and you get a
 shell aimed at them instead of the GUI:
 
 ```console
-[sandpolis demo] /data $ sandpolis agent list
+[sandpolis demo] /data $ sandpolis agents list
 ```
 
 </details>

@@ -315,6 +315,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::id::AgentId;
     use super::*;
     use crate::InstanceId;
     use crate::database::DatabaseManager;
@@ -326,8 +327,7 @@ mod tests {
     use sandpolis_macros::data;
     use std::time::Duration;
 
-    #[data]
-    #[derive(Default)]
+    #[data(defaults)]
     struct SyncTestData {
         #[secondary_key]
         _instance_id: InstanceId,
@@ -337,10 +337,9 @@ mod tests {
 
     fn record(op: SyncOp, instance: InstanceId, name: &str, value: u32) -> SyncRecord {
         let item = SyncTestData {
-            _instance_id: instance,
             name: name.into(),
             value,
-            ..Default::default()
+        ..SyncTestData::scoped(instance)
         };
         SyncRecord {
             model_id: <SyncTestData as Model>::native_model_id(),
@@ -356,8 +355,8 @@ mod tests {
 
         let db: DatabaseManager = test_db!(SyncTestData);
         let realm = db.realm(RealmName::default())?;
-        let a = InstanceId::new(crate::InstanceType::Agent);
-        let b = InstanceId::new(crate::InstanceType::Agent);
+        let a = InstanceId::from(crate::AgentId::random());
+        let b = InstanceId::from(crate::AgentId::random());
 
         reg.apply(&realm, &record(SyncOp::Upsert, a, "x", 1))?;
         reg.apply(&realm, &record(SyncOp::Upsert, b, "y", 2))?;
@@ -411,7 +410,7 @@ mod tests {
         let db: DatabaseManager = test_db!(SyncTestData, GlobalTestData);
         let realm = db.realm(RealmName::default())?;
 
-        let instance = InstanceId::new(crate::InstanceType::Agent);
+        let instance = InstanceId::from(crate::AgentId::random());
         reg.apply(&realm, &record(SyncOp::Upsert, instance, "x", 1))?;
         let global_item = GlobalTestData {
             name: "g".into(),
@@ -460,10 +459,9 @@ mod tests {
         let realm = db.realm(RealmName::default())?;
 
         let mut item = SyncTestData {
-            _instance_id: InstanceId::default(),
             name: "x".into(),
             value: 1,
-            ..Default::default()
+            ..SyncTestData::scoped(AgentId::random().into())
         };
         item.set_revision(DataRevision::Latest(2));
 
@@ -525,7 +523,7 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(50)).await;
         reg.apply(
             &realm,
-            &record(SyncOp::Upsert, InstanceId::default(), "z", 9),
+            &record(SyncOp::Upsert, AgentId::random().into(), "z", 9),
         )?;
 
         let got = tokio::time::timeout(Duration::from_secs(2), rx.recv())

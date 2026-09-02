@@ -309,7 +309,7 @@ fn probe_device(target: PanelTarget) -> Option<sandpolis_probe::RegisteredDevice
         .read()
         .ok()?
         .iter()
-        .find(|device| device.id == device_id)?
+        .find(|device| device.id.body() == device_id)?
         .clone();
     Some(device)
 }
@@ -354,7 +354,7 @@ fn open_stream(target: PanelTarget, outbound_rx: Receiver<DesktopStreamRequest>)
         };
         let (requester, events) = crate::vnc::VncStreamRequester::channel();
         let initial = crate::vnc::VncStreamRequest::Start {
-            device_id: device.id,
+            device_id: device.id.body(),
         };
         spawn_vnc_stream(conn, requester, initial, outbound_rx);
         return StreamStart::Opened(events);
@@ -377,7 +377,7 @@ fn open_stream(target: PanelTarget, outbound_rx: Receiver<DesktopStreamRequest>)
         };
         let (requester, events) = crate::rdp::RdpStreamRequester::channel();
         let initial = crate::rdp::RdpStreamRequest::Start {
-            device_id: device.id,
+            device_id: device.id.body(),
         };
         spawn_rdp_stream(conn, requester, initial, outbound_rx);
         return StreamStart::Opened(events);

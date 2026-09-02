@@ -122,7 +122,7 @@ fn count_connections(network: &NetworkManager, instance: InstanceId) -> usize {
         .iter()
         .filter(|connection| {
             let cd = connection.read();
-            cd._instance_id == instance || cd.remote_instance == instance
+            cd._instance_id == instance || cd.remote_instance == Some(instance)
         })
         .count()
 }
@@ -133,9 +133,9 @@ fn describe_connections(network: &NetworkManager, instance: InstanceId) -> Strin
     let mut lines = Vec::new();
     for connection in network.connections.iter() {
         let cd = connection.read();
-        if cd._instance_id == instance || cd.remote_instance == instance {
+        if cd._instance_id == instance || cd.remote_instance == Some(instance) {
             lines.push(format!(
-                "{} -> {}\n  local={:?} remote={:?}\n  established={} disconnected={:?}\n  r/w={}/{}B",
+                "{} -> {:?}\n  local={:?} remote={:?}\n  established={} disconnected={:?}\n  r/w={}/{}B",
                 cd._instance_id,
                 cd.remote_instance,
                 cd.local_socket,

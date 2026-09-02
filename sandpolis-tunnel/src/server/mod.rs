@@ -78,13 +78,11 @@ pub fn install(context: TunnelServerContext) {
 /// One tunnel the orchestrator is managing.
 struct Managed {
     config: TunnelConfig,
-    listener_id: InstanceId,
-    terminator_id: InstanceId,
+    /// `None` when the config couldn't be parsed; the row is left `Failed`.
+    endpoints: Option<(InstanceId, InstanceId)>,
     row: Arc<Resident<TunnelData>>,
     cancel: Option<CancellationToken>,
     handle: Option<tokio::task::JoinHandle<()>>,
-    /// False when the config couldn't be parsed; the row is left `Failed`.
-    valid: bool,
 }
 
 async fn orchestrate() {
@@ -100,26 +98,24 @@ async fn orchestrate() {
     for config in &ctx.tunnels {
         let listener = config.listener.parse::<InstanceId>();
         let terminator = config.terminator.parse::<InstanceId>();
-        let (listener_id, terminator_id, valid, error) = match (listener, terminator) {
-            (Ok(l), Ok(t)) => (l, t, true, None),
+        let (endpoints, error) = match (listener, terminator) {
+            (Ok(l), Ok(t)) => (Some((l, t)), None),
             _ => (
-                InstanceId::default(),
-                InstanceId::default(),
-                false,
+                None,
                 Some("Invalid listener or terminator instance id".to_string()),
             ),
         };
 
         let data = TunnelData {
             name: config.name.clone(),
-            listener_id,
+            listener_id: endpoints.map(|(l, _)| l),
             listen_addr: config.listen.to_string(),
-            terminator_id,
+            terminator_id: endpoints.map(|(_, t)| t),
             target_addr: config.target.clone(),
             protocol: config.protocol,
             mode: config.mode,
             effective_mode: TunnelMode::Indirect,
-            state: if valid {
+            state: if endpoints.is_some() {
                 TunnelState::Pending
             } else {
                 TunnelState::Failed
@@ -136,12 +132,10 @@ async fn orchestrate() {
         };
         managed.push(Managed {
             config: config.clone(),
-            listener_id,
-            terminator_id,
+            endpoints,
             row,
             cancel: None,
             handle: None,
-            valid,
         });
     }
 
@@ -154,9 +148,9 @@ async fn orchestrate() {
 
     loop {
         for m in managed.iter_mut() {
-            if !m.valid {
+            let Some((listener_id, terminator_id)) = m.endpoints else {
                 continue;
-            }
+            };
             // Clear a bridge that ended (an endpoint dropped), cancelling its
             // token so the surviving endpoint's forwarder/worker tasks and
             // streams are torn down rather than left running.
@@ -169,15 +163,14 @@ async fn orchestrate() {
             if m.handle.is_some() {
                 continue;
             }
-            if !endpoint_reachable(ctx, m.listener_id) || !endpoint_reachable(ctx, m.terminator_id)
-            {
+            if !endpoint_reachable(ctx, listener_id) || !endpoint_reachable(ctx, terminator_id) {
                 continue;
             }
 
             let cancel = CancellationToken::new();
             let listener = open_endpoint(
                 ctx,
-                m.listener_id,
+                listener_id,
                 TunnelRole::Listener {
                     listen: m.config.listen,
                 },
@@ -187,7 +180,7 @@ async fn orchestrate() {
             .await;
             let terminator = open_endpoint(
                 ctx,
-                m.terminator_id,
+                terminator_id,
                 TunnelRole::Terminator {
                     target: m.config.target.clone(),
                 },
@@ -213,7 +206,7 @@ async fn orchestrate() {
             // The direct/hole-punch path is a stub, so a `Direct` client<->agent
             // tunnel falls back to the indirect bridge here.
             let effective = match m.config.mode {
-                TunnelMode::Direct => match direct::attempt_direct(m.terminator_id) {
+                TunnelMode::Direct => match direct::attempt_direct(terminator_id) {
                     direct::DirectOutcome::Unsupported => TunnelMode::Indirect,
                 },
                 TunnelMode::Indirect => TunnelMode::Indirect,

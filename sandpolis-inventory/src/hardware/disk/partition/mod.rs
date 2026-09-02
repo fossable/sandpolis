@@ -5,8 +5,7 @@ use sandpolis_macros::data;
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct PartitionData {
     /// Path of the partition's device node (e.g. `/dev/sda1`)
     pub identification: String,

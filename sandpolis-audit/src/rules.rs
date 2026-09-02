@@ -204,7 +204,7 @@ mod tests {
     use super::*;
     use anyhow::Result;
     use linux_audit_parser::Parser;
-    use sandpolis_instance::{InstanceId, InstanceType};
+    use sandpolis_instance::InstanceId;
 
     /// The parser requires the trailing newline a real log line carries.
     fn parse(line: &str) -> Result<linux_audit_parser::Message<'static>> {
@@ -212,7 +212,7 @@ mod tests {
     }
 
     fn some_instance() -> InstanceId {
-        InstanceId::new(InstanceType::Agent)
+        sandpolis_instance::AgentId::random().into()
     }
 
     const FAILED_LOGIN: &str = "type=USER_LOGIN msg=audit(1723400000.123:456): pid=1234 uid=0 auid=1000 ses=3 msg='op=login acct=\"tyler\" exe=\"/usr/sbin/sshd\" hostname=203.0.113.7 addr=203.0.113.7 terminal=ssh res=failed'";

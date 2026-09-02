@@ -24,8 +24,7 @@ pub enum ActiveState {
 }
 
 /// Information about a single systemd unit on an agent.
-#[data]
-#[derive(Default)]
+#[data(defaults)]
 pub struct SystemdUnitData {
     #[secondary_key]
     pub _instance_id: InstanceId,

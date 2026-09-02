@@ -337,7 +337,7 @@ fn ssh_probe_device(target: PanelTarget) -> Option<sandpolis_probe::RegisteredDe
         .read()
         .ok()?
         .iter()
-        .find(|device| device.id == device_id)?
+        .find(|device| device.id.body() == device_id)?
         .clone();
     device.device.ssh.as_ref()?;
     Some(device)
@@ -386,7 +386,7 @@ fn open_session_stream(
         };
         let (requester, output) = crate::ssh::SshSessionStreamRequester::channel();
         let initial = crate::ssh::SshSessionStreamRequest::Start {
-            device_id: device.id,
+            device_id: device.id.body(),
             rows: rows as u32,
             cols: cols as u32,
         };

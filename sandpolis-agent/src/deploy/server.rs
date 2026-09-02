@@ -57,6 +57,7 @@ impl StreamResponder for DeployStreamResponder {
             target,
             server,
             poll,
+            dry_run,
         } = request;
 
         let cancel = self.cancel.clone();
@@ -66,15 +67,19 @@ impl StreamResponder for DeployStreamResponder {
                 step: DeployStep::Connect,
             };
 
-            let deploy = deploy(&target, &server, poll, &mut progress);
+            let deploy = deploy(&target, &server, poll, dry_run, &mut progress);
             tokio::select! {
                 _ = cancel.cancelled() => {
                     debug!(host = %target.host, "Deployment cancelled");
                 }
                 result = deploy => match result {
-                    Ok(reconfigured) => {
+                    Ok(Outcome::Deployed { reconfigured }) => {
                         info!(host = %target.host, reconfigured, "Deployment finished");
                         progress.finished(reconfigured).await;
+                    }
+                    Ok(outcome @ Outcome::Planned { .. }) => {
+                        info!(host = %target.host, "Dry run finished");
+                        progress.planned(outcome).await;
                     }
                     Err(e) => {
                         warn!(host = %target.host, error = %e, "Deployment failed");
@@ -91,6 +96,21 @@ impl Drop for DeployStreamResponder {
     fn drop(&mut self) {
         self.cancel.cancel();
     }
+}
+
+/// How a deployment ended when it didn't fail.
+enum Outcome {
+    Deployed {
+        reconfigured: bool,
+    },
+    /// A dry run's findings; nothing was changed on the target.
+    Planned {
+        os: TargetOs,
+        arch: String,
+        installed: bool,
+        actions: Vec<String>,
+        blocker: Option<String>,
+    },
 }
 
 /// Reports step transitions back to the client, remembering which step is
@@ -128,6 +148,29 @@ impl Progress {
             .await;
     }
 
+    async fn planned(&self, outcome: Outcome) {
+        let Outcome::Planned {
+            os,
+            arch,
+            installed,
+            actions,
+            blocker,
+        } = outcome
+        else {
+            return;
+        };
+        let _ = self
+            .sender
+            .send(DeployStreamResponse::Planned {
+                os: os.to_string(),
+                arch,
+                installed,
+                actions,
+                blocker,
+            })
+            .await;
+    }
+
     async fn failed(&self, error: anyhow::Error) {
         let _ = self
             .sender
@@ -141,14 +184,15 @@ impl Progress {
     }
 }
 
-/// Run a deployment start to finish, returning whether it only reconfigured an
-/// existing installation.
+/// Run a deployment start to finish. A dry run stops after the read-only
+/// steps and reports what a real deployment would have done.
 async fn deploy(
     target: &DeployTarget,
     server: &ServerUrl,
     poll: Option<crate::PollConfig>,
+    dry_run: bool,
     progress: &mut Progress,
-) -> Result<bool> {
+) -> Result<Outcome> {
     progress
         .begin(
             DeployStep::Connect,
@@ -185,6 +229,37 @@ async fn deploy(
     let realm_cert = certificate(server)?;
     progress.done().await;
 
+    if dry_run {
+        let mut actions = vec![format!("write the realm certificate to {REALM_FILE}")];
+        let mut blocker = None;
+        if !installed {
+            let key = AgentBinaryKey {
+                os: os.clone(),
+                arch: arch.clone(),
+            };
+            match crate::deploy::binary::check(&key) {
+                Ok(()) => {
+                    actions.push(format!(
+                        "upload the agent binary for {key} to {INSTALL_PATH}"
+                    ));
+                    actions.push(format!(
+                        "install {} and reload systemd",
+                        systemd::UNIT_PATH
+                    ));
+                    actions.push(format!("enable and start {}", systemd::UNIT_NAME));
+                }
+                Err(e) => blocker = Some(format!("{e:#}")),
+            }
+        }
+        return Ok(Outcome::Planned {
+            os,
+            arch,
+            installed,
+            actions,
+            blocker,
+        });
+    }
+
     progress
         .begin(DeployStep::Upload, format!("Writing {REALM_FILE}"))
         .await;
@@ -195,7 +270,7 @@ async fn deploy(
     // so there is nothing left to install. Its polling schedule lives in the
     // unit file, which belongs to the installation and is left alone here.
     if installed {
-        return Ok(true);
+        return Ok(Outcome::Deployed { reconfigured: true });
     }
 
     progress
@@ -233,7 +308,9 @@ async fn deploy(
     .context("the agent service did not stay running")?;
     progress.done().await;
 
-    Ok(false)
+    Ok(Outcome::Deployed {
+        reconfigured: false,
+    })
 }
 
 /// Mint an agent certificate from `server`'s realm CA and render the realm cert

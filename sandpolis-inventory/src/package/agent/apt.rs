@@ -1,3 +1,4 @@
+use sandpolis_instance::InstanceId;
 use super::PackageManager;
 use crate::package::{PackageData, PackageManager as PM};
 use anyhow::{Result, bail};
@@ -48,7 +49,7 @@ impl PackageManager for Apt {
         Ok(())
     }
 
-    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+    async fn get_installed(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         let lines = self.exec_command(&["list", "--installed"]).await?;
         let mut packages = Vec::new();
 
@@ -67,7 +68,7 @@ impl PackageManager for Apt {
                         manager: PM::Apt,
                         // `parts.len() >= 3` is guaranteed above.
                         architecture: Some(parts[2].to_string()),
-                        ..Default::default()
+                        ..PackageData::scoped(instance)
                     });
                 }
             }
@@ -76,7 +77,11 @@ impl PackageManager for Apt {
         Ok(packages)
     }
 
-    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+    async fn get_latest_available(
+        &self,
+        packages: &mut [PackageData],
+        _instance: InstanceId,
+    ) -> Result<()> {
         // `apt list --upgradable` reports each upgradable package alongside its
         // candidate version. Packages already at the newest version are omitted
         // and left untouched, mirroring how `get_outdated` reads the same list.
@@ -101,12 +106,12 @@ impl PackageManager for Apt {
         Ok(())
     }
 
-    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+    async fn get_metadata(&self, name: String, instance: InstanceId) -> Result<PackageData> {
         let stdout = self.exec_command(&["show", &name]).await?;
         let mut package_data = PackageData {
             name: name.clone(),
             manager: PM::Apt,
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
 
         for line in stdout.lines() {
@@ -142,7 +147,7 @@ impl PackageManager for Apt {
         Ok(package_data)
     }
 
-    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
+    async fn get_outdated(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         let lines = self.exec_command(&["list", "--upgradable"]).await?;
         let mut packages = Vec::new();
 
@@ -159,7 +164,7 @@ impl PackageManager for Apt {
                         name: name.to_string(),
                         version: version.to_string(),
                         manager: PM::Apt,
-                        ..Default::default()
+                        ..PackageData::scoped(instance)
                     });
                 }
             }

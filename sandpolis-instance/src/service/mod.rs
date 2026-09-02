@@ -166,8 +166,7 @@ impl std::fmt::Display for ServiceState {
 ///
 /// One row per service per hosting instance, updated after every pass. Synced to
 /// clients so background work is inspectable from the GUI.
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct ServiceData {
     /// `"{layer}/{name}"`. A single derived string because native_db has no
     /// compound secondary keys and identity here is really the pair.

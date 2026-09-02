@@ -416,6 +416,17 @@ impl RealmDatabase {
         &self,
         query: impl DataQuery<T>,
     ) -> Result<Resident<T>> {
+        self.resident_with(query, T::default)
+    }
+
+    /// Like [`resident`](Self::resident), but for models with no `Default`
+    /// (e.g. those carrying an `InstanceId`): `seed` supplies the record when
+    /// none exists yet.
+    pub fn resident_with<T: Data + 'static>(
+        &self,
+        query: impl DataQuery<T>,
+        seed: impl FnOnce() -> T,
+    ) -> Result<Resident<T>> {
         // Hold onto this transaction until we've created the watch channel so
         // we don't miss any updates.
         let r = self.inner.r_transaction()?;
@@ -432,7 +443,7 @@ impl RealmDatabase {
             // authority the record belongs elsewhere, so hand back an
             // unpersisted default: seeding would create a second row for the
             // same logical record, competing with the one that replicates in.
-            let default = T::default();
+            let default = seed();
             if self.may_write(default.scope()) {
                 let rw = self.inner.rw_transaction()?;
                 rw.insert(default.clone())?;
@@ -466,9 +477,18 @@ impl RealmDatabase {
         let resident = Resident {
             inner: Arc::new(RwLock::new(item)),
             db: self.clone(),
-            watch: Some((watch_id, token.clone())),
+            watch: Some(Arc::new(WatchGuard {
+                db: self.clone(),
+                watch_id,
+                token: token.clone(),
+            })),
         };
-        let resident_clone = resident.clone();
+
+        // The watch task must not keep the resident alive: it only stops once
+        // the guard's token fires, and the guard only drops with the last user
+        // handle. Hold a weak reference instead.
+        let inner = Arc::downgrade(&resident.inner);
+        let db = self.clone();
 
         tokio::spawn({
             async move {
@@ -478,7 +498,17 @@ impl RealmDatabase {
                             break;
                         }
                         event = channel.recv() => match event {
-                            Some(event) => resident_clone.handle_event(event),
+                            Some(event) => {
+                                let Some(inner) = inner.upgrade() else {
+                                    break;
+                                };
+                                Resident {
+                                    db: db.clone(),
+                                    inner,
+                                    watch: None,
+                                }
+                                .handle_event(event);
+                            }
                             None => break,
 
                         }
@@ -542,11 +572,21 @@ impl RealmDatabase {
         let resident = ResidentVec {
             inner: Arc::new(RwLock::new(inner)),
             db: self.clone(),
-            watch: (watch_id, token.clone()),
-            conditions,
+            watch: Some(Arc::new(WatchGuard {
+                db: self.clone(),
+                watch_id,
+                token: token.clone(),
+            })),
+            conditions: conditions.clone(),
             listeners: Arc::new(Mutex::new(Vec::new())),
         };
-        let resident_clone = resident.clone();
+
+        // The watch task must not keep the vec alive: it only stops once the
+        // guard's token fires, and the guard only drops with the last user
+        // handle. Hold weak references instead.
+        let inner = Arc::downgrade(&resident.inner);
+        let listeners = Arc::downgrade(&resident.listeners);
+        let db = self.clone();
 
         tokio::spawn({
             async move {
@@ -556,7 +596,21 @@ impl RealmDatabase {
                             break;
                         }
                         event = channel.recv() => match event {
-                            Some(event) => resident_clone.handle_event(event),
+                            Some(event) => {
+                                let (Some(inner), Some(listeners)) =
+                                    (inner.upgrade(), listeners.upgrade())
+                                else {
+                                    break;
+                                };
+                                ResidentVec {
+                                    db: db.clone(),
+                                    inner,
+                                    watch: None,
+                                    conditions: conditions.clone(),
+                                    listeners,
+                                }
+                                .handle_event(event);
+                            }
                             None => {
                                 break;
                             }
@@ -849,6 +903,24 @@ impl ToKey for DataCreation {
     }
 }
 
+/// Owns a database watch on behalf of every clone of a [`Resident`] or
+/// [`ResidentVec`]. The watch is cancelled when the last handle sharing this
+/// guard drops, so cloning a handle never kills the watch out from under the
+/// other clones.
+struct WatchGuard {
+    db: RealmDatabase,
+    watch_id: u64,
+    token: CancellationToken,
+}
+
+impl Drop for WatchGuard {
+    fn drop(&mut self) {
+        self.token.cancel();
+        // The database may already be shutting down; don't panic over it.
+        let _ = self.db.db().unwatch(self.watch_id);
+    }
+}
+
 // TODO special case of ResVec?
 /// Maintains a real-time cache of persistent objects in the database of
 /// type `T`.
@@ -862,16 +934,7 @@ where
     // listeners: Arc<RwLock<Vec>>,
 
     // TODO dont allow detach?
-    watch: Option<(u64, CancellationToken)>,
-}
-
-impl<T: Data> Drop for Resident<T> {
-    fn drop(&mut self) {
-        if let Some((watch_id, token)) = self.watch.as_ref() {
-            token.cancel();
-            self.db.db().unwatch(*watch_id).unwrap();
-        }
-    }
+    watch: Option<Arc<WatchGuard>>,
 }
 
 impl<T: Data> Resident<T> {
@@ -1037,6 +1100,7 @@ impl<T: Data> Resident<T> {
 
 #[cfg(test)]
 mod test_scoped {
+    use crate::id::AgentId;
     use super::*;
     use anyhow::Result;
     use native_db::*;
@@ -1052,8 +1116,7 @@ mod test_scoped {
     }
 
     /// Instance-scoped data.
-    #[data]
-    #[derive(Default)]
+    #[data(defaults)]
     pub struct InstanceScopeData {
         #[secondary_key]
         pub _instance_id: InstanceId,
@@ -1094,7 +1157,7 @@ mod test_scoped {
         assert!(realm.write(DataScope::Global).is_ok());
         assert!(
             realm
-                .write(DataScope::Instance(InstanceId::default()))
+                .write(DataScope::Instance(AgentId::random().into()))
                 .is_ok()
         );
         Ok(())
@@ -1108,8 +1171,8 @@ mod test_scoped {
         let db = test_scoped_db!(table, InstanceScopeData);
         let realm = db.realm(RealmName::default())?;
 
-        let self_id = InstanceId::new(crate::InstanceType::Server);
-        let agent = InstanceId::new(crate::InstanceType::Agent);
+        let self_id = InstanceId::from(crate::ServerId::random());
+        let agent = InstanceId::from(crate::AgentId::random());
 
         // Nothing owned yet: not even the self scope.
         assert!(realm.write(DataScope::Instance(self_id)).is_err());
@@ -1208,11 +1271,11 @@ mod test_scoped {
 #[cfg(test)]
 mod test_resident {
     use super::*;
-    use super::*;
+    
     use anyhow::Result;
     use native_db::*;
     use native_model::Model;
-    use sandpolis_macros::{Data, data};
+    use sandpolis_macros::data;
     use tokio::time::{Duration, sleep};
 
     #[data]
@@ -1349,15 +1412,7 @@ where
     conditions: Vec<DataCondition>,
     listeners: Arc<Mutex<Vec<ResidentVecListener<T>>>>,
 
-    watch: (u64, CancellationToken),
-}
-
-impl<T: Data> Drop for ResidentVec<T> {
-    fn drop(&mut self) {
-        let (watch_id, token) = &self.watch;
-        token.cancel();
-        self.db.db().unwatch(*watch_id).unwrap();
-    }
+    watch: Option<Arc<WatchGuard>>,
 }
 
 impl<T: Data> ResidentVec<T> {
@@ -1781,13 +1836,13 @@ impl<T: Data> DataQuery<T> for (DataCondition, DataCondition) {
 #[cfg(test)]
 mod test_resident_vec {
     use super::*;
-    use super::*;
+    
     use anyhow::Result;
-    use native_db::Models;
+    
     use native_db::*;
-    use native_model::{Model, native_model};
-    use sandpolis_macros::{Data, data};
-    use serde::{Deserialize, Serialize};
+    use native_model::Model;
+    use sandpolis_macros::data;
+    
     use tokio::time::{Duration, sleep};
 
     #[data]
@@ -1922,6 +1977,45 @@ mod test_resident_vec {
         // Check that listeners were called
         assert_eq!(add_count.load(Ordering::SeqCst), 2);
         assert_eq!(update_count.load(Ordering::SeqCst), 2);
+
+        Ok(())
+    }
+
+    /// Dropping a clone must not cancel the shared watch: replicated writes
+    /// (which reach a `ResidentVec` only through the watcher) still have to
+    /// notify the surviving handles.
+    #[tokio::test]
+    #[test_log::test]
+    async fn test_resident_vec_clone_drop_keeps_watch() -> Result<()> {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let database = test_db!(TestData);
+        let db = database.realm(RealmName::default())?;
+        let resident_vec: ResidentVec<TestData> = db.resident_vec(())?;
+
+        let add_count = Arc::new(AtomicUsize::new(0));
+        let add_count_clone = add_count.clone();
+        resident_vec.listen(move |event| {
+            if let ResidentVecEvent::Added(_) = event {
+                add_count_clone.fetch_add(1, Ordering::SeqCst);
+            }
+        });
+
+        drop(resident_vec.clone());
+
+        // A replicated write bypasses push() and lands via the watcher.
+        let rw = db.replica_write()?;
+        rw.insert(TestData {
+            a: "replicated".to_string(),
+            b: "value".to_string(),
+            ..Default::default()
+        })?;
+        rw.commit()?;
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+        assert_eq!(add_count.load(Ordering::SeqCst), 1);
+        assert_eq!(resident_vec.len(), 1);
 
         Ok(())
     }

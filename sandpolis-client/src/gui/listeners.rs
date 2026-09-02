@@ -48,9 +48,10 @@ pub async fn setup_all_listeners(
     network.connections.listen(move |event| {
         match event {
             ResidentVecEvent::Added(connection) => {
-                let instance_id = connection.read().remote_instance;
-                let _ = tx_connections.send(DatabaseUpdate::InstanceAdded(instance_id));
-                tracing::info!("New instance connected: {}", instance_id);
+                if let Some(instance_id) = connection.read().remote_instance {
+                    let _ = tx_connections.send(DatabaseUpdate::InstanceAdded(instance_id));
+                    tracing::info!("New instance connected: {}", instance_id);
+                }
             }
             ResidentVecEvent::Updated(_connection) => {
                 // Connection updated, trigger network topology refresh

@@ -1,3 +1,4 @@
+use sandpolis_instance::InstanceId;
 use super::PackageManager;
 use crate::package::{PackageData, PackageManager as PM};
 use crate::version::vercmp;
@@ -61,7 +62,7 @@ impl PackageManager for Nix {
         Ok(())
     }
 
-    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+    async fn get_installed(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         let stdout = self
             .exec_command(&[
                 "--extra-experimental-features",
@@ -78,7 +79,7 @@ impl PackageManager for Nix {
             // Nix 2.20+ format: { "elements": { "name": {...} } }
             if let Some(map) = elements.as_object() {
                 for (name, entry) in map {
-                    packages.push(parse_profile_entry(name, entry));
+                    packages.push(parse_profile_entry(name, entry, instance));
                 }
             // Older format: { "elements": [ {...} ] }
             } else if let Some(arr) = elements.as_array() {
@@ -89,7 +90,7 @@ impl PackageManager for Nix {
                         .or_else(|| entry.get("name").and_then(|v| v.as_str()))
                         .unwrap_or("")
                         .to_string();
-                    packages.push(parse_profile_entry(&name, entry));
+                    packages.push(parse_profile_entry(&name, entry, instance));
                 }
             }
         }
@@ -97,7 +98,7 @@ impl PackageManager for Nix {
         Ok(packages)
     }
 
-    async fn get_metadata(&self, name: String) -> Result<PackageData> {
+    async fn get_metadata(&self, name: String, instance: InstanceId) -> Result<PackageData> {
         let stdout = self
             .exec_command(&[
                 "--extra-experimental-features",
@@ -113,7 +114,7 @@ impl PackageManager for Nix {
         let mut package_data = PackageData {
             name: name.clone(),
             manager: PM::Nix,
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
 
         // Pick the first match (search returns a map keyed by attr path)
@@ -135,7 +136,11 @@ impl PackageManager for Nix {
         Ok(package_data)
     }
 
-    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+    async fn get_latest_available(
+        &self,
+        packages: &mut [PackageData],
+        _instance: InstanceId,
+    ) -> Result<()> {
         // One eval per package: profiles are small and per-entry failures
         // shouldn't spoil the rest. The first eval after the registry's TTL
         // expires re-fetches the nixpkgs tarball, which can take a while but
@@ -168,9 +173,9 @@ impl PackageManager for Nix {
         Ok(())
     }
 
-    async fn get_outdated(&self) -> Result<Vec<PackageData>> {
-        let mut packages = self.get_installed().await?;
-        self.get_latest_available(&mut packages).await?;
+    async fn get_outdated(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
+        let mut packages = self.get_installed(instance).await?;
+        self.get_latest_available(&mut packages, instance).await?;
         Ok(packages
             .into_iter()
             .filter(|p| {
@@ -256,10 +261,10 @@ impl PackageManager for Nix {
     }
 }
 
-fn parse_profile_entry(name: &str, entry: &serde_json::Value) -> PackageData {
+fn parse_profile_entry(name: &str, entry: &serde_json::Value, instance: InstanceId) -> PackageData {
     let mut pkg = PackageData {
         manager: PM::Nix,
-        ..Default::default()
+        ..PackageData::scoped(instance)
     };
 
     // Store paths give us the pname and version. Multi-output packages list
@@ -409,6 +414,7 @@ mod tests {
 
     #[test]
     fn profile_entry_parsing() {
+        let instance: InstanceId = sandpolis_instance::AgentId::random().into();
         let pkg = parse_profile_entry(
             "hello",
             &json!({
@@ -419,6 +425,7 @@ mod tests {
                     "/nix/store/def456-hello-2.12.1"
                 ]
             }),
+            instance,
         );
         assert_eq!(pkg.name, "hello");
         assert_eq!(pkg.version, "2.12.1");
@@ -431,6 +438,7 @@ mod tests {
                 "url": "github:NixOS/nixpkgs/nixos-24.05",
                 "storePaths": ["/nix/store/abc123-ripgrep-14.1.0"]
             }),
+            instance,
         );
         assert_eq!(pkg.name, "ripgrep");
         assert_eq!(pkg.version, "14.1.0");
@@ -449,10 +457,11 @@ mod tests {
 
     #[test]
     fn installable_for_package() {
+        let instance: InstanceId = sandpolis_instance::AgentId::random().into();
         let pkg = PackageData {
             name: "hello".to_string(),
             repository: Some("flake:nixpkgs".to_string()),
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
         assert_eq!(
             nixpkgs_installable(&pkg),
@@ -462,19 +471,19 @@ mod tests {
         let other_flake = PackageData {
             name: "tool".to_string(),
             repository: Some("github:user/repo".to_string()),
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
         assert_eq!(nixpkgs_installable(&other_flake), None);
 
         let no_repo = PackageData {
             name: "hello".to_string(),
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
         assert_eq!(nixpkgs_installable(&no_repo), None);
 
         let no_name = PackageData {
             repository: Some("flake:nixpkgs".to_string()),
-            ..Default::default()
+            ..PackageData::scoped(instance)
         };
         assert_eq!(nixpkgs_installable(&no_name), None);
     }

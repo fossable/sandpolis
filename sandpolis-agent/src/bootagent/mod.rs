@@ -10,8 +10,7 @@ pub mod streams;
 /// Per-agent boot behavior, written on the server. A boot agent that finds a
 /// hold set stays connected instead of chainloading, so the server can run
 /// snapshot operations against the cold partitions.
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct BootAgentData {
     /// Prevents the boot agent from chainloading until cleared
     pub hold: bool,

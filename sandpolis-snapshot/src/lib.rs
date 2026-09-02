@@ -91,8 +91,7 @@ where
 
 /// One stored snapshot of one partition. Written by the server that holds the
 /// qcow2 layer, scoped to the agent the partition belongs to.
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct SnapshotData {
     /// UUID of the partition this snapshot captured
     #[secondary_key]
@@ -151,8 +150,7 @@ impl SnapshotOperationState {
 /// A snapshot operation in progress (or recently finished), written by the
 /// server driving it. The client GUI renders these as progress bars and link
 /// activity.
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct SnapshotOperationData {
     /// UUID of the partition being captured or restored
     #[secondary_key]

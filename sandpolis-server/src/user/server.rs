@@ -553,10 +553,8 @@ pub async fn connect(
     }
 
     let mut response = ws.on_upgrade(move |socket| async move {
-        let mut cd = ConnectionData::default();
-        if let Some(id) = remote_instance {
-            cd.remote_instance = id;
-        }
+        let mut cd = ConnectionData::scoped(local_instance);
+        cd.remote_instance = remote_instance;
         cd.established = chrono::Utc::now();
         let instance = cd.remote_instance;
 
@@ -565,7 +563,7 @@ pub async fn connect(
 
         info!(
             kind = peer_kind,
-            %instance,
+            instance = ?instance,
             realm = %realm,
             peer = %peer,
             "Instance connected"

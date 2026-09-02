@@ -37,7 +37,7 @@ testConfiguredTunnelIsListed() {
 	# CA means "generate one for me", which the server writes back alongside the
 	# tunnel section. Written with printf (RON ignores whitespace) to avoid a
 	# heredoc, which the test harness mangles.
-	printf '%s' '(tunnel:(tunnels:[(name:"web",listener:"00000000-0000-0000-0000-000000000001",listen:"127.0.0.1:15555",terminator:"00000000-0000-0000-0000-000000000002",target:"10.0.0.5:80",protocol:Tcp,mode:Indirect)]))' >./default.realm.ron
+	printf '%s' '(tunnel:(tunnels:[(name:"web",listener:"agent-aaaaaaaaaaab",listen:"127.0.0.1:15555",terminator:"agent-aaaaaaaaaaac",target:"10.0.0.5:80",protocol:Tcp,mode:Indirect)]))' >./default.realm.ron
 
 	startServer
 

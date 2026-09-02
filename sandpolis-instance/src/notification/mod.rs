@@ -77,8 +77,7 @@ impl Severity {
 /// row's write scope. What the notification is *about* is [`subject`], which is
 /// usually the same instance but differs when, say, a server reports on one of
 /// its agents.
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct NotificationData {
     /// The layer that raised it, so a client can attribute and filter.
     #[secondary_key]
@@ -268,15 +267,15 @@ pub fn notify(notification: Notification) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::InstanceType;
+    use crate::id::AgentId;
+    
     use crate::database::DataCreation;
     use crate::realm::RealmName;
     use crate::test_db;
 
-    /// `InstanceId::default()` names no instance at all, so tests that need a
-    /// real one name its type explicitly.
+    /// A throwaway instance for tests that just need one to exist.
     fn some_instance() -> InstanceId {
-        InstanceId::new(InstanceType::Agent)
+        InstanceId::from(AgentId::random())
     }
 
     /// A notifier over a throwaway in-memory database, built directly rather

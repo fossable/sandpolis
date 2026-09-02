@@ -6,8 +6,7 @@ use sandpolis_macros::data;
 #[cfg(all(feature = "agent", not(feature = "uki")))]
 pub mod agent;
 
-#[data(temporal)]
-#[derive(Default)]
+#[data(temporal, defaults)]
 pub struct MountpointData {
     #[secondary_key]
     pub _instance_id: InstanceId,

@@ -85,7 +85,7 @@ mod server {
                         .read()
                         .ok()
                         .and_then(|devices| {
-                            devices.iter().find(|d| d.id == device_id).cloned()
+                            devices.iter().find(|d| d.id.body() == device_id).cloned()
                         })
                     else {
                         report(&sender, format!("device {device_id} is not registered")).await;

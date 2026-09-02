@@ -122,7 +122,7 @@ mod server {
         REGISTERED_DEVICES
             .read()
             .ok()
-            .and_then(|devices| devices.iter().find(|d| d.id == device_id).cloned())
+            .and_then(|devices| devices.iter().find(|d| d.id.body() == device_id).cloned())
             .ok_or_else(|| anyhow::anyhow!("device {device_id} is not registered"))
     }
 

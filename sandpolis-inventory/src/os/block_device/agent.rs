@@ -20,7 +20,7 @@ impl BlockDeviceCollector {
         })
     }
 
-    fn scan() -> Vec<BlockDeviceData> {
+    fn scan(instance: InstanceId) -> Vec<BlockDeviceData> {
         let mut devices = Vec::new();
         let Ok(disks) = std::fs::read_dir("/sys/block") else {
             return devices;
@@ -45,7 +45,7 @@ impl BlockDeviceCollector {
                 block_size,
                 r#type: "disk".to_string(),
                 name,
-                ..Default::default()
+                ..BlockDeviceData::scoped(instance)
             });
         }
         devices
@@ -54,7 +54,7 @@ impl BlockDeviceCollector {
 
 impl Collector for BlockDeviceCollector {
     async fn refresh(&mut self) -> Result<()> {
-        let devices = Self::scan();
+        let devices = Self::scan(self.instance_id);
         trace!(devices = devices.len(), "Polled block devices");
 
         let mut live: Vec<String> = Vec::new();
@@ -106,7 +106,7 @@ mod tests {
     async fn test_block_device_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(BlockDeviceData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector =
             BlockDeviceCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;

@@ -209,6 +209,50 @@ pub enum AgentsCommand {
         #[clap(flatten)]
         client: ClientArgs,
     },
+    /// Install an agent on a host over SSH, or reconfigure one already there
+    Deploy {
+        /// Target host: `[user@]host` or a `~/.ssh/config` alias
+        host: String,
+
+        /// SSH username (default: the user@ prefix, then ~/.ssh/config, then
+        /// $USER)
+        #[clap(long)]
+        user: Option<String>,
+
+        /// SSH port (default: ~/.ssh/config, then 22)
+        #[clap(long)]
+        port: Option<u16>,
+
+        /// Private key file (default: ~/.ssh/config, then ~/.ssh/id_*).
+        /// Without one, a password is prompted for on the terminal.
+        #[clap(long, value_name = "PATH")]
+        key: Option<PathBuf>,
+
+        /// Expected SHA256 host key fingerprint; without one the host key is
+        /// trusted on first use
+        #[clap(long)]
+        fingerprint: Option<String>,
+
+        /// Cron expression putting the deployed agent in polling mode
+        #[clap(long, value_name = "CRON")]
+        poll: Option<String>,
+
+        /// Check-in window length for --poll, in seconds
+        #[clap(long, value_name = "SECONDS",
+               default_value_t = sandpolis_agent::PollConfig::default_timeout_secs())]
+        poll_timeout: u64,
+
+        /// Report what the deployment would do without changing the target
+        #[clap(long)]
+        dryrun: bool,
+
+        /// Emit a machine-readable JSON result instead of progress lines
+        #[clap(long)]
+        json: bool,
+
+        #[clap(flatten)]
+        client: ClientArgs,
+    },
 }
 
 /// Subcommands for `sandpolis servers`, which manages configured servers.
@@ -438,6 +482,7 @@ impl Commands {
             Commands::Agents { action } => match action {
                 AgentsCommand::List { client, .. } => Some(client),
                 AgentsCommand::Restart { client, .. } => Some(client),
+                AgentsCommand::Deploy { client, .. } => Some(client),
             },
             Commands::Servers { action } => match action {
                 ServersCommand::List { client, .. } => Some(client),
@@ -769,6 +814,50 @@ mod test_client_commands {
     fn agents_requires_a_subcommand() {
         assert!(CommandLine::try_parse_from(["sandpolis", "agents"]).is_err());
     }
+
+    /// `agents deploy` takes the target as `[user@]host` plus flags.
+    #[test]
+    fn agents_deploy_parses() {
+        let command = CommandLine::try_parse_from([
+            "sandpolis",
+            "agents",
+            "deploy",
+            "root@example.com",
+            "--port",
+            "2222",
+            "--dryrun",
+            "--json",
+        ])
+        .expect("`agents deploy` parses")
+        .command;
+
+        let Commands::Agents {
+            action:
+                AgentsCommand::Deploy {
+                    host,
+                    user,
+                    port,
+                    dryrun,
+                    json,
+                    ..
+                },
+        } = command
+        else {
+            panic!("expected the agents deploy subcommand, got {command:?}");
+        };
+        // The user@ prefix is split off at dispatch, not by clap.
+        assert_eq!(host, "root@example.com");
+        assert_eq!(user, None);
+        assert_eq!(port, Some(2222));
+        assert!(dryrun);
+        assert!(json);
+    }
+
+    /// A deployment with no target host is meaningless.
+    #[test]
+    fn agents_deploy_requires_a_host() {
+        assert!(CommandLine::try_parse_from(["sandpolis", "agents", "deploy"]).is_err());
+    }
 }
 
 #[cfg(all(test, feature = "client"))]
@@ -843,7 +932,230 @@ mod client {
                 );
                 Ok(ExitCode::FAILURE)
             }
+            AgentsCommand::Deploy {
+                host,
+                user,
+                port,
+                key,
+                fingerprint,
+                poll,
+                poll_timeout,
+                dryrun,
+                json,
+                ..
+            } => {
+                deploy(
+                    host,
+                    user,
+                    port,
+                    key,
+                    fingerprint,
+                    poll,
+                    poll_timeout,
+                    dryrun,
+                    json,
+                )
+                .await
+            }
         }
+    }
+
+    /// How long a deployment may run end to end (a fresh install moves a
+    /// binary).
+    const DEPLOY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1800);
+
+    /// Drive a deployment (or a dry run) through the server, printing its
+    /// progress as it goes.
+    #[allow(clippy::too_many_arguments)]
+    async fn deploy(
+        host: String,
+        user: Option<String>,
+        port: Option<u16>,
+        key: Option<PathBuf>,
+        fingerprint: Option<String>,
+        poll: Option<String>,
+        poll_timeout: u64,
+        dryrun: bool,
+        json: bool,
+    ) -> Result<ExitCode> {
+        use sandpolis_agent::client::deploy_form::{self, DeployDefaults, DeployForm};
+        use sandpolis_agent::deploy::client::DeployStreamRequester;
+        use sandpolis_agent::deploy::{DeployStreamRequest, DeployStreamResponse, DeployTarget};
+        use std::io::IsTerminal;
+        use std::time::Duration;
+
+        // A user@ prefix wins over --user, the way OpenSSH treats it.
+        let (username, host) = match host.split_once('@') {
+            Some((user, host)) => (user.to_string(), host.to_string()),
+            None => (user.unwrap_or_default(), host),
+        };
+
+        let resolved = deploy_form::resolve_with_ssh_config(
+            &DeployForm {
+                host,
+                username,
+                port,
+                key_path: key
+                    .map(|key| key.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+                have_password: false,
+                fingerprint,
+            },
+            &DeployDefaults::detect(),
+        )?;
+
+        // The password is the account password when no key resolved, or the
+        // key's passphrase when the key at rest says it needs one. Prompted
+        // rather than taken as a flag so it stays out of shell history.
+        let password = if resolved.key_path.is_none() {
+            if !std::io::stdin().is_terminal() {
+                bail!(
+                    "no private key resolved for {}@{} and a password prompt needs \
+                     a terminal; pass --key or configure one in ~/.ssh/config",
+                    resolved.username,
+                    resolved.host
+                );
+            }
+            rpassword::prompt_password(format!(
+                "{}@{}'s password: ",
+                resolved.username, resolved.host
+            ))?
+        } else if let Some(key_path) = resolved
+            .key_path
+            .as_deref()
+            .filter(|path| {
+                std::fs::read_to_string(path)
+                    .is_ok_and(|pem| deploy_form::key_looks_encrypted(&pem))
+            })
+        {
+            if !std::io::stdin().is_terminal() {
+                bail!("the key at {key_path} is encrypted and a passphrase prompt needs a terminal");
+            }
+            rpassword::prompt_password(format!("Enter passphrase for {key_path}: "))?
+        } else {
+            String::new()
+        };
+        let auth = deploy_form::read_auth(resolved.key_path.as_deref(), &password)?;
+
+        let connection = sandpolis_client::sync::wait_for_connection(Duration::from_secs(30))
+            .await
+            .context("no server connection")?;
+        let server = sandpolis_client::sync::primary_server_url()
+            .context("the server connection has no URL yet")?;
+
+        let target_host = resolved.host.clone();
+        let (requester, mut events) = DeployStreamRequester::channel();
+        let request = DeployStreamRequest::Start {
+            target: DeployTarget {
+                host: resolved.host,
+                port: resolved.port,
+                username: resolved.username,
+                auth,
+                fingerprint: resolved.fingerprint,
+            },
+            server,
+            poll: poll.map(|schedule| sandpolis_agent::PollConfig {
+                schedule,
+                timeout_secs: poll_timeout,
+            }),
+            dry_run: dryrun,
+        };
+
+        // The sender stays alive for the drain: dropping it closes the stream,
+        // which is also how a timeout calls the deployment off server-side.
+        let (id, _tx) = connection.open_stream(requester, request).await?;
+        let deadline = tokio::time::Instant::now() + DEPLOY_TIMEOUT;
+
+        let code = loop {
+            match tokio::time::timeout_at(deadline, events.recv()).await {
+                Ok(Some(DeployStreamResponse::Step { step, message })) => {
+                    if !json {
+                        println!("[{}] {message}", step.label());
+                    }
+                }
+                Ok(Some(DeployStreamResponse::Done { .. })) => {}
+                Ok(Some(DeployStreamResponse::Finished { reconfigured })) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::json!({"status": "deployed", "reconfigured": reconfigured})
+                        );
+                    } else if reconfigured {
+                        println!("{target_host} already had an agent; its realm cert was rewritten.");
+                    } else {
+                        println!("The agent is installed and running on {target_host}.");
+                    }
+                    break ExitCode::SUCCESS;
+                }
+                Ok(Some(DeployStreamResponse::Planned {
+                    os,
+                    arch,
+                    installed,
+                    actions,
+                    blocker,
+                })) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "planned",
+                                "os": os,
+                                "arch": arch,
+                                "installed": installed,
+                                "actions": actions,
+                                "blocker": blocker,
+                            })
+                        );
+                    } else {
+                        println!(
+                            "Dry run against {target_host} ({os}/{arch}, agent {}):",
+                            if installed {
+                                "already installed"
+                            } else {
+                                "not installed"
+                            }
+                        );
+                        for action in actions {
+                            println!("  would {action}");
+                        }
+                        if let Some(blocker) = &blocker {
+                            println!("  blocked: {blocker}");
+                        }
+                    }
+                    break if blocker.is_none() {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::FAILURE
+                    };
+                }
+                Ok(Some(DeployStreamResponse::Failed { step, message })) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "failed",
+                                "step": step.label(),
+                                "error": message,
+                            })
+                        );
+                    } else {
+                        eprintln!("{}: {message}", step.label());
+                    }
+                    break ExitCode::FAILURE;
+                }
+                Ok(None) => {
+                    eprintln!("The connection to the server was lost.");
+                    break ExitCode::FAILURE;
+                }
+                Err(_) => {
+                    eprintln!("The deployment timed out; calling it off.");
+                    break ExitCode::FAILURE;
+                }
+            }
+        };
+
+        connection.close_stream(id);
+        Ok(code)
     }
 
     pub(super) async fn servers(

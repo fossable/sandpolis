@@ -11,12 +11,12 @@ use anyhow::Result;
 use chrono::{TimeDelta, Utc};
 use native_db::Models;
 use sandpolis_client::notification::NotificationWatermarkData;
+use sandpolis_instance::AgentId;
 use sandpolis_instance::database::{
     DataCreation, DatabaseManager, WriteAuthority, config::DatabaseConfig,
 };
 use sandpolis_instance::notification::{Notification, NotificationData, install, notify};
 use sandpolis_instance::realm::RealmName;
-use sandpolis_instance::{InstanceId, InstanceType};
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -38,7 +38,7 @@ async fn surfaces_new_notifications_but_not_replayed_history() -> Result<()> {
         WriteAuthority::Full,
     )?;
     let realm = database.realm(RealmName::default())?;
-    let instance_id = InstanceId::new(InstanceType::Agent);
+    let instance_id = AgentId::random().into();
 
     install(&realm, instance_id);
 

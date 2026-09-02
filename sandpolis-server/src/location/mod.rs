@@ -5,9 +5,14 @@ use sandpolis_macros::data;
 #[cfg(feature = "server")]
 pub mod server;
 
-#[data(instance, temporal)]
+#[data(temporal)]
 #[derive(Default)]
 pub struct LocationData {
+    /// The instance this location describes, once it has been associated with
+    /// one. A freshly queried location is not yet owned by any instance.
+    #[secondary_key(optional)]
+    pub _instance_id: Option<sandpolis_instance::InstanceId>,
+
     /// The AS name
     pub as_name: Option<String>,
     /// The numerical AS code

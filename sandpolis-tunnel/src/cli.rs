@@ -53,7 +53,7 @@ async fn list(target: TargetArgs) -> Result<ExitCode> {
         .filter(|t| {
             target
                 .instance
-                .is_none_or(|id| t.listener_id == id || t.terminator_id == id)
+                .is_none_or(|id| t.listener_id == Some(id) || t.terminator_id == Some(id))
         })
         .collect();
 

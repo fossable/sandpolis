@@ -32,16 +32,13 @@ pub enum ReachabilityRequest {
     /// The complete set of instances directly connected to the sender, replacing
     /// any previous advertisement. Sent on connect and again whenever the set
     /// changes.
-    ///
-    /// Serialized as strings because the wire codec (cbor) cannot represent the
-    /// 128-bit `InstanceId`.
-    Advertise { instances: Vec<String> },
+    Advertise { instances: Vec<InstanceId> },
 }
 
 impl ReachabilityRequest {
     pub fn advertise(instances: &[InstanceId]) -> Self {
         Self::Advertise {
-            instances: instances.iter().map(|id| id.to_string()).collect(),
+            instances: instances.to_vec(),
         }
     }
 }
@@ -96,21 +93,10 @@ impl StreamResponder for ReachabilityResponder {
             return Ok(());
         };
 
-        let parsed: Vec<InstanceId> = instances
-            .iter()
-            .filter_map(|s| match s.parse::<InstanceId>() {
-                Ok(id) => Some(id),
-                Err(e) => {
-                    tracing::warn!(instance = %s, error = %e, "Ignoring unparseable advertised instance");
-                    None
-                }
-            })
-            .collect();
-
-        self.relay.advertise(&via, &parsed);
+        self.relay.advertise(&via, &instances);
         sender
             .send(ReachabilityAck {
-                accepted: parsed.len(),
+                accepted: instances.len(),
             })
             .await?;
         Ok(())
@@ -160,7 +146,10 @@ pub fn accept_advertisements(connection: &Arc<InstanceConnection>, relay: Arc<Re
     // Routes through a dead peer are worse than no route: `next_hop` would pick
     // it and the message would be dropped rather than falling through to the
     // default route.
-    let peer = connection.data.read().remote_instance;
+    // An unidentified peer never advertised, so there is nothing to withdraw.
+    let Some(peer) = connection.data.read().remote_instance else {
+        return;
+    };
     let cancel = connection.cancel.clone();
     tokio::spawn(async move {
         cancel.cancelled().await;

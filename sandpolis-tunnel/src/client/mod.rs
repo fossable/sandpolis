@@ -29,7 +29,7 @@ pub fn all_tunnels() -> Result<Vec<TunnelData>> {
 pub fn query_tunnels(instance: InstanceId) -> Result<Vec<TunnelData>> {
     Ok(all_tunnels()?
         .into_iter()
-        .filter(|t| t.listener_id == instance || t.terminator_id == instance)
+        .filter(|t| t.listener_id == Some(instance) || t.terminator_id == Some(instance))
         .collect())
 }
 

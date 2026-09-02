@@ -5,8 +5,7 @@ use sandpolis_macros::data;
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct BlockDeviceData {
     /// Block device name
     #[secondary_key]

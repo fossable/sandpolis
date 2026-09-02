@@ -124,32 +124,21 @@ impl AccountManager {
     }
 }
 
-/// Stable identity of an account.
-///
-/// Distinct from the record's `_id`, which changes with every revision. Links
-/// reference accounts by this id so they survive account updates.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct AccountId(u64);
+sandpolis_instance::typed_id!(
+    /// Stable identity of an account.
+    ///
+    /// Distinct from the record's `_id`, which changes with every revision. Links
+    /// reference accounts by this id so they survive account updates.
+    AccountId,
+    "account",
+    5
+);
 
+/// A fresh random id, so `AccountData::default()` never aliases an existing
+/// account.
 impl Default for AccountId {
     fn default() -> Self {
-        Self(rand::random())
-    }
-}
-
-impl std::fmt::Display for AccountId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:016x}", self.0)
-    }
-}
-
-impl ToKey for AccountId {
-    fn to_key(&self) -> Key {
-        Key::new(self.0.to_be_bytes().to_vec())
-    }
-
-    fn key_names() -> Vec<String> {
-        vec!["AccountId".to_string()]
+        Self::random()
     }
 }
 

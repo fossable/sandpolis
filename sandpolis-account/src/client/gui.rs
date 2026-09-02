@@ -403,7 +403,7 @@ fn update_account_nodes(
                     identity: account.identity().to_string(),
                 },
                 terrain_member: terrain_member(&account.domain),
-                sub_node: SubNode(account.account_id.0),
+                sub_node: SubNode(account.account_id.body()),
                 identity: NodeIdentity(account.identity().to_string()),
                 hitbox: NodeHitbox::from_diameter(ACCOUNT_NODE_DIAMETER),
                 collider: Collider::ball(ACCOUNT_NODE_DIAMETER / 2.0),

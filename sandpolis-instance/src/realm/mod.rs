@@ -1,3 +1,4 @@
+use crate::InstanceId;
 use crate::ClusterId;
 use crate::InstanceManager;
 use crate::InstanceType;
@@ -338,9 +339,10 @@ impl RealmManager {
 
                 // Get or create this instance's server cert
                 if !certs.iter().any(|c| {
-                    c.cert_type == RealmCertType::Server && c._instance_id == instance.instance_id
+                    c.cert_type == RealmCertType::Server
+                        && c._instance_id == Some(instance.instance_id)
                 }) {
-                    rw.insert(ca.server_cert(instance.instance_id)?)?;
+                    rw.insert(ca.server_cert(instance.instance_id.try_into()?)?)?;
                 }
 
                 rw.commit()?;
@@ -510,7 +512,7 @@ impl RealmManager {
             .any(|c| c.cert_type == RealmCertType::Cluster);
         let has_cert = certs
             .iter()
-            .any(|c| c.cert_type == RealmCertType::Server && c._instance_id == instance_id);
+            .any(|c| c.cert_type == RealmCertType::Server && c._instance_id == Some(instance_id));
 
         has_ca && has_cert
     }
@@ -539,7 +541,7 @@ impl RealmManager {
         for old in existing {
             match old.cert_type {
                 RealmCertType::Cluster => rw.remove(old)?,
-                RealmCertType::Server if old._instance_id == instance_id => rw.remove(old)?,
+                RealmCertType::Server if old._instance_id == Some(instance_id) => rw.remove(old)?,
                 _ => continue,
             };
         }
@@ -557,7 +559,7 @@ impl RealmManager {
             ca,
             cert,
             key: Some(key),
-            _instance_id: instance_id,
+            _instance_id: Some(instance_id),
             ..Default::default()
         })?;
 
@@ -683,9 +685,15 @@ impl ToKey for RealmCertType {
 /// Clients and agents hold the same kind of certificate. The server doesn't
 /// distinguish them — what a client is allowed to do comes from the user it
 /// logs in as, not from the certificate that got it onto the network.
-#[data(instance)]
+#[data]
 #[derive(Default)]
 pub struct RealmCert {
+    /// The instance whose credential this is. `None` for certificates that
+    /// belong to no single instance: the realm CA, and endpoint certificates
+    /// loaded from a file before this process has an identity.
+    #[secondary_key(optional)]
+    pub _instance_id: Option<InstanceId>,
+
     pub cert_type: RealmCertType,
 
     /// The realm this certificate belongs to.
@@ -872,8 +880,9 @@ pub(crate) fn common_name_url(der: &[u8]) -> Result<ServerUrl> {
 #[cfg(all(test, feature = "server"))]
 mod test_enrollment {
     use super::*;
+    use crate::id::{AgentId, ServerId};
     use crate::database::{ScopeTable, WriteAuthority};
-    use crate::{InstanceId, InstanceType};
+    use crate::InstanceId;
 
     fn models() -> &'static native_db::Models {
         static MODELS: std::sync::OnceLock<native_db::Models> = std::sync::OnceLock::new();
@@ -907,7 +916,7 @@ mod test_enrollment {
     #[tokio::test]
     async fn replica_starts_without_certificates() -> Result<()> {
         let realms = manager(replica()?);
-        let id = InstanceId::new(InstanceType::Server);
+        let id = InstanceId::from(ServerId::random());
         assert!(!realms.has_server_cert(RealmName::default(), id));
         Ok(())
     }
@@ -919,8 +928,9 @@ mod test_enrollment {
     async fn enrollment_installs_ca_without_its_key() -> Result<()> {
         let cluster_id = crate::ClusterId::default();
         let ca = RealmCert::new_cluster(cluster_id, RealmName::default())?;
-        let id = InstanceId::new(InstanceType::Server);
-        let issued = ca.server_cert(id)?;
+        let server_id = ServerId::random();
+        let id = InstanceId::from(server_id);
+        let issued = ca.server_cert(server_id)?;
 
         let realms = manager(replica()?);
         realms.install_enrollment(
@@ -961,12 +971,13 @@ mod test_enrollment {
     /// them, so `resident()` (which expects a singleton CA) keeps working.
     #[tokio::test]
     async fn re_enrolling_replaces_credentials() -> Result<()> {
-        let id = InstanceId::new(InstanceType::Server);
+        let server_id = ServerId::random();
+        let id = InstanceId::from(server_id);
         let realms = manager(replica()?);
 
         for _ in 0..2 {
             let ca = RealmCert::new_cluster(crate::ClusterId::default(), RealmName::default())?;
-            let issued = ca.server_cert(id)?;
+            let issued = ca.server_cert(server_id)?;
             realms.install_enrollment(
                 RealmName::default(),
                 ca.cert.clone(),
@@ -1021,14 +1032,11 @@ mod test_enrollment {
         Ok(())
     }
 
-    /// A server certificate is only ever issued to a server.
+    /// A server certificate is only ever issued to a server: a non-server id
+    /// can't even be converted into the argument `server_cert` takes.
     #[tokio::test]
     async fn server_cert_requires_a_server_id() -> Result<()> {
-        let ca = RealmCert::new_cluster(crate::ClusterId::default(), RealmName::default())?;
-        assert!(
-            ca.server_cert(InstanceId::new(InstanceType::Agent))
-                .is_err()
-        );
+        assert!(ServerId::try_from(InstanceId::from(AgentId::random())).is_err());
         Ok(())
     }
 }
@@ -1036,8 +1044,9 @@ mod test_enrollment {
 #[cfg(all(test, feature = "server"))]
 mod test_realm_cert {
     use super::*;
+    use crate::id::ServerId;
     use crate::realm::config::{CERTIFICATE_TAG, to_pem};
-    use crate::{InstanceId, InstanceType};
+    
 
     fn url() -> ServerUrl {
         "gs.example.com:9000/myrealm".parse().unwrap()
@@ -1101,7 +1110,7 @@ mod test_realm_cert {
     #[test]
     fn only_endpoint_certs_load() -> Result<()> {
         let ca = RealmCert::new_cluster(crate::ClusterId::default(), "myrealm".parse()?)?;
-        let server_cert = ca.server_cert(InstanceId::new(InstanceType::Server))?;
+        let server_cert = ca.server_cert(ServerId::random())?;
 
         let temp_file = tempfile::NamedTempFile::new()?;
         std::fs::write(temp_file.path(), to_pem(&server_cert))?;

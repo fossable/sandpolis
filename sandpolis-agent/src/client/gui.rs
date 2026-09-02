@@ -10,9 +10,9 @@
 //! a deployment is running. The switch is a despawn/respawn, which is why
 //! [`manage_deploy_dialog`] tracks what it last built.
 
-use crate::client::ssh_config;
+use crate::client::deploy_form::{self, DeployDefaults, DeployForm};
 use crate::deploy::client::DeployStreamRequester;
-use crate::deploy::{DeployAuth, DeployStep, DeployStreamRequest, DeployStreamResponse, DeployTarget};
+use crate::deploy::{DeployStep, DeployStreamRequest, DeployStreamResponse, DeployTarget};
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::input_focus::{FocusCause, InputFocus};
 use bevy::prelude::*;
@@ -104,15 +104,6 @@ impl StepState {
     }
 }
 
-/// What each field falls back to when the operator leaves it blank. Read from
-/// the operator's environment when the dialog opens, so the labels can say what
-/// will actually be used.
-#[derive(Clone, Debug, Default)]
-struct DeployDefaults {
-    username: String,
-    identity_file: Option<String>,
-}
-
 /// State of the deploy dialog.
 #[derive(Resource, Default)]
 pub struct DeployDialogState {
@@ -164,10 +155,7 @@ impl DeployDialogState {
         self.password.clear();
         self.message = None;
         self.steps = Default::default();
-        self.defaults = DeployDefaults {
-            username: ssh_config::default_username(),
-            identity_file: ssh_config::default_identity_file(),
-        };
+        self.defaults = DeployDefaults::detect();
     }
 
     fn close(&mut self) {
@@ -499,53 +487,28 @@ fn start_deploy(
 ) -> anyhow::Result<(UnboundedReceiver<DeployStreamResponse>, DeployStream)> {
     use anyhow::{Context, bail};
 
-    let alias = state.host.trim();
-    if alias.is_empty() {
-        bail!("A host is required");
-    }
-
-    // Explicit field, then what ssh would use for this host, then the default.
-    let configured = ssh_config::lookup(alias);
-    let host = configured.hostname.clone().unwrap_or_else(|| alias.into());
-    let username = first_non_empty([
-        state.username.trim().to_string(),
-        configured.user.clone().unwrap_or_default(),
-        state.defaults.username.clone(),
-    ]);
-    let port = match state.port.trim() {
-        "" => configured.port.unwrap_or(22),
-        given => given
-            .parse()
-            .with_context(|| format!("{given:?} is not a port number"))?,
-    };
-
     let password = state.password.trim().to_string();
-    let key_path = first_non_empty([
-        ssh_config::expand_tilde(state.key_path.trim()),
-        configured.identity_file.clone().unwrap_or_default(),
-        // A password the operator typed wins over a default key they never
-        // mentioned; without one, fall back to their usual key.
-        if password.is_empty() {
-            state.defaults.identity_file.clone().unwrap_or_default()
-        } else {
-            String::new()
-        },
-    ]);
-
-    let auth = if !key_path.is_empty() {
-        // Read here rather than on the server: the key is on this machine, and
-        // the server is the one that has to authenticate with it.
-        let pem = std::fs::read_to_string(&key_path)
-            .with_context(|| format!("reading the private key at {key_path}"))?;
-        DeployAuth::PrivateKey {
-            pem,
-            passphrase: (!password.is_empty()).then(|| password.clone()),
-        }
-    } else if !password.is_empty() {
-        DeployAuth::Password(password)
-    } else {
-        bail!("No private key or password to authenticate with");
+    let port = match state.port.trim() {
+        "" => None,
+        given => Some(
+            given
+                .parse()
+                .with_context(|| format!("{given:?} is not a port number"))?,
+        ),
     };
+
+    let resolved = deploy_form::resolve_with_ssh_config(
+        &DeployForm {
+            host: state.host.clone(),
+            username: state.username.clone(),
+            port,
+            key_path: state.key_path.clone(),
+            have_password: !password.is_empty(),
+            fingerprint: None,
+        },
+        &state.defaults,
+    )?;
+    let auth = deploy_form::read_auth(resolved.key_path.as_deref(), &password)?;
 
     let connection =
         sandpolis_client::sync::connection().context("Not connected to a server yet")?;
@@ -555,16 +518,17 @@ fn start_deploy(
     let (requester, events) = DeployStreamRequester::channel();
     let request = DeployStreamRequest::Start {
         target: DeployTarget {
-            host,
-            port,
-            username,
+            host: resolved.host,
+            port: resolved.port,
+            username: resolved.username,
             auth,
-            fingerprint: None,
+            fingerprint: resolved.fingerprint,
         },
         server,
         // Deployed agents stay connected; polling is a per-agent choice made
         // by whoever wrote the unit file.
         poll: None,
+        dry_run: false,
     };
 
     // Registered here rather than inside the task so the caller learns the
@@ -589,14 +553,6 @@ fn start_deploy(
     }
 
     Ok((events, stream))
-}
-
-/// The first entry that isn't blank.
-fn first_non_empty<const N: usize>(candidates: [String; N]) -> String {
-    candidates
-        .into_iter()
-        .find(|candidate| !candidate.is_empty())
-        .unwrap_or_default()
 }
 
 /// Drain progress from the server into the dialog's state.
@@ -640,6 +596,14 @@ fn poll_deploy_events(mut state: ResMut<DeployDialogState>) {
                         .body(format!("{}: {message}", step.label())),
                 );
                 state.message = Some(message);
+                finished = true;
+            }
+            // The dialog never asks for a dry run, but a verdict is a verdict.
+            DeployStreamResponse::Planned { blocker, .. } => {
+                state.message = Some(match blocker {
+                    Some(blocker) => format!("Dry run: {blocker}"),
+                    None => "Dry run finished; nothing was changed.".to_string(),
+                });
                 finished = true;
             }
         }

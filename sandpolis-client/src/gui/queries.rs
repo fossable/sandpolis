@@ -45,8 +45,10 @@ pub fn query_all_instances(
 
     for connection in network_manager.connections.iter() {
         let conn = connection.read();
-        if !instance_ids.contains(&conn.remote_instance) {
-            instance_ids.push(conn.remote_instance);
+        if let Some(remote) = conn.remote_instance
+            && !instance_ids.contains(&remote)
+        {
+            instance_ids.push(remote);
         }
     }
 
@@ -78,11 +80,14 @@ pub fn query_network_topology(network_manager: &NetworkManager) -> Result<Vec<Ne
     // Get all connections and build edges
     for connection in network_manager.connections.iter() {
         let conn = connection.read();
-        // Create edge from local instance to remote instance
-        edges.push(NetworkEdge {
-            from: conn._instance_id,
-            to: conn.remote_instance,
-        });
+        // Create edge from local instance to remote instance; an unidentified
+        // peer has no node to draw an edge to.
+        if let Some(remote) = conn.remote_instance {
+            edges.push(NetworkEdge {
+                from: conn._instance_id,
+                to: remote,
+            });
+        }
     }
 
     Ok(edges)

@@ -36,8 +36,7 @@ pub mod input;
 mod platform;
 
 /// A capturable desktop (display) discovered on an agent.
-#[data]
-#[derive(Default)]
+#[data(defaults)]
 pub struct DesktopData {
     #[secondary_key]
     pub _instance_id: InstanceId,

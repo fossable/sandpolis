@@ -68,8 +68,7 @@ impl CveSeverity {
 /// subscription as the rest of the agent's inventory. The `(instance, cve_id,
 /// package)` key is what makes alerts fire at most once: a scan only counts a
 /// finding as new when no row with its key exists.
-#[data]
-#[derive(Default)]
+#[data(defaults)]
 pub struct VulnerabilityData {
     #[secondary_key]
     pub _instance_id: InstanceId,

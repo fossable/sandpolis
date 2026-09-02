@@ -11,6 +11,10 @@
 //! stops after [`DeployStep::Upload`]: rewriting its realm cert is the whole
 //! job. Polling belongs to the unit file rather than the certificate, so
 //! redeploying to an installed host leaves its schedule as it was.
+//!
+//! A dry run walks the read-only prefix of the same sequence — connect, probe,
+//! certificate validation — and then reports what a real deployment would do
+//! ([`DeployStreamResponse::Planned`]) without changing the target.
 
 use serde::{Deserialize, Serialize};
 
@@ -87,6 +91,9 @@ pub enum DeployStreamRequest {
         /// continuously connected. Baked into the unit file, so it only applies
         /// to a fresh installation.
         poll: Option<crate::PollConfig>,
+        /// Probe and report what a deployment would do, without changing the
+        /// target: no upload, no unit file, no service start.
+        dry_run: bool,
     },
 }
 
@@ -145,4 +152,19 @@ pub enum DeployStreamResponse {
     Finished { reconfigured: bool },
     /// The deployment failed during `step` and has stopped.
     Failed { step: DeployStep, message: String },
+    /// Terminal response of a dry run: nothing was changed on the target.
+    Planned {
+        /// The target's OS as the probe identified it.
+        os: String,
+        /// Machine architecture as `uname -m` reports it.
+        arch: String,
+        /// An agent is already installed; a real deploy would only rewrite
+        /// its realm cert.
+        installed: bool,
+        /// The mutations a real deployment would perform, in order.
+        actions: Vec<String>,
+        /// Why a real deployment would fail at the [`DeployStep::Service`]
+        /// step, when it would (e.g. no prebuilt agent binary).
+        blocker: Option<String>,
+    },
 }

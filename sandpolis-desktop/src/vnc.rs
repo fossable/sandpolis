@@ -74,7 +74,7 @@ mod server {
                     let Some(device) = sandpolis_probe::REGISTERED_DEVICES
                         .read()
                         .ok()
-                        .and_then(|devices| devices.iter().find(|d| d.id == device_id).cloned())
+                        .and_then(|devices| devices.iter().find(|d| d.id.body() == device_id).cloned())
                     else {
                         warn!("VNC stream requested for unregistered device {device_id}");
                         let _ = sender.send(DesktopStreamResponse::Stopped).await;

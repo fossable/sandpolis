@@ -304,7 +304,7 @@ impl ServerConnection {
             .read()
             .unwrap()
             .as_ref()
-            .map(|connection| connection.data.read().remote_instance)
+            .and_then(|connection| connection.data.read().remote_instance)
     }
 
     /// Establish the websocket connection used for streams and DB sync, retaining
@@ -379,10 +379,8 @@ impl ServerConnection {
 
         let socket = response.into_websocket().await?;
 
-        let mut cd = ConnectionData::default();
-        if let Some(id) = remote_instance {
-            cd.remote_instance = id;
-        }
+        let mut cd = ConnectionData::scoped(instance_id);
+        cd.remote_instance = remote_instance;
         cd.established = chrono::Utc::now();
         // Live connection bookkeeping is local state, allowed on a replica.
         let data = network

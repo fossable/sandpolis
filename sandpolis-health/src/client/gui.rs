@@ -164,7 +164,7 @@ mod probe {
             .and_then(|devices| {
                 devices
                     .iter()
-                    .find(|d| d.id == device_id)
+                    .find(|d| d.id.body() == device_id)
                     .map(|d| d.device.service_protocols())
             })
             .unwrap_or_default()

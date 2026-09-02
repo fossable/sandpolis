@@ -180,7 +180,7 @@ mod probe {
             .read()
             .ok()?
             .iter()
-            .find(|d| d.id == device_id)
+            .find(|d| d.id.body() == device_id)
             .and_then(|d| d.device.filesystem_protocols().first().copied())
     }
 

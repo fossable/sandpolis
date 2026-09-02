@@ -215,11 +215,11 @@ docker build --target demo   -f sandpolis/Dockerfile -t sandpolis/demo   .
 
 The `server`, `agent` and `client` targets each carry one instance. `demo`
 carries all three around a single `--features server,agent,client` binary
-(remember `--all-features` doesn't build): its entrypoint starts
-a server, waits for the realm cert, attaches an agent, and opens the GUI client
-if a wayland socket or `$DISPLAY` was handed in. Without one it drops into a
-shell with `$S7S_REALM` and `$S7S_DATA` already pointed at the running demo, so
-the client subcommands work without flags.
+(remember `--all-features` doesn't build): its entrypoint starts a server, waits
+for the realm cert, attaches an agent, and opens the GUI client if a wayland
+socket or `$DISPLAY` was handed in. Without one it drops into a shell with
+`$S7S_REALM` and `$S7S_DATA` already pointed at the running demo, so the client
+subcommands work without flags.
 
 Both stages are nix. The build runs inside `nix-shell shell.nix`, and the
 runtime image is the closure of a `buildEnv` from the same package lists
@@ -260,8 +260,6 @@ cd android && ./gradlew assembleDebug
   notification. If the client is not running in the foreground, only show
   OS-native notifcations.
   - Notification on errors
-- Move Collector/CollectorService to sandpolis-instance subsystem
-- Extract sandpolis-core subsystem from sandpolis-instance?
 
 ## `sandpolis-tunnel`
 
@@ -287,8 +285,6 @@ cd android && ./gradlew assembleDebug
   framework resolves them through `deploy::binary::AgentBinarySource`, which
   currently has no source installed, so a fresh install stops with "no prebuilt
   agent binary available".
-- Add `sandpolis agent deploy` subcommand which drives the same flow as the GUI
-  - Also support `--dryrun` mode of operation
 
 ## `sandpolis-account`
 
@@ -432,13 +428,13 @@ cd android && ./gradlew assembleDebug
 - The server places a "boot hold" per agent (`BootAgentData.hold`, written on
   the server; nothing toggles it from a client yet). A boot agent announces
   itself on the `BootStream` after connecting; the responder answers
-  Hold/Proceed and sends Release when the flag clears, which reboots the
-  agent. While held, a snapshot operation swaps the homepage for the snapshot
-  layer's block-grid display (`boot_snapshot::active()`).
+  Hold/Proceed and sends Release when the flag clears, which reboots the agent.
+  While held, a snapshot operation swaps the homepage for the snapshot layer's
+  block-grid display (`boot_snapshot::active()`).
 - Building the UKI itself (`mkrootfs`) remains; the UI uses
   `SLINT_BACKEND=linuxkms-noseat` there, winit on a desktop
-- Also configured as fallback in case the primary OS fails to boot which the
-  UKI detects (not implemented)
+- Also configured as fallback in case the primary OS fails to boot which the UKI
+  detects (not implemented)
 - See if we can generate better, more cohesive instance type icons under
   sandpolis-client/assets/network/ (these are what node panels show for
   instances)
@@ -455,3 +451,14 @@ cd android && ./gradlew assembleDebug
     as the device's. Shell, desktop, filesystem and health discriminate on
     `ctx.target.sub` and route probe targets to per-protocol code; inventory
     needs the same before its nodes can appear.
+- Revise how the realm config is updated
+  - If a user modifies it, the server diffs the previous and reloads any
+    subsystem that changed
+  - If a user makes the config invalid, the change is ignored and the previous
+    config is still used with a warning log
+  - If a user makes a config change at the same time as the server, the user
+    change has precedence and the server retries. If there's a collision in the
+    config, the server aborts the change which should lead to an error message
+    in the GUI.
+- When rustls gets a working DTLS implementation, coordinate DTLS "connection"
+  directly between agents and clients

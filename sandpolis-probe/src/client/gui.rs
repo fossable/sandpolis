@@ -19,7 +19,7 @@ use sandpolis_client::gui::ui::theme::{Role, Theme, ThemedBg, ThemedBorder, Them
 use sandpolis_client::gui::ui::widgets::{button, heading, muted, row, text};
 use sandpolis_instance::network::InstanceConnection;
 use sandpolis_instance::network::stream::{StreamId, StreamMessage};
-use sandpolis_instance::{InstanceId, InstanceType, LayerName};
+use sandpolis_instance::{InstanceId, LayerName};
 use sandpolis_server::ServerUrl;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -92,7 +92,7 @@ pub fn spawn_probe_node(
 
     // Position device nodes in an orbit around the parent, using the device id for
     // consistent golden-angle placement.
-    let angle = (device.id as f32 * 0.618_034 * std::f32::consts::TAU) % std::f32::consts::TAU;
+    let angle = (device.id.body() as f32 * 0.618_034 * std::f32::consts::TAU) % std::f32::consts::TAU;
     let orbit_radius = 120.0;
     let x = parent_position.x + orbit_radius * angle.cos();
     let y = parent_position.y + orbit_radius * angle.sin();
@@ -100,12 +100,12 @@ pub fn spawn_probe_node(
     let node_entity = commands
         .spawn(ProbeNodeBundle {
             probe_node: ProbeNode {
-                device_id: device.id,
+                device_id: device.id.body(),
                 icon,
                 gateway,
             },
             node_entity: NodeEntity { instance_id },
-            sub_node: SubNode(device.id),
+            sub_node: SubNode(device.id.body()),
             identity: NodeIdentity(device.display_name()),
             hitbox: NodeHitbox { radius: 25.0 },
             collider: Collider::ball(25.0),
@@ -229,7 +229,7 @@ pub fn update_probe_nodes(
         .collect();
 
     for device in &all_devices {
-        if !existing_ids.contains(&device.id)
+        if !existing_ids.contains(&device.id.body())
             && let Some(&parent_pos) = gateway_positions.get(&device.gateway)
         {
             let visible = device_visible(&registry, &current_layer, &device.device);
@@ -237,7 +237,7 @@ pub fn update_probe_nodes(
         }
     }
 
-    let db_ids: std::collections::HashSet<u64> = all_devices.iter().map(|d| d.id).collect();
+    let db_ids: std::collections::HashSet<u64> = all_devices.iter().map(|d| d.id.body()).collect();
     for (entity, probe) in existing_probes.iter() {
         if !db_ids.contains(&probe.device_id) {
             commands.entity(entity).despawn();
@@ -320,13 +320,13 @@ pub fn query_devices(gateway: InstanceId) -> Vec<RegisteredDevice> {
         .collect()
 }
 
-/// Look up a single device by id.
+/// Look up a single device by its sub-node key (the id's body).
 pub(crate) fn device_by_id(id: u64) -> Option<RegisteredDevice> {
     crate::REGISTERED_DEVICES
         .read()
         .unwrap()
         .iter()
-        .find(|d| d.id == id)
+        .find(|d| d.id.body() == id)
         .cloned()
 }
 
@@ -675,7 +675,7 @@ fn build_device_section(
     theme: &Theme,
     device: &RegisteredDevice,
 ) {
-    let device_id = device.id;
+    let device_id = device.id.body();
     let protocols = device.device.protocols();
 
     parent
@@ -748,7 +748,7 @@ fn build_tab_content(
     device: &RegisteredDevice,
     proto: ProbeType,
 ) {
-    let device_id = device.id;
+    let device_id = device.id.body();
     match proto {
         ProbeType::Rtsp => {
             // Live video display (transparent until frames arrive).
@@ -853,7 +853,7 @@ fn build_filesystem_tab(
     device: &RegisteredDevice,
     proto: ProbeType,
 ) {
-    let device_id = device.id;
+    let device_id = device.id.body();
 
     // What's configured, so a misconfigured device is obvious next to what the
     // server actually reports.
@@ -1345,7 +1345,9 @@ fn delete_selected_devices(commands: &mut Commands) {
         }
         if let Some(conn) = sandpolis_client::sync::connection() {
             for id in ids {
-                crate::management::delete_device(conn.clone(), id);
+                if let Some(device) = device_by_id(id) {
+                    crate::management::delete_device(conn.clone(), device.id);
+                }
             }
         }
         if let Some(mut sel) = world.get_resource_mut::<DeviceSelectionSet>() {

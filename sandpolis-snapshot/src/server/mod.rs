@@ -79,7 +79,7 @@ static ACTIVE: LazyLock<Mutex<HashSet<(InstanceId, String)>>> =
 pub fn install(context: SnapshotServerContext) {
     tokio::spawn(async {
         match SnapshotStore::check_qemu().await {
-            Ok(version) => info!(%version, "Snapshot store ready"),
+            Ok(_version) => info!("Snapshot store ready"),
             Err(e) => warn!(error = %e, "qemu-img is unavailable; snapshot operations will fail"),
         }
     });
@@ -95,7 +95,7 @@ fn agent_connection(
         .network
         .live_inbound()
         .into_iter()
-        .find(|c| c.data.read().remote_instance == agent)
+        .find(|c| c.data.read().remote_instance == Some(agent))
 }
 
 /// Server side of the management stream.
@@ -287,11 +287,10 @@ fn new_operation(
     }
 
     match context.operations.push(SnapshotOperationData {
-        _instance_id: agent,
         partition_uuid: partition_uuid.to_string(),
         direction,
         state: SnapshotOperationState::Preparing,
-        ..Default::default()
+        ..SnapshotOperationData::scoped(agent)
     }) {
         Ok(op) => Some(op),
         Err(e) => {
@@ -598,7 +597,6 @@ async fn drive_create_inner(
         // Unlike the progress rows, losing this write loses the snapshot, so
         // ride out a transient ownership hiccup before giving up.
         let record = SnapshotData {
-            _instance_id: agent,
             partition_uuid: partition_uuid.to_string(),
             uuid: uuid.clone(),
             parent: previous.map(|p| p.uuid),
@@ -606,7 +604,7 @@ async fn drive_create_inner(
             block_size: SNAPSHOT_BLOCK_SIZE,
             stored_size,
             label,
-            ..Default::default()
+            ..SnapshotData::scoped(agent)
         };
         for attempt in 0.. {
             match context.snapshots.push(record.clone()) {

@@ -501,7 +501,7 @@ impl Relay {
         }
 
         tracing::debug!(
-            via = %via_id,
+            via = ?via_id,
             count = instances.len(),
             "Recorded reachability advertisement"
         );
@@ -525,7 +525,7 @@ impl Relay {
             .write()
             .unwrap()
             .retain(|_, entry| match entry.upgrade() {
-                Some(conn) => conn.data.read().remote_instance != via,
+                Some(conn) => conn.data.read().remote_instance != Some(via),
                 None => false,
             });
     }
@@ -557,7 +557,9 @@ impl Relay {
             .read()
             .unwrap()
             .iter()
-            .find(|c| c.data.read().remote_instance == target && !c.streams.is_origin(origin_tx))
+            .find(|c| {
+                c.data.read().remote_instance == Some(target) && !c.streams.is_origin(origin_tx)
+            })
             .cloned();
         if direct.is_some() {
             return direct;
@@ -841,9 +843,10 @@ mod tests {
 #[cfg(test)]
 mod relay_tests {
     use super::*;
+    use crate::id::{AgentId, ClientId, ServerId};
     use crate::network::{ConnectionData, InstanceConnection};
     use crate::realm::RealmName;
-    use crate::{ClusterId, InstanceId, InstanceType, test_db};
+    use crate::{ClusterId, InstanceId, test_db};
     use sandpolis_macros::Stream;
     use tokio::sync::mpsc;
     use tokio::time::{Duration, timeout};
@@ -914,10 +917,10 @@ mod relay_tests {
         agent_reg.register_responder(RelayEchoResponder::default);
 
         // Server connections (so the relay can find the agent by instance id).
-        let mut agent_data = ConnectionData::default();
-        agent_data.remote_instance = agent_id;
-        let mut client_data = ConnectionData::default();
-        client_data.remote_instance = client_id;
+        let mut agent_data = ConnectionData::scoped(InstanceId::from(ServerId::random()));
+        agent_data.remote_instance = Some(agent_id);
+        let mut client_data = ConnectionData::scoped(InstanceId::from(ServerId::random()));
+        client_data.remote_instance = Some(client_id);
         let agent_conn = Arc::new(InstanceConnection {
             data: conns.push(agent_data)?,
             realm: RealmName::default(),
@@ -969,8 +972,8 @@ mod relay_tests {
     #[tokio::test]
     async fn relays_client_to_agent_and_back() -> anyhow::Result<()> {
         relay_echo_roundtrip(
-            InstanceId::new(InstanceType::Agent),
-            InstanceId::new(InstanceType::Client),
+            InstanceId::from(AgentId::random()),
+            InstanceId::from(ClientId::random()),
         )
         .await
     }
@@ -981,7 +984,7 @@ mod relay_tests {
     /// route to the other one.
     #[tokio::test]
     async fn relays_with_duplicate_instance_id() -> anyhow::Result<()> {
-        let shared = InstanceId::new(InstanceType::Agent);
+        let shared = InstanceId::from(AgentId::random());
         relay_echo_roundtrip(shared, shared).await
     }
 
@@ -991,8 +994,8 @@ mod relay_tests {
         reg: &Arc<StreamRegistry>,
         peer: InstanceId,
     ) -> anyhow::Result<Arc<InstanceConnection>> {
-        let mut data = ConnectionData::default();
-        data.remote_instance = peer;
+        let mut data = ConnectionData::scoped(InstanceId::from(ServerId::random()));
+        data.remote_instance = Some(peer);
         Ok(Arc::new(InstanceConnection {
             data: conns.push(data)?,
             realm: RealmName::default(),
@@ -1014,9 +1017,9 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let client_id = InstanceId::new(InstanceType::Client);
-        let ls_id = InstanceId::new(InstanceType::Server);
-        let agent_id = InstanceId::new(InstanceType::Agent);
+        let client_id = InstanceId::from(ClientId::random());
+        let ls_id = InstanceId::from(ServerId::random());
+        let agent_id = InstanceId::from(AgentId::random());
 
         let (client_out, client_out_rx) = mpsc::channel(32);
         let (gs_to_client, gs_to_client_rx) = mpsc::channel(32);
@@ -1096,11 +1099,11 @@ mod relay_tests {
         let peer_reg = Arc::new(StreamRegistry::new(peer_out));
         let upstream_reg = Arc::new(StreamRegistry::new(upstream_out));
 
-        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(InstanceType::Agent))?;
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::from(AgentId::random()))?;
         let upstream_conn = conn(
             &conns,
             &upstream_reg,
-            InstanceId::new(InstanceType::Server),
+            InstanceId::from(ServerId::random()),
         )?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![peer_conn]))));
@@ -1111,7 +1114,7 @@ mod relay_tests {
         let origin_reg = Arc::new(StreamRegistry::new(origin_out));
         origin_reg.set_relay(Arc::downgrade(&relay));
 
-        let stranger = InstanceId::new(InstanceType::Agent);
+        let stranger = InstanceId::from(AgentId::random());
         origin_reg
             .dispatch(StreamMessage::to(
                 RelayEchoRequester::generate_id(),
@@ -1137,7 +1140,7 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let agent_id = InstanceId::new(InstanceType::Agent);
+        let agent_id = InstanceId::from(AgentId::random());
 
         let (direct_out, mut direct_rx) = mpsc::channel(32);
         let (advertised_out, mut advertised_rx) = mpsc::channel(32);
@@ -1148,7 +1151,7 @@ mod relay_tests {
         let peer_conn = conn(
             &conns,
             &advertised_reg,
-            InstanceId::new(InstanceType::Server),
+            InstanceId::from(ServerId::random()),
         )?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![direct_conn]))));
@@ -1185,12 +1188,12 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let departed = InstanceId::new(InstanceType::Agent);
-        let stayed = InstanceId::new(InstanceType::Agent);
+        let departed = InstanceId::from(AgentId::random());
+        let stayed = InstanceId::from(AgentId::random());
 
         let (peer_out, mut peer_rx) = mpsc::channel(32);
         let peer_reg = Arc::new(StreamRegistry::new(peer_out));
-        let peer_conn = conn(&conns, &peer_reg, InstanceId::new(InstanceType::Server))?;
+        let peer_conn = conn(&conns, &peer_reg, InstanceId::from(ServerId::random()))?;
 
         let relay = Arc::new(Relay::new(Arc::new(RwLock::new(vec![]))));
         relay.advertise(&peer_conn, &[departed, stayed]);
@@ -1235,7 +1238,7 @@ mod relay_tests {
         let realm = db.realm(RealmName::default())?;
         let conns = realm.resident_vec::<ConnectionData>(())?;
 
-        let target = InstanceId::new(InstanceType::Agent);
+        let target = InstanceId::from(AgentId::random());
         let (next_out, mut next_rx) = mpsc::channel(32);
         let next_reg = Arc::new(StreamRegistry::new(next_out));
         let next_conn = conn(&conns, &next_reg, target)?;

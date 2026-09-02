@@ -373,9 +373,8 @@ fn update(
     // Cloning the previous row keeps its `_id`, so this replaces rather than
     // duplicates.
     let mut row = previous.clone().unwrap_or_else(|| ServiceData {
-        _instance_id: instance_id,
         key: key.to_string(),
-        ..Default::default()
+        ..ServiceData::scoped(instance_id)
     });
     f(&mut row, previous.is_none());
 
@@ -395,6 +394,7 @@ fn update(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::id::ServerId;
     use crate::LayerName;
     use crate::database::DatabaseManager;
     use crate::realm::RealmName;
@@ -449,7 +449,7 @@ mod tests {
     #[test]
     fn passes_accumulate_into_one_row() -> Result<()> {
         let realm = realm()?;
-        let instance = InstanceId::new_server();
+        let instance = InstanceId::from(ServerId::random());
         let key = "Account/favicon";
 
         let record = |started, result: &Result<ServiceReport>| {
@@ -522,8 +522,8 @@ mod tests {
     fn rows_are_per_instance() -> Result<()> {
         let realm = realm()?;
         let key = "Health/systemd";
-        let a = InstanceId::new(crate::InstanceType::Agent);
-        let b = InstanceId::new(crate::InstanceType::Agent);
+        let a = InstanceId::from(crate::AgentId::random());
+        let b = InstanceId::from(crate::AgentId::random());
 
         update(&realm, a, key, |row, _| row.runs = 5)?;
         update(&realm, b, key, |row, _| row.runs = 9)?;
@@ -538,7 +538,7 @@ mod tests {
     #[test]
     fn reconcile_preserves_stored_enabled() -> Result<()> {
         let realm = realm()?;
-        let instance = InstanceId::new_server();
+        let instance = InstanceId::from(ServerId::random());
         let key = "Test/counter";
 
         let supervisor = |passes: Arc<AtomicU64>| {
@@ -575,7 +575,7 @@ mod tests {
     #[tokio::test]
     async fn disabling_stops_the_service() -> Result<()> {
         let realm = realm()?;
-        let instance = InstanceId::new_server();
+        let instance = InstanceId::from(ServerId::random());
         let passes = Arc::new(AtomicU64::new(0));
 
         let mut runner = ServiceRunner::new(realm.clone(), instance);

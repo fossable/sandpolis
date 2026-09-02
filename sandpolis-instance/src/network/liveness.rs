@@ -43,7 +43,6 @@ pub const MAX_SCHEDULE_LEN: usize = 128;
 
 /// One server's view of one instance's reachability.
 #[data(instance)]
-#[derive(Default)]
 pub struct LivenessData {
     /// The instance this row is about. Deliberately not unique: several servers
     /// may each hold an opinion about the same instance.
@@ -65,6 +64,23 @@ pub struct LivenessData {
     /// disconnected. Passing this without a connection is what makes it offline.
     #[serde(with = "ts_seconds_option")]
     pub expected_next: Option<DateTime<Utc>>,
+}
+
+impl LivenessData {
+    /// Every other field at its default: `observer`'s opinion of `subject`.
+    pub fn observation(observer: InstanceId, subject: InstanceId) -> Self {
+        Self {
+            subject,
+            online: false,
+            last_seen: Default::default(),
+            poll_schedule: None,
+            expected_next: None,
+            _id: Default::default(),
+            _revision: Default::default(),
+            _creation: Default::default(),
+            _instance_id: observer,
+        }
+    }
 }
 
 // Scoped by the observing server so its rows replicate as part of that server's
@@ -126,22 +142,21 @@ pub fn find(
 #[cfg(test)]
 mod test_reachable {
     use super::*;
-    use crate::InstanceType;
+    use crate::id::{AgentId, ServerId};
+    
 
     fn row(observer: InstanceId, subject: InstanceId, online: bool) -> LivenessData {
         LivenessData {
-            subject,
             online,
-            _instance_id: observer,
-            ..Default::default()
+            ..LivenessData::observation(observer, subject)
         }
     }
 
     #[test]
     fn resolves_outward_from_direct_connections() {
-        let gs = InstanceId::new(InstanceType::Server);
-        let ls = InstanceId::new(InstanceType::Server);
-        let agent = InstanceId::new(InstanceType::Agent);
+        let gs = InstanceId::from(ServerId::random());
+        let ls = InstanceId::from(ServerId::random());
+        let agent = InstanceId::from(AgentId::random());
 
         // The client only reaches the GS directly; the GS vouches for the LS,
         // which vouches for the agent.
@@ -156,9 +171,9 @@ mod test_reachable {
     /// its agents are up, because it never got to say otherwise.
     #[test]
     fn a_dead_observer_vouches_for_nobody() {
-        let gs = InstanceId::new(InstanceType::Server);
-        let ls = InstanceId::new(InstanceType::Server);
-        let agent = InstanceId::new(InstanceType::Agent);
+        let gs = InstanceId::from(ServerId::random());
+        let ls = InstanceId::from(ServerId::random());
+        let agent = InstanceId::from(AgentId::random());
 
         let rows = vec![row(gs, ls, false), row(ls, agent, true)];
         let online = reachable(rows, [gs]);
@@ -169,8 +184,8 @@ mod test_reachable {
 
     #[test]
     fn an_offline_row_is_not_a_vouch() {
-        let gs = InstanceId::new(InstanceType::Server);
-        let agent = InstanceId::new(InstanceType::Agent);
+        let gs = InstanceId::from(ServerId::random());
+        let agent = InstanceId::from(AgentId::random());
 
         let online = reachable(vec![row(gs, agent, false)], [gs]);
         assert!(!online.contains(&agent));

@@ -5,8 +5,7 @@ use sandpolis_macros::data;
 #[cfg(feature = "agent")]
 pub mod agent;
 
-#[data(instance)]
-#[derive(Default)]
+#[data(instance, defaults)]
 pub struct CpuData {
     /// Product model
     pub model: Option<String>,
@@ -22,8 +21,7 @@ pub struct CpuData {
     pub l4_cache: Option<u64>,
 }
 
-#[data(instance, temporal)]
-#[derive(Default)]
+#[data(instance, temporal, defaults)]
 pub struct CpuCoreData {
     #[secondary_key]
     pub index: u32,

@@ -87,13 +87,12 @@ impl Collector for DesktopDisplayCollector {
             }
 
             self.data.push(DesktopData {
-                _instance_id: self.instance_id,
                 name,
                 width: display.width() as u32,
                 height: display.height() as u32,
                 primary: display.is_primary(),
                 scale_factor: display.scale(),
-                ..Default::default()
+                ..DesktopData::scoped(self.instance_id)
             })?;
         }
 

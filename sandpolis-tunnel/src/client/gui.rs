@@ -152,8 +152,8 @@ impl Default for LinkSample {
 /// One active tunnel's drawable state.
 struct TunnelView {
     name: String,
-    listener_id: InstanceId,
-    terminator_id: InstanceId,
+    listener_id: Option<InstanceId>,
+    terminator_id: Option<InstanceId>,
     mode: TunnelMode,
     rx_bps: f64,
     tx_bps: f64,
@@ -220,8 +220,8 @@ fn link_segments<'a>(
     positions: &'a HashMap<InstanceId, Vec2>,
 ) -> impl Iterator<Item = (Vec2, Vec2, usize)> + 'a {
     links.views.iter().enumerate().filter_map(move |(i, view)| {
-        let from = positions.get(&view.listener_id)?;
-        let to = positions.get(&view.terminator_id)?;
+        let from = positions.get(&view.listener_id?)?;
+        let to = positions.get(&view.terminator_id?)?;
         Some((*from, *to, i))
     })
 }

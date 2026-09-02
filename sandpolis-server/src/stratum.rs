@@ -57,9 +57,9 @@ fn upstream_retry() -> RetryWait {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct IssueServerCertRequest {
     pub realm: RealmName,
-    /// The requesting server's own instance id, as a string (the wire codec
-    /// cannot represent the 128-bit id directly).
-    pub instance_id: String,
+    /// The requesting server's own instance id. Decoding rejects anything that
+    /// isn't a server id, so a non-server can't even ask.
+    pub instance_id: sandpolis_instance::ServerId,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -95,13 +95,7 @@ pub async fn issue_server_cert(
         return axum::Json(IssueServerCertResponse::NotGlobalStratum);
     }
 
-    let Ok(instance_id) = request.instance_id.parse::<InstanceId>() else {
-        return axum::Json(IssueServerCertResponse::Rejected);
-    };
-    if !instance_id.is_server() {
-        warn!(instance = %request.instance_id, "Refusing to issue a server certificate to a non-server");
-        return axum::Json(IssueServerCertResponse::Rejected);
-    }
+    let instance_id = request.instance_id;
 
     let issued = (|| -> Result<(RealmCert, RealmCert)> {
         let db = server.realms.realm(request.realm.clone())?;
@@ -211,7 +205,10 @@ async fn request_cert(
             "realm/server-cert",
             IssueServerCertRequest {
                 realm: realm.clone(),
-                instance_id: instance.instance_id.to_string(),
+                instance_id: instance
+                    .instance_id
+                    .try_into()
+                    .map_err(EnrollError::Permanent)?,
             },
         )
         .await
@@ -312,7 +309,9 @@ async fn attempt_link(
     // no liveness row of its own, and this server is the one that noticed. The
     // notification waits here until the link is back, since that is the only way
     // out of an edge server during an outage.
-    crate::liveness::report_unreachable(link.data.read().remote_instance);
+    if let Some(peer) = link.data.read().remote_instance {
+        crate::liveness::report_unreachable(peer);
+    }
 
     Ok(established.elapsed())
 }

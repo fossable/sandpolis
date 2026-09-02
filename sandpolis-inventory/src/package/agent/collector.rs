@@ -44,19 +44,23 @@ impl Manager {
         }
     }
 
-    async fn get_installed(&self) -> Result<Vec<PackageData>> {
+    async fn get_installed(&self, instance: InstanceId) -> Result<Vec<PackageData>> {
         match self {
-            Manager::Apt(m) => m.get_installed().await,
-            Manager::Nix(m) => m.get_installed().await,
-            Manager::Pacman(m) => m.get_installed().await,
+            Manager::Apt(m) => m.get_installed(instance).await,
+            Manager::Nix(m) => m.get_installed(instance).await,
+            Manager::Pacman(m) => m.get_installed(instance).await,
         }
     }
 
-    async fn get_latest_available(&self, packages: &mut [PackageData]) -> Result<()> {
+    async fn get_latest_available(
+        &self,
+        packages: &mut [PackageData],
+        instance: InstanceId,
+    ) -> Result<()> {
         match self {
-            Manager::Apt(m) => m.get_latest_available(packages).await,
-            Manager::Nix(m) => m.get_latest_available(packages).await,
-            Manager::Pacman(m) => m.get_latest_available(packages).await,
+            Manager::Apt(m) => m.get_latest_available(packages, instance).await,
+            Manager::Nix(m) => m.get_latest_available(packages, instance).await,
+            Manager::Pacman(m) => m.get_latest_available(packages, instance).await,
         }
     }
 }
@@ -90,14 +94,15 @@ impl Collector for PackageCollector {
         let mut installed: Vec<PackageData> = Vec::new();
         let mut failed: Vec<PM> = Vec::new();
         for manager in &self.managers {
-            match manager.get_installed().await {
+            match manager.get_installed(self.instance_id).await {
                 Ok(mut packages) => {
                     debug!(
                         manager = ?manager.kind(),
                         count = packages.len(),
                         "Collected installed packages"
                     );
-                    if let Err(error) = manager.get_latest_available(&mut packages).await {
+                    if let Err(error) = manager.get_latest_available(&mut packages, self.instance_id).await
+                    {
                         warn!(
                             manager = ?manager.kind(),
                             %error,
@@ -170,7 +175,7 @@ mod tests {
     async fn test_package_collector() -> Result<()> {
         let database: DatabaseManager = test_db!(PackageData);
 
-        let instance_id = InstanceId::new_server();
+        let instance_id = sandpolis_instance::ServerId::random().into();
         let mut collector =
             PackageCollector::new(database.realm(RealmName::default())?, instance_id)?;
         collector.refresh().await?;

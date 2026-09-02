@@ -7,8 +7,7 @@ use sandpolis_macros::data;
 pub mod agent;
 
 /// Information about an "operating-system" level user account.
-#[data]
-#[derive(Default)]
+#[data(defaults)]
 pub struct UserData {
     #[secondary_key]
     pub _instance_id: InstanceId,

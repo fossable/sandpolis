@@ -189,8 +189,7 @@ mod tests {
     use native_model::Model;
     use sandpolis_macros::data;
 
-    #[data]
-    #[derive(Default)]
+    #[data(defaults)]
     struct BrowseTestData {
         #[secondary_key]
         _instance_id: InstanceId,
@@ -205,21 +204,19 @@ mod tests {
 
         let db: DatabaseManager = test_db!(BrowseTestData);
         let realm = db.realm(RealmName::default())?;
-        let a = InstanceId::new(crate::InstanceType::Agent);
-        let b = InstanceId::new(crate::InstanceType::Agent);
+        let a = InstanceId::from(crate::AgentId::random());
+        let b = InstanceId::from(crate::AgentId::random());
 
         let rw = realm.write(DataScope::Instance(a))?;
         rw.insert(BrowseTestData {
-            _instance_id: a,
             name: "x".into(),
             value: 1,
-            ..Default::default()
+        ..BrowseTestData::scoped(a)
         })?;
         rw.insert(BrowseTestData {
-            _instance_id: b,
             name: "y".into(),
             value: 2,
-            ..Default::default()
+        ..BrowseTestData::scoped(b)
         })?;
         rw.commit()?;
 

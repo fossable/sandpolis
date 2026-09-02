@@ -354,7 +354,7 @@ mod tests {
     use super::*;
     use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
-    use sandpolis_instance::{InstanceType, test_db};
+    use sandpolis_instance::test_db;
     use std::io::Write;
 
     const FAILED_LOGIN: &str = "type=USER_LOGIN msg=audit(1723400000.123:456): pid=1234 uid=0 auid=1000 ses=3 msg='op=login acct=\"tyler\" exe=\"/usr/sbin/sshd\" addr=203.0.113.7 terminal=ssh res=failed'";
@@ -364,7 +364,7 @@ mod tests {
         let database: DatabaseManager = test_db!(AuditEventData, AuditManagerData);
         Ok(AuditdService::new(
             database.realm(RealmName::default())?,
-            InstanceId::new(InstanceType::Agent),
+            sandpolis_instance::AgentId::random().into(),
         )?
         .with_path(path))
     }
@@ -459,7 +459,7 @@ mod tests {
         let database: DatabaseManager = test_db!(AuditEventData, AuditManagerData);
         let service = AuditdService::new(
             database.realm(RealmName::default())?,
-            InstanceId::new(InstanceType::Agent),
+            sandpolis_instance::AgentId::random().into(),
         )?;
 
         let cancel = CancellationToken::new();

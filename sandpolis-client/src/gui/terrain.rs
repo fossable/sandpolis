@@ -89,7 +89,7 @@ impl TerrainAttribute {
     ) -> Option<(String, String)> {
         match self {
             TerrainAttribute::InstanceType => {
-                let label = match id.instance_type()? {
+                let label = match id.instance_type() {
                     InstanceType::Server => "Servers",
                     InstanceType::Agent => "Agents",
                     InstanceType::Client => "Clients",

@@ -117,7 +117,7 @@ impl NetworkManager {
         if let Some(direct) = self
             .live_inbound()
             .into_iter()
-            .find(|c| c.data.read().remote_instance == instance)
+            .find(|c| c.data.read().remote_instance == Some(instance))
         {
             return Some((direct, None));
         }
@@ -161,12 +161,10 @@ impl NetworkManager {
 
         // Same classification the connect handler logs: a peer that identified
         // itself as neither a server nor an agent was served as a client.
-        let kind = if instance.is_server() {
-            "server"
-        } else if instance.is_agent() {
-            "agent"
-        } else {
-            "client"
+        let kind = match instance {
+            Some(id) if id.is_server() => "server",
+            Some(id) if id.is_agent() => "agent",
+            _ => "client",
         };
 
         self.inbound.write().unwrap().push(connection);
@@ -189,7 +187,7 @@ impl NetworkManager {
                 debug!(error = %e, "Failed to remove a closed connection");
             }
 
-            info!(kind, %instance, realm = %realm, "Instance disconnected");
+            info!(kind, instance = ?instance, realm = %realm, "Instance disconnected");
         });
     }
 }
@@ -198,14 +196,14 @@ impl NetworkManager {
 #[cfg(feature = "server")]
 pub type RequestResult<T> = Result<axum::Json<T>, axum::Json<T>>;
 
-#[data(temporal)]
-#[derive(Default)]
+#[data(temporal, defaults)]
 pub struct ConnectionData {
     #[secondary_key]
     pub _instance_id: InstanceId,
 
-    // TODO option before it's figured out
-    pub remote_instance: InstanceId,
+    /// The peer's id, once it has identified itself. `None` for a peer that
+    /// never sent one, e.g. a browser hitting the web listener.
+    pub remote_instance: Option<InstanceId>,
 
     /// Application-level bytes read since the connection was established
     pub read_bytes: u64,

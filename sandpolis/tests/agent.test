@@ -65,3 +65,16 @@ testAgentRestartUnimplemented() {
 	! output=$(sandpolis agents restart --instance "${instance}" --realm ./default.realm.pem)
 	echo "${output}" | jq -e '.status == "unimplemented"'
 }
+
+## A deploy dry run against an unreachable host travels the whole path — CLI,
+## server responder, SSH connect — and comes back as a failure at the Connect
+## step. The key file's contents never matter: the connection fails first.
+testAgentsDeployDryrunUnreachable() {
+	startServer
+
+	echo "not a key" >./fake.key
+
+	! output=$(sandpolis agents deploy root@127.0.0.1 --port 1 --key ./fake.key \
+		--dryrun --json --realm ./default.realm.pem)
+	echo "${output}" | jq -e '.status == "failed" and .step == "Connect"'
+}

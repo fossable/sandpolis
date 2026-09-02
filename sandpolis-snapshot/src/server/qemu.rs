@@ -128,6 +128,7 @@ impl SnapshotStore {
 
     /// Report the qemu-img version, verifying the binary is reachable at all.
     pub async fn check_qemu() -> Result<String> {
+        // TODO assert version greater than 11.0.0
         let output = Command::new("qemu-img").arg("--version").output().await?;
         if !output.status.success() {
             bail!("qemu-img --version exited with {}", output.status);
@@ -166,7 +167,7 @@ mod tests {
     async fn test_commit_reconstruct_roundtrip() -> Result<()> {
         let root = tempfile::tempdir()?;
         let store = SnapshotStore::new(root.path().to_path_buf());
-        let agent = InstanceId::new(sandpolis_instance::InstanceType::Agent);
+        let agent = sandpolis_instance::AgentId::random().into();
         let partition = "cafe0000-0000-0000-0000-000000000001";
 
         // Base image: 4 MiB with a marker at 1 MiB

@@ -22,7 +22,7 @@ pub enum DeviceMgmtRequest {
         device: DeviceConfig,
     },
     /// Delete the device with this id.
-    Delete { id: u64 },
+    Delete { id: crate::ProbeId },
 }
 
 /// Responses from the server's device manager.
@@ -107,20 +107,22 @@ mod server {
                     // Record which server this probe is associated with so the
                     // global-stratum config persists the ownership.
                     device.server = Some(server);
-                    {
-                        let mut devices = REGISTERED_DEVICES.write().unwrap();
-                        let id = devices.iter().map(|d| d.id).max().unwrap_or(0) + 1;
-                        devices.push(RegisteredDevice {
-                            id,
-                            // Probes are accessed only from servers, so the gateway
-                            // is always this server's own id.
-                            gateway: crate::gateway().unwrap_or_default(),
+                    // Probes are accessed only from servers, so the gateway is
+                    // always this server's own id.
+                    if let Some(gateway) = crate::gateway() {
+                        REGISTERED_DEVICES.write().unwrap().push(RegisteredDevice {
+                            id: crate::ProbeId::random(),
+                            gateway,
                             device,
                             online: false,
                             status_message: None,
                         });
+                        commit();
+                    } else {
+                        tracing::warn!(
+                            "Ignoring a device registration before this server's id is known"
+                        );
                     }
-                    commit();
                 }
                 DeviceMgmtRequest::Delete { id } => {
                     {
@@ -218,7 +220,7 @@ mod client {
     }
 
     /// Delete the device with `id`.
-    pub fn delete_device(conn: Arc<InstanceConnection>, id: u64) {
+    pub fn delete_device(conn: Arc<InstanceConnection>, id: crate::ProbeId) {
         send_request(conn, DeviceMgmtRequest::Delete { id });
     }
 }

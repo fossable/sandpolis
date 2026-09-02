@@ -4,9 +4,8 @@ use super::RealmName;
 use super::RealmManager;
 use super::url::ServerUrl;
 use crate::ClusterId;
-use crate::InstanceId;
+use crate::ServerId;
 use crate::InstanceManager;
-use crate::InstanceType;
 use anyhow::Result;
 use anyhow::anyhow;
 use anyhow::bail;
@@ -128,10 +127,7 @@ impl RealmCert {
     }
 
     /// Generate a new realm certificate for server instances.
-    pub fn server_cert(&self, server_id: InstanceId) -> Result<RealmCert> {
-        if !server_id.is_type(InstanceType::Server) {
-            bail!("A server ID is required");
-        }
+    pub fn server_cert(&self, server_id: ServerId) -> Result<RealmCert> {
         let issuer = self.issuer()?;
 
         // Generate key
@@ -170,7 +166,7 @@ impl RealmCert {
             ca: self.cert.clone(),
             cert: cert.der().to_vec(),
             key: Some(keypair.serialize_der()),
-            _instance_id: server_id,
+            _instance_id: Some(server_id.into()),
             ..Default::default()
         })
     }
@@ -181,7 +177,6 @@ mod test_realm_ca {
     use super::*;
     use io::Write;
     use openssl::{
-        ec::EcKey,
         pkey::PKey,
         ssl::{SslAcceptor, SslConnector, SslMethod, SslVerifyMode},
         x509::X509,
@@ -193,7 +188,7 @@ mod test_realm_ca {
     fn test_generate_and_authenticate() -> Result<()> {
         let ca = RealmCert::new_cluster(ClusterId::default(), "default".parse()?)?;
         let client = ca.endpoint_cert(&"127.0.0.1:9999/default".parse()?)?;
-        let server = ca.server_cert(InstanceId::new_server())?;
+        let server = ca.server_cert(ServerId::random())?;
 
         // Write CA cert to temp file
         let mut ca_file = tempfile::NamedTempFile::new()?;
@@ -280,7 +275,7 @@ impl RealmAcceptor {
                 .iter()
                 .find(|cert| {
                     cert.cert_type == RealmCertType::Server
-                        && cert._instance_id == instance_manager.instance_id
+                        && cert._instance_id == Some(instance_manager.instance_id)
                 })
                 .ok_or_else(|| anyhow!("No server certificate for realm: {}", realm.name))?;
 

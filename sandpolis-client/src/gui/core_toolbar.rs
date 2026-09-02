@@ -90,7 +90,7 @@ fn describe_link(network: &NetworkManager, instance: InstanceId) -> String {
     let mut written = 0u64;
     for connection in network.connections.iter() {
         let data = connection.read();
-        if data._instance_id == instance || data.remote_instance == instance {
+        if data._instance_id == instance || data.remote_instance == Some(instance) {
             connections += 1;
             read += data.read_bytes;
             written += data.write_bytes;

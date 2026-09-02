@@ -29,6 +29,9 @@ sandpolis-macros = { path = "../sandpolis-macros", version = "0.0.1" }
 [target.'cfg(not(target_os = "android"))'.dependencies]
 ratatui = { workspace = true, optional = true }
 
+[dev-dependencies]
+tempfile = { workspace = true }
+
 [features]
 agent = ["sandpolis-instance/agent"]
 client = [

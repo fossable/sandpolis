@@ -690,7 +690,7 @@ struct CpeMatch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sandpolis_instance::InstanceType;
+    
     use sandpolis_instance::database::DatabaseManager;
     use sandpolis_instance::realm::RealmName;
     use sandpolis_instance::test_db;
@@ -863,7 +863,7 @@ mod tests {
     async fn full_pass_matches_alerts_once_and_prunes() -> Result<()> {
         let db: DatabaseManager = test_db!(VulnerabilityData);
         let realm = db.realm(RealmName::default())?;
-        let instance = InstanceId::new(InstanceType::Agent);
+        let instance = sandpolis_instance::AgentId::random().into();
         let dir = tempfile::tempdir()?;
         write_feed(dir.path(), "CVE-2024.json.xz", FEED)?;
 
@@ -923,7 +923,7 @@ mod tests {
 
     #[test_log::test(tokio::test)]
     async fn overlay_masks_year_file_records() -> Result<()> {
-        let instance = InstanceId::new(InstanceType::Agent);
+        let instance = sandpolis_instance::AgentId::random().into();
         let dir = tempfile::tempdir()?;
         write_feed(dir.path(), "CVE-2024.json.xz", FEED)?;
 

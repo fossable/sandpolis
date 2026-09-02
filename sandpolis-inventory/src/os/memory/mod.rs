@@ -7,8 +7,7 @@ use sandpolis_macros::data;
 pub mod agent;
 
 /// Live RAM and swap usage for an instance.
-#[data(temporal)]
-#[derive(Default)]
+#[data(temporal, defaults)]
 pub struct MemoryData {
     #[secondary_key]
     pub _instance_id: InstanceId,

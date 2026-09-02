@@ -85,13 +85,11 @@ impl Liveness {
             }
             None => {
                 self.rows.push(LivenessData {
-                    subject,
                     online: true,
                     last_seen: now,
                     poll_schedule: poll.map(|p| p.schedule.clone()),
                     expected_next,
-                    _instance_id: self.observer,
-                    ..Default::default()
+                    ..LivenessData::observation(self.observer, subject)
                 })?;
 
                 // No row at all means this server has never seen it attach —
@@ -193,10 +191,9 @@ const LAYER: &str = "Network";
 /// What to call an instance in a notification.
 fn describe(subject: InstanceId) -> &'static str {
     match subject.instance_type() {
-        Some(InstanceType::Agent) => "Agent",
-        Some(InstanceType::Server) => "Server",
-        Some(InstanceType::Client) => "Client",
-        None => "Instance",
+        InstanceType::Agent => "Agent",
+        InstanceType::Server => "Server",
+        InstanceType::Client => "Client",
     }
 }
 
@@ -228,7 +225,10 @@ fn attached(network: &NetworkManager) -> BTreeMap<InstanceId, Option<PollAnnounc
     network
         .live_inbound()
         .iter()
-        .map(|c| (c.data.read().remote_instance, c.poll.get().cloned()))
+        .filter_map(|c| {
+            let id = c.data.read().remote_instance?;
+            Some((id, c.poll.get().cloned()))
+        })
         .filter(|(id, _)| !id.is_client())
         .collect()
 }
