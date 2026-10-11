@@ -559,9 +559,17 @@ impl Commands {
                 crate::lsp::run(args).await?;
             }
             Commands::About => {
-                for line in fossable::sandpolis_word() {
-                    println!("{line}");
-                }
+                // The emblem as the terminal can take it: a real image where
+                // there is a graphics protocol, block letters where there
+                // isn't. Redirected, the word grid still goes out plainly,
+                // since showing it is what this command is for.
+                let emblem = cilki::terminal::banner(&cilki::emblem::SANDPOLIS, 56, 7)
+                    .unwrap_or_else(|| {
+                        let mut word = cilki::emblem::SANDPOLIS.word_lines("◼").join("\n");
+                        word.push('\n');
+                        word
+                    });
+                print!("{emblem}");
                 println!("{} {}", "Layer".bold(), "Version".bold());
                 for (layer, version) in crate::layers().iter() {
                     println!(

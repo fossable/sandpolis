@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{CommandFactory, FromArgMatches};
 use sandpolis::cli::CommandLine;
 use std::process::ExitCode;
 use tracing_subscriber::filter::LevelFilter;
@@ -15,8 +15,18 @@ async fn main() -> Result<ExitCode> {
         anyhow::bail!("No instance was enabled at build time");
     }
 
+    // The emblem rides above the help text, as a real image on terminals with
+    // a graphics protocol and in block letters elsewhere. clap is handed it as
+    // `before_help` so it appears only when help is actually printed, and
+    // never when the output is a pipe or a file.
     #[allow(unreachable_code)]
-    let args = CommandLine::parse();
+    let args = {
+        let mut command = CommandLine::command();
+        if let Some(emblem) = cilki::terminal::before_help(&cilki::emblem::SANDPOLIS, 56, 7) {
+            command = command.before_help(emblem);
+        }
+        CommandLine::from_arg_matches(&command.get_matches())?
+    };
 
     // A client subcommand opens a TUI (or prints JSON), so it owns the terminal;
     // send logs to a file in that case instead of corrupting the view. Daemons

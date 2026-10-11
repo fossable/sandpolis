@@ -16,10 +16,13 @@ walkdir = "2"
 
 [dependencies]
 anyhow = { workspace = true }
+cilki = { version = "0.2", features = [
+  "project-sandpolis",
+  "terminal-graphics",
+] }
 clap = { workspace = true }
 colored = { workspace = true }
 dirs = "6"
-fossable = "0.1.2"
 fs2 = "0.4"
 futures = { workspace = true }
 ron = { workspace = true }
